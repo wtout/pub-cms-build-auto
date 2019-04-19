@@ -1,0 +1,89 @@
+[esxi:vars]
+  ansible_user=watout
+[esxi]
+  esxi01root ansible_host=paevcenter01
+  esxi01console ansible_host=paevcenter01
+
+[stack]
+  [stack:children]
+    em7
+    linuxjs
+    splunk
+    relays
+
+    [em7]
+      [em7:vars]
+        ansible_user=em7admin
+        ansible_ssh_pass=
+        ansible_become_pass=
+      [em7:children]
+        em7db
+        em7as
+        em7mc
+        em7dc
+
+        [em7db]
+          em7db01
+          em7db02
+        [em7as]
+          em7as01
+          em7as02
+        [em7mc]
+          em7mc01
+          em7mc02
+        [em7dc]
+          em7dc01
+          em7dc02
+          em7dc03
+          em7dc04
+          em7dc05
+          em7dc06
+          em7dc07
+          em7dc08
+
+    [linuxjs:vars]
+      ansible_user=root
+      ansible_ssh_pass=
+      ansible_become_pass=
+    [linuxjs]
+      linuxjs01
+      linuxjs02
+
+    [splunk:vars]
+      ansible_user=root
+      ansible_ssh_pass=
+      ansible_become_pass=
+    [splunk:children]
+      splunksh
+      splunkin
+      splunkcm
+      splunkde
+
+      [splunksh]
+        splunksh01
+        splunksh02
+      [splunkin]
+        splunkin01
+        splunkin02
+      [splunkcm]
+        splunkcm01
+        splunkcm02
+      [splunkde]
+        splunkde01
+        splunkde02
+
+    [relays:vars]
+      ansible_user=root
+      ansible_ssh_pass=
+      ansible_become_pass=
+    [relays]
+      relays01
+      relays02
+
+[is4]
+  is4host
+
+[aio]
+  aiorelay
+  aiosplunk
+  aioem7

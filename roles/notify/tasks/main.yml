@@ -1,0 +1,51 @@
+---
+# Tasks for notify
+- block:
+  - name: Get user's identity
+    shell: head -3 {{LFILE}}
+    register: userid
+  - name: Check if user requested to abort
+    shell: grep "user requested abort!" {{LFILE}}
+    register: user_abort
+    ignore_errors: true
+  - name: Get playbook status from {{LFILE}}
+    shell: "grep 'PLAY RECAP' {{LFILE}} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ansible_play_hosts|length}};i++){print $0;getline}}' {{LFILE}} | grep -v awk || echo 'No Play Recap found'"
+    register: playbook_status
+  - set_fact:
+      NOTIF_MSG: "{{NOTIF_MSG | default ([]) + [item] | list}}"
+    with_items:
+      - '========================================================='
+      - ' '
+      - "{{userid.stdout | replace ('\nThis script was run', 'Job started') | replace ('#', '')}}"
+      - "Script **{{SNAME}} {{SARG | replace ('dash', '-') | replace ('*', '')}}** completed with:"
+      - "{{user_abort.stdout if user_abort is succeeded else ''}}"
+      - "{{playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '`\\1`') | regex_replace ('\n.*[\\|] ', '\n')}}"
+      - ' '
+      - '========================================================='
+# This module cannot be used currently as there is a known bug with it. Will revisit in the future
+#  - name: Send notification via Webex Teams
+#    cisco_spark:
+#      recipient_type: roomId
+#      recipient_id: 'Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj'
+#      message_type: text
+#      message: "{{NOTIF_MSG | join('\n')}}"
+#      personal_token: MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f
+# The below task implements the following curl command
+#      curl --request POST \
+#        --header "Authorization: Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f" \
+#        --header "Content-Type: application/json" \
+#        --data '{"roomId":"Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj","text":"howdybot2"}' \
+#        https://api.ciscospark.com/v1/messages
+  - name: Send notification via Webex Teams
+    uri:
+      url: "https://api.ciscospark.com/v1/messages"
+      method: POST
+      headers:
+        Authorization: "Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
+      body_format: form-urlencoded
+      body: 
+        roomId: Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj
+        markdown: "{{NOTIF_MSG | join('\n')}}"
+  delegate_to: localhost
+  run_once: true
+  tags: [ 'never', 'notify' ]

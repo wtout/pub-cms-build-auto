@@ -1,0 +1,41 @@
+[esxi:vars]
+  ansible_user=watout
+  ansible_ssh_pass=
+[esxi]
+  esxi01root ansible_host=paevcenter01
+  esxi01console ansible_host=paevcenter01
+
+[stack]
+  [stack:children]
+    em7
+
+    [em7]
+      [em7:vars]
+        ansible_user=em7admin
+        ansible_ssh_pass=
+        ansible_become_pass=
+      [em7:children]
+        em7db
+        em7as
+        em7mc
+        em7dc
+
+        [em7db]
+          em7db01
+          em7db02
+        [em7as]
+          em7as01
+          em7as02
+        [em7mc]
+          em7mc01
+          em7mc02
+        [em7dc]
+          em7dc01
+          em7dc02
+          em7dc03
+          em7dc04
+          em7dc05
+          em7dc06
+          em7dc07
+          em7dc08
+

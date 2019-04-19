@@ -1,0 +1,34 @@
+---
+# Play to determine what to do
+- name: determine what to do
+  hosts: all
+  gather_facts: no
+
+#  roles:
+#  - role: todo
+
+# Plays to set up the remote hosts and install the software
+- name: Setup hosts and install the software
+  hosts: all
+  gather_facts: no
+
+#  roles:
+
+  tasks:
+  - debug:
+      msg: "I am {{ansible_host}}"
+
+# Plays to uninstall the software and rollback the remote hosts
+#- name: Uninstall the software and rollback the remote hosts
+#  hosts: all
+#  gather_facts: no
+
+#  roles:
+
+# Play to notify via Webex Teams
+- name: send a notification via Webex Teams
+  hosts: all
+  gather_facts: no
+
+  roles:
+  - role: notify

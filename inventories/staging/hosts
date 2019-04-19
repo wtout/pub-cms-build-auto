@@ -1,0 +1,27 @@
+[stack]
+  [stack:children]
+    splunk
+
+    [splunk:vars]
+      ansible_user=root
+      ansible_ssh_pass=
+      ansible_become_pass=
+    [splunk:children]
+      splunksh
+      splunkin
+      splunkcm
+      splunkde
+
+      [splunksh]
+        splunksh01
+        splunksh02
+      [splunkin]
+        splunkin01
+        splunkin02
+      [splunkcm]
+        splunkcm01
+        splunkcm02
+      [splunkde]
+        splunkde01
+        splunkde02
+
