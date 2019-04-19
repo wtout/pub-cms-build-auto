@@ -64,7 +64,7 @@ with the script name being one of the following options:
 
 5- The list of roles used in the playbook:
 
-  - **notify**: sends a notification via Slack channel indicating the status of the activity
+  - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
 To execute specific role(s), add "_--tags 'role1,role2,...'_" as argument to the script.
 
