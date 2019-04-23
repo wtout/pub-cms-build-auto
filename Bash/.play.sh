@@ -53,32 +53,49 @@ function git_config() {
 	fi
 }
 
+function get_sudopass(){
+	read -s -p "Enter localhost's sudo password and press [ENTER]: " SP
+	sudo -S echo "Thanks" &>/dev/null <<< ${SP}
+	if [[ "${?}" == 0 ]]
+	then
+		echo ${SP}
+		return 0
+	else
+		echo "Password is incorrect. Aborting!"
+		return 1
+	fi
+}
+
 function install_packages() {
 	for pkg in ${PKG_LIST}
 	do
 		if [ "x$(yum list installed ${pkg} &>/dev/null;echo ${?})" == "x1" ]
 		then
-			if [ "x${SUDO_PASS}" == "x" ]
+			if [[ "x${SUDO_PASS}" == "x" ]]
 			then
-				read -sp "Enter localhost's sudo password and press [ENTER]: " SUDO_PASS
+				SUDO_PASS=$(get_sudopass) || FS=${?}
+				[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
 			fi
-			echo "Installing ${pkg} on localhost" && \
-			sudo -S yum install -y ${pkg} --quiet <<< ${SUDO_PASS}
+			PKG_ARR=(${PKG_LIST})
+			[[ ${pkg} == ${PKG_ARR[0]} ]] && echo -e "\n\nInstalling ${pkg} on localhost" || \
+			echo -e "Installing ${pkg} on localhost"
+			sudo -S yum install -y ${pkg} --quiet <<< ${SUDO_PASS} 2>/dev/null
 		fi
 	done
 	if [ "x$(which pip 2>/dev/null)" == "x" ]
 	then
-		if [ "x${SUDO_PASS}" == "x" ]
+		if [[ "x${SUDO_PASS}" == "x" ]]
 		then
-			read -sp "Enter localhost's sudo password and press [ENTER]: " SUDO_PASS
+			SUDO_PASS=$(get_sudopass) || FS=${?}
+			[[ "${FS}" != 1 ]] && echo -e "\n${SUDO_PASS}" && exit ${FS}
 		fi
 		echo "Installing pip on localhost"
-		sudo -S yum install -y python-pip --quiet &>/dev/null <<< ${SUDO_PASS}
+		sudo -S yum install -y python-pip --quiet &>/dev/null <<< ${SUDO_PASS} 2>/dev/null
 	fi
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
 		echo "Installing ansible on localhost"
-		pip install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION}
+		pip install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} 2>/dev/null
 	else
 		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
 		then
