@@ -73,29 +73,34 @@ function install_packages() {
 		then
 			if [[ "x${SUDO_PASS}" == "x" ]]
 			then
+				echo
 				SUDO_PASS=$(get_sudopass) || FS=${?}
 				[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
 			fi
 			PKG_ARR=(${PKG_LIST})
-			[[ ${pkg} == ${PKG_ARR[0]} ]] && echo -e "\n\nInstalling ${pkg} on localhost" || \
-			echo -e "Installing ${pkg} on localhost"
+			[[ ${pkg} == ${PKG_ARR[0]} ]] && printf "\n\nInstalling ${pkg} on localhost ..." || \
+			printf "\nInstalling ${pkg} on localhost ..."
 			sudo -S yum install -y ${pkg} --quiet <<< ${SUDO_PASS} 2>/dev/null
+			printf " Installed version $(yum list ${pkg} | tail -1 | awk '{print $2}')\n"
 		fi
 	done
 	if [ "x$(which pip 2>/dev/null)" == "x" ]
 	then
 		if [[ "x${SUDO_PASS}" == "x" ]]
 		then
+			echo
 			SUDO_PASS=$(get_sudopass) || FS=${?}
 			[[ "${FS}" != 1 ]] && echo -e "\n${SUDO_PASS}" && exit ${FS}
 		fi
-		echo "Installing pip on localhost"
-		sudo -S yum install -y python-pip --quiet &>/dev/null <<< ${SUDO_PASS} 2>/dev/null
+		printf "\nInstalling pip on localhost ..."
+		sudo -S yum install -y python-pip --quiet <<< ${SUDO_PASS} 2>/dev/null
+		printf " Installed version $(pip -V 2>/dev/null | awk '{print $2}')\n"
 	fi
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
-		echo "Installing ansible on localhost"
-		pip install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} 2>/dev/null
+		printf "\nInstalling ansible on localhost ..."
+		pip install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION}
+		printf " Installed version ${ANSIBLE_VERSION}\n"
 	else
 		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
 		then
@@ -108,7 +113,7 @@ function install_packages() {
 function verify_package {
 	if [[ "x$(git config user.name)" != "x" ]]
 	then
-		git rev-parse --short HEAD 2> /dev/null
+		git rev-parse --short HEAD &>/dev/null
 		if [ ${?} -eq 0 ]
 		then
 			echo $(git config user.name) > ${2}
@@ -118,18 +123,19 @@ function verify_package {
 				source ${1}
 				ansible-vault --vault-id ${2} encrypt ${1} &>/dev/null
 			else
+				echo
 				read -sp "Enter your Bitbucket password [ENTER]: " BBPASS
 				printf "BBPASS=${BBPASS}\n" > ${1}
 				ansible-vault --vault-id ${2} encrypt ${1} &>/dev/null
-				echo ""
+				echo
 			fi
 			rm -f ${2}
 			local LOCALID=$(git rev-parse --short HEAD)
-			local REMOTEID=$(git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD | cut -c1-7)
+			local REMOTEID=$(git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD 2>/dev/null | cut -c1-7)
 			[[ "${REMOTEID}" == "" ]] && printf "\nYour Bitbucket credentials are invalid!\n\n" && rm -f ${1} && exit
 			if [[ "${LOCALID}" != "${REMOTEID}" ]]
 			then
-				echo ""
+				echo
 				read -p "Your installation package is not up to date. Updating it will overwrite any changes to tracked files. Do you want to update? ${BOLD}(y/n)${NORMAL}: " ANSWER
 				echo ""
 				if [[ "$(echo ${ANSWER} | tr [A-Z] [a-z])" == "y" ]]
