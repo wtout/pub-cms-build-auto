@@ -1,21 +1,42 @@
-[esxi:vars]
-  ansible_user=watout
-[esxi]
-  esxi01root ansible_host=paevcenter01
-  esxi01console ansible_host=paevcenter01
+[bastion:vars]
+  ansible_user="{{bastion.username}}"
+  ansible_ssh_pass="{{bastion.password}}"
+[bastion]
+#  paelnxjmp02 ansible_host="{{bastion.address}}"
+  paelnxjmp01 ansible_host="10.225.228.240"
+  paelnxjmp02 ansible_host="10.225.228.240"
 
+[vcenter:vars]
+  ansible_user="{{vcenter.username}}"
+  ansible_ssh_pass="{{vcenter.password}}"
+  ansible_become_pass="{{ansible_ssh_pass}}"
+[vcenter]
+  vsconsole ansible_host="{{vcenter.address}}"
+#  vsconsole ansible_host="172.30.251.20"
+
+[testserver:vars]
+  ansible_user="{{testserver.username}}"
+  ansible_ssh_pass="{{testserver.password}}"
+  ansible_become_pass="{{ansible_ssh_pass}}"
+[testserver]
+  test1 ansible_host="172.30.233.3"
+
+[stack:vars]
+  ansible_user="{{stack.username}}"
+  ansible_ssh_pass="{{stack.password}}"
+  ansible_become_pass="{{ansible_ssh_pass}}"
 [stack]
   [stack:children]
     em7
     linuxjs
     splunk
-    relays
+    relay
 
     [em7]
       [em7:vars]
-        ansible_user=em7admin
-        ansible_ssh_pass=
-        ansible_become_pass=
+        ansible_user="{{em7.username}}"
+        ansible_ssh_pass="{{em7.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
       [em7:children]
         em7db
         em7as
@@ -41,49 +62,44 @@
           em7dc07
           em7dc08
 
-    [linuxjs:vars]
-      ansible_user=root
-      ansible_ssh_pass=
-      ansible_become_pass=
     [linuxjs]
-      linuxjs01
-      linuxjs02
+      [linuxjs:vars]
+        ansible_user="{{linuxjs.username}}"
+        ansible_ssh_pass="{{linuxjs.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [linuxjs]
+        linuxjs01
+        linuxjs02
 
-    [splunk:vars]
-      ansible_user=root
-      ansible_ssh_pass=
-      ansible_become_pass=
-    [splunk:children]
-      splunksh
-      splunkin
-      splunkcm
-      splunkde
+    [splunk]
+      [splunk:vars]
+        ansible_user="{{splunk.username}}"
+        ansible_ssh_pass="{{splunk.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [splunk:children]
+        splunksh
+        splunkin
+        splunkcm
+        splunkde
 
-      [splunksh]
-        splunksh01
-        splunksh02
-      [splunkin]
-        splunkin01
-        splunkin02
-      [splunkcm]
-        splunkcm01
-        splunkcm02
-      [splunkde]
-        splunkde01
-        splunkde02
+        [splunksh]
+          splunksh01
+          splunksh02
+        [splunkin]
+          splunkin01
+          splunkin02
+        [splunkcm]
+          splunkcm01
+          splunkcm02
+        [splunkde]
+          splunkde01
+          splunkde02
 
-    [relays:vars]
-      ansible_user=root
-      ansible_ssh_pass=
-      ansible_become_pass=
-    [relays]
-      relays01
-      relays02
-
-[is4]
-  is4host
-
-[aio]
-  aiorelay
-  aiosplunk
-  aioem7
+    [relay]
+      [relay:vars]
+        ansible_user="{{relay.username}}"
+        ansible_ssh_pass="{{relay.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [relay]
+        relay01
+        relay02

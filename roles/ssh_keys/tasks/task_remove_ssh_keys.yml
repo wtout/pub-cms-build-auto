@@ -1,0 +1,19 @@
+---
+# Tasks to remove the ssh keys from remote server(s)
+- block:
+  - block:
+    - stat:
+        path: "{{LOCAL_SSH_DIR}}/{{SSH_KEY_FILE}}"
+      register: privkey
+    - stat:
+        path: "{{LOCAL_SSH_DIR}}/{{SSH_KEY_FILE}}.pub"
+      register: pubkey
+    delegate_to: localhost
+    run_once: true
+  - name: remove the SSH keys from remote hosts
+    authorized_key:
+      user: "{{ansible_user}}"
+      state: absent
+      key: "{{ lookup('file', '{{LOCAL_SSH_DIR}}/{{SSH_KEY_FILE}}.pub')}}"
+    when: privkey.stat.exists and pubkey.stat.exists
+  tags: ssh_keys

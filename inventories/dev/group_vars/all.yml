@@ -1,3 +1,18 @@
 ---
-# Variables for all servers
-DATACENTER_NAME: "RTP Building 10"
+# Variables for all hosts
+datacenter:
+#  name: "RTP-PAE"
+  name: "PAE-HX-DC"
+
+datastore:
+  db_min: 1374389534720 #1.25Tib = 1280GiB
+  vm_min: 429496729600 #400GiB
+
+bastion:
+  address1: "{{hostvars[groups['bastion'][0]]['ansible_host'] if groups['bastion'] | length >= 1 else ''}}"
+  address2: "{{hostvars[groups['bastion'][1]]['ansible_host'] if groups['bastion'] | length >= 2 else ''}}"
+  username: "{{BASTION_USER | default('')}}"
+  password: "{{BASTION_PASS | default('')}}"
+
+vsphere:
+  address: "172.30.251.20"

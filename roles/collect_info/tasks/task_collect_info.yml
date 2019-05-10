@@ -1,0 +1,173 @@
+---
+# tasks to collect info
+- block:
+### Bastion ###
+### prompts ###
+  - pause:
+      prompt: "Enter the Bastion username [ENTER]"
+    register: bastion_user
+    until: bastion_user.user_input != ''
+    run_once: true
+
+  - pause:
+      prompt: "Enter the Bastion password [ENTER]"
+      echo: no
+    when:
+      - groups['bastion'] | length >= 1
+    register: bastion_pass
+    until: bastion_pass.user_input != ''
+    run_once: true
+    no_log: true
+
+  - pause:
+      prompt: "Confirm the Bastion password [ENTER]"
+      echo: no
+    when:
+      - bastion_pass.user_input != ''
+    register: bastion_pass2
+    until: bastion_pass2.user_input == bastion_pass.user_input
+    run_once: true
+    no_log: true
+
+### Set Facts ###
+  - block:
+    - name: define Bastion credentials
+      set_fact:
+        bastion: "{{bastion | default({}) | combine(new_item, recursive=true)}}"
+      vars:
+        new_item: "{'{{item.key}}': '{{item.value}}'}"
+      with_items:
+        - { key: 'username', value: '{{bastion_user.user_input}}'}
+        - { key: 'password', value: '{{bastion_pass.user_input}}'}
+    - name: check if Bastion login credentials are defined
+      assert:
+        that:
+          - bastion.username is defined
+          - bastion.username != ''
+          - bastion.password is defined
+          - bastion.password != ''
+    when:
+      - bastion_user.user_input is defined
+    no_log: true
+
+### Vcenter ###
+### prompts ###
+  - pause:
+      prompt: "Are the Vcenter login credentials the same as the Bastion's? [Yes/No]"
+    when:
+      - bastion.username != ''
+      - bastion.password != ''
+    register: answer
+    run_once: true
+
+### Set Facts ###
+  - block:
+    - name: define Vcenter credentials
+      set_fact:
+        vcenter: "{{vcenter | default({}) | combine(new_item, recursive=true)}}"
+      vars:
+        new_item: "{'{{item.key}}': '{{item.value}}'}"
+      with_items:
+        - { key: 'username', value: '{{bastion.username}}'}
+        - { key: 'password', value: '{{bastion.password}}'}
+      when:
+        - bastion.username != ''
+        - bastion.password != ''
+
+    - name: check if Vcenter login credentials are defined
+      assert:
+        that:
+          - vcenter.username is defined
+          - vcenter.username != ''
+          - vcenter.password is defined
+          - vcenter.password != ''
+    when:
+      - answer.user_input is defined
+      - answer.user_input == '' or answer.user_input | lower == 'yes' or answer.user_input | lower == 'y'
+    no_log: true
+
+### Vcenter ###
+  - block:
+### prompts ###
+    - pause:
+        prompt: "Enter the Vcenter login username [ENTER]"
+      register: vcenter_user
+      until: vcenter_user.user_input != ''
+      run_once: true
+
+### prompts ###
+    - pause:
+        prompt: "Enter the Vcenter login password [ENTER]"
+        echo: no
+      when:
+        - vcenter_user.user_input != ''
+      register: vcenter_pass
+      until: vcenter_pass.user_input != ''
+      run_once: true
+      no_log: true
+
+    - pause:
+        prompt: "Confirm the Vcenter login password [ENTER]"
+        echo: no
+      when:
+        - vcenter_pass.user_input != ''
+      register: vcenter_pass2
+      until: vcenter_pass2.user_input == vcenter_pass.user_input
+      run_once: true
+      no_log: true
+
+### Set Facts ###
+    - block:
+      - name: define Vcenter credentials
+        set_fact:
+          vcenter: "{{vcenter | default({}) | combine(new_item, recursive=true)}}"
+        vars:
+          new_item: "{'{{item.key}}': '{{item.value}}'}"
+        with_items:
+          - { key: 'username', value: '{{vcenter_user.user_input}}'}
+          - { key: 'password', value: '{{vcenter_pass.user_input}}'}
+      - name: check if Vcenter login credentials are defined
+        assert:
+          that:
+            - vcenter.username is defined
+            - vcenter.username != ''
+            - vcenter.password is defined
+            - vcenter.password != ''
+    when:
+      - (groups['bastion'] | length == 0) or (answer.user_input is defined)
+      - answer.user_input | lower == 'no' or answer.user_input | lower == 'n'
+    no_log: true
+  when:
+    - groups['bastion'] | length >= 1
+  tags: always
+
+### Write facts ###
+- block:
+  - name: create credentials file
+    copy:
+      content: '# Credentials'
+      dest: "{{VFILE}}"
+      force: true
+
+  - name: Save Bastion credentials
+    lineinfile:
+      path: "{{VFILE}}"
+      line: "{{task_item.name|upper}}_{{task_item.key|upper}}: {{task_item.value}}"
+    with_items:
+        - { name: 'bastion', key: 'user', value: '{{bastion.username}}' }
+        - { name: 'bastion', key: 'pass', value: '{{bastion.password}}' }
+    loop_control:
+      loop_var: task_item
+    when: groups['bastion'] | length >=1
+
+  - name: Save Vcenter credentials
+    lineinfile:
+      path: "{{VFILE}}"
+      line: "{{task_item.name|upper}}_{{task_item.key|upper}}: {{task_item.value}}"
+    with_items:
+        - { name: 'vcenter', key: 'user', value: '{{vcenter.username}}' }
+        - { name: 'vcenter', key: 'pass', value: '{{vcenter.password}}' }
+    loop_control:
+      loop_var: task_item
+  no_log: true
+  tags: always

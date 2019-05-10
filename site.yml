@@ -1,29 +1,37 @@
 ---
+# Validate credentials
+- name: Validate user's credentials
+  hosts: localhost
+  gather_facts: no
+
+  roles:
+    - role: check_creds
+
 # Play to determine what to do
 - name: determine what to do
   hosts: all
   gather_facts: no
 
-#  roles:
-#  - role: todo
+  roles:
+    - role: todo
 
 # Plays to set up the remote hosts and install the software
 - name: Setup hosts and install the software
   hosts: all
   gather_facts: no
 
-#  roles:
-
-  tasks:
-  - debug:
-      msg: "I am {{ansible_host}}"
+  roles:
+  - {role: ssh_keys, when: configure_ssh_keys | default(false) | bool}
+  - {role: capcheck, when: capcheck | default(false) | bool}
+#  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
 
 # Plays to uninstall the software and rollback the remote hosts
-#- name: Uninstall the software and rollback the remote hosts
-#  hosts: all
-#  gather_facts: no
+- name: Uninstall the software and rollback the remote hosts
+  hosts: all
+  gather_facts: no
 
-#  roles:
+  roles:
+  - {role: ssh_keys, when: rollback_ssh_keys | default(false) | bool}
 
 # Play to notify via Webex Teams
 - name: send a notification via Webex Teams

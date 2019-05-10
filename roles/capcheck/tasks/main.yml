@@ -1,0 +1,5 @@
+---
+# tasks file for capcheck
+- include_tasks: task_get_datastores_info.yml
+  when: capcheck | default(false) | bool
+  tags: capcheck

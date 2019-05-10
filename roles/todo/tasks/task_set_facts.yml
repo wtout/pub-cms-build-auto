@@ -1,0 +1,43 @@
+---
+- name: define check_requiretty
+  set_fact:
+    check_requiretty: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname not in groups['bastion']
+    - inventory_hostname not in groups['vcenter']
+    - inventory_hostname not in groups['stack'] #temp
+  tags: always
+
+- name: define configure_ssh_keys
+  set_fact:
+    configure_ssh_keys: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['bastion']
+  tags: ssh_keys
+
+- name: define rollback_ssh_keys
+  set_fact:
+    rollback_ssh_keys: true
+  when:
+    - rollback | default(false) | bool
+    - inventory_hostname in groups['bastion']
+  tags: ssh_keys
+
+- name: define capcheck
+  set_fact:
+    capcheck: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['vcenter']
+  tags: capcheck
+
+- name: define check_requiretty
+  set_fact:
+    check_requiretty: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['stack']
+  tags: check_requiretty
+

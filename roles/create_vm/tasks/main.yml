@@ -1,0 +1,5 @@
+---
+# tasks file for create_vm
+- include_tasks: task_get_datastores_info.yml
+  when: create_vm | default(false) | bool
+  tags: vm

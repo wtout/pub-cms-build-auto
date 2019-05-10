@@ -1,0 +1,30 @@
+---
+# tasks file for create_vm
+- name: Get datastore info
+  vmware_datastore_facts:
+    hostname: "{{hostvars[groups['vcenter'][0]]['vcenter']['address']}}"
+    username: "{{hostvars[groups['vcenter'][0]]['vcenter']['username']}}"
+    password: "{{hostvars[groups['vcenter'][0]]['vcenter']['password']}}"
+    datacenter: "{{datacenter.name}}"
+    validate_certs: no
+  register: ds_facts
+  delegate_to: "{{groups['bastion'][0] if groups['bastion'] | length >= 1 else 'localhost'}}"
+  when:
+    - (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['bastion_creds'] is succeeded) or groups['bastion'] | length == 0
+  tags: vm
+
+- set_fact:
+    ds_max_fs_name: "{{(ds_facts.datastores | sort(attribute='freeSpace')|last).name}}"
+  tags: vm
+
+- set_fact:
+    ds_db_vm_names: "{{ds_db_vm_names | default([]) + [item.name]}}"
+  loop: "{{ds_facts.datastores | sort(attribute='freeSpace')}}"
+  when: item.freeSpace >= datastore.db_min
+  tags: vm
+
+- debug:
+    msg:
+      - "{{ds_max_fs_name}}"
+      - "{{ds_db_vm_names}}"
+  tags: vm

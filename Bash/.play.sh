@@ -110,7 +110,19 @@ function install_packages() {
 	fi
 }
 
-function verify_package {
+function encrypt_vault() {
+	echo $(git config user.email | cut -d'@' -f1) > ${2}
+	[[ -f ${1} ]] && ansible-vault --vault-id ${2} encrypt ${1} &>/dev/null
+	rm -f ${2}
+}
+
+function decrypt_vault() {
+	echo $(git config user.email | cut -d'@' -f1) > ${2}
+	[[ -f ${1} ]] && ansible-vault --vault-id ${2} decrypt ${1} &>/dev/null
+	rm -f ${2}
+}
+
+function check_updates {
 	if [[ "x$(git config user.name)" != "x" ]]
 	then
 		git rev-parse --short HEAD &>/dev/null
@@ -119,14 +131,14 @@ function verify_package {
 			echo $(git config user.name) > ${2}
 			if [[ -f ${1} ]]
 			then
-				ansible-vault --vault-id ${2} decrypt ${1} &>/dev/null
+				decrypt_vault ${1} ${2}
 				source ${1}
-				ansible-vault --vault-id ${2} encrypt ${1} &>/dev/null
+				encrypt_vault ${1} ${2}
 			else
 				echo
 				read -sp "Enter your Bitbucket password [ENTER]: " BBPASS
 				printf "BBPASS=${BBPASS}\n" > ${1}
-				ansible-vault --vault-id ${2} encrypt ${1} &>/dev/null
+				encrypt_vault ${1} ${2}
 				echo
 			fi
 			rm -f ${2}
@@ -226,8 +238,23 @@ function enable_logging() {
 	fi
 }
 
+function get_credentials() {
+	if [[ ! -f ${CRVAULT} ]]
+	then
+		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@}
+		GET_CREDS_STATUS=${?}
+		encrypt_vault ${CRVAULT} ${VAULTP}
+	fi
+	rm -f ${VAULTP}
+}
+
 function run_playbook() {
-	ansible-playbook site.yml --extra-vars "{$(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@}
+	if [[ ${GET_CREDS_STATUS} == 0 || -f ${CRVAULT} ]]
+	then
+		[[ ! -f ${VAULTP} ]] && echo $(git config user.email | cut -d'@' -f1) > ${VAULTP}
+		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${CRVAULT} --vault-password-file ${VAULTP}
+		rm -f ${VAULTP}
+	fi
 }
 
 function disable_logging() {
@@ -241,7 +268,7 @@ function disable_logging() {
 }
 
 function send_notification() {
-	disable_logging
+#	disable_logging
 	if [ "$(check_mode ${@})" == " " ]
 	then
 		SCRIPT_ARG=$(echo ${@} | sed -e 's/-/dash/g')
@@ -258,8 +285,9 @@ BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST='epel-release sshpass'
 ANSIBLE_VERSION='2.7.10'
-PVAULT="${PWD}/.pvault"
-VAULTP="${PWD}/.vaultp"
+BBVAULT="/var/tmp/.bbvault"
+CRVAULT="/var/tmp/.crvault"
+VAULTP="/var/tmp/.vaultp"
 
 # Main
 CC=$(check_concurrency)
@@ -269,12 +297,14 @@ NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
-verify_package ${PVAULT} ${VAULTP}
+check_updates ${BBVAULT} ${VAULTP}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 update_inventory
 get_hosts ${@}
 #validate_hosts
+get_credentials ${@}
 enable_logging ${@}
 [[ -f ${OFILE} ]] && source ${OFILE}
 run_playbook ${@}
-send_notification ${ORIG_ARGS} &
+disable_logging
+#send_notification ${ORIG_ARGS} &

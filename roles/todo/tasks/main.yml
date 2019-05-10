@@ -1,0 +1,5 @@
+---
+# Tasks for todo
+- include_tasks: task_set_facts.yml
+  when: (deploy | default(false) | bool) or (rollback | default(false) | bool) or (upgrade | default(false) | bool)
+  tags: always

@@ -1,0 +1,37 @@
+---
+# tasks file for check_creds
+- include_tasks:
+    file: task_validate_bastion_creds.yml
+    apply:
+      vars:
+        bastion_host: "{{task_item}}"
+  loop: "{{groups['bastion']}}"
+  loop_control:
+    loop_var: task_item
+  when: groups['bastion']|length >= 1
+  tags: always
+
+- include_tasks:
+    file: task_validate_vcenter_creds.yml
+    apply:
+      vars:
+        vcenter_host: "{{task_item}}"
+  loop: "{{groups['vcenter']}}"
+  loop_control:
+    loop_var: task_item
+  when:
+    - groups['vcenter'] | length >= 1
+    - (groups['bastion'] | length >= 1 and bastion_creds is succeeded) or groups['bastion'] | length == 0
+    - not abort_play | default(false) | bool
+  tags: always
+
+- block:
+  - name: Delete credentials
+    file:
+      path: "{{VFILE}}"
+      state: absent
+  - fail:
+      msg:
+        - "{{err_msg}}"
+  when: abort_play | default(false) | bool
+  tags: always
