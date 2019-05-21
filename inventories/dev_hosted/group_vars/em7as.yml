@@ -1,0 +1,19 @@
+---
+# Variables for em7 application servers
+vm:
+  cpu: '8'
+  memory: '28'    # GiB
+  disk: '90.17'   # GiB
+  name: "em7prt{{datacenters[datacenter.name]['deptype']}}"
+
+netconfig:
+  octetpool1: [ '3', '4' ]
+  gateway1: ''
+  netmask1: '255.255.255.192'
+  network1: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+  netname1: 'ens160'
+  octetpool2: [ '98', '100' ]
+  gateway2: "{{customer.octets}}.123"
+  netmask2: '255.255.255.224'
+  network2: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-96-27-lbnet"
+  netname2: 'ens192'

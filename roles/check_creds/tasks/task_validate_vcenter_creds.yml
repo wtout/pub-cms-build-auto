@@ -7,9 +7,9 @@
         extra_args: --user
     - name: Validate vcenter credentials
       vmware_about_facts:
-        hostname: "{{hostvars[groups['vcenter'][0]]['vcenter']['address']}}"
-        username: "{{hostvars[groups['vcenter'][0]]['vcenter']['username']}}"
-        password: "{{hostvars[groups['vcenter'][0]]['vcenter']['password']}}"
+        hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+        username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+        password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
         validate_certs: no
       register: vcenter_creds
       ignore_errors: true

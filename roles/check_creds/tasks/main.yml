@@ -1,5 +1,10 @@
 ---
 # tasks file for check_creds
+#- debug:
+#    msg:
+#      - "{{customer}}"
+#      - "{{customer.name_prefix + '-' + customer.octets | replace('.', '-')}}"
+#  tags: always
 - include_tasks:
     file: task_validate_bastion_creds.yml
     apply:
@@ -8,7 +13,9 @@
   loop: "{{groups['bastion']}}"
   loop_control:
     loop_var: task_item
-  when: groups['bastion']|length >= 1
+  when:
+    - groups['bastion']|length >= 1
+    - hostvars[task_item]['ansible_host'] != ''
   tags: always
 
 - include_tasks:

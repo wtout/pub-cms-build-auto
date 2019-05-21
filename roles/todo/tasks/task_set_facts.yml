@@ -1,14 +1,4 @@
 ---
-- name: define check_requiretty
-  set_fact:
-    check_requiretty: true
-  when:
-    - deploy | default(false) | bool
-    - inventory_hostname not in groups['bastion']
-    - inventory_hostname not in groups['vcenter']
-    - inventory_hostname not in groups['stack'] #temp
-  tags: always
-
 - name: define configure_ssh_keys
   set_fact:
     configure_ssh_keys: true
@@ -33,6 +23,14 @@
     - inventory_hostname in groups['vcenter']
   tags: capcheck
 
+- name: define create_vm
+  set_fact:
+    create_vm: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['stack']
+  tags: create_vm
+
 - name: define check_requiretty
   set_fact:
     check_requiretty: true
@@ -40,4 +38,3 @@
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack']
   tags: check_requiretty
-

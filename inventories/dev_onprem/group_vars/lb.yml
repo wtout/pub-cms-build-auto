@@ -1,0 +1,22 @@
+---
+# Variables for lb hosts
+credentials:
+  username: "root"
+  password: "root"
+
+vm:
+  cpu: '2'
+  memory: '2'     # GiB
+  disk: '20'      # GiB
+
+netconfig:
+  octetpool1: [ '53', '54', '55' ]
+  gateway1: ''
+  netmask1: '255.255.255.192'
+  network1: "Internat-Net"
+  netname1: 'ens160'
+  octetpool2: [ '123' ]
+  gateway2: "{{customer.octets}}.123"
+  netmask2: '255.255.255.224'
+  network2: "Customer-Net"
+  netname2: 'ens192'

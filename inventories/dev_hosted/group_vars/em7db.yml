@@ -1,0 +1,19 @@
+---
+# Variables for em7 databases
+vm:
+  cpu: '12'
+  memory: '256'   # GiB
+  disk: '1280'    # GiB
+  name: "em7db{{datacenters[datacenter.name]['deptype']}}"
+
+netconfig:
+  octetpool1: [ '13', '14' ]
+  gateway1: "{{customer.octets}}.62"
+  netmask1: '255.255.255.192'
+  network1: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+  netname1: 'ens160'
+  ippool2: [ '192.170.170.9', '192.170.170.10' ]
+  gateway2: ''
+  netmask2: '255.255.255.252'
+  network2: "QS-{{customer.name_prefix}}-db-heartbeat"
+  netname2: 'ens192'

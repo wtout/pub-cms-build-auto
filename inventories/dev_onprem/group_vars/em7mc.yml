@@ -1,0 +1,19 @@
+---
+# Variables for em7 message collectors
+vm:
+  cpu: '2'
+  memory: '12'    # GiB
+  disk: '102.16'  # GiB
+  name: "em7mc{{datacenters[datacenter.name]['deptype']}}"
+
+netconfig:
+  octetpool1: [ '5', '7' ]
+  gateway1: "{{customer.octets}}.62"
+  netmask1: '255.255.255.192'
+  network1: "Internat-Net"
+  netname1: 'ens160'
+  octetpool2: []
+  gateway2: ''
+  netmask2: ''
+  network2: ''
+  netname2: ''

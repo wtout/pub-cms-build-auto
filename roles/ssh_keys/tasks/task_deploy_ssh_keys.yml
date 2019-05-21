@@ -15,5 +15,7 @@
       user: "{{ansible_user}}"
       state: present
       key: "{{ lookup('file', '{{LOCAL_SSH_DIR}}/{{SSH_KEY_FILE}}.pub')}}"
-    when: privkey.stat.exists and pubkey.stat.exists
+    when:
+      - privkey.stat.exists and pubkey.stat.exists
+      - hostvars[inventory_hostname]['ansible_host'] != ''
   tags: ssh_keys

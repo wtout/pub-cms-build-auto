@@ -1,0 +1,99 @@
+---
+# tasks to get datastore facts
+- name: Get datastore facts
+  vmware_datastore_facts:
+    hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+    username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+    password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+    datacenter: "{{hostvars[groups['vcenter'][0]]['information']['datacenter']}}"
+    validate_certs: no
+  register: datastore_facts
+  delegate_to: "{{groups['bastion'][0] if groups['bastion'] | length >= 1 else 'localhost'}}"
+  tags: capcheck
+
+- block:
+  - set_fact:
+      hs_ds_names: "{{hs_ds_names|default([]) + [item.name]}}"
+    loop: "{{datastore_facts.datastores | sort(attribute='freeSpace')}}"
+    when: item.freeSpace >= (required_space|float * 1024|pow(3)) / 2
+  - block:
+    - set_fact:
+        db_ds_names: "{{hs_ds_names}}"
+        vm_ds_names: "{{hs_ds_names}}"
+    - debug:
+        msg: "Found {{hs_ds_names|length}} datastores that have enough space for half the VMs"
+    when: hs_ds_names|length >= 2
+  - block:
+    - set_fact:
+        db_ds_names: "{{db_ds_names|default([]) + [item.name]}}"
+      loop: "{{datastore_facts.datastores | sort(attribute='freeSpace')}}"
+      when: item.freeSpace >= hostvars[groups['em7db'][0]]['vm']['disk']|float * 1024|pow(3)
+    - set_fact:
+        intvm_ds_names: "{{intvm_ds_names|default([]) + [item.name]}}"
+      loop: "{{datastore_facts.datastores | difference(db_ds_names) | sort(attribute='freeSpace')}}"
+      when: item.freeSpace >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float * 1024|pow(3))
+    - set_fact:
+        com_ds_names: "{{com_ds_names|default([]) + item}}"
+      vars:
+        myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace')|list}}"
+      loop: "{{db_ds_names}}"
+      when: myvar[0] >= (required_space|float * 1024|pow(3)) / 2
+    - set_fact:
+        vm_ds_names: "{{com_ds_names | union(intvm_ds_names) | unique}}"
+    when: hs_ds_names|length < 2
+  when: information.deptype == 'h'
+  tags: capcheck
+
+- block:
+  - set_fact:
+      db_ds_names: "{{db_ds_names | default([]) + [item.name]}}"
+    loop: "{{datastore_facts.datastores | sort(attribute='freeSpace')}}"
+    when:
+      - item.freeSpace >= hostvars[groups['em7db'][0]]['vm']['disk']|float * 1024|pow(3)
+      - "'ssd' in item.name|lower"
+  - set_fact:
+      vm_ds_names: "{{vm_ds_names | default([]) + [item.name]}}"
+    loop: "{{datastore_facts.datastores | sort(attribute='freeSpace')}}"
+    when:
+      - item.freeSpace >= (((required_space|float * 1024|pow(3)) / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float * 1024|pow(3))
+      - "'sas' in item.name|lower"
+  when: information.deptype == 'a'
+  tags: capcheck
+
+- assert:
+    that:
+      - "db_ds_names|length >= 2"
+    fail_msg: "Not enough storage space to deploy EM7 databases"
+    success_msg: "Found {{db_ds_names|length}} datastores to deploy EM7 databases"
+  tags: capcheck
+
+- set_fact:
+    db_ds_total_fs: "{{db_ds_total_fs|default(0)|int + myvar[0]}}"
+  vars:
+    myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace')|list}}"
+  loop: "{{db_ds_names}}"
+  tags: capcheck
+
+- assert:
+    that:
+      - "vm_ds_names|length >= 2"
+    fail_msg: "Not enough storage space to deploy the non-DB VMs"
+    success_msg: "Found {{vm_ds_names|length}} datastores to deploy the non-DB VMs"
+  tags: capcheck
+
+- set_fact:
+    vm_ds_total_fs: "{{vm_ds_total_fs|default(0)|int + myvar[0]}}"
+  vars:
+    myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace')|list}}"
+  loop: "{{vm_ds_names}}"
+  tags: capcheck
+
+- debug:
+    msg:
+      - "{{db_ds_names}}"
+      - "{{db_ds_names|last}}: {{datastore_facts.datastores|selectattr('name', 'equalto', db_ds_names|last)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
+      - "{{(db_ds_total_fs|int / 1024|pow(4))|string + ' TiB' if db_ds_total_fs|length > 12 else (db_ds_total_fs|int / 1024|pow(3))|string + ' GiB'}}"
+      - "{{vm_ds_names}}"
+      - "{{vm_ds_names|last}}: {{datastore_facts.datastores|selectattr('name', 'equalto', vm_ds_names|last)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
+      - "{{(vm_ds_total_fs|int / 1024|pow(4))|string + ' TiB' if vm_ds_total_fs|length > 12 else (vm_ds_total_fs|int / 1024|pow(3))|string + ' GiB'}}"
+  tags: capcheck

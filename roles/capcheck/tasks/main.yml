@@ -1,5 +1,8 @@
 ---
 # tasks file for capcheck
-- include_tasks: task_get_datastores_info.yml
+- block:
+  - include_tasks: task_get_required_space.yml
+  - include_tasks: task_get_datastore_facts.yml
   when: capcheck | default(false) | bool
   tags: capcheck
+  

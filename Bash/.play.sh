@@ -211,17 +211,6 @@ function get_hosts() {
 	fi
 }
 
-function validate_hosts() {
-	PASS='false'
-	NOPASS='false'
-	for host in ${HOST_LIST}
-	do
-		[ "x$(echo $( ansible ${host} -m debug -a 'var=group_names' | egrep -v "\[|\]|{|}" | sed -e 's/.*"\(.*\)".*/\1/g' | sort -u | tr '\n' ' ') | egrep -w 'aws|ec2|productionkey')" != "x" ] && NOPASS='true' || PASS='true'
-		[ ${PASS} == ${NOPASS} ] && printf "${ERROR_MSG}" && exit 1
-	done
-	[ "x${PASS}" == "xtrue" ] && ASK_PASS="--ask-pass --ask-become-pass" || ASK_PASS=""
-}
-
 function check_mode() {
 	[[ "$(echo ${@} | egrep -w '\-\-check')" != "" ]] && echo " in check mode " || echo " "
 }
@@ -264,11 +253,11 @@ function disable_logging() {
 		sed -i "/^log_path.*${ELF}$/,+d" ${ANSIBLE_CFG}
 		NEW_LOG_FILE=${LOG_FILE}.$(ls --full-time ${LOG_FILE} | awk '{print $6"-"$7}')
 		mv ${LOG_FILE} ${NEW_LOG_FILE}
+		printf "\nThe log file is ${BOLD}${NEW_LOG_FILE}${NORMAL}\n\n"
 	fi
 }
 
 function send_notification() {
-#	disable_logging
 	if [ "$(check_mode ${@})" == " " ]
 	then
 		SCRIPT_ARG=$(echo ${@} | sed -e 's/-/dash/g')
@@ -293,18 +282,18 @@ VAULTP="/var/tmp/.vaultp"
 CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
+CRVAULT="${CRVAULT}_${ENAME}"
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
 check_updates ${BBVAULT} ${VAULTP}
-[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
+[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 update_inventory
 get_hosts ${@}
-#validate_hosts
 get_credentials ${@}
 enable_logging ${@}
 [[ -f ${OFILE} ]] && source ${OFILE}
 run_playbook ${@}
 disable_logging
-#send_notification ${ORIG_ARGS} &
+send_notification ${ORIG_ARGS} &

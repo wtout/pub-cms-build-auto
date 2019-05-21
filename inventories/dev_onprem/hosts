@@ -1,0 +1,104 @@
+[bastion:vars]
+  ansible_user="{{bastion.username}}"
+  ansible_ssh_pass="{{bastion.password}}"
+[bastion]
+  paelnxjmp01 ansible_host="{{bastion.address1}}"
+  paelnxjmp02 ansible_host="{{bastion.address2}}"
+
+[vcenter:vars]
+  ansible_user="{{credentials.username}}"
+  ansible_ssh_pass="{{credentials.password}}"
+  ansible_become_pass="{{ansible_ssh_pass}}"
+[vcenter]
+  vsconsole ansible_host="{{information.address}}"
+
+[stack]
+  [stack:children]
+    infra
+    em7
+    linuxjs
+    splunk
+    relay
+
+    [infra]
+      [infra:children]
+        csr
+        lb
+        winjmp
+
+      [csr:vars]
+        ansible_user="{{credentials.username}}"
+        ansible_ssh_pass="{{credentials.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [csr]
+        csr[01:02]
+
+      [lb:vars]
+        ansible_user="{{credentials.username}}"
+        ansible_ssh_pass="{{credentials.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [lb]
+        lb[01:02]
+
+      [winjmp:vars]
+        ansible_user="{{credentials.username}}"
+        ansible_ssh_pass="{{credentials.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [winjmp]
+        winjmp[01:02]
+
+    [em7]
+      [em7:vars]
+        ansible_user="{{credentials.username}}"
+        ansible_ssh_pass="{{credentials.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [em7:children]
+        em7db
+        em7as
+        em7mc
+        em7dc
+
+        [em7db]
+          em7db[01:02]
+        [em7as]
+          em7as[01:02]
+        [em7mc]
+          em7mc[01:02]
+        [em7dc]
+          em7dc[01:08]
+
+    [linuxjs]
+      [linuxjs:vars]
+        ansible_user="{{credentials.username}}"
+        ansible_ssh_pass="{{credentials.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [linuxjs]
+        linuxjs[01:02]
+
+    [splunk]
+      [splunk:vars]
+        ansible_user="{{credentials.username}}"
+        ansible_ssh_pass="{{credentials.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [splunk:children]
+        splunksh
+        splunkin
+        splunkcm
+        splunkde
+
+        [splunksh]
+          splunksh[01:02]
+        [splunkin]
+          splunkin[01:02]
+        [splunkcm]
+          splunkcm[01:02]
+        [splunkde]
+          splunkde[01:02]
+
+    [relay]
+      [relay:vars]
+        ansible_user="{{credentials.username}}"
+        ansible_ssh_pass="{{credentials.password}}"
+        ansible_become_pass="{{ansible_ssh_pass}}"
+      [relay]
+        relay[01:02]

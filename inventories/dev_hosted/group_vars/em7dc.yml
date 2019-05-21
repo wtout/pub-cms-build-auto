@@ -1,0 +1,22 @@
+---
+# Variables for em7 data collectors
+vm:
+  cpu: '4'
+  memory: '24'    # GiB
+  disk: '174.16'  # GiB
+  name: "em7dc{{datacenters[datacenter.name]['deptype']}}"
+
+
+netconfig:
+#  octetpool1: "{{range(start, stop)|list}}"
+  octetpool1: [ '9', '11', '10', '12', '15', '17', '16', '18', '26', '27', '28', '29' ]
+  gateway1: ''
+  netmask1: '255.255.255.192'
+  network1: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+  netname1: 'ens160'
+#  octetpool2: "{{range(start, stop)|list}}"
+  octetpool2: [ '65', '66', '67', '68', '69', '70', '71', '72', '86', '87', '88', '89' ]
+  gateway2: "{{customer.octets}}.94"
+  netmask2: '255.255.255.224'
+  network2: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-64-27-cust"
+  netname2: 'ens192'

@@ -1,0 +1,22 @@
+---
+# Variables for winjmp hosts
+credentials:
+  username: "root"
+  password: "root"
+
+vm:
+  cpu: '2'
+  memory: '8'     # GiB
+  disk: '200'     # GiB
+
+netconfig:
+  octetpool1: [ '59', '57' ]
+  gateway1: ''
+  netmask1: '255.255.255.192'
+  network1: "Internat-Net"
+  netname1: 'ens160'
+  octetpool2: [ '75', '73' ]
+  gateway2: "{{customer.octets}}.123"
+  netmask2: '255.255.255.224'
+  network2: "Customer-Net"
+  netname2: 'ens192'

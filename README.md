@@ -28,17 +28,15 @@ On a newly installed Linux **CentOS 7** VM run the following commands to install
 
 #### Configuration:
 
-1- Create your own hosts file under the _``inventories/<customer-name>``_ folder to contain the information of your remote host(s). Use the included hosts file as a template. **If you choose to update the included _hosts_ file, be aware that your changes will be lost everytime the automated installation package is updated**
+####*Note: If you choose to make changes to git tracked items such as folder names or file names or content of files downloaded from the repository, be aware that your changes will be lost everytime the automated installation package is updated*
 
-2- Add the admin account username for each remote node or a group of nodes (see hosts file for proper syntax)
+1- Create your own environment directory structure under the _``inventories/<customer-name>``_ folder to contain the information defining the environment. Use the included _``<environment-name>_hosted``_ or _``<environment-name>_onprem``_ as templates
 
-3- If Ansible is already installed, you can test connectivity to your host(s) with the following Ansible adhoc command. If host's ssh password is not defined in the hosts file, append the argument "_--ask-pass_" to the ansible command (Requires Ansible to be installed)
+2- Use the included hosts file as a template and ensure the number of hosts of each type is correct. For example, the line ``em7db[01:02]`` in the hosts file represents a list of two hosts; ``em7db01`` and ``em7db02``
 
-    $> ansible <host-or-host-group-name> -m ping [--ask-pass]
+3- Update the file _``inventories/<customer-name>/group_vars/all.yml``_ with the values defining your environment. **Do not add or delete variables**
 
-4- Environment/system specific settings are to be added to a dedicated file under _``inventories/<customer-name>/group_vars``_ directory. The name of the variables file has to match the name of the the group of hosts
-
-5- Host specific settings are to be added to a dedicated file under _``inventories/<customer-name>/host_vars``_ directory. The name of the variables file has to match the name of the host
+4- Host specific settings are to be added to a dedicated file under _``inventories/<customer-name>/host_vars``_ directory. The name of the variables file has to match the name of the host
 
 #### Dependencies:
 
@@ -54,7 +52,9 @@ All packages listed in "how to get set up" section need to be installed on the m
 
 with the script name being one of the following options:
 
-- ``play.sh``
+- ``play_deploy.sh``
+
+- ``play_rollback.sh``
 
 ####*Note: Running multiple instances of the same script for a given customer simultaneously is prohibited*
 
@@ -64,6 +64,13 @@ with the script name being one of the following options:
 
 5- The list of roles used in the playbook:
 
+  - **collect_info**: prompts the user for required information
+  - **check_creds**: validates the user's credentials
+  - **todo**: determines what roles and/or tasks to execute
+  - **ssh_keys**: creates and deploys SSH keys to the bastion server(s) if applicable
+  - **capcheck**: performs a capacity check of the infrastructure
+  - **create_vm**: deploys the system's VMs
+  - **check_requiretty**: checks for and disables requiretty on the hosts
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
 To execute specific role(s), add "_--tags 'role1,role2,...'_" as argument to the script.
@@ -77,13 +84,6 @@ To skip specific role(s), add "_--skip-tags 'role1,role2,...'_" as argument to t
 **_Example2_**: to run all roles except os and ntp, run the script as follows:
 
     $> sh Bash/<script-name> --envname <customer-name> --skip-tags 'os,ntp'
-
-To limit the execution of the playbook to one host or a group of hosts, add "_``--limit '<string>'``_" as argument to the script. If omitted, the playbook will be executed on all the hosts defined in the hosts file. The _``'<string>'``_ can be:
-
-  - **host name**: 'host1.domain' or 'host1*'
-  - **list of host names separated by comma**: 'host1.domain,host2.domain' or '\*host1\*,\*host2\*'
-  - **group name**: 'group1'
-  - **list of group names**: 'group1,group2'
 
 
 ### Contribution guidelines ###

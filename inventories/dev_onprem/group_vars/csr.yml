@@ -1,0 +1,27 @@
+---
+# Variables for csr hosts
+credentials:
+  username: "root"
+  password: "root"
+
+vm:
+  cpu: '2'
+  memory: '4'     # GiB
+  disk: '8'       # GiB
+
+netconfig:
+  octetpool1: [ '60', '61', '62' ]
+  gateway1: ''
+  netmask1: '255.255.255.192'
+  network1: "Internat-Net"
+  netname1: 'ens160'
+  octetpool2: [ '92', '93', '94' ]
+  gateway2: "{{customer.octets}}.123"
+  netmask2: '255.255.255.224'
+  network2: "Customer-Net"
+  netname2: 'ens192'
+  octetpool3: [ '124', '125', '126' ]
+  gateway3: "{{customer.octets}}.123"
+  netmask3: '255.255.255.224'
+  network3: "Loadbalancer-Net"
+  netname3: 'ens192'

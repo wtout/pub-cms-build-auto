@@ -1,0 +1,23 @@
+---
+# Variables for linuxjs hosts
+credentials:
+  username: "root"
+  password: "root"
+
+vm:
+  cpu: '2'
+  memory: '8'     # GiB
+  disk: '70.16'   # GiB
+  name: "lnxjmp{{datacenters[datacenter.name]['deptype']}}"
+
+netconfig:
+  octetpool1: [ '58', '56' ]
+  gateway1: ''
+  netmask1: '255.255.255.192'
+  network1: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+  netname1: 'ens160'
+  octetpool2: [ '76', '74' ]
+  gateway2: "{{customer.octets}}.94"
+  netmask2: '255.255.255.224'
+  network2: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-64-27-cust"
+  netname2: 'ens192'

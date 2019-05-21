@@ -1,0 +1,19 @@
+---
+# Variables for splunk deployers
+vm:
+  cpu: '2'
+  memory: '8'     # GiB
+  disk: '70.16'   # GiB
+  name: "spldpl{{datacenters[datacenter.name]['deptype']}}"
+
+netconfig:
+  octetpool1: [ '23', '39' ]
+  gateway1: "{{customer.octets}}.62"
+  netmask1: '255.255.255.192'
+  network1: "Internat-Net"
+  netname1: 'ens160'
+  octetpool2: []
+  gateway2: ''
+  netmask2: ''
+  network2: ''
+  netname2: ''

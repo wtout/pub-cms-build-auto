@@ -1,0 +1,13 @@
+---
+# tasks to get the total storage space required
+- set_fact:
+    required_space: "{{required_space|default(0)|float + hostvars[task_item]['vm']['disk']|float}}"
+  loop: "{{groups['stack']}}"
+  loop_control:
+    loop_var: task_item
+  tags: capcheck
+
+- debug:
+    msg:
+      - "Total system required storage space: {{(required_space|float / 1024)|string + ' TiB' if (required_space|int)|string|length > 3 else required_space|string + ' GiB'}}"
+  tags: capcheck
