@@ -1,0 +1,37 @@
+---
+# Tasks to download the release package
+- block:
+  - name: check if package {{customer.release}} exists
+    stat:
+      path: "{{playbook_dir}}/Packages/{{customer.release}}"
+    register: package_exists
+  - block:
+    - name: download the package for release version {{customer.release}}
+      shell: "wget --no-proxy -np -nH --cut-dirs=2 -r -R index.html http://engci-maven-master.cisco.com/artifactory/cms-quicksilver-release/{{customer.release}}/Puppet/"
+      args:
+        chdir: "{{playbook_dir}}/Packages"
+      no_log: true
+    - name: find list of files in the downloaded package
+      find:
+        paths: "{{playbook_dir}}/Packages/{{customer.release}}"
+        file_type: file
+        patterns: '*.ova, *.tar, *.zip, *.gz, *.tgz, *.conf'
+        recurse: yes
+        get_checksum: yes
+      register: files_list
+    - name: check the integrity of the package contents
+      assert:
+        that:
+          - file_item.checksum == lookup('file', hash_file)
+        fail_msg: "The package {{file_item.path}} was corrupted during download"
+      vars:
+        - hash_file: "{{file_item.path}}.sha1"
+      loop: "{{files_list.files}}"
+      loop_control:
+        loop_var: file_item
+      when: files_list.matched >= 1
+    when:
+      - not (package_exists.stat.exists and package_exists.stat.isdir is defined and package_exists.stat.isdir)
+  delegate_to: localhost
+  run_once: true
+  tags: get_release

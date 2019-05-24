@@ -1,0 +1,6 @@
+---
+# tasks file for get_release
+- block:
+  - include_tasks: task_download_package.yml
+  when: get_release | default(false) | bool
+  tags: get_release

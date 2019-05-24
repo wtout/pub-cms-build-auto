@@ -1,2 +1,3 @@
 ---
 # vars file for create_vm
+ova_dir: "{{playbook_dir}}/Packages/{{customer.release}}/Puppet"

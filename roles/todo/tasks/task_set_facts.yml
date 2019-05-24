@@ -23,6 +23,14 @@
     - inventory_hostname in groups['vcenter']
   tags: capcheck
 
+- name: define get_release
+  set_fact:
+    get_release: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['stack']
+  tags: get_release
+
 - name: define create_vm
   set_fact:
     create_vm: true

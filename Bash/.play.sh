@@ -143,6 +143,7 @@ function check_updates {
 			fi
 			rm -f ${2}
 			local LOCALID=$(git rev-parse --short HEAD)
+			[[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true" && unset https_proxy
 			local REMOTEID=$(git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD 2>/dev/null | cut -c1-7)
 			[[ "${REMOTEID}" == "" ]] && printf "\nYour Bitbucket credentials are invalid!\n\n" && rm -f ${1} && exit
 			if [[ "${LOCALID}" != "${REMOTEID}" ]]
@@ -163,6 +164,7 @@ function check_updates {
 					EC='continue'
 				fi
 			fi
+			[[ ${reset_proxy} == "true" ]] && source ~/.bashrc
 			${EC}
 		fi
 	fi

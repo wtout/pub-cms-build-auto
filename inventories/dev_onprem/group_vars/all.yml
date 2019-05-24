@@ -1,10 +1,9 @@
 ---
 # Variables for all hosts
 customer:
-  name: "Baxter"
-  name_prefix: "baxt1"
-  octets: "172.19.164"
-#  net_name_prefix: "{{customer.name_prefix + '-' + octets | replace('.', '-')}}" defined in playbook
+  name: "Dev_Onprem"
+  name_prefix: "devo"
+  octets: "172.30.251"
 
 bastion:
   address1: "10.225.228.240"

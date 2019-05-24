@@ -23,6 +23,7 @@
   roles:
   - {role: ssh_keys, when: configure_ssh_keys | default(false) | bool}
   - {role: capcheck, when: capcheck | default(false) | bool}
+  - {role: get_release, when: get_release | default(false) | bool}
   - {role: create_vm, when: create_vm | default(false) | bool}
 #  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
 

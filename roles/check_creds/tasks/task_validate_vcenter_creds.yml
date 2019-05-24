@@ -2,9 +2,23 @@
 # tasks to validate vcenter credentials
 - block:
   - block:
-    - pip:
+    - name: gather facts
+      setup:
+    - name: get http proxy setting
+      shell: grep -r "http_proxy" /etc/profile {{ansible_env.HOME}}/.bashrc {{ansible_env.HOME}}/.bash_profile | cut -d '"' -f2 | uniq
+      register: http_proxy_string
+      check_mode: no
+    - name: get https proxy setting
+      shell: grep -r "https_proxy" /etc/profile {{ansible_env.HOME}}/.bashrc {{ansible_env.HOME}}/.bash_profile | cut -d '"' -f2 | uniq
+      register: https_proxy_string
+      check_mode: no
+    - name: install PyVmomi if it is not installed
+      pip:
         name: PyVmomi
         extra_args: --user
+      environment:
+        http_proxy: "{{http_proxy_string.stdout}}"
+        https_proxy: "{{https_proxy_string.stdout}}"
     - name: Validate vcenter credentials
       vmware_about_facts:
         hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"

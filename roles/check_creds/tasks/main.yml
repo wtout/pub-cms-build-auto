@@ -1,10 +1,5 @@
 ---
 # tasks file for check_creds
-#- debug:
-#    msg:
-#      - "{{customer}}"
-#      - "{{customer.name_prefix + '-' + customer.octets | replace('.', '-')}}"
-#  tags: always
 - include_tasks:
     file: task_validate_bastion_creds.yml
     apply:
@@ -37,8 +32,11 @@
     file:
       path: "{{VFILE}}"
       state: absent
+    #when: not ansible_check_mode
   - fail:
       msg:
         - "{{err_msg}}"
-  when: abort_play | default(false) | bool
+  when:
+    - not ansible_check_mode
+    - abort_play | default(false) | bool
   tags: always

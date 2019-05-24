@@ -85,60 +85,62 @@
       - answer.user_input is defined
       - answer.user_input == '' or answer.user_input | lower == 'yes' or answer.user_input | lower == 'y'
     no_log: true
-
-### Vcenter ###
-  - block:
-### prompts ###
-    - pause:
-        prompt: "Enter the Vcenter login username [ENTER]"
-      register: vcenter_user
-      until: vcenter_user.user_input != ''
-      run_once: true
-
-### prompts ###
-    - pause:
-        prompt: "Enter the Vcenter login password [ENTER]"
-        echo: no
-      when:
-        - vcenter_user.user_input != ''
-      register: vcenter_pass
-      until: vcenter_pass.user_input != ''
-      run_once: true
-      no_log: true
-
-    - pause:
-        prompt: "Confirm the Vcenter login password [ENTER]"
-        echo: no
-      when:
-        - vcenter_pass.user_input != ''
-      register: vcenter_pass2
-      until: vcenter_pass2.user_input == vcenter_pass.user_input
-      run_once: true
-      no_log: true
-
-### Set Facts ###
-    - block:
-      - name: define Vcenter credentials
-        set_fact:
-          vcenter: "{{vcenter | default({}) | combine(new_item, recursive=true)}}"
-        vars:
-          new_item: "{'{{item.key}}': '{{item.value}}'}"
-        with_items:
-          - { key: 'username', value: '{{vcenter_user.user_input}}'}
-          - { key: 'password', value: '{{vcenter_pass.user_input}}'}
-      - name: check if Vcenter login credentials are defined
-        assert:
-          that:
-            - vcenter.username is defined
-            - vcenter.username != ''
-            - vcenter.password is defined
-            - vcenter.password != ''
-    when:
-      - (groups['bastion'] | length == 0) or (answer.user_input is defined)
-      - answer.user_input | lower == 'no' or answer.user_input | lower == 'n'
-    no_log: true
   when:
     - groups['bastion'] | length >= 1
+  tags: always
+
+### Vcenter ###
+- block:
+### prompts ###
+  - pause:
+      prompt: "Enter the Vcenter login username [ENTER]"
+    register: vcenter_user
+    until: vcenter_user.user_input != ''
+    run_once: true
+
+  - pause:
+      prompt: "Enter the Vcenter login password [ENTER]"
+      echo: no
+    when:
+      - vcenter_user.user_input != ''
+    register: vcenter_pass
+    until: vcenter_pass.user_input != ''
+    run_once: true
+    no_log: true
+
+  - pause:
+      prompt: "Confirm the Vcenter login password [ENTER]"
+      echo: no
+    when:
+      - vcenter_pass.user_input != ''
+    register: vcenter_pass2
+    until: vcenter_pass2.user_input == vcenter_pass.user_input
+    run_once: true
+    no_log: true
+
+### Set Facts ###
+  - block:
+    - name: define Vcenter credentials
+      set_fact:
+        vcenter: "{{vcenter | default({}) | combine(new_item, recursive=true)}}"
+      vars:
+        new_item: "{'{{item.key}}': '{{item.value}}'}"
+      with_items:
+        - { key: 'username', value: '{{vcenter_user.user_input}}'}
+        - { key: 'password', value: '{{vcenter_pass.user_input}}'}
+    - name: check if Vcenter login credentials are defined
+      assert:
+        that:
+          - vcenter.username is defined
+          - vcenter.username != ''
+          - vcenter.password is defined
+          - vcenter.password != ''
+    when:
+      - vcenter_user.user_input is defined
+    no_log: true
+  when:
+    - (groups['bastion'] | length == 0) or (answer.user_input is defined and (answer.user_input | lower == 'no' or answer.user_input | lower == 'n'))
+  no_log: true
   tags: always
 
 ### Write facts ###
@@ -158,7 +160,8 @@
         - { name: 'bastion', key: 'pass', value: '{{bastion.password}}' }
     loop_control:
       loop_var: task_item
-    when: groups['bastion'] | length >=1
+    when:
+      - groups['bastion'] | length >=1
 
   - name: Save Vcenter credentials
     lineinfile:
@@ -170,4 +173,5 @@
     loop_control:
       loop_var: task_item
   no_log: true
+  check_mode: no
   tags: always
