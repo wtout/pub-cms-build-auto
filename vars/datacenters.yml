@@ -1,0 +1,15 @@
+---
+##########################################
+# Do not modify anything below this line
+##########################################
+datacenters:
+  PAE-HX-DC:
+    vsphere: "172.30.251.20"
+    deptype: "h"
+    folder: "Bld-Auto-test"
+#    cluster: "PAE-RTP-HX"
+  RTP-PAE:
+    vsphere: "172.30.251.20"
+    deptype: "a"
+    resources: ["pae-esxi-r2505-p5.cisco-pae.com", "pae-esxi-r2505-p6.cisco-pae.com"]
+    

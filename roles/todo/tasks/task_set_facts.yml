@@ -31,13 +31,21 @@
     - inventory_hostname in groups['stack']
   tags: get_release
 
-- name: define create_vm
+- name: define create_vms
   set_fact:
-    create_vm: true
+    create_vms: true
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack']
-  tags: create_vm
+  tags: vms
+
+- name: define rollback_vms
+  set_fact:
+    rollback_vms: true
+  when:
+    - rollback | default(false) | bool
+    - inventory_hostname in groups['stack']
+  tags: vms
 
 - name: define check_requiretty
   set_fact:

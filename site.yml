@@ -24,7 +24,7 @@
   - {role: ssh_keys, when: configure_ssh_keys | default(false) | bool}
   - {role: capcheck, when: capcheck | default(false) | bool}
   - {role: get_release, when: get_release | default(false) | bool}
-  - {role: create_vm, when: create_vm | default(false) | bool}
+  - {role: vms, when: create_vms | default(false) | bool}
 #  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
 
 # Plays to uninstall the software and rollback the remote hosts
@@ -33,6 +33,7 @@
   gather_facts: no
 
   roles:
+  - {role: vms, when: rollback_vms | default(false) | bool}
   - {role: ssh_keys, when: rollback_ssh_keys | default(false) | bool}
 
 # Play to notify via Webex Teams

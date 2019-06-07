@@ -2,7 +2,44 @@
 # tasks file for capcheck
 - block:
   - include_tasks: task_get_required_space.yml
-  - include_tasks: task_get_datastore_facts.yml
+
+  - block:
+    - include_tasks: task_get_cluster_name.yml
+      when:
+        - hostvars[groups['vcenter'][0]]['information']['cluster'] is not defined or hostvars[groups['vcenter'][0]]['information']['cluster'] == ''
+
+    - include_tasks: task_get_hosts_list.yml
+      when:
+        - hostvars[groups['vcenter'][0]]['information']['resources'] is not defined or hostvars[groups['vcenter'][0]]['information']['resources'] == ''
+
+    - include_tasks: task_get_datastore_facts.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
+
+  - include_tasks: task_get_host_facts.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
+
+  - assert:
+      that:
+        - "db_ds_names|length >= 2"
+      fail_msg: "Not enough storage space to deploy EM7 databases"
+      success_msg: "Found {{db_ds_names|length}} datastores to deploy EM7 databases"
+
+  - assert:
+      that:
+        - "vm_ds_names|length >= 2"
+      fail_msg: "Not enough storage space to deploy the non-DB VMs"
+      success_msg: "Found {{vm_ds_names|length}} datastores to deploy the non-DB VMs"
+
+  - debug:
+      msg:
+        - "{{db_ds_names}}"
+#        - "{{db_ds_names|first}}: {{datastore_facts.datastores|selectattr('name', 'equalto', db_ds_names|first)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
+        - "{{(db_ds_total_fs|int / 1024|pow(4))|string + ' TiB' if db_ds_total_fs|length > 12 else (db_ds_total_fs|int / 1024|pow(3))|string + ' GiB'}}"
+        - "{{vm_ds_names}}"
+#        - "{{vm_ds_names|first}}: {{datastore_facts.datastores|selectattr('name', 'equalto', vm_ds_names|first)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
+        - "{{(vm_ds_total_fs|int / 1024|pow(4))|string + ' TiB' if vm_ds_total_fs|length > 12 else (vm_ds_total_fs|int / 1024|pow(3))|string + ' GiB'}}"
+
   when: capcheck | default(false) | bool
   tags: capcheck
-  

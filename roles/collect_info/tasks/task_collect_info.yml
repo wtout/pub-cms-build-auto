@@ -37,8 +37,8 @@
       vars:
         new_item: "{'{{item.key}}': '{{item.value}}'}"
       with_items:
-        - { key: 'username', value: '{{bastion_user.user_input}}'}
-        - { key: 'password', value: '{{bastion_pass.user_input}}'}
+        - { key: 'username', value: '{{bastion_user.user_input}}' }
+        - { key: 'password', value: '{{bastion_pass.user_input}}' }
     - name: check if Bastion login credentials are defined
       assert:
         that:
@@ -68,8 +68,8 @@
       vars:
         new_item: "{'{{item.key}}': '{{item.value}}'}"
       with_items:
-        - { key: 'username', value: '{{bastion.username}}'}
-        - { key: 'password', value: '{{bastion.password}}'}
+        - { key: 'username', value: '{{bastion.username}}' }
+        - { key: 'password', value: '{{bastion.password}}' }
       when:
         - bastion.username != ''
         - bastion.password != ''
@@ -126,8 +126,8 @@
       vars:
         new_item: "{'{{item.key}}': '{{item.value}}'}"
       with_items:
-        - { key: 'username', value: '{{vcenter_user.user_input}}'}
-        - { key: 'password', value: '{{vcenter_pass.user_input}}'}
+        - { key: 'username', value: '{{vcenter_user.user_input}}' }
+        - { key: 'password', value: '{{vcenter_pass.user_input}}' }
     - name: check if Vcenter login credentials are defined
       assert:
         that:

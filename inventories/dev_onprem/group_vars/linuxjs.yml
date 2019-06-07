@@ -14,7 +14,7 @@ netconfig:
   octetpool1: [ '58', '56' ]
   gateway1: ''
   netmask1: '255.255.255.192'
-  network1: "Internat-Net"
+  network1: "Internal-Net"
   netname1: 'ens160'
   octetpool2: [ '76', '74' ]
   gateway2: "{{customer.octets}}.94"

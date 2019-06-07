@@ -1,0 +1,8 @@
+---
+# tasks file for vms
+- block:
+  - include_tasks: task_create_vms.yml
+    when: create_vms | default(false) | bool
+  - include_tasks: task_rollback_vms.yml
+    when: rollback_vms | default(false) | bool
+  tags: vms

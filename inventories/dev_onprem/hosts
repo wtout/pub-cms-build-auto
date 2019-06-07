@@ -2,13 +2,13 @@
   ansible_user="{{bastion.username}}"
   ansible_ssh_pass="{{bastion.password}}"
 [bastion]
-  paelnxjmp01 ansible_host="{{bastion.address1}}"
-  paelnxjmp02 ansible_host="{{bastion.address2}}"
+  paelnxjmp01 ansible_host="{{bastion.address[0] if bastion.address[0] is defined else ''}}"
+  paelnxjmp02 ansible_host="{{bastion.address[1] if bastion.address[1] is defined else ''}}"
 
 [vcenter:vars]
-  ansible_user="{{credentials.username}}"
-  ansible_ssh_pass="{{credentials.password}}"
-  ansible_become_pass="{{ansible_ssh_pass}}"
+#  ansible_user="{{credentials.username}}"
+#  ansible_ssh_pass="{{credentials.password}}"
+#  ansible_become_pass="{{ansible_ssh_pass}}"
 [vcenter]
   vsconsole ansible_host="{{information.address}}"
 

@@ -1,0 +1,5 @@
+---
+# Tasks to rollback VMs
+- include_tasks:
+    file: task_delete_vm.yml
+  tags: vms

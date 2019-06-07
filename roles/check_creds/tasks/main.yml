@@ -32,7 +32,7 @@
     file:
       path: "{{VFILE}}"
       state: absent
-    #when: not ansible_check_mode
+    when: delete_creds | default(false) | bool
   - fail:
       msg:
         - "{{err_msg}}"

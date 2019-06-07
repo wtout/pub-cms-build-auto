@@ -31,5 +31,11 @@
   - set_fact:
       abort_play: yes
       err_msg: "{{vcenter_host}}: {{vcenter_creds.msg}}"
-    when: vcenter_creds is failed
+    when:
+      - vcenter_creds is failed
+  - set_fact:
+      delete_creds: yes
+    when:
+      - vcenter_creds is failed
+      - "'Cannot complete login due to an incorrect user name or password' in vcenter_creds.msg"
   tags: always

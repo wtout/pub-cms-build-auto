@@ -243,7 +243,7 @@ function run_playbook() {
 	if [[ ${GET_CREDS_STATUS} == 0 || -f ${CRVAULT} ]]
 	then
 		[[ ! -f ${VAULTP} ]] && echo $(git config user.email | cut -d'@' -f1) > ${VAULTP}
-		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${CRVAULT} --vault-password-file ${VAULTP}
+		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS}
 		rm -f ${VAULTP}
 	fi
 }
@@ -276,6 +276,7 @@ BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST='epel-release sshpass'
 ANSIBLE_VERSION='2.7.10'
+ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 BBVAULT="/var/tmp/.bbvault"
 CRVAULT="/var/tmp/.crvault"
 VAULTP="/var/tmp/.vaultp"

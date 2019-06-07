@@ -4,10 +4,10 @@ customer:
   name: "Dev_Onprem"
   name_prefix: "devo"
   octets: "172.30.251"
+  release: "R9.2"
 
 bastion:
-  address1: "10.225.228.240"
-  address2: ""
+  address: ["10.225.228.240", "10.225.228.240"]
   username: "{{BASTION_USER | default('')}}"
   password: "{{BASTION_PASS | default('')}}"
 
@@ -27,31 +27,18 @@ repo:
   ip_address: ""
 
 splunk:
-  license_master_ip: ""
-  he_indexer1_ip: ""
-  he_indexer2_ip: ""
-  he_search_head_ip1: ""
-  he_search_head_ip2: ""
-  deployment1_ip: ""
-  deployment2_ip: ""
-  mom_indexer1_ip: ""
-  mom_indexer2_ip: ""
+  license_master_ip: "172.19.252.22"
+  he_indexer01_ip: "alln1splidxp01"
+  he_indexer02_ip: ""
+  he_searchhead01_ip: "alln1splidxp01"
+  he_searchhead02_ip: "alln1splidxp01"
+  he_deployment_server_ip: "172.19.252.21"
+  he_deployment_server: "alln1-sol-ds-p01"
+  mom_indexer1_ip: "172.19.252.28"
+  mom_indexer2_ip: "172.19.252.29"
+  mom_clustermaster_ip: ""
 
-dns:
-  config_entry: ""
-  domain_name_config: ""
-  tile_server_ip: ""
-
-
-##########################################
-# Do not modify anything below this line
-##########################################
-datacenters:
-  PAE-HX-DC:
-    vsphere: "172.30.251.20"
-    deptype: "h"
-  RTP-PAE:
-    vsphere: "172.30.251.20"
-    deptype: "a"
-    resources: ["pae-esxi-r2505-p5.cisco-pae.com", "pae-esxi-r2505-p6.cisco-pae.com"]
-    
+sysconfig:
+  dns_config: ["search cisco-cms.com", "nameserver 172.19.251.21", "nameserver 172.19.251.22"]
+  domain_name: "cisco-cms.com"
+  ntp_server: "{{customer.octests}}.62"

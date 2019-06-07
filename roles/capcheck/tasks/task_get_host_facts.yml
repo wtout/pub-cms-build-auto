@@ -1,0 +1,54 @@
+---
+# tasks to get host info
+- name: Get host facts
+  vmware_host_facts:
+    hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+    username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+    password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+    esxi_hostname: "{{item}}"
+    validate_certs: no
+  loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+  register: host_facts
+  delegate_to: "{{groups['bastion'][0] if groups['bastion'] | length >= 1 else 'localhost'}}"
+  tags: capcheck
+
+- name: define list of datastores
+  set_fact:
+    ssd_ds: "{{ssd_ds|default([]) | union(item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list)}}"
+    sas_ds: "{{sas_ds|default([]) | union(item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list)}}"
+  loop: "{{host_facts.results}}"
+  tags: capcheck
+
+- name: define list of db datastores
+  set_fact:
+    db_ds_names: "{{db_ds_names|default([]) + [item.0]}}"
+  vars:
+    myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
+  loop: "{{ ssd_ds|zip(host_facts.results)|list }}"
+  when: myvar[0] >= hostvars[groups['em7db'][0]]['vm']['disk']|float / 1024
+  tags: capcheck
+
+- name: define list of vm datastores
+  set_fact:
+    vm_ds_names: "{{vm_ds_names|default([]) + [item.0]}}"
+  vars:
+    myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
+  loop: "{{ sas_ds|zip(host_facts.results)|list }}"
+  when: myvar[0] >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float) / 1024
+  tags: capcheck
+
+- name: define db_ds_total_fs
+  set_fact:
+    db_ds_total_fs: "{{db_ds_total_fs|default(0)|float + myvar[0]|float * 1024|pow(4)}}"
+  vars:
+    myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
+  loop: "{{ ssd_ds|zip(host_facts.results)|list }}"
+  tags: capcheck
+
+- name: define vm_ds_total_fs
+  set_fact:
+    vm_ds_total_fs: "{{vm_ds_total_fs|default(0)|float + myvar[0]|float * 1024|pow(4)}}"
+  vars:
+    myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
+  loop: "{{ sas_ds|zip(host_facts.results)|list }}"
+  tags: capcheck

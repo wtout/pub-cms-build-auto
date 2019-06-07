@@ -12,7 +12,7 @@ netconfig:
   octetpool1: [ '9', '11', '10', '12', '15', '17', '16', '18', '26', '27', '28', '29' ]
   gateway1: ''
   netmask1: '255.255.255.192'
-  network1: "Internat-Net"
+  network1: "Internal-Net"
   netname1: 'ens160'
 #  octetpool2: "{{range(start, stop)|list}}"
   octetpool2: [ '65', '66', '67', '68', '69', '70', '71', '72', '86', '87', '88', '89' ]

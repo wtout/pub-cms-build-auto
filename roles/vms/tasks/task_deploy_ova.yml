@@ -1,0 +1,33 @@
+---
+# tasks to deploy VM from OVF/OVA
+- set_fact:
+#    netvar: "{{netconfig.network1}}"
+    netvar: 'vlan-252'
+  tags: vms
+- debug:
+    msg:
+      - "{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+  tags: vms
+- name: Deploy VM from OVF/OVA
+  vmware_deploy_ovf:
+    allow_duplicates: no
+    hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+    username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+    password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+    datacenter: "{{datacenter.name}}"
+    cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
+    datastore: "{{vm_ds}}"
+    folder: "{{datacenter.name}}/vm/{{hostvars[groups['vcenter'][0]]['information']['folder']}}"
+    networks:
+      Internal Net: "{{netvar}}"
+#      Internal Net: "{{netconfig.network1}}"
+    name: "{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+    ova: "{{ova_dir}}/{{ova_name}}"
+    resource_pool: "{{\"hostvars[groups['vcenter'][0]]['information']['resources']\"}}"
+    power_on: no
+#    inject_ovf_env: yes
+    validate_certs: no
+  register: deploy_ovf
+  delegate_to: "{{groups['bastion'][0] if groups['bastion'] | length >= 1 else 'localhost'}}"
+#  no_log: true
+  tags: vms
