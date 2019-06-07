@@ -69,7 +69,7 @@ with the script name being one of the following options:
   - **todo**: determines what roles and/or tasks to execute
   - **ssh_keys**: creates and deploys SSH keys to the bastion server(s) if applicable
   - **capcheck**: performs a capacity check of the infrastructure
-  - **create_vm**: deploys the system's VMs
+  - **vms**: deploys the system's VMs
   - **check_requiretty**: checks for and disables requiretty on the hosts
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
