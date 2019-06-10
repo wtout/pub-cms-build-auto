@@ -1,15 +1,8 @@
 ---
 # tasks to generate ssh_keys
-- block:
-  - stat: path={{LOCAL_SSH_DIR}}/{{SSH_KEY_FILE}}
-    register: privkey
-  - stat: path={{LOCAL_SSH_DIR}}/{{SSH_KEY_FILE}}.pub
-    register: pubkey
-  - name: generate SSH keys
-    shell: ssh-keygen -t rsa -f {{LOCAL_SSH_DIR}}/{{SSH_KEY_FILE}} -N ''
-    when:
-      - privkey.stat.exists == false
-      - pubkey.stat.exists == false
+- name: generate the ssh keys pair
+  openssh_keypair:
+    path: "{{LOCAL_SSH_DIR}}/{{SSH_KEY_FILE}}"
   delegate_to: localhost
   run_once: true
   tags: ssh_keys
