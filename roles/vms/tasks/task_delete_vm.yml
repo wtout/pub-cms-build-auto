@@ -18,5 +18,5 @@
     state: absent
     force: yes
     validate_certs: no
-  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['ansible_host'] != '') else 'localhost'}}"
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != []) else 'localhost'}}"
   tags: vms

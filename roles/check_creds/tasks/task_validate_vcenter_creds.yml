@@ -25,7 +25,7 @@
         validate_certs: no
       register: vcenter_creds
       ignore_errors: true
-    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['ansible_host'] != '') else 'localhost'}}"
+    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != []) else 'localhost'}}"
   - set_fact:
       abort_play: yes
       err_msg: "{{vcenter_host}}: {{vcenter_creds.msg}}"

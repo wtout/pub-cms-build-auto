@@ -231,7 +231,7 @@ function enable_logging() {
 function get_credentials() {
 	if [[ ! -f ${CRVAULT} ]]
 	then
-		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@}
+		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${@}
 		GET_CREDS_STATUS=${?}
 		encrypt_vault ${CRVAULT} ${VAULTP}
 	fi

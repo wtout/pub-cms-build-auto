@@ -1,9 +1,9 @@
 ---
 # Variables for vcenter
-ssh_username: "{{hostvars[groups['bastion'][0]]['ansible_user'] if (groups['bastion'][0] is defined and hostvars[groups['bastion'][0]]['ansible_host'] != '') else ''}}"
-ssh_address: "{{hostvars[groups['bastion'][0]]['ansible_host'] if (groups['bastion'][0] is defined and hostvars[groups['bastion'][0]]['ansible_host'] != '') else ''}}"
+ssh_username: "{{hostvars[groups['bastion'][0]]['ansible_user'] if (groups['bastion'][0] is defined and bastion.address != []) else ''}}"
+ssh_address: "{{hostvars[groups['bastion'][0]]['ansible_host'] if (groups['bastion'][0] is defined and bastion.address != []) else ''}}"
 ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ssh_username}}@{{ssh_address}}"'
-ansible_ssh_common_args: "{{ssh_var if (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['ansible_host'] != '') else ''}}"
+ansible_ssh_common_args: "{{ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else ''}}"
 
 credentials:
   username: "{{VCENTER_USER}}"

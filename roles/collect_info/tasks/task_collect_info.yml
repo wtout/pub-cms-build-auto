@@ -87,6 +87,7 @@
     no_log: true
   when:
     - groups['bastion'] | length >= 1
+    - bastion.address != []
   tags: always
 
 ### Vcenter ###
@@ -139,7 +140,7 @@
       - vcenter_user.user_input is defined
     no_log: true
   when:
-    - (groups['bastion'] | length == 0) or (answer.user_input is defined and (answer.user_input | lower == 'no' or answer.user_input | lower == 'n'))
+    - (groups['bastion'] | length == 0 or bastion.address == []) or (answer.user_input is defined and (answer.user_input | lower == 'no' or answer.user_input | lower == 'n'))
   no_log: true
   tags: always
 
@@ -162,6 +163,7 @@
       loop_var: task_item
     when:
       - groups['bastion'] | length >=1
+      - bastion.address != []
 
   - name: Save Vcenter credentials
     lineinfile:
