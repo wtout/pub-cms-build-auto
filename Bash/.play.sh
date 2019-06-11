@@ -1,6 +1,6 @@
 # Functions declaration
 
-function check_concurrency(){
+function check_concurrency() {
 	PID=${$}
 	ps -ef | grep $(basename ${0}) | grep -v grep | grep -v ${PID}
 }
@@ -53,7 +53,7 @@ function git_config() {
 	fi
 }
 
-function get_sudopass(){
+function get_sudopass() {
 	read -s -p "Enter localhost's sudo password and press [ENTER]: " SP
 	sudo -S echo "Thanks" &>/dev/null <<< ${SP}
 	if [[ "${?}" == 0 ]]
@@ -122,7 +122,7 @@ function decrypt_vault() {
 	rm -f ${2}
 }
 
-function check_updates {
+function check_updates() {
 	if [[ "x$(git config user.name)" != "x" ]]
 	then
 		git rev-parse --short HEAD &>/dev/null
@@ -160,7 +160,6 @@ function check_updates {
 					rm -f ${PWD}/.pullerr
 					EC='exit'
 				else
-					rm -f ${1}
 					EC='continue'
 				fi
 			fi
@@ -170,7 +169,7 @@ function check_updates {
 	fi
 }
 
-function get_hostsinplay(){
+function get_hostsinplay() {
 	local ENVS=$(ps -ef | grep play.sh | grep envname | grep -v grep | grep -v ${ENAME} | awk -F 'envname ' '{print $NF}' | cut -d'-' -f1 | sort -u)
 	local HN=""
 	for env in ${ENVS}
@@ -180,7 +179,7 @@ function get_hostsinplay(){
 	echo ${HN}
 }
 
-function get_sleeptime(){
+function get_sleeptime() {
 	local HN=$(get_hostsinplay)
 	local HN=( ${HN} )
 	local HOSTNUM=${#HN[@]}

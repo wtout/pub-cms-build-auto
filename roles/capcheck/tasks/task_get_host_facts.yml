@@ -9,7 +9,7 @@
     validate_certs: no
   loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
   register: host_facts
-  delegate_to: "{{groups['bastion'][0] if groups['bastion'] | length >= 1 else 'localhost'}}"
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['ansible_host'] != '') else 'localhost'}}"
   tags: capcheck
 
 - name: define list of datastores

@@ -2,14 +2,12 @@
 # tasks to validate vcenter credentials
 - block:
   - block:
-    - name: gather facts
-      setup:
     - name: get http proxy setting
-      shell: grep -r "http_proxy" /etc/profile {{ansible_env.HOME}}/.bashrc {{ansible_env.HOME}}/.bash_profile | cut -d '"' -f2 | uniq
+      shell: grep -r "http_proxy" /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
       register: http_proxy_string
       check_mode: no
     - name: get https proxy setting
-      shell: grep -r "https_proxy" /etc/profile {{ansible_env.HOME}}/.bashrc {{ansible_env.HOME}}/.bash_profile | cut -d '"' -f2 | uniq
+      shell: grep -r "https_proxy" /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
       register: https_proxy_string
       check_mode: no
     - name: install PyVmomi if it is not installed
@@ -27,7 +25,7 @@
         validate_certs: no
       register: vcenter_creds
       ignore_errors: true
-    delegate_to: "{{groups['bastion'][0] if groups['bastion'] | length >= 1 else 'localhost'}}"
+    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['ansible_host'] != '') else 'localhost'}}"
   - set_fact:
       abort_play: yes
       err_msg: "{{vcenter_host}}: {{vcenter_creds.msg}}"

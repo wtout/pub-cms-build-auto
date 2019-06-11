@@ -9,7 +9,7 @@
       cluster_name: "{{cluster_name[0] if cluster_name is defined else hostvars[groups['vcenter'][0]]['information']['cluster']}}"
       validate_certs: no
     register: host_facts
-    delegate_to: "{{groups['bastion'][0] if groups['bastion'] | length >= 1 else 'localhost'}}"
+    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['ansible_host'] != '') else 'localhost'}}"
     no_log: true
 
   - name: define hosts_list

@@ -23,7 +23,7 @@
     loop_var: task_item
   when:
     - groups['vcenter'] | length >= 1
-    - (groups['bastion'] | length >= 1 and bastion_creds is succeeded) or groups['bastion'] | length == 0
+    - (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['ansible_host'] != '' and bastion_creds is succeeded) or hostvars[groups['bastion'][0]]['ansible_host'] == ''
     - not abort_play | default(false) | bool
   tags: always
 

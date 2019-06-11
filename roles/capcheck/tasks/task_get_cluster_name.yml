@@ -10,7 +10,7 @@
       validate_certs: no
     register: cluster_facts
     check_mode: no
-    delegate_to: "{{groups['bastion'][0] if groups['bastion'] | length >= 1 else 'localhost'}}"
+    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and hostvars[groups['bastion'][0]]['ansible_host'] != '') else 'localhost'}}"
 
   - name: define cluster_name
     set_fact:
