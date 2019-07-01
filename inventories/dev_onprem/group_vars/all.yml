@@ -1,19 +1,20 @@
 ---
 # Variables for all hosts
 customer:
-  name: "Dev_Onprem"
+  name: "DEV_ONPREM"
   name_prefix: "devo"
-  octets: "172.30.251"
+  octets: "172.19.112"
   release: "R9.2"
 
 bastion:
-  address: ["10.225.228.240", "10.225.228.240"]
+  address: []
+#  address: ["10.225.228.240", "10.225.228.240"]
   username: "{{BASTION_USER | default('')}}"
   password: "{{BASTION_PASS | default('')}}"
 
 datacenter:
-  name: "RTP-PAE"
-  resources: ""
+  name: "cdra-Build-Development"
+  resources: []
 
 puppet:
   vm_name: ""
@@ -40,5 +41,6 @@ splunk:
 
 sysconfig:
   dns_config: ["search cisco-cms.com", "nameserver 172.19.251.21", "nameserver 172.19.251.22"]
+  dns_servers: ["172.19.251.21", "172.19.251.22"]
   domain_name: "cisco-cms.com"
-  ntp_server: "{{customer.octests}}.62"
+  ntp_server_fo: "62"

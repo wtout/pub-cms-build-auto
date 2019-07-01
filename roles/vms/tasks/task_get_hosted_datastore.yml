@@ -1,41 +1,44 @@
 ---
-# tasks to get datastore facts
+# tasks to define the hosted datastore for each host
 - name: Get datastore facts
   vmware_datastore_facts:
     hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
     username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
     password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
     datacenter: "{{hostvars[groups['vcenter'][0]]['information']['datacenter']}}"
+    cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
     validate_certs: no
   register: datastore_facts
-  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != []) else 'localhost'}}"
-  no_log: true
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+  #no_log: true
   when: inventory_hostname == groups[vm_group][pair_num]
   tags: vms
 
 - block:
-  - name: define datastore names
+  - name: define hosted datastore names
     set_fact:
       ds_names: "{{ds_names|default([]) + [task_item.name]}}"
     loop: "{{datastore_facts.datastores | sort(attribute='freeSpace', reverse=true)}}"
     loop_control:
       loop_var: task_item
     when: task_item.freeSpace >= (vm.disk|float * 1024|pow(3))
-    no_log: true
-  - name: define datastores list for each host group
+    #no_log: true
+  - name: define hosted datastores list for each host group
     set_fact:
-      vm_ds_names: "{{ds_names | intersect(hostvars[groups['vcenter'][0]]['db_ds_names']) if vm_group == 'em7db' else ds_names | intersect(hostvars[groups['vcenter'][0]]['vm_ds_names'])}}"
+      vm_ds_names: "{{ds_names | intersect(hostvars[groups['vcenter'][0]]['db_ds_names']) if vm_group == 'em7db' else ds_names | intersect(hostvars[groups['vcenter'][0]]['ndb_ds_names'])}}"
   when: inventory_hostname == groups[vm_group][pair_num]
   tags: vms
 
-- name: define datastore for each host
+- name: define hosted datastore for each host
   set_fact:
     vm_ds: "{{vm_ds_names[0]}}"
   when: inventory_hostname == groups[vm_group][pair_num]
   tags: vms
 
-- name: define datastore for each host
+- name: define hosted datastore for each host
   set_fact:
     vm_ds: "{{hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1]}}"
-  when: inventory_hostname == groups[vm_group][pair_num + 1]
+  when:
+    - groups[vm_group][pair_num + 1] is defined
+    - inventory_hostname == groups[vm_group][pair_num + 1]
   tags: vms

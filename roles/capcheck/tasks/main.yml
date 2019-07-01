@@ -10,7 +10,7 @@
 
     - include_tasks: task_get_hosts_list.yml
       when:
-        - hostvars[groups['vcenter'][0]]['information']['resources'] is not defined or hostvars[groups['vcenter'][0]]['information']['resources'] == ''
+        - hostvars[groups['vcenter'][0]]['information']['resources'] is not defined or hostvars[groups['vcenter'][0]]['information']['resources'] == []
 
     - include_tasks: task_get_datastore_facts.yml
     when:
@@ -28,18 +28,18 @@
 
   - assert:
       that:
-        - "vm_ds_names|length >= 2"
+        - "ndb_ds_names|length >= 2"
       fail_msg: "Not enough storage space to deploy the non-DB VMs"
-      success_msg: "Found {{vm_ds_names|length}} datastores to deploy the non-DB VMs"
+      success_msg: "Found {{ndb_ds_names|length}} datastores to deploy the non-DB VMs"
 
   - debug:
       msg:
         - "{{db_ds_names}}"
 #        - "{{db_ds_names|first}}: {{datastore_facts.datastores|selectattr('name', 'equalto', db_ds_names|first)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
         - "{{(db_ds_total_fs|int / 1024|pow(4))|string + ' TiB' if db_ds_total_fs|length > 12 else (db_ds_total_fs|int / 1024|pow(3))|string + ' GiB'}}"
-        - "{{vm_ds_names}}"
-#        - "{{vm_ds_names|first}}: {{datastore_facts.datastores|selectattr('name', 'equalto', vm_ds_names|first)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
-        - "{{(vm_ds_total_fs|int / 1024|pow(4))|string + ' TiB' if vm_ds_total_fs|length > 12 else (vm_ds_total_fs|int / 1024|pow(3))|string + ' GiB'}}"
+        - "{{ndb_ds_names}}"
+#        - "{{ndb_ds_names|first}}: {{datastore_facts.datastores|selectattr('name', 'equalto', ndb_ds_names|first)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
+        - "{{(ndb_ds_total_fs|int / 1024|pow(4))|string + ' TiB' if ndb_ds_total_fs|length > 12 else (ndb_ds_total_fs|int / 1024|pow(3))|string + ' GiB'}}"
 
   when: capcheck | default(false) | bool
   tags: capcheck

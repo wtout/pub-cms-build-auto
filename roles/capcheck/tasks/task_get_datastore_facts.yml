@@ -6,9 +6,10 @@
     username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
     password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
     datacenter: "{{hostvars[groups['vcenter'][0]]['information']['datacenter']}}"
+    cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
     validate_certs: no
   register: datastore_facts
-  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != []) else 'localhost'}}"
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: capcheck
 
 - set_fact:
@@ -20,7 +21,7 @@
 - block:
   - set_fact:
       db_ds_names: "{{hs_ds_names}}"
-      vm_ds_names: "{{hs_ds_names}}"
+      ndb_ds_names: "{{hs_ds_names}}"
   - debug:
       msg: "Found {{hs_ds_names|length}} datastores that have enough space for half the VMs"
   when: hs_ds_names|length >= 2
@@ -32,7 +33,7 @@
     loop: "{{datastore_facts.datastores | sort(attribute='freeSpace', reverse=true)}}"
     when: item.freeSpace >= hostvars[groups['em7db'][0]]['vm']['disk']|float * 1024|pow(3)
   - set_fact:
-      intvm_ds_names: "{{intvm_ds_names|default([]) + [item.name]}}"
+      intndb_ds_names: "{{intndb_ds_names|default([]) + [item.name]}}"
     loop: "{{datastore_facts.datastores | difference(db_ds_names) | sort(attribute='freeSpace', reverse=true)}}"
     when: item.freeSpace >= (((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float) * 1024|pow(3))
   - set_fact:
@@ -42,7 +43,7 @@
     loop: "{{db_ds_names}}"
     when: myvar[0] >= (required_space|float * 1024|pow(3)) / 2
   - set_fact:
-      vm_ds_names: "{{com_ds_names | union(intvm_ds_names) | unique}}"
+      ndb_ds_names: "{{com_ds_names | union(intndb_ds_names) | unique}}"
   when: hs_ds_names|length < 2
   tags: capcheck
 
@@ -54,10 +55,10 @@
   loop: "{{db_ds_names}}"
   tags: capcheck
 
-- name: define vm_ds_total_fs
+- name: define ndb_ds_total_fs
   set_fact:
-    vm_ds_total_fs: "{{vm_ds_total_fs|default(0)|int + myvar[0]}}"
+    ndb_ds_total_fs: "{{ndb_ds_total_fs|default(0)|int + myvar[0]}}"
   vars:
     myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace')|list}}"
-  loop: "{{vm_ds_names}}"
+  loop: "{{ndb_ds_names}}"
   tags: capcheck

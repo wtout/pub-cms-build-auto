@@ -2,4 +2,4 @@
 # Variables for splunk hosts
 credentials:
   username: "root"
-  password: "root"
+  password: "ast4roslab"

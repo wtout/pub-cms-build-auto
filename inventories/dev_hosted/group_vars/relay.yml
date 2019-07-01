@@ -2,7 +2,7 @@
 # Variables for relay hosts
 credentials:
   username: "root"
-  password: "root"
+  password: "ast4roslab"
 
 vm:
   cpu: '4'

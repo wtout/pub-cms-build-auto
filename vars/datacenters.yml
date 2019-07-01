@@ -7,9 +7,23 @@ datacenters:
     vsphere: "172.30.251.20"
     deptype: "h"
     folder: "Bld-Auto-test"
-#    cluster: "PAE-RTP-HX"
+    cluster: "PAE-RTP-HX"
   RTP-PAE:
     vsphere: "172.30.251.20"
     deptype: "a"
     resources: ["pae-esxi-r2505-p5.cisco-pae.com", "pae-esxi-r2505-p6.cisco-pae.com"]
-    
+  cdra-Build-Development:
+    vsphere: "172.30.240.248"
+    deptype: "a"
+    folder: ""
+    resources: ["172.30.240.205", "172.30.240.206"]
+  PAE-Customer-Build:
+    vsphere: "172.30.240.248"
+    deptype: "a"
+    folder: ""
+    resources: ["172.30.240.52", "172.30.240.53"]
+  RTP5:
+    vsphere: "rtp5vcsap01.cisco-cms.com"
+    deptype: "h"
+    folder: "Hosted Solution"
+    cluster: "RTP5 HX Cluster"

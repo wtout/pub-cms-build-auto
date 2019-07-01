@@ -6,6 +6,8 @@
   paelnxjmp02 ansible_host="{{bastion.address[1] if bastion.address[1] is defined else ''}}"
 
 [vcenter:vars]
+  ansible_user="{{vcenter.username | default('')}}"
+  ansible_ssh_pass="{{vcenter.password | default('')}}"
 [vcenter]
   vsconsole ansible_host="{{information.address}}"
 
@@ -50,19 +52,19 @@
         ansible_ssh_pass="{{credentials.password}}"
         ansible_become_pass="{{ansible_ssh_pass}}"
       [splunk:children]
-        splunksh
-        splunkin
-        splunkcm
-        splunkde
+        splunksrc
+        splunkind
+        splunkmas
+        splunkdpl
 
-        [splunksh]
-          splunksh[01:02]
-        [splunkin]
-          splunkin[01:02]
-        [splunkcm]
-          splunkcm[01:02]
-        [splunkde]
-          splunkde[01:02]
+        [splunksrc]
+          splunksrc[01:02]
+        [splunkind]
+          splunkind[01:02]
+        [splunkmas]
+          splunkmas[01:02]
+        [splunkdpl]
+          splunkdpl[01:02]
 
     [relay]
       [relay:vars]

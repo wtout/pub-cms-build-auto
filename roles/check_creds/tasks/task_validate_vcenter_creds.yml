@@ -2,21 +2,17 @@
 # tasks to validate vcenter credentials
 - block:
   - block:
-    - name: get http proxy setting
-      shell: grep -r "http_proxy" /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-      register: http_proxy_string
-      check_mode: no
-    - name: get https proxy setting
-      shell: grep -r "https_proxy" /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-      register: https_proxy_string
+    - name: get proxy setting
+      shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
+      register: proxy_string
       check_mode: no
     - name: install PyVmomi if it is not installed
       pip:
         name: PyVmomi
         extra_args: --user
       environment:
-        http_proxy: "{{http_proxy_string.stdout}}"
-        https_proxy: "{{https_proxy_string.stdout}}"
+        http_proxy: "{{proxy_string.stdout}}"
+        https_proxy: "{{proxy_string.stdout}}"
     - name: Validate vcenter credentials
       vmware_about_facts:
         hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -25,7 +21,7 @@
         validate_certs: no
       register: vcenter_creds
       ignore_errors: true
-    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != []) else 'localhost'}}"
+    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   - set_fact:
       abort_play: yes
       err_msg: "{{vcenter_host}}: {{vcenter_creds.msg}}"

@@ -1,0 +1,57 @@
+---
+# tasks to update VM's hardware settings
+- block:
+  - name: Update VM hardware settings
+    vmware_guest:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+      datacenter: "{{datacenter.name}}"
+      cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
+      hardware:
+        memory_mb: "{{vm.memory|int * 1024}}"
+        num_cpus: "{{vm.cpu|int}}"
+      networks:
+        - name: "{{netconfig.network1}}"
+          ip: "{{netconfig.ipaddress1}}"
+          netmask: "{{netconfig.netmask1}}"
+          gateway: "{{netconfig.gateway1}}"
+          device_type: vmxnet3
+      customization:
+        dns_servers: "{{sysconfig.dns_servers}}"
+        domain: "{{sysconfig.domain_name}}"
+      validate_certs: no
+    register: vmguest
+    when:
+      - ova_nets.stdout_lines|length == 1
+  - name: Update VM hardware settings
+    vmware_guest:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+      datacenter: "{{datacenter.name}}"
+      cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
+      hardware:
+        memory_mb: "{{vm.memory|int * 1024}}"
+        num_cpus: "{{vm.cpu|int}}"
+      networks:
+        - name: "{{netconfig.network1}}"
+          ip: "{{netconfig.ipaddress1}}"
+          netmask: "{{netconfig.netmask1}}"
+          gateway: "{{netconfig.gateway1}}"
+          device_type: vmxnet3
+        - name: "{{netconfig.network2}}"
+          ip: "{{netconfig.ipaddress2}}"
+          netmask: "{{netconfig.netmask2}}"
+          gateway: "{{netconfig.gateway2}}"
+          device_type: vmxnet3
+      customization:
+        dns_servers: "{{sysconfig.dns_servers}}"
+        domain: "{{sysconfig.domain_name}}"
+      validate_certs: no
+    register: vmguest
+    when:
+      - ova_nets.stdout_lines|length == 2
+  tags: vms

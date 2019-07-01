@@ -90,7 +90,7 @@ function install_packages() {
 		then
 			echo
 			SUDO_PASS=$(get_sudopass) || FS=${?}
-			[[ "${FS}" != 1 ]] && echo -e "\n${SUDO_PASS}" && exit ${FS}
+			[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}" && exit ${FS}
 		fi
 		printf "\nInstalling pip on localhost ..."
 		sudo -S yum install -y python-pip --quiet <<< ${SUDO_PASS} 2>/dev/null
@@ -274,7 +274,7 @@ OFILE="${PWD}/Bash/override.sh"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST='epel-release sshpass'
-ANSIBLE_VERSION='2.7.10'
+ANSIBLE_VERSION='2.8.1'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 BBVAULT="/var/tmp/.bbvault"
 CRVAULT="/var/tmp/.crvault"

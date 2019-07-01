@@ -1,0 +1,19 @@
+---
+# tasks to define the on-prem datastore for each host
+- name: define on-prem datastores list for each host group
+  set_fact:
+    vm_ds_names: "{{hostvars[groups['vcenter'][0]]['db_ds_names'] if vm_group == 'em7db' else hostvars[groups['vcenter'][0]]['ndb_ds_names']}}"
+  when: inventory_hostname == groups[vm_group][pair_num]
+  tags: vms
+
+- name: define on-prem datastore for each host
+  set_fact:
+    vm_ds: "{{vm_ds_names[0]}}"
+  when: inventory_hostname == groups[vm_group][pair_num]
+  tags: vms
+
+- name: define on-prem datastore for each host
+  set_fact:
+    vm_ds: "{{hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1]}}"
+  when: inventory_hostname == groups[vm_group][pair_num + 1]
+  tags: vms

@@ -1,0 +1,76 @@
+---
+# tasks to delete cluster
+- name: Check if '{{hostvars[groups['vcenter'][0]]['information']['cluster']}}' cluster exists
+  vmware_cluster_facts:
+    hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+    username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+    password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+    cluster_name: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
+    validate_certs: no
+  register: cluster_status
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost'}}"
+  run_once: true
+  ignore_errors: true
+  tags: vms
+
+- block:
+  - name: Put hosts in maintenance mode
+    vmware_maintenancemode:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      esxi_hostname: "{{host_item}}"
+      timeout: 3600
+      state: present
+      validate_certs: no
+    loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+    loop_control:
+      loop_var: host_item
+    register: maint_mode
+
+  - name: Move hosts out of the '{{hostvars[groups['vcenter'][0]]['information']['cluster']}}' cluster
+    vmware_host:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      datacenter: "{{datacenter.name}}"
+      folder: "{{datacenter.name}}/host"
+      esxi_hostname: "{{host_item}}"
+      esxi_username: 'root'
+      esxi_password: 'xp91jc9.67HgfDZnm!'
+      state: present
+      validate_certs: no
+    loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+    loop_control:
+      loop_var: host_item
+    register: move_hosts
+
+  - name: Put hosts in normal mode
+    vmware_maintenancemode:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      esxi_hostname: "{{host_item}}"
+      timeout: 3600
+      state: absent
+      validate_certs: no
+    loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+    loop_control:
+      loop_var: host_item
+    register: normal_mode
+
+  - name: Delete the '{{hostvars[groups['vcenter'][0]]['information']['cluster']}}' cluster
+    vmware_cluster:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      datacenter: "{{datacenter.name}}"
+      cluster_name: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
+      state: absent
+      validate_certs: no
+    register: cust_cluster
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost'}}"
+  run_once: true
+  when:
+    - cluster_status is successful
+  tags: vms

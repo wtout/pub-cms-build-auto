@@ -22,9 +22,9 @@
       - "{{playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '`\\1`') | regex_replace ('\n.*[\\|] ', '\n')}}"
       - ' '
       - '========================================================='
-  - name: get http proxy setting
-    shell: grep -r "http_proxy" /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-    register: http_proxy_string
+  - name: get proxy setting
+    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
+    register: proxy_string
 # This module cannot be used currently due to a known bug. Will revisit in the future
 #  - name: Send notification via Webex Teams
 #    cisco_spark:
@@ -49,7 +49,8 @@
         roomId: Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj
         markdown: "{{NOTIF_MSG | join('\n')}}"
     environment:
-      https_proxy: "{{http_proxy_string.stdout}}" # Ansible only supports http proxies currently
+      http_proxy: "{{proxy_string.stdout}}"
+      https_proxy: "{{proxy_string.stdout}}" # Ansible only supports http proxies currently
   delegate_to: localhost
   run_once: true
   tags: [ 'never', 'notify' ]

@@ -23,7 +23,7 @@
     loop_var: task_item
   when:
     - groups['vcenter'] | length >= 1
-    - (groups['bastion'] | length >= 1 and bastion.address != [] and bastion_creds is succeeded) or bastion.address == []
+    - (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion_creds is succeeded) or (bastion.address == [] or bastion.address == [''])
     - not abort_play | default(false) | bool
   tags: always
 
@@ -32,11 +32,12 @@
     file:
       path: "{{VFILE}}"
       state: absent
-    when: delete_creds | default(false) | bool
+    when:
+      - delete_creds | default(false) | bool
+      - not ansible_check_mode
   - fail:
       msg:
         - "{{err_msg}}"
   when:
-    - not ansible_check_mode
     - abort_play | default(false) | bool
   tags: always

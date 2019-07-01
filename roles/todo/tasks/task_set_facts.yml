@@ -6,6 +6,7 @@
     - deploy | default(false) | bool
     - inventory_hostname in groups['bastion']
     - bastion.address != []
+    - bastion.address != ['']
   tags: ssh_keys
 
 - name: define rollback_ssh_keys
@@ -15,6 +16,7 @@
     - rollback | default(false) | bool
     - inventory_hostname in groups['bastion']
     - bastion.address != []
+    - bastion.address != ['']
   tags: ssh_keys
 
 - name: define capcheck

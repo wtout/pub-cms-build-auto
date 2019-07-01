@@ -1,5 +1,13 @@
 ---
 # Tasks to rollback VMs
-- include_tasks:
-    file: task_delete_vm.yml
+- block:
+  - include_tasks: task_delete_vm.yml
+  - include_tasks: task_delete_folder.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
+    run_once: true
+  - include_tasks: task_delete_cluster.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
+    run_once: true
   tags: vms

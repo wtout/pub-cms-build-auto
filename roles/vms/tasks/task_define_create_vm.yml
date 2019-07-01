@@ -3,20 +3,6 @@
 - block:
   - include_tasks: task_get_vm_ip.yml
   - include_tasks: task_get_ova_name.yml
-
-  - name: define vm_seq for each host
-    set_fact:
-      vm_seq: "{{range(0, groups[vm_group]|length, 2)|list}}"
-
-  - include_tasks:
-      file:
-        task_get_datastore_facts.yml
-      apply:
-        vars:
-          - pair_num: "{{seq_item}}"
-    loop: "{{vm_seq}}"
-    loop_control:
-      loop_var: seq_item
-
+  - include_tasks: task_get_vm_datastore.yml
   - include_tasks: task_deploy_ova.yml
   tags: vms
