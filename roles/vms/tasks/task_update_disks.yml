@@ -19,6 +19,7 @@
       disk0_readsize: "{{disk_facts.guest_disk_facts | dict2items | selectattr('key','equalto', '0') | map(attribute='value.capacity_in_kb') | list | to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '')}}"
     when:
       - disk_facts.guest_disk_facts | dict2items | length >= 1
+      - vm.disk0 is defined
   - name: Define VM disk1
     set_fact:
       disk1_unit_number: "{{disk_facts.guest_disk_facts | dict2items | selectattr('key','equalto', '1') | map(attribute='value.unit_number') | list| to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '')}}"
@@ -28,6 +29,7 @@
       disk1_readsize: "{{disk_facts.guest_disk_facts | dict2items | selectattr('key','equalto', '1') | map(attribute='value.capacity_in_kb') | list | to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '')}}"
     when:
       - disk_facts.guest_disk_facts | dict2items | length >= 2
+      - vm.disk1 is defined
   - name: Define VM disk2
     set_fact:
       disk2_unit_number: "{{(disk1_unit_number|int + 1)}}"
@@ -63,6 +65,7 @@
     register: vmguest_disk
     when:
       - disk_facts.guest_disk_facts | dict2items | length == 1
+      - vm.disk0 is defined
       - vm.disk2 is not defined or vm.disk2 == ''
       - vm.disk3 is not defined or vm.disk3 == ''
   - name: Update VM Disk settings
@@ -89,6 +92,7 @@
     register: vmguest_disk
     when:
       - disk_facts.guest_disk_facts | dict2items | length == 2
+      - vm.disk0 is defined
       - vm.disk2 is not defined or vm.disk2 == ''
       - vm.disk3 is not defined or vm.disk3 == ''
   - name: Update VM Disk settings
@@ -121,6 +125,7 @@
     register: vmguest_disk
     when:
       - disk_facts.guest_disk_facts | dict2items | length >= 2
+      - vm.disk0 is defined
       - vm.disk2 is defined
       - vm.disk2 != ''
       - vm.disk3 is not defined or vm.disk3 == ''
@@ -160,6 +165,7 @@
     register: vmguest_disk
     when:
       - disk_facts.guest_disk_facts | dict2items | length >= 2
+      - vm.disk0 is defined
       - vm.disk2 is defined
       - vm.disk2 != ''
       - vm.disk3 is defined

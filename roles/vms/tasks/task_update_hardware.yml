@@ -19,12 +19,14 @@
           gateway: "{{netconfig.gateway1}}"
           device_type: vmxnet3
       customization:
+        existing_vm: true
         dns_servers: "{{sysconfig.dns_servers}}"
         domain: "{{sysconfig.domain_name}}"
       validate_certs: no
     register: vmguest
     when:
       - ova_nets.stdout_lines|length == 1
+      - inventory_hostname not in groups['relay']
   - name: Update VM hardware settings
     vmware_guest:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -48,10 +50,11 @@
           gateway: "{{netconfig.gateway2}}"
           device_type: vmxnet3
       customization:
+        existing_vm: true
         dns_servers: "{{sysconfig.dns_servers}}"
         domain: "{{sysconfig.domain_name}}"
       validate_certs: no
     register: vmguest
     when:
-      - ova_nets.stdout_lines|length == 2
+      - ova_nets.stdout_lines|length == 2 or inventory_hostname in groups['relay']
   tags: vms
