@@ -13,7 +13,6 @@
       state: present
       validate_certs: no
     register: cust_folder
-  - debug: var=cust_folder
 
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: vms

@@ -25,7 +25,7 @@
   vars:
     myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
   loop: "{{ ssd_ds|zip(host_facts.results)|list }}"
-  when: myvar[0] >= hostvars[groups['em7db'][0]]['vm']['disk']|float / 1024
+  when: myvar[0] >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
   tags: capcheck
 
 - name: define list of non-db datastores
@@ -34,7 +34,7 @@
   vars:
     myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
   loop: "{{ sas_ds|zip(host_facts.results)|list }}"
-  when: myvar[0] >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float) / 1024
+  when: myvar[0] >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
   tags: capcheck
 
 - name: define db_ds_total_fs

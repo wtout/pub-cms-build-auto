@@ -10,12 +10,14 @@ vm:
   disk: '8'       # GiB
 
 netconfig:
-  octetpool1: [ '60', '61', '62' ]
+  octetpool1: "{{range(60, 62 + 1)|list}}"
+#  octetpool1: [ '60', '61', '62' ]
   gateway1: ''
   netmask1: '255.255.255.192'
   network1: "Internal-Net"
   netname1: 'ens160'
-  octetpool2: [ '92', '93', '94' ]
+  octetpool2: "{{range(92, 94 + 1)|list}}"
+#  octetpool2: [ '92', '93', '94' ]
   gateway2: "{{customer.octets}}.123"
   netmask2: '255.255.255.224'
   network2: "Customer-Net"

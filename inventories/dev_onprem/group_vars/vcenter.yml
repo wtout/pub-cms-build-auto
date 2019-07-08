@@ -14,5 +14,7 @@ information:
   datacenter: "{{datacenter.name}}"
   deptype: "{{datacenters[datacenter.name]['deptype']}}"
   resources: "{{datacenter.resources if (datacenter.resources != [] and datacenter.resources != ['']) else datacenters[datacenter.name]['resources'] if datacenters[datacenter.name]['resources'] is defined else ''}}"
+  hostuser: "{{datacenter.hostuser if (datacenter.hostuser is defined and datacenter.hostuser != '') else datacenters[datacenter.name]['hostuser'] if datacenters[datacenter.name]['hostuser'] is defined else ''}}"
+  hostpass: "{{datacenter.hostpass if (datacenter.hostpass is defined and datacenter.hostpass != '') else datacenters[datacenter.name]['hostpass'] if datacenters[datacenter.name]['hostpass'] is defined else ''}}"
   cluster: "{{datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ customer.name_prefix if datacenters[datacenter.name]['deptype'] == 'a' else ''}}"
   folder: "{{datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else ''}}"

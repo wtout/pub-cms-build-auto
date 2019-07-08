@@ -1,7 +1,7 @@
 ---
 # tasks to get the total storage space required
 - set_fact:
-    required_space: "{{required_space|default(0)|float + hostvars[task_item]['vm']['disk']|float}}"
+    required_space: "{{required_space|default(0)|float + hostvars[task_item]['vm']['disk']|float + hostvars[task_item]['vm']['memory']|float}}"
   loop: "{{groups['stack']}}"
   loop_control:
     loop_var: task_item

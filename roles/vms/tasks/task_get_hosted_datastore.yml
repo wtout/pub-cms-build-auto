@@ -21,7 +21,7 @@
     loop: "{{datastore_facts.datastores | sort(attribute='freeSpace', reverse=true)}}"
     loop_control:
       loop_var: task_item
-    when: task_item.freeSpace >= (vm.disk|float * 1024|pow(3))
+    when: task_item.freeSpace >= ((vm.disk|float + vm.memory|float) * 1024|pow(3))
     #no_log: true
   - name: define hosted datastores list for each host group
     set_fact:

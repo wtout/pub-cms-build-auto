@@ -3,7 +3,8 @@
 vm:
   cpu: '12'
   memory: '256'   # GiB
-  disk: '1280'    # GiB
+  disk: '1024'    # GiB
+  disk0: '1024'   # GiB
   name: "em7db{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:

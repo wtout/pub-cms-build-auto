@@ -7,15 +7,21 @@ credentials:
 vm:
   cpu: '4'
   memory: '8'     # GiB
-  disk: '620.16'  # GiB
+  disk: '612'     # GiB
+  disk0: '37'     # GiB
+  disk1: '25'     # GiB
+  disk2: '100'    # GiB
+  disk3: '450'    # GiB
   name: "rly{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:
-  octetpool1: [ '1', '2' ]
+  octetpool1: "{{range(1, 2 + 1)|list}}"
+#  octetpool1: [ '1', '2' ]
   gateway1: ''
   netmask1: '255.255.255.192'
   network1: "Internal-Net"
   netname1: 'ens160'
+#  octetpool2: "{{range(97, 99 + 1)|list}}"
   octetpool2: [ '97', '99' ]
   gateway2: "{{customer.octets}}.126"
   netmask2: '255.255.255.224'

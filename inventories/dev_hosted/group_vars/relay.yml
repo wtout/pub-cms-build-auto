@@ -7,7 +7,11 @@ credentials:
 vm:
   cpu: '4'
   memory: '8'     # GiB
-  disk: '620.16'  # GiB
+  disk: '612'     # GiB
+  disk0: '37'     # GiB
+  disk1: '25'     # GiB
+  disk2: '100'    # GiB
+  disk3: '450'    # GiB
   name: "rly{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:

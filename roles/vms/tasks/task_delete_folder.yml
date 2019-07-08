@@ -13,5 +13,16 @@
       state: absent
       validate_certs: no
     register: cust_folder
+    ignore_errors: true
+  - debug:
+      msg: "The folder '{{hostvars[groups['vcenter'][0]]['information']['folder']}}/{{customer.name}}' cannot be deleted because it is not empty"
+    when:
+      - cust_folder is failed
+      - "'The attempted operation cannot be performed in the current state (Powered on)' in cust_folder.msg"
+  - fail:
+      msg: "Failed to delete the folder '{{hostvars[groups['vcenter'][0]]['information']['folder']}}/{{customer.name}}'"
+    when:
+      - cust_folder is failed
+      - "'The attempted operation cannot be performed in the current state (Powered on)' not in cust_folder.msg"
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: vms

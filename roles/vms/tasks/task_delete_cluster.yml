@@ -1,5 +1,55 @@
 ---
 # tasks to delete cluster
+- name: Get VM facts
+  vmware_vm_facts:
+    hostname: "{{host_item}}"
+    username: "{{hostvars[groups['vcenter'][0]]['information']['hostuser']}}"
+    password: "{{hostvars[groups['vcenter'][0]]['information']['hostpass']}}"
+    vm_type: vm
+    validate_certs: no
+  loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+  loop_control:
+    loop_var: host_item
+  check_mode: no
+  register: vm_facts
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+  tags: vms
+- name: define vm names list
+  set_fact:
+    vm_names: "{{vm_names|default([]) + [host_item.virtual_machines | map(attribute='guest_name') | list] | flatten}}"
+  loop: "{{vm_facts.results}}"
+  loop_control:
+    loop_var: host_item
+  tags: vms
+
+- name: Get the guest_facts
+  vmware_guest_facts:
+    hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+    username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+    password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+    datacenter: "{{datacenter.name}}"
+    name: "{{vm_item}}"
+    validate_certs: no
+  loop: "{{vm_names}}"
+  loop_control:
+    loop_var: vm_item
+  check_mode: no
+  register: vmguest_facts
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+  tags: vms
+
+- name: define delete_cluster
+  set_fact:
+    delete_cluster: "{{delete_cluster|default(true) and not vm_in_cluster}}"
+#    delete_cluster: "{{delete_cluster|default(true) and not (vm_in_cluster and vm_on)}}"
+  vars:
+    vm_in_cluster: "{{true if vm_item.instance.hw_cluster == hostvars[groups['vcenter'][0]]['information']['cluster'] else false}}"
+#    vm_on: "{{true if vm_item.instance.hw_power_status|lower is search('poweredon') else false}}"
+  loop: "{{vmguest_facts.results}}"
+  loop_control:
+    loop_var: vm_item
+  tags: vms
+
 - name: Check if '{{hostvars[groups['vcenter'][0]]['information']['cluster']}}' cluster exists
   vmware_cluster_facts:
     hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -11,6 +61,8 @@
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost'}}"
   run_once: true
   ignore_errors: true
+  when: delete_cluster|bool
+  check_mode: no
   tags: vms
 
 - block:
@@ -36,8 +88,8 @@
       datacenter: "{{datacenter.name}}"
       folder: "{{datacenter.name}}/host"
       esxi_hostname: "{{host_item}}"
-      esxi_username: 'root'
-      esxi_password: 'xp91jc9.67HgfDZnm!'
+      esxi_username: "{{hostvars[groups['vcenter'][0]]['information']['hostuser']}}"
+      esxi_password: "{{hostvars[groups['vcenter'][0]]['information']['hostpass']}}"
       state: present
       validate_certs: no
     loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
@@ -73,4 +125,5 @@
   run_once: true
   when:
     - cluster_status is successful
+    - delete_cluster|bool
   tags: vms

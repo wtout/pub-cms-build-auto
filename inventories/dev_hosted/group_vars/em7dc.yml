@@ -3,7 +3,8 @@
 vm:
   cpu: '4'
   memory: '24'    # GiB
-  disk: '174.16'  # GiB
+  disk: '150'     # GiB
+  disk0: '150'    # GiB
   name: "em7dc{{datacenters[datacenter.name]['deptype']}}"
 
 

@@ -1,0 +1,86 @@
+---
+# tasks to expand VM disks
+- block:
+  - name: Ensure VM is powered on
+    vmware_guest_tools_wait:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      validate_certs: false
+      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+  - name: Copy disk expansion script to VM
+    vmware_guest_file_operation:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      datacenter: "{{datacenter.name}}"
+      validate_certs: false
+      vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+      vm_username: "{{ credentials.username }}"
+      vm_password: "{{ credentials.password }}"
+      copy:
+          src: "{{playbook_dir}}/roles/vms/files/expand_disks.sh"
+          dest: "/tmp/expand_disks.sh"
+          overwrite: false
+  - name: Execute disk expansion script
+    vmware_vm_shell:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      datacenter: "{{datacenter.name}}"
+      validate_certs: false
+      vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+      vm_username: "{{ credentials.username }}"
+      vm_password: "{{ credentials.password }}"
+      vm_shell: /bin/sh
+      vm_shell_args: "/tmp/expand_disks.sh"
+      wait_for_process: true
+  - block:
+    - name: Copy password update script to VM
+      vmware_guest_file_operation:
+        hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+        username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+        password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+        datacenter: "{{datacenter.name}}"
+        validate_certs: false
+        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+        vm_username: "{{ credentials.username }}"
+        vm_password: "{{ credentials.password }}"
+        copy:
+            src: "{{playbook_dir}}/roles/vms/files/update_passwd.sh"
+            dest: "/tmp/update_passwd.sh"
+            overwrite: false
+    - name: Execute password update script
+      vmware_vm_shell:
+        hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+        username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+        password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+        datacenter: "{{datacenter.name}}"
+        validate_certs: false
+        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+        vm_username: "{{ credentials.username }}"
+        vm_password: "{{ credentials.password }}"
+        vm_shell: /bin/sh
+        vm_shell_args: "/tmp/update_passwd.sh"
+        wait_for_process: true
+      async: 45
+      poll: 0
+    - name: pause for 10 sec
+      pause:
+        seconds: 10
+    - name: Delete password update script
+      vmware_vm_shell:
+        hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+        username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+        password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+        datacenter: "{{datacenter.name}}"
+        validate_certs: false
+        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+        vm_username: "{{ credentials.username }}"
+        vm_password: KSvNKG0f0Q6nuZJnem1t
+        vm_shell: /usr/bin/rm
+        vm_shell_args: "/tmp/update_passwd.sh"
+        wait_for_process: true
+    when:
+      - customer.name is search('MDR')
+  tags: vms

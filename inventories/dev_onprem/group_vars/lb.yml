@@ -10,7 +10,8 @@ vm:
   disk: '20'      # GiB
 
 netconfig:
-  octetpool1: [ '53', '54', '55' ]
+  octetpool1: "{{range(53, 55 + 1)|list}}"
+#  octetpool1: [ '53', '54', '55' ]
   gateway1: ''
   netmask1: '255.255.255.192'
   network1: "Internal-Net"

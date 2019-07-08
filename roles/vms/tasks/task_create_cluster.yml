@@ -11,7 +11,6 @@
       state: present
       validate_certs: no
     register: cust_cluster
-  - debug: var=cust_cluster
 
   - name: Add hosts to the '{{hostvars[groups['vcenter'][0]]['information']['cluster']}}' cluster
     vmware_host:
@@ -21,15 +20,14 @@
       datacenter: "{{datacenter.name}}"
       cluster_name: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
       esxi_hostname: "{{host_item}}"
-      esxi_username: 'root'
-      esxi_password: 'xp91jc9.67HgfDZnm!'
+      esxi_username: "{{hostvars[groups['vcenter'][0]]['information']['hostuser']}}"
+      esxi_password: "{{hostvars[groups['vcenter'][0]]['information']['hostpass']}}"
       state: present
       validate_certs: no
     loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
     loop_control:
       loop_var: host_item
     register: move_hosts
-  - debug: var=move_hosts
 
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: vms

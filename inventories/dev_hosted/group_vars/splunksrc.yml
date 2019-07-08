@@ -3,7 +3,9 @@
 vm:
   cpu: '8'
   memory: '16'    # GiB
-  disk: '78.17'   # GiB
+  disk: '62'      # GiB
+  disk0: '37'     # GiB
+  disk1: '25'     # GiB
   name: "splsrc{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:

@@ -1,6 +1,16 @@
 ---
 # tasks to update VM's hardware settings
 - block:
+  - name: Power-off VM
+    vmware_guest:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+      datacenter: "{{datacenter.name}}"
+      cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
+      state: poweredoff
+      validate_certs: no
   - name: Update VM hardware settings
     vmware_guest:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -23,10 +33,12 @@
         dns_servers: "{{sysconfig.dns_servers}}"
         domain: "{{sysconfig.domain_name}}"
       validate_certs: no
-    register: vmguest
+      wait_for_customization: true
+    register: vmguest_1net
+    ignore_errors: true
     when:
       - ova_nets.stdout_lines|length == 1
-      - inventory_hostname not in groups['relay']
+      - "'relay' not in group_names"
   - name: Update VM hardware settings
     vmware_guest:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -54,7 +66,19 @@
         dns_servers: "{{sysconfig.dns_servers}}"
         domain: "{{sysconfig.domain_name}}"
       validate_certs: no
-    register: vmguest
+      wait_for_customization: true
+    register: vmguest_2net
+    ignore_errors: true
     when:
-      - ova_nets.stdout_lines|length == 2 or inventory_hostname in groups['relay']
+      - ova_nets.stdout_lines|length == 2 or 'relay' in group_names
+  - fail:
+      msg: "{{vmguest_1net.msg}}"
+    when:
+      - vmguest_1net is failed
+      - "'Guest Customization is already pending' not in vmguest_1net.msg"
+  - fail:
+      msg: "{{vmguest_2net.msg}}"
+    when:
+      - vmguest_2net is failed
+      - "'Guest Customization is already pending' not in vmguest_2net.msg"
   tags: vms

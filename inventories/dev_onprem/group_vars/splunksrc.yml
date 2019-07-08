@@ -3,11 +3,14 @@
 vm:
   cpu: '8'
   memory: '16'    # GiB
-  disk: '78.17'   # GiB
+  disk: '62'      # GiB
+  disk0: '37'     # GiB
+  disk1: '25'     # GiB
   name: "splsrc{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:
-  octetpool1: [ '20', '21' ]
+  octetpool1: "{{range(20, 21 + 1)|list}}"
+#  octetpool1: [ '20', '21' ]
   gateway1: "{{customer.octets}}.62"
   netmask1: '255.255.255.192'
   network1: "Internal-Net"

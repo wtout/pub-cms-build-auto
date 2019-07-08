@@ -3,11 +3,13 @@
 vm:
   cpu: '12'
   memory: '256'   # GiB
-  disk: '1280'    # GiB
+  disk: '1024'    # GiB
+  disk0: '1024'   # GiB
   name: "em7db{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:
-  octetpool1: [ '13', '14' ]
+  octetpool1: "{{range(13, 14 + 1)|list}}"
+#  octetpool1: [ '13', '14' ]
   gateway1: "{{customer.octets}}.62"
   netmask1: '255.255.255.192'
   network1: "Internal-Net"

@@ -3,11 +3,16 @@
 vm:
   cpu: '4'
   memory: '8'     # GiB
-  disk: '270.16'  # GiB
+  disk: '262'     # GiB
+  disk0: '37'     # GiB
+  disk1: '25'     # GiB
+  disk2: '100'    # GiB
+  disk3: '100'    # GiB
   name: "splind{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:
-  octetpool1: [ '24', '25' ]
+  octetpool1: "{{range(24, 25 + 1)|list}}"
+#  octetpool1: [ '24', '25' ]
   gateway1: "{{customer.octets}}.62"
   netmask1: '255.255.255.192'
   network1: "Internal-Net"

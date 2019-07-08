@@ -47,7 +47,7 @@
       - vm.disk3 is defined
       - vm.disk3 != ''
 
-  - name: Update VM Disk settings
+  - name: Update VM Disk0 settings
     vmware_guest_disk:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
@@ -64,11 +64,8 @@
       validate_certs: no
     register: vmguest_disk
     when:
-      - disk_facts.guest_disk_facts | dict2items | length == 1
       - vm.disk0 is defined
-      - vm.disk2 is not defined or vm.disk2 == ''
-      - vm.disk3 is not defined or vm.disk3 == ''
-  - name: Update VM Disk settings
+  - name: Update VM Disk1 settings
     vmware_guest_disk:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
@@ -76,12 +73,6 @@
       name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
       datacenter: "{{datacenter.name}}"
       disk:
-        - size_kb: "{{disk0_size_kb}}"
-          type: thick
-          datastore: "{{disk0_datastore}}"
-          state: present
-          scsi_controller: 0
-          unit_number: "{{disk0_unit_number}}"
         - size_kb: "{{disk1_size_kb}}"
           type: thick
           datastore: "{{disk1_datastore}}"
@@ -91,11 +82,8 @@
       validate_certs: no
     register: vmguest_disk
     when:
-      - disk_facts.guest_disk_facts | dict2items | length == 2
-      - vm.disk0 is defined
-      - vm.disk2 is not defined or vm.disk2 == ''
-      - vm.disk3 is not defined or vm.disk3 == ''
-  - name: Update VM Disk settings
+      - vm.disk1 is defined
+  - name: Update VM Disk2 settings
     vmware_guest_disk:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
@@ -103,18 +91,6 @@
       name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
       datacenter: "{{datacenter.name}}"
       disk:
-        - size_kb: "{{disk0_size_kb}}"
-          type: thick
-          datastore: "{{disk0_datastore}}"
-          state: present
-          scsi_controller: 0
-          unit_number: "{{disk0_unit_number}}"
-        - size_kb: "{{disk1_size_kb}}"
-          type: thick
-          datastore: "{{disk1_datastore}}"
-          state: present
-          scsi_controller: 0
-          unit_number: "{{disk1_unit_number}}"
         - size_kb: "{{disk2_size_kb}}"
           type: thick
           datastore: "{{disk2_datastore}}"
@@ -124,12 +100,9 @@
       validate_certs: no
     register: vmguest_disk
     when:
-      - disk_facts.guest_disk_facts | dict2items | length >= 2
-      - vm.disk0 is defined
       - vm.disk2 is defined
       - vm.disk2 != ''
-      - vm.disk3 is not defined or vm.disk3 == ''
-  - name: Update VM Disk settings
+  - name: Update VM Disk3 settings
     vmware_guest_disk:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
@@ -137,24 +110,6 @@
       name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
       datacenter: "{{datacenter.name}}"
       disk:
-        - size_kb: "{{disk0_size_kb}}"
-          type: thick
-          datastore: "{{disk0_datastore}}"
-          state: present
-          scsi_controller: 0
-          unit_number: "{{disk0_unit_number}}"
-        - size_kb: "{{disk1_size_kb}}"
-          type: thick
-          datastore: "{{disk1_datastore}}"
-          state: present
-          scsi_controller: 0
-          unit_number: "{{disk1_unit_number}}"
-        - size_kb: "{{disk2_size_kb}}"
-          type: thick
-          datastore: "{{disk2_datastore}}"
-          state: present
-          scsi_controller: 0
-          unit_number: "{{disk2_unit_number}}"
         - size_kb: "{{disk3_size_kb}}"
           type: thick
           datastore: "{{disk3_datastore}}"
@@ -164,10 +119,6 @@
       validate_certs: no
     register: vmguest_disk
     when:
-      - disk_facts.guest_disk_facts | dict2items | length >= 2
-      - vm.disk0 is defined
-      - vm.disk2 is defined
-      - vm.disk2 != ''
       - vm.disk3 is defined
       - vm.disk3 != ''
   when: not ansible_check_mode

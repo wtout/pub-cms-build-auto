@@ -12,11 +12,22 @@
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: capcheck
 
+- name: Initialize found datastores list
+  set_fact:
+    hs_ds_names: []
+
+  tags: vms
+
 - set_fact:
     hs_ds_names: "{{hs_ds_names|default([]) + [item.name]}}"
   loop: "{{datastore_facts.datastores | sort(attribute='freeSpace', reverse=true)}}"
   when: item.freeSpace >= (required_space|float * 1024|pow(3)) / 2
   tags: capcheck
+
+- assert:
+    that:
+      - "hs_ds_names|length > 0"
+    fail_msg: "Found no datastores with enough storage space to deploy the environment"
 
 - block:
   - set_fact:
@@ -31,11 +42,15 @@
   - set_fact:
       db_ds_names: "{{db_ds_names|default([]) + [item.name]}}"
     loop: "{{datastore_facts.datastores | sort(attribute='freeSpace', reverse=true)}}"
-    when: item.freeSpace >= hostvars[groups['em7db'][0]]['vm']['disk']|float * 1024|pow(3)
+    when:
+      - groups['em7db'] is defined
+      - item.freeSpace >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float) * 1024|pow(3)
   - set_fact:
       intndb_ds_names: "{{intndb_ds_names|default([]) + [item.name]}}"
     loop: "{{datastore_facts.datastores | difference(db_ds_names) | sort(attribute='freeSpace', reverse=true)}}"
-    when: item.freeSpace >= (((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float) * 1024|pow(3))
+    when:
+      - groups['em7db'] is defined
+      - item.freeSpace >= (((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) * 1024|pow(3))
   - set_fact:
       com_ds_names: "{{com_ds_names|default([]) + item}}"
     vars:

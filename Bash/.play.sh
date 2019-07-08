@@ -111,13 +111,17 @@ function install_packages() {
 }
 
 function encrypt_vault() {
-	echo $(git config user.email | cut -d'@' -f1) > ${2}
+	[[ $- =~ x ]] && debug=1 && set +x
+	echo ${3} > ${2}
+	[[ ${debug} == 1 ]] && set -x
 	[[ -f ${1} ]] && ansible-vault --vault-id ${2} encrypt ${1} &>/dev/null
 	rm -f ${2}
 }
 
 function decrypt_vault() {
-	echo $(git config user.email | cut -d'@' -f1) > ${2}
+	[[ $- =~ x ]] && debug=1 && set +x
+	echo ${3} > ${2}
+	[[ ${debug} == 1 ]] && set -x
 	[[ -f ${1} ]] && ansible-vault --vault-id ${2} decrypt ${1} &>/dev/null
 	rm -f ${2}
 }
@@ -128,23 +132,27 @@ function check_updates() {
 		git rev-parse --short HEAD &>/dev/null
 		if [ ${?} -eq 0 ]
 		then
-			echo $(git config user.name) > ${2}
 			if [[ -f ${1} ]]
 			then
-				decrypt_vault ${1} ${2}
+				decrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
+				[[ $- =~ x ]] && debug=1 && set +x
 				source ${1}
-				encrypt_vault ${1} ${2}
+				[[ ${debug} == 1 ]] && set -x
+				encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
 			else
 				echo
 				read -sp "Enter your Bitbucket password [ENTER]: " BBPASS
+				[[ $- =~ x ]] && debug=1 && set +x
 				printf "BBPASS=${BBPASS}\n" > ${1}
-				encrypt_vault ${1} ${2}
+				[[ ${debug} == 1 ]] && set -x
+				encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
 				echo
 			fi
-			rm -f ${2}
 			local LOCALID=$(git rev-parse --short HEAD)
 			[[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true" && unset https_proxy
+			[[ $- =~ x ]] && debug=1 && set +x
 			local REMOTEID=$(git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD 2>/dev/null | cut -c1-7)
+			[[ ${debug} == 1 ]] && set -x
 			[[ "${REMOTEID}" == "" ]] && printf "\nYour Bitbucket credentials are invalid!\n\n" && rm -f ${1} && exit
 			if [[ "${LOCALID}" != "${REMOTEID}" ]]
 			then
@@ -233,17 +241,15 @@ function get_credentials() {
 	then
 		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${@}
 		GET_CREDS_STATUS=${?}
-		encrypt_vault ${CRVAULT} ${VAULTP}
+		encrypt_vault ${CRVAULT} ${VAULTP} ${BBPASS}
 	fi
-	rm -f ${VAULTP}
 }
 
 function run_playbook() {
 	if [[ ${GET_CREDS_STATUS} == 0 || -f ${CRVAULT} ]]
 	then
-		[[ ! -f ${VAULTP} ]] && echo $(git config user.email | cut -d'@' -f1) > ${VAULTP}
+		[[ ! -f ${VAULTP} ]] && echo ${BBPASS} > ${VAULTP}
 		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS}
-		rm -f ${VAULTP}
 	fi
 }
 
@@ -264,7 +270,7 @@ function send_notification() {
 		SCRIPT_ARG=$(echo ${@} | sed -e 's/-/dash/g')
 		[ $(echo ${HOST_LIST} | wc -w) -gt 1 ] && HL=$(echo ${HOST_LIST} | sed 's/ /,/g') || HL=${HOST_LIST}
 		# Send playbook status notification
-		ansible-playbook site.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}'}" --limit ${HL} --tags notify &>/dev/null
+		ansible-playbook site.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}'}" --limit ${HL} --tags notify &>/dev/null &
 	fi
 }
 
@@ -277,14 +283,13 @@ PKG_LIST='epel-release sshpass'
 ANSIBLE_VERSION='2.8.1'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 BBVAULT="/var/tmp/.bbvault"
-CRVAULT="/var/tmp/.crvault"
-VAULTP="/var/tmp/.vaultp"
 
 # Main
 CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
-CRVAULT="${CRVAULT}_${ENAME}"
+CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
+VAULTP="${PWD}/inventories/${ENAME}/group_vars/vaultp"
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
@@ -298,4 +303,4 @@ enable_logging ${@}
 [[ -f ${OFILE} ]] && source ${OFILE}
 run_playbook ${@}
 disable_logging
-send_notification ${ORIG_ARGS} &
+send_notification ${ORIG_ARGS}
