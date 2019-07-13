@@ -1,0 +1,100 @@
+---
+# tasks to get VMs info
+- block:
+  - name: define hosts info
+    set_fact:
+      ipaddress1: "{{ipvar1 if ipvar1 != '' else octetvar1}}"
+      ipaddress2: "{{ipvar2 if ipvar2 != '' else octetvar2}}"
+      vmname: "{{namevar}}"
+      vmcpu: "{{cpuvar}}"
+      vmmem: "{{memvar}}"
+      appliance: "[{{ipvar1 if ipvar1 != '' else octetvar1}}/{{typevar}} {{ipvar1 if ipvar1 != '' else octetvar1}}\"/CUG]"
+    vars:
+      index: "{{member_item | regex_replace('[^\\.]*([0-9][0-9])$', '\\1')}}"
+      ipvar1: "{{hostvars[member_item]['netconfig']['ippool1'][index|int - 1] if hostvars[member_item]['netconfig']['ippool1'] is defined else ''}}"
+      ipvar2: "{{hostvars[member_item]['netconfig']['ippool2'][index|int - 1] if hostvars[member_item]['netconfig']['ippool2'] is defined else ''}}"
+      octetvar1: "{{customer.octets + '.' + hostvars[member_item]['netconfig']['octetpool1'][index|int - 1]|string if (hostvars[member_item]['netconfig']['octetpool1'] is defined and hostvars[member_item]['netconfig']['octetpool1'] != [] and index|int <= hostvars[member_item]['netconfig']['octetpool1']|length) else ''}}"
+      octetvar2: "{{customer.octets + '.' + hostvars[member_item]['netconfig']['octetpool2'][index|int - 1]|string if (hostvars[member_item]['netconfig']['octetpool2'] is defined and hostvars[member_item]['netconfig']['octetpool2'] != [] and index|int <= hostvars[member_item]['netconfig']['octetpool2']|length) else ''}}"
+      namevar: "{{customer.name_prefix}}{{hostvars[member_item]['vm']['name']}}{{member_item | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
+      cpuvar: "{{hostvars[member_item]['vm']['cpu']}}"
+      memvar: "{{hostvars[member_item]['vm']['memory']}}"
+      typevar: "{{'db/\"Database:' if 'em7db' in hostvars[member_item]['group_names'] else 'ap/\"Admin Portal:' if 'em7as' in hostvars[member_item]['group_names'] else 'mc/\"Message Collector:' if 'em7mc' in hostvars[member_item]['group_names'] else 'dc/\"Data Collector:'}}"
+    loop: "{{groups[vm_group]}}"
+    loop_control:
+      loop_var: member_item
+    register: info
+
+  - name: define appliances list
+    set_fact:
+      appliances_list: "{{appliances_list | default([]) + myvar if (appliances_list is defined and appliances_list != '') else myvar}}"
+
+    vars:
+      myvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.appliance') | list}}"
+    loop: "{{groups['em7db'] + groups['em7as'] + groups['em7mc'] + groups['em7dc']}}"
+    loop_control:
+      loop_var: info_item
+    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
+  - name: define relay lists
+    set_fact:
+      relay_ip1_list: "{{relay_ip1_list | default([]) + ipvar1 if (relay_ip1_list is defined and relay_ip1_list != '') else ipvar1}}"
+      relay_hst_list: "{{relay_hst_list | default([]) + hstvar if (relay_hst_list is defined and relay_hst_list != '') else hstvar}}"
+    vars:
+      ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
+      hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list}}"
+    loop: "{{groups['relay']}}"
+    loop_control:
+      loop_var: info_item
+    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
+  - name: define em7as lists
+    set_fact:
+      as_ip1_list: "{{as_ip1_list | default([]) + ipvar1 if (as_ip1_list is defined and as_ip1_list != '') else ipvar1}}"
+      as_hst_list: "{{as_hst_list | default([]) + hstvar if (as_hst_list is defined and as_hst_list != '') else hstvar}}"
+      as_cpu_list: "{{as_cpu_list | default([]) + cpuvar if (as_cpu_list is defined and as_cpu_list != '') else cpuvar}}"
+      as_mem_list: "{{as_mem_list | default([]) + cpuvar if (as_mem_list is defined and as_mem_list != '') else memvar}}"
+    vars:
+      ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
+      hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list}}"
+      cpuvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmcpu') | list}}"
+      memvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmmem') | list}}"
+    loop: "{{groups['em7as']}}"
+    loop_control:
+      loop_var: info_item
+    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+  - name: define em7db lists
+    set_fact:
+      db_ip1_list: "{{db_ip1_list | default([]) + ipvar1 if (db_ip1_list is defined and db_ip1_list != '') else ipvar1}}"
+      db_ip2_list: "{{db_ip2_list | default([]) + ipvar2 if (db_ip2_list is defined and db_ip2_list != '') else ipvar2}}"
+    vars:
+      ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
+      ipvar2: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list}}"
+    loop: "{{groups['em7db']}}"
+    loop_control:
+      loop_var: info_item
+    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
+  - name: define em7 dc lists
+    set_fact:
+      dc_ip1_list: "{{dc_ip1_list | default([]) + ipvar1 if (dc_ip1_list is defined and dc_ip1_list != '') else ipvar1}}"
+      half_dc_ip1_list: "{{half_dc_ip1_list | default([]) + halfvar1 if (half_dc_ip1_list is defined and half_dc_ip1_list != '') else halfvar1}}"
+    vars:
+      ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item.0) | map(attribute='ansible_facts.ipaddress1') | list}}"
+      halfvar1: "{{info.results | selectattr('member_item', 'equalto', info_item.0) | map(attribute='ansible_facts.ipaddress1') | list if info_item.1|int <= groups['em7dc']|length/2 - 1|int else []}}"
+    loop: "{{groups['em7dc'] | zip(range(0, (groups['em7dc']|length)|int)) | list}}"
+    loop_control:
+      loop_var: info_item
+    when: info.results | selectattr('member_item', 'equalto', info_item.0) | map(attribute='member_item') | list | string is search(info_item.0)
+
+  - name: define em7 mc lists
+    set_fact:
+      mc_ip1_list: "{{mc_ip1_list | default([]) + ipvar1 if (mc_ip1_list is defined and mc_ip1_list != '') else ipvar1}}"
+    vars:
+      ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
+    loop: "{{groups['em7mc']}}"
+    loop_control:
+      loop_var: info_item
+    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+  delegate_to: "{{groups['stack'] | first}}"
+  run_once: true
+  tags: vms

@@ -25,10 +25,6 @@
       power_on: no
       validate_certs: no
     register: deploy_ovf
-#- debug: var=deploy_ovf.instance.instance_uuid
-  - include_tasks: task_update_disks.yml
-  - include_tasks: task_update_hardware.yml
-  - include_tasks: task_expand_disks.yml
-  - include_tasks: task_configure_default_route.yml
+#  - debug: var=deploy_ovf.instance.instance_uuid
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: vms

@@ -11,7 +11,7 @@
       cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
       state: poweredoff
       validate_certs: no
-  - name: Update VM hardware settings
+  - name: Update VM hardware settings with one NIC
     vmware_guest:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
@@ -39,7 +39,7 @@
     when:
       - ova_nets.stdout_lines|length == 1
       - "'relay' not in group_names"
-  - name: Update VM hardware settings
+  - name: Update VM hardware settings with two NICs
     vmware_guest:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
@@ -81,4 +81,5 @@
     when:
       - vmguest_2net is failed
       - "'Guest Customization is already pending' not in vmguest_2net.msg"
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: vms

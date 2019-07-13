@@ -2,8 +2,8 @@
   ansible_user="{{bastion.username}}"
   ansible_ssh_pass="{{bastion.password}}"
 [bastion]
-  paelnxjmp01 ansible_host="{{bastion.address[0] if bastion.address[0] is defined else ''}}"
-  paelnxjmp02 ansible_host="{{bastion.address[1] if bastion.address[1] is defined else ''}}"
+  bastion01 ansible_host="{{bastion.address[0] if bastion.address[0] is defined else ''}}"
+  bastion02 ansible_host="{{bastion.address[1] if bastion.address[1] is defined else ''}}"
 
 [vcenter:vars]
   ansible_user="{{vcenter.username | default('')}}"
@@ -48,8 +48,8 @@
 
     [em7]
       [em7:vars]
-        ansible_user="{{credentials.username}}"
-        ansible_ssh_pass="{{credentials.password}}"
+        ansible_user="{{credentials.ssh_username}}"
+        ansible_ssh_pass="{{credentials.ssh_password}}"
         ansible_become_pass="{{ansible_ssh_pass}}"
       [em7:children]
         em7db
@@ -68,16 +68,16 @@
 
     [linuxjs]
       [linuxjs:vars]
-        ansible_user="{{credentials.username}}"
-        ansible_ssh_pass="{{credentials.password}}"
+        ansible_user="{{credentials.ssh_username}}"
+        ansible_ssh_pass="{{credentials.ssh_password}}"
         ansible_become_pass="{{ansible_ssh_pass}}"
       [linuxjs]
         linuxjs[01:02]
 
     [splunk]
       [splunk:vars]
-        ansible_user="{{credentials.username}}"
-        ansible_ssh_pass="{{credentials.password}}"
+        ansible_user="{{credentials.ssh_username}}"
+        ansible_ssh_pass="{{credentials.ssh_password}}"
         ansible_become_pass="{{ansible_ssh_pass}}"
       [splunk:children]
         splunksrc
@@ -96,8 +96,8 @@
 
     [relay]
       [relay:vars]
-        ansible_user="{{credentials.username}}"
-        ansible_ssh_pass="{{credentials.password}}"
+        ansible_user="{{credentials.ssh_username}}"
+        ansible_ssh_pass="{{credentials.ssh_password}}"
         ansible_become_pass="{{ansible_ssh_pass}}"
       [relay]
         relay[01:02]

@@ -16,8 +16,8 @@
       datacenter: "{{datacenter.name}}"
       validate_certs: false
       vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
-      vm_username: "{{ credentials.username }}"
-      vm_password: "{{ credentials.password }}"
+      vm_username: "{{ credentials.console_username }}"
+      vm_password: "{{ credentials.console_password }}"
       copy:
           src: "{{playbook_dir}}/roles/vms/files/expand_disks.sh"
           dest: "/tmp/expand_disks.sh"
@@ -30,8 +30,8 @@
       datacenter: "{{datacenter.name}}"
       validate_certs: false
       vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
-      vm_username: "{{ credentials.username }}"
-      vm_password: "{{ credentials.password }}"
+      vm_username: "{{ credentials.console_username }}"
+      vm_password: "{{ credentials.console_password }}"
       vm_shell: /bin/sh
       vm_shell_args: "/tmp/expand_disks.sh"
       wait_for_process: true
@@ -44,8 +44,8 @@
         datacenter: "{{datacenter.name}}"
         validate_certs: false
         vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
-        vm_username: "{{ credentials.username }}"
-        vm_password: "{{ credentials.password }}"
+        vm_username: "{{ credentials.console_username }}"
+        vm_password: "{{ credentials.console_password }}"
         copy:
             src: "{{playbook_dir}}/roles/vms/files/update_passwd.sh"
             dest: "/tmp/update_passwd.sh"
@@ -58,8 +58,8 @@
         datacenter: "{{datacenter.name}}"
         validate_certs: false
         vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
-        vm_username: "{{ credentials.username }}"
-        vm_password: "{{ credentials.password }}"
+        vm_username: "{{ credentials.console_username }}"
+        vm_password: "{{ credentials.console_password }}"
         vm_shell: /bin/sh
         vm_shell_args: "/tmp/update_passwd.sh"
         wait_for_process: true
@@ -76,7 +76,7 @@
         datacenter: "{{datacenter.name}}"
         validate_certs: false
         vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname | regex_replace('[^\\.]+([0-9][0-9])$', '\\1')}}"
-        vm_username: "{{ credentials.username }}"
+        vm_username: "{{ credentials.console_username }}"
         vm_password: KSvNKG0f0Q6nuZJnem1t
         vm_shell: /usr/bin/rm
         vm_shell_args: "/tmp/update_passwd.sh"

@@ -1,0 +1,12 @@
+---
+# Tasks to get hosts info
+- block:
+  - include_tasks:
+      file: task_define_hosts_variables_lists.yml
+      apply:
+        vars:
+          vm_group: "{{group_item}}"
+    loop: "{{group_list}}"
+    loop_control:
+      loop_var: group_item
+  tags: vms

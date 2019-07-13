@@ -81,6 +81,7 @@
           unit_number: "{{disk1_unit_number}}"
       validate_certs: no
     register: vmguest_disk
+    notify: expand disk1
     when:
       - vm.disk1 is defined
   - name: Update VM Disk2 settings
@@ -99,6 +100,7 @@
           unit_number: "{{disk2_unit_number}}"
       validate_certs: no
     register: vmguest_disk
+    notify: expand disk2
     when:
       - vm.disk2 is defined
       - vm.disk2 != ''
@@ -118,8 +120,10 @@
           unit_number: "{{disk3_unit_number}}"
       validate_certs: no
     register: vmguest_disk
+    notify: expand disk3
     when:
       - vm.disk3 is defined
       - vm.disk3 != ''
   when: not ansible_check_mode
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: vms

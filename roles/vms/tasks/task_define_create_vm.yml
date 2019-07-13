@@ -5,4 +5,12 @@
   - include_tasks: task_get_ova_name.yml
   - include_tasks: task_get_vm_datastore.yml
   - include_tasks: task_deploy_ova.yml
+  - include_tasks: task_update_disks.yml
+  - include_tasks: task_update_hardware.yml
+  - include_tasks: task_update_default_route.yml
+  - include_tasks: task_update_em7user_group.yml
+  - include_tasks: task_update_vmwaretools.yml
+  - include_tasks: task_update_chrony.yml
+  - include_tasks: task_update_repo.yml
+  - include_tasks: task_update_puppet_data_file.yml
   tags: vms

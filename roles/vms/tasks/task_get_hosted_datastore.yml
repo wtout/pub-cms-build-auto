@@ -26,19 +26,19 @@
   - name: define hosted datastores list for each host group
     set_fact:
       vm_ds_names: "{{ds_names | intersect(hostvars[groups['vcenter'][0]]['db_ds_names']) if vm_group == 'em7db' else ds_names | intersect(hostvars[groups['vcenter'][0]]['ndb_ds_names'])}}"
-  when: inventory_hostname == groups[vm_group][pair_num]
+  when: inventory_hostname == groups[vm_group][pair_num] or (inventory_hostname == groups[vm_group][pair_num + 1] and groups[vm_group][pair_num] not in ansible_play_hosts)
   tags: vms
 
 - name: define hosted datastore for each host
   set_fact:
     vm_ds: "{{vm_ds_names[0]}}"
-  when: inventory_hostname == groups[vm_group][pair_num]
+  when:
+    - (inventory_hostname | regex_replace('^[a-z,A-Z]*', '')|int - 1) % 2 == 0
   tags: vms
 
 - name: define hosted datastore for each host
   set_fact:
-    vm_ds: "{{hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1]}}"
+    vm_ds: "{{hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1] if groups[vm_group][pair_num] in ansible_play_hosts else vm_ds_names[1]}}"
   when:
-    - groups[vm_group][pair_num + 1] is defined
-    - inventory_hostname == groups[vm_group][pair_num + 1]
+    - (inventory_hostname | regex_replace('^[a-z,A-Z]*', '')|int - 1) % 2 != 0
   tags: vms

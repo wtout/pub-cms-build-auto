@@ -6,6 +6,7 @@
       group_list: "{{group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'splunk', 'infra'])}}"
     loop: "{{groups['stack']}}"
     run_once: true
+  - include_tasks: task_define_hosts_variables.yml
   - include_tasks: task_create_folder.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'

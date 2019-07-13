@@ -14,33 +14,45 @@ bastion:
 
 datacenter:
   name: "PAE-HX-DC"
-  resources: ""
+  resources: []
 
 puppet:
-  vm_name: ""
-  fqdn: ""
-  ip_address: ""
+  vmname: 'alln1qspupp01'
+  fqdn: 'alln1qspupp01.cisco-cms.com'
+  ipaddress: '172.19.251.53'
 
 repo:
-  base_url: ""
-  vm_name: ""
-  fqdn: ""
-  ip_address: ""
+  baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'
+  vmname: 'alln1qsyumrpp01'
+  fqdn: 'alln1qsyumrpp01.cisco-cms.com'
+  ipaddress: '172.19.251.54'
 
 splunk:
-  license_master_ip: "172.19.252.22"
-  he_indexer01_ip: "alln1splidxp01"
-  he_indexer02_ip: ""
-  he_searchhead01_ip: "alln1splidxp01"
-  he_searchhead02_ip: "alln1splidxp01"
-  he_deployment_server_ip: "172.19.252.21"
-  he_deployment_server: "alln1-sol-ds-p01"
-  mom_indexer1_ip: "172.19.252.28"
-  mom_indexer2_ip: "172.19.252.29"
-  mom_clustermaster_ip: ""
+  license_master_ip: '172.19.252.22'
+  he_indexer01_ip: 'alln1splidxp01'
+  he_indexer02_ip: ''
+  he_searchhead01_ip: 'alln1splsrcp01'
+  he_searchhead02_ip: 'alln1splsrcp02'
+  he_deployment_server_ip: '172.19.252.21'
+  he_deployment_server: 'alln1-spl-ds-p01'
+  mom_indexer1_ip: '172.19.252.28'
+  mom_indexer2_ip: '172.19.252.29'
+  mom_clustermaster_ip: ''
+  tile: 'alln1spltlsp01'
 
 sysconfig:
   dns_config: ["search cisco-cms.com", "nameserver 172.19.251.21", "nameserver 172.19.251.22"]
   dns_servers: ["172.19.251.21", "172.19.251.22"]
-  domain_name: "cisco-cms.com"
-  ntp_server_fo: "62"
+  domain_name: 'cisco-cms.com'
+  ntp_server_fo: '62'
+
+vip:
+  mc: "{{customer.octets}}.42"
+  prt: "{{customer.octets}}.49"
+  db: "{{customer.octets}}.40"
+  src: "{{customer.octets}}.41"
+  rly: "{{customer.octets}}.120"
+  rly_db: "{{customer.octets}}.1"
+  msa: ''
+  casesentry: ''
+

@@ -1,8 +1,10 @@
 ---
 # Variables for linuxjs hosts
 credentials:
-  username: "root"
-  password: "ast4roslab"
+  console_username: "root"
+  console_password: "ast4roslab"
+  ssh_username: "root"
+  ssh_password: "ast4roslab"
 
 vm:
   cpu: '2'
@@ -16,10 +18,10 @@ netconfig:
   octetpool1: [ '58', '56' ]
   gateway1: ''
   netmask1: '255.255.255.192'
-  network1: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+  network1: "Internal-Net"
   netname1: 'ens160'
   octetpool2: [ '76', '74' ]
   gateway2: "{{customer.octets}}.94"
   netmask2: '255.255.255.224'
-  network2: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-64-27-cust"
+  network2: "Customer-Net-Inside"
   netname2: 'ens192'

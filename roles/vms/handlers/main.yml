@@ -1,2 +1,86 @@
 ---
 # handlers file for vms
+- name: expand disk1
+  shell: partprobe; pvresize /dev/sdb; lvresize -l +100%FREE -r /dev/mapper/vgroup2-opt
+  tags: vms
+
+- name: expand disk2
+  shell: |
+    parted --script /dev/sdc mklabel gpt mkpart vgroup3 0% 100% set 1 lvm on
+    pvcreate /dev/sdc1
+    vgcreate vgroup3 /dev/sdc1
+    lvcreate -l100%FREE -n data01 /dev/vgroup3
+  notify: create disk2 filesystem
+  tags: vms
+
+- name: create disk2 filesystem
+  filesystem:
+    fstype: ext4
+    device: /dev/vgroup3/data01
+  notify: set data01 mount points
+  tags: vms
+
+- name: set data01 mount points
+  mount:
+    name: /data01
+    src: /dev/mapper/vgroup3-data01
+    fstype: ext4
+    opts: defaults
+    state: mounted
+    dump: '1'
+    passno: '2'
+  notify: set permissions and ownership of /data01
+  tags: vms
+
+- name: set permissions and ownership of /data01
+  file:
+    path: /data01
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+  tags: vms
+
+- name: expand disk3
+  shell: |
+    parted --script /dev/sdd mklabel gpt mkpart vgroup4 0% 100% set 1 lvm on
+    pvcreate /dev/sdd1
+    vgcreate vgroup4 /dev/sdd1
+    lvcreate -l100%FREE -n data02 /dev/vgroup4
+  notify: create disk3 filesystem
+  tags: vms
+
+- name: create disk3 filesystem
+  filesystem:
+    fstype: ext4
+    device: /dev/vgroup4/data02
+  notify: set data02 mount points
+  tags: vms
+
+- name: set data02 mount points
+  mount:
+    name: /data02
+    src: /dev/mapper/vgroup4-data02
+    fstype: ext4
+    opts: defaults
+    state: mounted
+    dump: '1'
+    passno: '2'
+  notify: set permissions and ownership of /data02
+  tags: vms
+
+- name: set permissions and ownership of /data02
+  file:
+    path: /data02
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+  tags: vms
+
+- name: restart chrony
+  service:
+    name: chronyd
+    state: restarted
+  become: true
+  tags: vms
