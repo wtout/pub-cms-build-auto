@@ -1,7 +1,57 @@
 ---
 # handlers file for vms
+- name: expand disk0
+  parted:
+    device: /dev/sda
+    unit: MiB
+    number: 2
+  become: "{{true if 'em7' in group_names else false}}"
+  register: parted_info
+  changed_when: parted_info is succeeded
+  notify: define parted_start
+  tags: vms
+
+- name: define parted_start
+  set_fact:
+    parted_start: "{{task_item.begin | default(0)}}"
+  loop: "{{parted_info.partitions}}"
+  loop_control:
+    loop_var: task_item
+  when: task_item.num == 2
+  changed_when: parted_info is succeeded
+  notify: delete old disk0 partition
+  tags: vms
+
+- name: delete old disk0 partition
+  parted:
+    device: /dev/sda
+    number: 2
+    state: absent
+  become: "{{true if 'em7' in group_names else false}}"
+  notify: create new disk0 partition
+  tags: vms
+
+- name: create new disk0 partition
+  parted:
+    device: /dev/sda
+    number: 2
+    flags: [ lvm ]
+    part_start: "{{parted_start}}MiB"
+    state: present
+  become: "{{true if 'em7' in group_names else false}}"
+  notify: reboot vm
+  tags: vms
+
+- name: reboot vm
+  reboot:
+    post_reboot_delay: 10
+    reboot_timeout: 60
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vms
+
 - name: expand disk1
   shell: partprobe; pvresize /dev/sdb; lvresize -l +100%FREE -r /dev/mapper/vgroup2-opt
+  become: "{{true if 'em7' in group_names else false}}"
   tags: vms
 
 - name: expand disk2
@@ -10,6 +60,7 @@
     pvcreate /dev/sdc1
     vgcreate vgroup3 /dev/sdc1
     lvcreate -l100%FREE -n data01 /dev/vgroup3
+  become: "{{true if 'em7' in group_names else false}}"
   notify: create disk2 filesystem
   tags: vms
 
@@ -17,6 +68,7 @@
   filesystem:
     fstype: ext4
     device: /dev/vgroup3/data01
+  become: "{{true if 'em7' in group_names else false}}"
   notify: set data01 mount points
   tags: vms
 
@@ -29,6 +81,7 @@
     state: mounted
     dump: '1'
     passno: '2'
+  become: "{{true if 'em7' in group_names else false}}"
   notify: set permissions and ownership of /data01
   tags: vms
 
@@ -39,6 +92,7 @@
     mode: 0755
     owner: root
     group: root
+  become: "{{true if 'em7' in group_names else false}}"
   tags: vms
 
 - name: expand disk3
@@ -47,6 +101,7 @@
     pvcreate /dev/sdd1
     vgcreate vgroup4 /dev/sdd1
     lvcreate -l100%FREE -n data02 /dev/vgroup4
+  become: "{{true if 'em7' in group_names else false}}"
   notify: create disk3 filesystem
   tags: vms
 
@@ -54,6 +109,7 @@
   filesystem:
     fstype: ext4
     device: /dev/vgroup4/data02
+  become: "{{true if 'em7' in group_names else false}}"
   notify: set data02 mount points
   tags: vms
 
@@ -66,6 +122,7 @@
     state: mounted
     dump: '1'
     passno: '2'
+  become: "{{true if 'em7' in group_names else false}}"
   notify: set permissions and ownership of /data02
   tags: vms
 
@@ -76,11 +133,12 @@
     mode: 0755
     owner: root
     group: root
+  become: "{{true if 'em7' in group_names else false}}"
   tags: vms
 
 - name: restart chrony
   service:
     name: chronyd
     state: restarted
-  become: true
+  become: "{{true if 'em7' in group_names else false}}"
   tags: vms

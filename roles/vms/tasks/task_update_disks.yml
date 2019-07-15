@@ -63,6 +63,7 @@
           unit_number: "{{disk0_unit_number}}"
       validate_certs: no
     register: vmguest_disk
+    notify: expand disk0
     when:
       - vm.disk0 is defined
   - name: Update VM Disk1 settings
