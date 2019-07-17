@@ -1,0 +1,17 @@
+---
+# Tasks to get hosts info
+- block:
+  - name: get list of groups in stack
+    set_fact:
+      group_list: "{{group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'splunk', 'infra'])}}"
+    loop: "{{groups['stack']}}"
+    run_once: true
+  - include_tasks:
+      file: task_define_hosts_variables_lists.yml
+      apply:
+        vars:
+          vm_group: "{{group_item}}"
+    loop: "{{group_list}}"
+    loop_control:
+      loop_var: group_item
+  tags: always

@@ -1,13 +1,14 @@
 ---
-# Variables for lb hosts
+# Variables for netscaler hosts
 credentials:
-  username: "root"
-  password: "root"
+  username: "nsroot"
+  password: "C1sc0123"
 
 vm:
   cpu: '2'
   memory: '2'     # GiB
   disk: '20'      # GiB
+  name: "nsvpx{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:
   octetpool1: "{{range(53, 55 + 1)|list}}"

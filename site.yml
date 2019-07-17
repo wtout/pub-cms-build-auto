@@ -15,6 +15,14 @@
   roles:
     - role: todo
 
+# Play to define vm facts
+- name: define vm facts
+  hosts: all
+  gather_facts: no
+
+  roles:
+    - role: vmfacts
+
 # Plays to set up the remote hosts and install the software
 - name: Setup hosts and install the software
   hosts: all

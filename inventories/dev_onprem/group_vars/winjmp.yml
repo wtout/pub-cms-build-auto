@@ -2,12 +2,13 @@
 # Variables for winjmp hosts
 credentials:
   username: "root"
-  password: "root"
+  password: "V1c3gr1p"
 
 vm:
   cpu: '2'
   memory: '8'     # GiB
   disk: '200'     # GiB
+  name: "winjmp{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:
   octetpool1: [ '59', '57' ]

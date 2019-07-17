@@ -1,13 +1,14 @@
 ---
 # Variables for csr hosts
 credentials:
-  username: "root"
-  password: "root"
+  username: "admin"
+  password: "C1sc0123"
 
 vm:
   cpu: '2'
   memory: '4'     # GiB
   disk: '8'       # GiB
+  name: "csr{{datacenters[datacenter.name]['deptype']}}"
 
 netconfig:
   octetpool1: "{{range(60, 62 + 1)|list}}"

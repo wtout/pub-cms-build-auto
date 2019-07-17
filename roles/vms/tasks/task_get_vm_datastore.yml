@@ -1,31 +1,13 @@
 ---
-# Tasks to assign a datastore to each VM
+# Tasks to assign a datastore to each VM in a pair
 - block:
-  - name: define vm_seq for each host
-    set_fact:
-      vm_seq: "{{range(0, groups[vm_group]|length, 2)|list}}"
-
   - include_tasks:
-      file:
-        task_get_hosted_datastore.yml
-      apply:
-        vars:
-          - pair_num: "{{seq_item}}"
-    loop: "{{vm_seq}}"
-    loop_control:
-      loop_var: seq_item
+      file: task_get_hosted_datastore.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
 
   - include_tasks:
-      file:
-        task_get_onprem_datastore.yml
-      apply:
-        vars:
-          - pair_num: "{{seq_item}}"
-    loop: "{{vm_seq}}"
-    loop_control:
-      loop_var: seq_item
+      file: task_get_onprem_datastore.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
 

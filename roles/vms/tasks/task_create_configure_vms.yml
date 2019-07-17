@@ -1,8 +1,6 @@
 ---
-# Tasks to define and create VMs
+# Tasks to create and configure VM pairs
 - block:
-  - include_tasks: task_get_vm_ip.yml
-  - include_tasks: task_get_ova_name.yml
   - include_tasks: task_get_vm_datastore.yml
   - include_tasks: task_deploy_ova.yml
   - include_tasks: task_update_disks.yml
@@ -13,4 +11,5 @@
   - include_tasks: task_update_chrony.yml
   - include_tasks: task_update_repo.yml
   - include_tasks: task_update_puppet_data_file.yml
+  when: inventory_hostname == groups[vm_group][pair_num] or inventory_hostname == groups[vm_group][pair_num + 1]
   tags: vms

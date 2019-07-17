@@ -22,7 +22,7 @@
     [infra]
       [infra:children]
         csr
-        lb
+        nsc
         winjmp
 
       [csr:vars]
@@ -32,12 +32,12 @@
       [csr]
 #        csr[01:02]
 
-      [lb:vars]
+      [nsc:vars]
         ansible_user="{{credentials.username}}"
         ansible_ssh_pass="{{credentials.password}}"
         ansible_become_pass="{{ansible_ssh_pass}}"
-      [lb]
-#        lb[01:02]
+      [nsc]
+#        nsc[01:02]
 
       [winjmp:vars]
         ansible_user="{{credentials.username}}"
