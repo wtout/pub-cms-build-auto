@@ -15,8 +15,7 @@
 - name: Initialize found datastores list
   set_fact:
     hs_ds_names: []
-
-  tags: vms
+  tags: capcheck
 
 - set_fact:
     hs_ds_names: "{{hs_ds_names|default([]) + [item.name]}}"
@@ -28,10 +27,12 @@
     that:
       - "hs_ds_names|length > 0"
     fail_msg: "Found no datastores with enough storage space to deploy the environment"
+  tags: capcheck
 
 - block:
-  - set_fact:
-      db_ds_names: "{{hs_ds_names}}"
+  - name: define lists of datastores that have enough space for half the VMs
+    set_fact:
+      db_ds_names: "{{hs_ds_names if groups['em7db'] is defined else []}}"
       ndb_ds_names: "{{hs_ds_names}}"
   - debug:
       msg: "Found {{hs_ds_names|length}} datastores that have enough space for half the VMs"
@@ -39,26 +40,29 @@
   tags: capcheck
 
 - block:
-  - set_fact:
+  - name: define list of datastores to host the DB VMs
+    set_fact:
       db_ds_names: "{{db_ds_names|default([]) + [item.name]}}"
     loop: "{{datastore_facts.datastores | sort(attribute='freeSpace', reverse=true)}}"
     when:
       - groups['em7db'] is defined
       - item.freeSpace >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float) * 1024|pow(3)
-  - set_fact:
+  - name: define intermediate list of datastores
+    set_fact:
       intndb_ds_names: "{{intndb_ds_names|default([]) + [item.name]}}"
-    loop: "{{datastore_facts.datastores | difference(db_ds_names) | sort(attribute='freeSpace', reverse=true)}}"
+    loop: "{{datastore_facts.datastores | difference(db_ds_names|default([])) | sort(attribute='freeSpace', reverse=true)}}"
     when:
-      - groups['em7db'] is defined
-      - item.freeSpace >= (((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) * 1024|pow(3))
-  - set_fact:
+      - item.freeSpace >= (((required_space|float / 2) - (hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) * 1024|pow(3) if groups['em7db'] is defined else 0))
+  - name: define the list of common datastores
+    set_fact:
       com_ds_names: "{{com_ds_names|default([]) + item}}"
     vars:
       myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace', reverse=true)|list}}"
-    loop: "{{db_ds_names}}"
+    loop: "{{db_ds_names|default([])}}"
     when: myvar[0] >= (required_space|float * 1024|pow(3)) / 2
-  - set_fact:
-      ndb_ds_names: "{{com_ds_names | union(intndb_ds_names) | unique}}"
+  - name: define the list of datastores to host the non-DB VMs
+    set_fact:
+      ndb_ds_names: "{{com_ds_names|default([]) | union(intndb_ds_names) | unique}}"
   when: hs_ds_names|length < 2
   tags: capcheck
 
@@ -67,7 +71,7 @@
     db_ds_total_fs: "{{db_ds_total_fs|default(0)|int + myvar[0]}}"
   vars:
     myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace')|list}}"
-  loop: "{{db_ds_names}}"
+  loop: "{{db_ds_names|default([])}}"
   tags: capcheck
 
 - name: define ndb_ds_total_fs
@@ -75,5 +79,5 @@
     ndb_ds_total_fs: "{{ndb_ds_total_fs|default(0)|int + myvar[0]}}"
   vars:
     myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace')|list}}"
-  loop: "{{ndb_ds_names}}"
+  loop: "{{ndb_ds_names|default([])}}"
   tags: capcheck

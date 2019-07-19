@@ -26,10 +26,29 @@
   - name: define hosted datastores list for each host group
     set_fact:
       vm_ds_names: "{{ds_names | intersect(hostvars[groups['vcenter'][0]]['db_ds_names']) if vm_group == 'em7db' else ds_names | intersect(hostvars[groups['vcenter'][0]]['ndb_ds_names'])}}"
+  - name: assert 1
+    assert:
+      that:
+        - vm_ds_names|length >= 2
+      fail_msg: "Not enough storage space to deploy the pair of {{vm_group}} VMs"
+    when:
+      - groups[vm_group][pair_num] is defined
+      - groups[vm_group][pair_num + 1] is defined
   when: inventory_hostname == groups[vm_group][pair_num] or (inventory_hostname == groups[vm_group][pair_num + 1] and groups[vm_group][pair_num] not in ansible_play_hosts)
   tags: vms
 
-- name: define hosted datastore for each host
+- name: assert 2
+  assert:
+    that:
+      - hostvars[groups[vm_group][pair_num]]['vm_ds_names']|length >= 2
+    fail_msg: "Not enough storage space to deploy the pair of {{vm_group}} VMs"
+  when:
+    - groups[vm_group][pair_num] is defined
+    - groups[vm_group][pair_num + 1] is defined
+    - inventory_hostname == groups[vm_group][pair_num + 1]
+  tags: vms
+
+- name: define hosted datastore for each each even seq host
   set_fact:
     vm_ds: "{{vm_ds_names[0]}}"
   when:
@@ -37,9 +56,9 @@
     - inventory_hostname == groups[vm_group][pair_num]
   tags: vms
 
-- name: define hosted datastore for each host
+- name: define hosted datastore for each odd seq host
   set_fact:
-    vm_ds: "{{hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1] if groups[vm_group][pair_num] in ansible_play_hosts else vm_ds_names[1]}}"
+    vm_ds: "{{hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1] if groups[vm_group][pair_num + 1] in ansible_play_hosts else vm_ds_names[1]}}"
   when:
     - (inventory_hostname[-2:]|int - 1) % 2 != 0
     - inventory_hostname == groups[vm_group][pair_num + 1]

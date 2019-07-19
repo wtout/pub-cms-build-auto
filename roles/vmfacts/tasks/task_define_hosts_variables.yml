@@ -1,11 +1,20 @@
 ---
 # Tasks to get hosts info
 - block:
+#  - name: define the list of groups in the stack
+#    set_fact:
+#      group_list: "{{group_list|default([]) + [group_item] if (groups[group_item] is defined and groups[group_item] != []) else group_list|default([])}}"
+#    loop: [ 'csr', 'nsc', 'winjmp', 'em7db', 'em7dc', 'em7mc', 'em7as', 'splunkdpl', 'splunkind', 'splunkmas', 'splunksrc', 'linuxjs', 'relay' ]
+#    loop_control:
+#      loop_var: group_item
+#    run_once: true
+
   - name: get list of groups in stack
     set_fact:
       group_list: "{{group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'splunk', 'infra'])}}"
     loop: "{{groups['stack']}}"
     run_once: true
+
   - include_tasks:
       file: task_define_hosts_variables_lists.yml
       apply:

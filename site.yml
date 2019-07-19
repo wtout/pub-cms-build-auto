@@ -1,5 +1,5 @@
 ---
-# Validate credentials
+# Validate credentials (always run)
 - name: Validate user's credentials
   hosts: localhost
   gather_facts: no
@@ -7,21 +7,25 @@
   roles:
     - role: check_creds
 
-# Play to determine what to do
+# Play to determine what to do and to define vms facts(always run)
 - name: determine what to do
   hosts: all
+  any_errors_fatal: true
   gather_facts: no
 
   roles:
     - role: todo
+    - role: vmfacts
 
-# Play to define vm facts
-- name: define vm facts
+# Plays to deploy the ssh_keys to bastion server(s) and to perform the infrastructure capacity check
+- name: Deploy ssh keys if applicable and perform capacity check
   hosts: all
+  any_errors_fatal: true
   gather_facts: no
 
   roles:
-    - role: vmfacts
+  - {role: ssh_keys, when: configure_ssh_keys | default(false) | bool}
+  - {role: capcheck, when: capcheck | default(false) | bool}
 
 # Plays to set up the remote hosts and install the software
 - name: Setup hosts and install the software
@@ -29,8 +33,6 @@
   gather_facts: no
 
   roles:
-  - {role: ssh_keys, when: configure_ssh_keys | default(false) | bool}
-  - {role: capcheck, when: capcheck | default(false) | bool}
   - {role: get_release, when: get_release | default(false) | bool}
   - {role: vms, when: create_vms | default(false) | bool}
 #  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
@@ -38,6 +40,7 @@
 # Plays to uninstall the software and rollback the remote hosts
 - name: Uninstall the software and rollback the remote hosts
   hosts: all
+  order: reverse_inventory
   gather_facts: no
 
   roles:

@@ -27,10 +27,9 @@
   - name: define appliances list
     set_fact:
       appliances_list: "{{appliances_list | default([]) + myvar if (appliances_list is defined and appliances_list != '') else myvar}}"
-
     vars:
       myvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.appliance') | list}}"
-    loop: "{{groups['em7db'] + groups['em7as'] + groups['em7mc'] + groups['em7dc']}}"
+    loop: "{{(groups['em7db'] if groups['em7db'] is defined else []) + (groups['em7as'] if groups['em7as'] is defined else []) + (groups['em7mc'] if groups['em7mc'] is defined else []) + (groups['em7dc'] if groups['em7dc'] is defined else [])}}"
     loop_control:
       loop_var: info_item
     when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
@@ -45,7 +44,9 @@
     loop: "{{groups['relay']}}"
     loop_control:
       loop_var: info_item
-    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+    when:
+      - groups['relay'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define em7as lists
     set_fact:
@@ -61,7 +62,9 @@
     loop: "{{groups['em7as']}}"
     loop_control:
       loop_var: info_item
-    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+    when:
+      - groups['em7as'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
   - name: define em7db lists
     set_fact:
       db_ip1_list: "{{db_ip1_list | default([]) + ipvar1 if (db_ip1_list is defined and db_ip1_list != '') else ipvar1}}"
@@ -72,7 +75,9 @@
     loop: "{{groups['em7db']}}"
     loop_control:
       loop_var: info_item
-    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+    when:
+      - groups['em7db'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define em7 dc lists
     set_fact:
@@ -84,7 +89,9 @@
     loop: "{{groups['em7dc'] | zip(range(0, (groups['em7dc']|length)|int)) | list}}"
     loop_control:
       loop_var: info_item
-    when: info.results | selectattr('member_item', 'equalto', info_item.0) | map(attribute='member_item') | list | string is search(info_item.0)
+    when:
+      - groups['em7dc'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item.0) | map(attribute='member_item') | list | string is search(info_item.0)
 
   - name: define em7 mc lists
     set_fact:
@@ -94,7 +101,9 @@
     loop: "{{groups['em7mc']}}"
     loop_control:
       loop_var: info_item
-    when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+    when:
+      - groups['em7mc'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
   delegate_to: "{{groups['stack'] | first}}"
   run_once: true
-  tags: always
+  tags: vms
