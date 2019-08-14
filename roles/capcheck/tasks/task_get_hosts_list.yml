@@ -24,4 +24,4 @@
     vars:
       new_item: "{'resources': \"{{hosts_list}}\"}"
 
-  tags: capcheck
+  tags: ['capcheck', 'vms']

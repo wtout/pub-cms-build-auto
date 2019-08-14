@@ -10,24 +10,24 @@
     validate_certs: no
   register: datastore_facts
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
-  tags: capcheck
+  tags: ['capcheck', 'vms']
 
 - name: Initialize found datastores list
   set_fact:
     hs_ds_names: []
-  tags: capcheck
+  tags: ['capcheck', 'vms']
 
 - set_fact:
     hs_ds_names: "{{hs_ds_names|default([]) + [item.name]}}"
   loop: "{{datastore_facts.datastores | sort(attribute='freeSpace', reverse=true)}}"
   when: item.freeSpace >= (required_space|float * 1024|pow(3)) / 2
-  tags: capcheck
+  tags: ['capcheck', 'vms']
 
 - assert:
     that:
       - "hs_ds_names|length > 0"
     fail_msg: "Found no datastores with enough storage space to deploy the environment"
-  tags: capcheck
+  tags: ['capcheck', 'vms']
 
 - block:
   - name: define lists of datastores that have enough space for half the VMs
@@ -37,7 +37,7 @@
   - debug:
       msg: "Found {{hs_ds_names|length}} datastores that have enough space for half the VMs"
   when: hs_ds_names|length >= 2
-  tags: capcheck
+  tags: ['capcheck', 'vms']
 
 - block:
   - name: define list of datastores to host the DB VMs
@@ -64,7 +64,7 @@
     set_fact:
       ndb_ds_names: "{{com_ds_names|default([]) | union(intndb_ds_names) | unique}}"
   when: hs_ds_names|length < 2
-  tags: capcheck
+  tags: ['capcheck', 'vms']
 
 - name: define db_ds_total_fs
   set_fact:
@@ -72,7 +72,7 @@
   vars:
     myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace')|list}}"
   loop: "{{db_ds_names|default([])}}"
-  tags: capcheck
+  tags: ['capcheck', 'vms']
 
 - name: define ndb_ds_total_fs
   set_fact:
@@ -80,4 +80,4 @@
   vars:
     myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace')|list}}"
   loop: "{{ndb_ds_names|default([])}}"
-  tags: capcheck
+  tags: ['capcheck', 'vms']

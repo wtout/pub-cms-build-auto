@@ -1,0 +1,31 @@
+---
+# Tasks to generate certificate for em7 vm
+- block:
+  - name: check if generate-ngx-cert.sh exists
+    stat:
+      path: '/opt/em7/share/ssl/generate-ngx-cert.sh'
+    register: script_stat
+  - assert:
+      that: script_stat.stat.exists
+      fail_msg: 'Script to generate certificates for em7 does not exist. Aborting!'
+  - block:
+    - name: generate ngx certificate for EM7 VM
+      shell: ./generate-ngx-cert.sh
+      args:
+        chdir: '/opt/em7/share/ssl'
+    - name: update puppet.conf
+      lineinfile:
+        path: '/home/em7release/.puppetlabs/etc/puppet/puppet.conf'
+        line: "{{line_item}}"
+        group: em7release
+        owner: em7release
+      loop:
+        - '[agent]'
+        - 'certname = em7release.{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}'
+        - 'server = {{puppet.fqdn}}'
+      loop_control:
+        loop_var: line_item
+    when: script_stat.stat.exists
+    become: "{{true if 'em7' in group_names else false}}"
+  when: "'em7' in group_names"
+  tags: certificates

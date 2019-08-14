@@ -1,0 +1,29 @@
+---
+# Tasks to generate certificate for non-em7 vm
+- block:
+  - name: check if puppet agent is installed
+    shell: $(which yum) list installed puppet-agent || echo "No puppet-agent installed"
+    check_mode: no
+    register: puppet_installed
+    ignore_errors: true
+  - block:
+    - name: Download Puppet to non-EM7 VM
+      get_url:
+        url: "https://{{puppet.fqdn}}:8140/packages/current/install.bash"
+        dest: /tmp
+        url_username: "{{hostvars[groups['puppet']|first]['ansible_user']}}"
+        url_password: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
+        validate_certs: no
+      register: download_action
+    - name: Install Puppet on non-EM7 VM
+      command: bash /tmp/install.bash
+      when: download_action is succeeded
+      notify:
+        - puppet sign certs
+    when: "'No puppet-agent installed' in puppet_installed"
+  when: "'em7' not in group_names"
+  tags: certificates
+
+- name: flush handlers
+  meta: flush_handlers
+  tags: certificates

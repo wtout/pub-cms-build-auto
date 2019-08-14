@@ -1,0 +1,7 @@
+---
+# handlers file for certificates
+- name: puppet sign certs
+  shell: /usr/local/bin/puppet cert sign {{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}
+  delegate_to: "{{groups['puppet']|first}}"
+  ignore_errors: true
+  tags: certificates

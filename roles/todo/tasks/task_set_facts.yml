@@ -25,7 +25,7 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['vcenter']
-  tags: capcheck
+  tags: ['capcheck', 'vms']
 
 - name: define get_release
   set_fact:
@@ -50,6 +50,14 @@
     - rollback | default(false) | bool
     - inventory_hostname in groups['stack']
   tags: vms
+
+- name: define create_certs
+  set_fact:
+    create_certs: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['stack']
+  tags: certificates
 
 - name: define check_requiretty
   set_fact:

@@ -1,10 +1,8 @@
 ---
 # Variables for relay hosts
 credentials:
-  console_username: "root"
-  console_password: "ast4roslab"
-  ssh_username: "root"
-  ssh_password: "ast4roslab"
+  username: "root"
+  password: "ast4roslab"
 
 vm:
   cpu: '4'

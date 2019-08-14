@@ -1,12 +1,5 @@
 ---
 # tasks file for check_creds
-- name: delete vaultp file
-  file:
-    path: "{{VPFILE}}"
-    state: absent
-  check_mode: no
-  tags: always
-
 - include_tasks:
     file: task_validate_bastion_creds.yml
     apply:
@@ -18,6 +11,13 @@
   when:
     - groups['bastion']|length >= 1
     - hostvars[task_item]['ansible_host'] != ''
+  tags: always
+
+- name: delete vaultp file
+  file:
+    path: "{{VPFILE}}"
+    state: absent
+  check_mode: no
   tags: always
 
 - include_tasks:

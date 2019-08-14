@@ -1,0 +1,27 @@
+---
+# tasks to update /etc/silo.conf on EM7 VM
+- block:
+  - name: Update silo.conf on VM
+    replace:
+      path: /etc/silo.conf
+      regexp: '^({{task_item.param}}) (.*)$'
+      replace: '\g<1> {{task_item.value}}'
+    loop:
+      - { param: 'ipaddress =', value: "{{ansible_host}}" }
+      - { param: 'dbipaddrs =', value: "{{db_ip1_list|join(',') + ',' + vip.db}}" }
+#    - { param: 'ipaddr =', value: "{{db_ip1_list[0] if inventory_hostname == groups['em7db'][1] else db_ip1_list[1]}}" }
+    loop_control:
+      loop_var: task_item
+  - name: Update dbserver in silo.conf on VM
+    replace:
+      path: /etc/silo.conf
+      regexp: '^({{task_item.param}}) (.*)$'
+      replace: '\g<1> {{task_item.value}}'
+    loop:
+      - { param: 'dbserver =', value: "{{vip.db}}" }
+    loop_control:
+      loop_var: task_item
+    when: "'em7db' not in group_names"
+  when: "'em7' in group_names"
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vms

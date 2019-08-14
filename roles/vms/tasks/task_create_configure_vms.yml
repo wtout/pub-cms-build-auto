@@ -6,10 +6,5 @@
   - include_tasks: task_update_disks.yml
   - include_tasks: task_update_hardware.yml
   - include_tasks: task_update_default_route.yml
-  - include_tasks: task_update_em7user_group.yml
-  - include_tasks: task_update_vmwaretools.yml
-  - include_tasks: task_update_chrony.yml
-  - include_tasks: task_update_repo.yml
-  - include_tasks: task_update_puppet_data_file.yml
   when: inventory_hostname == groups[vm_group][pair_num] or inventory_hostname == groups[vm_group][pair_num + 1]
   tags: vms

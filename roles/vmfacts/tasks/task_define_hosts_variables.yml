@@ -4,7 +4,7 @@
 #  - name: define the list of groups in the stack
 #    set_fact:
 #      group_list: "{{group_list|default([]) + [group_item] if (groups[group_item] is defined and groups[group_item] != []) else group_list|default([])}}"
-#    loop: [ 'csr', 'nsc', 'winjmp', 'em7db', 'em7dc', 'em7mc', 'em7as', 'splunkdpl', 'splunkind', 'splunkmas', 'splunksrc', 'linuxjs', 'relay' ]
+#    loop: [ 'csr', 'nsc', 'winjmp', 'em7db', 'em7dc', 'em7mc', 'em7prt', 'splunkdpl', 'splunkind', 'splunkmas', 'splunksrc', 'linuxjs', 'relay' ]
 #    loop_control:
 #      loop_var: group_item
 #    run_once: true

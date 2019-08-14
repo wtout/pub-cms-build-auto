@@ -1,7 +1,5 @@
 ---
 # Variables for em7 hosts
 credentials:
-  console_username: "root"
-  console_password: "em7admin"
-  ssh_username: "em7release"
-  ssh_password: "em7release"
+  username: "em7admin"
+  password: "em7admin"

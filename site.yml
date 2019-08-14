@@ -26,6 +26,7 @@
   roles:
   - {role: ssh_keys, when: configure_ssh_keys | default(false) | bool}
   - {role: capcheck, when: capcheck | default(false) | bool}
+  - {role: get_release, when: get_release | default(false) | bool}
 
 # Plays to set up the remote hosts and install the software
 - name: Setup hosts and install the software
@@ -33,8 +34,8 @@
   gather_facts: no
 
   roles:
-  - {role: get_release, when: get_release | default(false) | bool}
   - {role: vms, when: create_vms | default(false) | bool}
+  - {role: certificates, when: create_certs | default(false) | bool}
 #  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
 
 # Plays to uninstall the software and rollback the remote hosts

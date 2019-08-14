@@ -1,0 +1,12 @@
+---
+# tasks file for certificates
+- block:
+  - include_tasks: task_delete_certificates.yml
+  - include_tasks: task_add_vm_to_class.yml
+  - include_tasks: task_generate_cert_for_em7.yml
+  - include_tasks: task_generate_cert_for_nonem7.yml
+  - include_tasks: task_puppet_agent_test.yml
+  when:
+    - "'stack' in group_names"
+    - (deploy | default(false) | bool) or (upgrade | default(false) | bool)
+  tags: certificates

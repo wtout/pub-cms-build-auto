@@ -129,25 +129,25 @@ function decrypt_vault() {
 function check_updates() {
 	if [[ "x$(git config user.name)" != "x" ]]
 	then
+		if [[ -f ${1} ]]
+		then
+			decrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
+			[[ $- =~ x ]] && debug=1 && set +x
+			source ${1}
+			[[ ${debug} == 1 ]] && set -x
+			encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
+		else
+			echo
+			read -sp "Enter your Bitbucket password [ENTER]: " BBPASS
+			[[ $- =~ x ]] && debug=1 && set +x
+			printf "BBPASS=${BBPASS}\n" > ${1}
+			[[ ${debug} == 1 ]] && set -x
+			encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
+			echo
+		fi
 		git rev-parse --short HEAD &>/dev/null
 		if [ ${?} -eq 0 ]
 		then
-			if [[ -f ${1} ]]
-			then
-				decrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
-				[[ $- =~ x ]] && debug=1 && set +x
-				source ${1}
-				[[ ${debug} == 1 ]] && set -x
-				encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
-			else
-				echo
-				read -sp "Enter your Bitbucket password [ENTER]: " BBPASS
-				[[ $- =~ x ]] && debug=1 && set +x
-				printf "BBPASS=${BBPASS}\n" > ${1}
-				[[ ${debug} == 1 ]] && set -x
-				encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
-				echo
-			fi
 			local LOCALID=$(git rev-parse --short HEAD)
 			[[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true" && unset https_proxy
 			[[ $- =~ x ]] && debug=1 && set +x
@@ -232,7 +232,7 @@ function enable_logging() {
 		[ "$(grep ^log_path ${ANSIBLE_CFG} | grep ${LOG_FILE})" != "" ] && printf "\nRunning multiple instances of ${BOLD}$(basename ${0})${NORMAL} is prohibited. Aborting!\n\n" && exit 1
 		[ "$(grep ^log_path ${ANSIBLE_CFG} | grep ${LOG_FILE})" == "" ] && sed -i "s|^\(log_path = .*\)$|\1\nlog_path = ${LOG_FILE}|" ${ANSIBLE_CFG}
 		[ "$(grep ^log_path ${ANSIBLE_CFG})" == "" ] && sed -i "s|^\(# Set the log_path\)$|\1\nlog_path = ${LOG_FILE}|" ${ANSIBLE_CFG}
-		printf "############################################################\nThis script was run$(check_mode ${@})by $(git config user.name) ($(git config remote.origin.url | sed -e 's|.*\/\/\(.*\)@.*|\1|')) on $(date)\n############################################################\n\n" > ${LOG_FILE}
+		printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by $(git config user.name) ($(git config remote.origin.url | sed -e 's|.*\/\/\(.*\)@.*|\1|')) on $(date)\n############################################################\n\n" > ${LOG_FILE}
 	fi
 }
 

@@ -13,4 +13,9 @@
       abort_play: "{{abort_play | default(false) or 'yes'|bool}}"
       err_msg: "{{b_list}}: Incorrect/Invalid credentials"
     when: bastion_creds is failed
+  - set_fact:
+      delete_creds: yes
+    when:
+      - bastion_creds is failed
+      - "'Failed to connect to the host via ssh: Permission denied' in bastion_creds.stderr"
   tags: always

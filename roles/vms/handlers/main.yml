@@ -142,3 +142,64 @@
     state: restarted
   become: "{{true if 'em7' in group_names else false}}"
   tags: vms
+
+- name: restart snmpd service
+  service:
+    name: 'snmpd'
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vms
+
+- name: restart drbd
+  service:
+    name: 'drbd'
+    enabled: yes
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  notify:
+    - mount drbd1
+    - start mysql
+    - start em7
+    - restart pacemaker
+    - restart corosync
+  tags: vms
+
+- name: mount drbd1
+  shell: |
+    drbd-overview | grep -i secondary/secondary && /sbin/drbdadm primary r0
+    mount /dev/drbd1 /data.local/db
+    df | grep /drbd1
+  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('01')
+  tags: vms
+
+- name: start mysql
+  service:
+    name: mysql
+    state: started
+  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('01')
+  tags: vms
+
+- name: start em7
+  service:
+    name: em7
+    state: started
+  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('01')
+  tags: vms
+
+- name: restart pacemaker
+  service:
+    name: pacemaker
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vms
+
+- name: restart corosync
+  service:
+    name: corosync
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vms
+

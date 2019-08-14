@@ -4,7 +4,7 @@ customer:
   name: 'DEV_ONPREM'
   name_prefix: 'devo'
   octets: '172.19.112'
-  release: 'R9.2'
+  release: 'R9.1.3'
 
 bastion:
   address: []
@@ -12,14 +12,18 @@ bastion:
   username: "{{BASTION_USER | default('')}}"
   password: "{{BASTION_PASS | default('')}}"
 
+# Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC
 datacenter:
   name: 'cdra-Build-Development'
   resources: []
 
 puppet:
-  vmname: 'alln1qspupp01'
-  fqdn: 'alln1qspupp01.cisco-cms.com'
-  ipaddress: '172.19.251.53'
+  vmname: 'alln1qspupp03'
+  fqdn: 'alln1qspupp03.cisco-cms.com'
+  ipaddress: '172.19.251.34'
+#  vmname: 'alln1qspupp02'
+#  fqdn: 'alln1qspupp02.cisco-cms.com'
+#  ipaddress: '172.19.251.59'
 
 repo:
   baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'

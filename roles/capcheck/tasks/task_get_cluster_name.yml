@@ -24,4 +24,5 @@
       new_item: "{'cluster': '{{cluster_name|first}}'}"
 
 #  no_log: true
-  tags: capcheck
+  tags:   tags: ['capcheck', 'vms']
+
