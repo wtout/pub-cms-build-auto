@@ -1,0 +1,86 @@
+---
+# tasks to license the EM7 VM
+- block:
+  - name: get MAC address
+    shell: ip a show ens160 | grep ether
+    register: host_mac
+    check_mode: no
+
+  - name: get registration key
+    shell: /usr/local/silo/proc/appliance_init.py -r
+    register: registration_key
+    check_mode: no
+
+  - name: define license authorization key
+    set_fact:
+      license_authorization_key: '61ee336f-fe0b-4e20-9586-2a41771b4b21'
+  - name: define license registration key file content
+    set_fact:
+      license_registration_key_file_contents: "{{registration_key.stdout}}\n"
+  - name: define license appliance type
+    set_fact:
+      license_appliance_type: "{{'db' if 'em7db' in group_names else 'cu' if 'em7dc' in group_names else 'mc' if 'em7mc' in group_names else 'ap' if 'em7prt' in group_names else 'is' if 'is4' in group_names else 'ao' if 'aio' in group_names else ''}}"
+  - name: define license appliance environment
+    set_fact:
+      license_appliance_environment: "{{'trial' if 'dev' in customer.name|lower else 'production'}}"
+  - name: define license hostname
+    set_fact:
+      license_hostname: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+  - name: define license MAC address
+    set_fact:
+      license_mac_address: "{{host_mac.stdout.split()[1]}}"
+#  - name: define license duration
+#    set_fact:
+#      license_duration_requested: "{{'2 years' if 'dev' in customer.name|lower else '5 years'}}"
+#  - name: define license reason
+#    set_fact:
+#      license_reason_for_request: "{{'Trial' if 'dev' in customer.name|lower else 'Production'}}"
+  when: "'em7' in group_names"
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vms
+
+- block:
+  - name: get proxy setting
+    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
+    register: proxy_string
+  - name: connect to sciencelogic api to get a license
+    uri:
+      url: https://portal.sciencelogic.com/portal/license_api
+      method: POST
+      body_format: json
+      body:
+        permanent: "{{'no' if 'dev' in customer.name|lower else 'yes'}}"
+        authorization_key: "{{license_authorization_key}}"
+        registration_key_file_contents: "{{license_registration_key_file_contents}}"
+        appliance_type: "{{license_appliance_type}}"
+        appliance_environment: "{{license_appliance_environment}}"
+        hostname: "{{license_hostname}}"
+        mac_address: "{{license_mac_address}}"
+#        duration_requested: "{{license_duration_requested}}"
+#        reason_for_request: "{{license_reason_for_request}}"
+    register: get_cert
+    environment:
+      http_proxy: "{{proxy_string.stdout}}"
+      https_proxy: "{{proxy_string.stdout}}"
+  when: "'em7' in group_names"
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+  tags: vms
+
+- block:
+  - debug:
+      msg:
+        - "{{get_cert.json}}"
+  - name: create the license folder on the EM7 VM
+    file:
+      path: /home/em7admin/license
+      state: directory
+      mode: 0755
+  - name: save the license on the EM7 VM under {{ansible_user}} home directory
+    copy:
+      content: "{{get_cert.json.license}}"
+      dest: /home/em7admin/license/em7.lic
+  - name: load the EM7 license
+    shell: /usr/local/silo/proc/appliance_init.py -l < /home/em7admin/license/em7.lic
+    become: "{{true if 'em7' in group_names else false}}"
+  when: "'em7' in group_names"
+  tags: vms

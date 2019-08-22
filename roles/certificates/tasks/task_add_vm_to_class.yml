@@ -1,18 +1,6 @@
 ---
 # Tasks to add vm to puppet class
 - block:
-  - name: store host's connection info
-    set_fact:
-      host_ansible_host: "{{ansible_host}}"
-      host_ansible_user: "{{ansible_user}}"
-      host_ansible_ssh_pass: "{{ansible_ssh_pass}}"
-      host_ansible_become_pass: "{{ansible_ssh_pass}}"
-  - name: overwrite host's connection info
-    set_fact:
-      ansible_host: "{{hostvars[groups['puppet']|first]['ansible_host']}}"
-      ansible_user: "{{hostvars[groups['puppet']|first]['ansible_user']}}"
-      ansible_ssh_pass: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
-      ansible_become_pass: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
   - name: check if updateNode.pl exists
     stat:
       path: '/opt/puppet/qs_scripts/updateNode.pl'
@@ -39,10 +27,5 @@
         loop_var: class_item
       when: class_item != ''
     when: script_stat.stat.exists
-  - name: reset host's connection info
-    set_fact:
-      ansible_host: "{{host_ansible_host}}"
-      ansible_user: "{{host_ansible_user}}"
-      ansible_ssh_pass: "{{host_ansible_ssh_pass}}"
-      ansible_become_pass: "{{host_ansible_ssh_pass}}"
+  delegate_to: "{{groups['puppet']|first}}"
   tags: certificates

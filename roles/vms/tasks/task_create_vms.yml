@@ -34,10 +34,12 @@
   - include_tasks: task_update_em7vg_files.yml
   - include_tasks: task_update_corosync_file.yml
   - include_tasks: task_update_drbd_res_file.yml
+  - include_tasks: task_install_packages.yml
   - name: flush handlers
     meta: flush_handlers
+  - include_tasks: task_update_exports_file.yml
   - include_tasks: task_update_cluster_vip.yml
   - include_tasks: task_update_dbconns_file.yml
-#  - include_tasks: task_get_em7_license.yml
+  - include_tasks: task_get_em7_license.yml
 
   tags: vms

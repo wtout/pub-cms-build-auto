@@ -20,7 +20,7 @@
       when: download_action is succeeded
       notify:
         - puppet sign certs
-    when: "'No puppet-agent installed' in puppet_installed"
+    when: "'No puppet-agent installed' in puppet_installed.stdout"
   when: "'em7' not in group_names"
   tags: certificates
 

@@ -9,31 +9,14 @@
       msg: "Found no client certificate on {{inventory_hostname}}"
     when: not client_cert_status.stat.exists
 
-  - name: store host's connection info
-    set_fact:
-      host_ansible_host: "{{ansible_host}}"
-      host_ansible_user: "{{ansible_user}}"
-      host_ansible_ssh_pass: "{{ansible_ssh_pass}}"
-      host_ansible_become_pass: "{{ansible_ssh_pass}}"
-  - name: overwrite host's connection info
-    set_fact:
-      ansible_host: "{{hostvars[groups['puppet']|first]['ansible_host']}}"
-      ansible_user: "{{hostvars[groups['puppet']|first]['ansible_user']}}"
-      ansible_ssh_pass: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
-      ansible_become_pass: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
   - name: check if there is a cert on the puppet server
-    shell: puppet cert list {{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}} | cut -d '(' -f2
+    shell: puppet cert list {{'em7release.' if 'em7' in group_names else ''}}{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}} | cut -d '(' -f2
     args:
       chdir: '/usr/local/bin'
     check_mode: no
     ignore_errors: true
     register: client_cert_on_server
-  - name: reset host's connection info
-    set_fact:
-      ansible_host: "{{host_ansible_host}}"
-      ansible_user: "{{host_ansible_user}}"
-      ansible_ssh_pass: "{{host_ansible_ssh_pass}}"
-      ansible_become_pass: "{{host_ansible_ssh_pass}}"
+    delegate_to: "{{groups['puppet']|first}}"
 
   - debug:
       msg: "Found no client certificate for {{inventory_hostname}} on puppet server"
@@ -76,35 +59,10 @@
       yum:
         name: puppet-agent
         state: absent
-#    - name: find all client cert files on the VM
-#      find:
-#        paths: '/etc/puppetlabs/puppet/ssl'
-#        patterns: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}.pem"
-#        recurse: yes
-#      register: client_cert
-#    - name: delete client cert if not active on puppet server
-#      file:
-#        path: "{{cert_item.path}}"
-#        state: absent
-#      loop: "{{client_cert.files}}"
-#      loop_control:
-#        loop_var: cert_item
     become: "{{true if 'em7' in group_names else false}}"
     when: delete_client_cert_on_vm | default(false) | bool
 
   - block:
-    - name: store host's connection info
-      set_fact:
-        host_ansible_host: "{{ansible_host}}"
-        host_ansible_user: "{{ansible_user}}"
-        host_ansible_ssh_pass: "{{ansible_ssh_pass}}"
-        host_ansible_become_pass: "{{ansible_ssh_pass}}"
-    - name: overwrite host's connection info
-      set_fact:
-        ansible_host: "{{hostvars[groups['puppet']|first]['ansible_host']}}"
-        ansible_user: "{{hostvars[groups['puppet']|first]['ansible_user']}}"
-        ansible_ssh_pass: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
-        ansible_become_pass: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
     - name: check if cleancert.sh exists
       stat:
         path: '/opt/puppet/qs_scripts/cleancert.sh'
@@ -115,14 +73,9 @@
         fail_msg: 'Script to delete the certificates does not exist. Aborting!'
       run_once: true
     - name: delete the VM certificate
-      shell: puppet cert clean {{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}
+      shell: puppet cert clean {{'em7release.' if 'em7' in group_names else ''}}{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}
       args:
         chdir: '/usr/local/bin'
-    - name: reset host's connection info
-      set_fact:
-        ansible_host: "{{host_ansible_host}}"
-        ansible_user: "{{host_ansible_user}}"
-        ansible_ssh_pass: "{{host_ansible_ssh_pass}}"
-        ansible_become_pass: "{{host_ansible_ssh_pass}}"
     when: delete_client_cert_on_server | default(false) | bool
+    delegate_to: "{{groups['puppet']|first}}"
   tags: certificates

@@ -18,12 +18,12 @@ datacenter:
   resources: []
 
 puppet:
-  vmname: 'alln1qspupp03'
-  fqdn: 'alln1qspupp03.cisco-cms.com'
-  ipaddress: '172.19.251.34'
-#  vmname: 'alln1qspupp02'
-#  fqdn: 'alln1qspupp02.cisco-cms.com'
-#  ipaddress: '172.19.251.59'
+#  vmname: 'alln1qspupp03'
+#  fqdn: 'alln1qspupp03.cisco-cms.com'
+#  ipaddress: '172.19.251.34'
+  vmname: 'alln1qspupp02'
+  fqdn: 'alln1qspupp02.cisco-cms.com'
+  ipaddress: '172.19.251.59'
 
 repo:
   baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'

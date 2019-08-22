@@ -1,18 +1,6 @@
 ---
 # Tasks to perform puppet agent test
 - block:
-  - name: store host's connection info
-    set_fact:
-      host_ansible_host: "{{ansible_host}}"
-      host_ansible_user: "{{ansible_user}}"
-      host_ansible_ssh_pass: "{{ansible_ssh_pass}}"
-      host_ansible_become_pass: "{{ansible_ssh_pass}}"
-  - name: overwrite host's connection info
-    set_fact:
-      ansible_host: "{{hostvars[groups['puppet']|first]['ansible_host']}}"
-      ansible_user: "{{hostvars[groups['puppet']|first]['ansible_user']}}"
-      ansible_ssh_pass: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
-      ansible_become_pass: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
   - name: check if puppet agent test is already running and wait until it is done
     wait_for:
       path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
@@ -20,11 +8,6 @@
       timeout: 1800
   - name: puppet agent test
     shell: /usr/local/bin/puppet agent --server {{puppet.fqdn}} --test
-  - name: reset host's connection info
-    set_fact:
-      ansible_host: "{{host_ansible_host}}"
-      ansible_user: "{{host_ansible_user}}"
-      ansible_ssh_pass: "{{host_ansible_ssh_pass}}"
-      ansible_become_pass: "{{host_ansible_ssh_pass}}"
+  delegate_to: "{{groups['puppet']|first}}"
   run_once: true
   tags: certificates
