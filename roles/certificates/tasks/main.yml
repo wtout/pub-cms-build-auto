@@ -1,6 +1,22 @@
 ---
 # tasks file for certificates
 - block:
+  - block:
+    - name: check VM credentials
+      shell: |
+        ansible {{inventory_hostname}} -m ping -e "{ansible_ssh_pass: '{{ansible_ssh_pass}}'}" || echo 'Password changed'
+      register: vm_creds1
+      check_mode: no
+      no_log: true
+      delegate_to: 'localhost'
+    - name: Update SSH password
+      set_fact:
+        ansible_ssh_pass: "{{pppp}}"
+      no_log: true
+      when:
+        - vm_creds1.stdout is search('Password changed')
+    when: "'em7' not in group_names"
+
   - include_tasks: task_delete_certificates.yml
   - include_tasks: task_add_vm_to_class.yml
   - include_tasks: task_generate_cert_for_em7.yml

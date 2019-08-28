@@ -1,0 +1,82 @@
+---
+# handlers file for vm_configuration
+- name: restart chrony
+  service:
+    name: chronyd
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration
+
+- name: yum clean all
+  command: yum clean all
+  args:
+    warn: no
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration
+
+- name: restart snmpd service
+  service:
+    name: 'snmpd'
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration
+
+- name: restart drbd
+  service:
+    name: 'drbd'
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  notify:
+    - mount drbd1
+    - start mysql
+    - start em7
+    - restart pacemaker
+    - restart corosync
+  tags: vm_configuration
+
+- name: mount drbd1
+  shell: |
+    drbd-overview | grep -i secondary/secondary && /sbin/drbdadm primary r0
+    mount /dev/drbd1 /data.local/db
+    df | grep /drbd1
+  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('01')
+  tags: vm_configuration
+
+- name: start mysql
+  service:
+    name: mysql
+    state: started
+  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('01')
+  tags: vm_configuration
+
+- name: start em7
+  service:
+    name: em7
+    state: started
+  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('01')
+  tags: vm_configuration
+
+- name: restart pacemaker
+  service:
+    name: pacemaker
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration
+
+- name: restart corosync
+  service:
+    name: corosync
+    state: restarted
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration
+
+- name: start nfs
+  service:
+    name: nfs
+    state: started
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration
+

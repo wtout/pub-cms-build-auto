@@ -1,0 +1,13 @@
+---
+# tasks to update data.conf on VM
+- block:
+  - name: Create the puppet directory
+    file:
+      path: /opt/puppet/var
+      state: directory
+  - name: Copy data.conf file to VM
+    template:
+      src: "{{role_path}}/templates/data.conf.tmpl"
+      dest: '/opt/puppet/var/data.conf'
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration

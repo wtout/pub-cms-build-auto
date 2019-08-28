@@ -1,0 +1,12 @@
+---
+# tasks to update drbd res file on EM7 VM
+- block:
+  - name: Update drbd file on VM
+    replace:
+      path: '/etc/drbd.d/r0.res'
+      regexp: '{{string_to_replace}}'
+      replace: '{{customer.name_prefix}}{{vm.name}}'
+    notify: restart drbd
+  when: "'em7db' in group_names"
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration

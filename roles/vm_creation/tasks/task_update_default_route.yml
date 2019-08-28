@@ -1,0 +1,91 @@
+---
+# Tasks to configure the default route on the VM
+- block:
+  - name: Wait on VMware Tools to become available
+    vmware_guest_tools_wait:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      validate_certs: false
+      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+  - name: Pause for 30 seconds to ensure VM finished booting
+    wait_for:
+      timeout: 30
+    when: deploy_ovf is not changed
+  - name: copy default route file locally
+    template:
+      src: "{{role_path}}/templates/route-ens160.tmpl"
+      dest: "/var/tmp/{{customer.name_prefix}}-route-ens160"
+    run_once: true
+  - block:
+    - name: copy default route file to VM
+      vmware_guest_file_operation:
+        hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+        username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+        password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+        datacenter: "{{datacenter.name}}"
+        validate_certs: false
+        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+        vm_username: "{{ credentials.username }}"
+        vm_password: "{{ credentials.password }}"
+        copy:
+            src: "/var/tmp/{{customer.name_prefix}}-route-ens160"
+            dest: "/tmp/route-ens160"
+            overwrite: false
+      environment:
+        http_proxy: ''
+        https_proxy: ''
+    - name: restart the network on the VM
+      vmware_vm_shell:
+        hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+        username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+        password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+        datacenter: "{{datacenter.name}}"
+        validate_certs: false
+        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+        vm_username: "{{ credentials.username }}"
+        vm_password: "{{ credentials.password }}"
+        vm_shell: '/usr/bin/sudo'
+        vm_shell_args: '-S sh -c "/usr/bin/cp /tmp/route-ens160 /etc/sysconfig/network-scripts/; /bin/systemctl restart network" <<< {{ credentials.password }}'
+        wait_for_process: true
+    when: "'em7' in group_names"
+  - block:
+    - name: copy default route file to VM
+      vmware_guest_file_operation:
+        hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+        username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+        password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+        datacenter: "{{datacenter.name}}"
+        validate_certs: false
+        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+        vm_username: "{{ credentials.username }}"
+        vm_password: "{{ credentials.password }}"
+        copy:
+            src: "/var/tmp/{{customer.name_prefix}}-route-ens160"
+            dest: "/etc/sysconfig/network-scripts/route-ens160"
+            overwrite: false
+      environment:
+        http_proxy: ''
+        https_proxy: ''
+    - name: restart the network on the VM
+      vmware_vm_shell:
+        hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+        username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+        password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+        datacenter: "{{datacenter.name}}"
+        validate_certs: false
+        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+        vm_username: "{{ credentials.username }}"
+        vm_password: "{{ credentials.password }}"
+        vm_shell: '/bin/systemctl'
+        vm_shell_args: 'restart network'
+        wait_for_process: true
+    when: "'em7' not in group_names"
+  - name: delete default route file locally
+    file:
+      path: "/var/tmp/{{customer.name_prefix}}-route-ens160"
+      state: absent
+    run_once: true
+  when: netconfig.gateway1 == ''
+  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+  tags: vm_creation

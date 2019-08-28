@@ -1,0 +1,8 @@
+---
+# tasks to update /etc/hosts on VM
+- name: Copy hosts file to VM
+  template:
+    src: "{{role_path}}/templates/hosts.tmpl"
+    dest: '/etc/hosts'
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration

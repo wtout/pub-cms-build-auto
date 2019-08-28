@@ -1,0 +1,10 @@
+---
+# Tasks for vm_facts
+- block:
+  - include_tasks: task_define_vm_ip.yml
+  - include_tasks: task_define_hosts_variables.yml
+    when: configure_vms | default(false) | bool
+  when:
+    - inventory_hostname in groups['stack']
+    - (deploy | default(false) | bool) or (upgrade | default(false) | bool)
+  tags: always

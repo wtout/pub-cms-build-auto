@@ -1,6 +1,0 @@
----
-# tasks to determine the VM's OVF/OVA file name
-- name: get OVA file name
-  set_fact:
-    ova_name: "{{'qs_em7_ap.ova' if vm_group == 'em7prt' else 'qs_em7_db.ova' if vm_group == 'em7db' else 'qs_em7_dc.ova' if vm_group == 'em7dc' else 'qs_em7_mc.ova' if vm_group == 'em7mc' else 'cms-qs-vm-template.ova'}}"
-  tags: vms

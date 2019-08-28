@@ -1,0 +1,27 @@
+---
+# tasks file to create vms
+- block:
+  - name: get list of groups in play
+    set_fact:
+      play_group_list: "{{play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'splunk', 'infra', 'vcenter'])}}"
+    loop: "{{ansible_play_hosts}}"
+    run_once: true
+  - include_tasks: task_create_folder.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
+    run_once: true
+  - include_tasks: task_create_cluster.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
+    run_once: true
+  - include_tasks:
+      file: task_create_vm_pair.yml
+      apply:
+        vars:
+          vm_group: "{{item}}"
+    loop: "{{play_group_list}}"
+    when: inventory_hostname in groups[item]
+  - name: flush handlers
+    meta: flush_handlers
+  - include_tasks: task_update_vmwaretools.yml
+  tags: vm_creation

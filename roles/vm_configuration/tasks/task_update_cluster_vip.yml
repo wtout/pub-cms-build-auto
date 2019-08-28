@@ -1,0 +1,16 @@
+---
+# tasks to update the DB cluster virtual IP
+- block:
+  - name: check the cluster virtual IP
+    shell: cibadmin --query | grep {{vip.db}} || echo 'VIP not configured'
+    register: cluster_vip
+    check_mode: no
+  - name: configure the cluster virtual IP
+    shell: crm_resource -r virtual_ip -p ip -v {{vip.db}}
+    when: cluster_vip.stdout is search('VIP not configured')
+    notify: restart pacemaker
+  when:
+    - inventory_hostname is search('01')
+    - "'em7db' in group_names"
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration

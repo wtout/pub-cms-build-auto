@@ -15,7 +15,7 @@
 
   roles:
     - role: todo
-    - role: vmfacts
+    - role: vm_facts
 
 # Plays to deploy the ssh_keys to bastion server(s) and to perform the infrastructure capacity check
 - name: Deploy ssh keys if applicable and perform capacity check
@@ -34,7 +34,8 @@
   gather_facts: no
 
   roles:
-  - {role: vms, when: create_vms | default(false) | bool}
+  - {role: vm_creation, when: create_vms | default(false) | bool}
+  - {role: vm_configuration, when: configure_vms | default(false) | bool}
   - {role: certificates, when: create_certs | default(false) | bool}
 #  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
 
@@ -45,7 +46,7 @@
   gather_facts: no
 
   roles:
-  - {role: vms, when: rollback_vms | default(false) | bool}
+  - {role: vm_creation, when: rollback_vms | default(false) | bool}
   - {role: ssh_keys, when: rollback_ssh_keys | default(false) | bool}
 
 # Play to notify via Webex Teams

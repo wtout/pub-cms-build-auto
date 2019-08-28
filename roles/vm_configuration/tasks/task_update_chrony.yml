@@ -1,0 +1,17 @@
+---
+# tasks to update chrony.conf on VM
+- block:
+  - name: Comment out the default time servers in the chrony config file
+    replace:
+      path: "{{chrony_file}}"
+      regexp: '^(server .*org iburst)$'
+      replace: '#\g<1>'
+  - name: Add the local time server to the chrony config file
+    lineinfile:
+      path: "{{chrony_file}}"
+      line: "server {{customer.octets}}.62 iburst"
+      insertafter: '^# Please consider.*$'
+    when: not ansible_check_mode
+    notify: restart chrony
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration

@@ -1,0 +1,15 @@
+---
+# tasks to update /etc/firewalld/zones/drop.xml on EM7 VM
+- block:
+  - name: Update drop.xml on VM
+    replace:
+      path: /etc/firewalld/zones/drop.xml
+      regexp: '^(.*{{task_item.param}}")[0-9]+[\\.][0-9]+[\\.][0-9]+([\\.][0-9]+.*)$'
+      replace: '\g<1>{{task_item.value}}\g<2>'
+    loop:
+      - { param: 'source address=', value: "{{customer.octets}}" }
+    loop_control:
+      loop_var: task_item
+  when: "'em7dc' in group_names or 'em7mc' in group_names"
+  become: "{{true if 'em7' in group_names else false}}"
+  tags: vm_configuration

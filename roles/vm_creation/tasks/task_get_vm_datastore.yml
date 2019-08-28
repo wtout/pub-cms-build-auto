@@ -1,0 +1,14 @@
+---
+# Tasks to assign a datastore to each VM in a pair
+- block:
+  - include_tasks:
+      file: task_get_hosted_datastore.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
+
+  - include_tasks:
+      file: task_get_onprem_datastore.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
+
+  tags: create_vms

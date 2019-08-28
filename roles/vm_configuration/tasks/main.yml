@@ -1,0 +1,6 @@
+---
+# tasks file for vm_configuration
+- block:
+  - include_tasks: task_configure_vms.yml
+    when: configure_vms | default(false) | bool
+  tags: vm_configuration
