@@ -213,10 +213,8 @@ function get_hosts() {
 	then
 		HOST_LIST=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}' | sed -e 's/,/ /g')
 		local HL=$(ansible $(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}') -m debug -a 'var=ansible_play_hosts' | sort -u | egrep -v "\[|\]|{|}" | sed -e 's/.*"\(.*\)".*/\1/g')
-		ERROR_MSG="\n${BOLD}${HL}${NORMAL}\n\nThe hosts/groups in scope cannot be worked on during a single playbook run\nPlease review your '${BOLD}--limit${NORMAL}' list and try again\n\n"
 	else
 		HOST_LIST=$(ansible localhost -m debug -a 'var=ansible_play_batch' | sort -u | egrep -v "\[|\]|{|}" | sed -e 's/.*"\(.*\)".*/\1/g')
-		ERROR_MSG="\n${BOLD}${HOST_LIST}${NORMAL}\n\nThe hosts/groups in scope cannot be worked on during a single playbook run\nPlease consider using the '${BOLD}--limit${NORMAL}' option to restrict the play to a subset of hosts or cleanup your inventory and try again\n\n"
 	fi
 }
 
