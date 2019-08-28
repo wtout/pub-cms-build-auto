@@ -67,9 +67,10 @@ with the script name being one of the following options:
   - **todo**: determines what roles and/or tasks to execute
   - **ssh_keys**: creates and deploys SSH keys to the bastion server(s) if applicable
   - **capcheck**: performs a capacity check of the infrastructure
-  - **vmfacts**: defines the individual VM facts required in the playbook
-  - **vms**: deploys and configures the system's VMs
-  - **certificates**: installs the puppet agent and generates the puppet certificates for the non-EM7 VMs
+  - **vm_facts**: defines the individual VM facts required in the playbook
+  - **vm_creation**: deploys the system's VMs
+  - **vm_configuration**: configures the system's VMs
+  - **certificates**: installs the puppet agent, generates the puppet certificates and triggers the puppet push for the non-EM7 VMs
   - **check_requiretty**: checks for and disables requiretty on the hosts
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
