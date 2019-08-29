@@ -1,13 +1,13 @@
 ---
 # Tasks for todo
-- name: delete vaultp file
-  file:
-    path: "{{VPFILE}}"
-    state: absent
-  check_mode: no
-  delegate_to: localhost
-  tags: always
-
-- include_tasks: task_set_facts.yml
+- block:
+  - name: delete vaultp file
+    file:
+      path: "{{VPFILE}}"
+      state: absent
+    check_mode: no
+    delegate_to: localhost
+    run_once: true
+  - include_tasks: task_set_facts.yml
   when: (deploy | default(false) | bool) or (rollback | default(false) | bool) or (upgrade | default(false) | bool)
   tags: always

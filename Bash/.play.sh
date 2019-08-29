@@ -212,7 +212,6 @@ function get_hosts() {
 	if [ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]
 	then
 		HOST_LIST=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}' | sed -e 's/,/ /g')
-		local HL=$(ansible $(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}') -m debug -a 'var=ansible_play_hosts' | sort -u | egrep -v "\[|\]|{|}" | sed -e 's/.*"\(.*\)".*/\1/g')
 	else
 		HOST_LIST=$(ansible localhost -m debug -a 'var=ansible_play_batch' | sort -u | egrep -v "\[|\]|{|}" | sed -e 's/.*"\(.*\)".*/\1/g')
 	fi
@@ -278,7 +277,7 @@ OFILE="${PWD}/Bash/override.sh"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST='epel-release sshpass'
-ANSIBLE_VERSION='2.8.1'
+ANSIBLE_VERSION='2.8.2'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 BBVAULT="/var/tmp/.bbvault"
 
