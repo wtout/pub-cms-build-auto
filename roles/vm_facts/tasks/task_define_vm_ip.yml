@@ -1,27 +1,26 @@
 ---
 # tasks to define vm ips
-- name: define IP addresses
-  set_fact:
-    ipaddress1: "{{netconfig.ippool1[index|int - 1] if netconfig.ippool1 is defined else customer.octets + '.' + netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) else ''}}"
-    ipaddress2: "{{netconfig.ippool2[index|int - 1] if netconfig.ippool2 is defined else customer.octets + '.' + netconfig.octetpool2[index|int - 1]|string if (netconfig.octetpool2 != [] and index|int <= netconfig.octetpool2|length) else ''}}"
-  vars:
-    index: "{{inventory_hostname[-2:]}}"
-  tags: always
+- block:
+  - name: define IP addresses
+    set_fact:
+      ipaddress1: "{{netconfig.ippool1[index|int - 1] if netconfig.ippool1 is defined else customer.octets + '.' + netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) else ''}}"
+      ipaddress2: "{{netconfig.ippool2[index|int - 1] if netconfig.ippool2 is defined else customer.octets + '.' + netconfig.octetpool2[index|int - 1]|string if (netconfig.octetpool2 != [] and index|int <= netconfig.octetpool2|length) else ''}}"
+    vars:
+      index: "{{inventory_hostname[-2:]}}"
 
-- name: define ansible_host
-  set_fact:
-    ansible_host: "{{ipaddress1}}"
-  tags: always
+  - name: define ansible_host
+    set_fact:
+      ansible_host: "{{ipaddress1}}"
 
-- name: update netconfig with IP addresses
-  set_fact:
-    netconfig: "{{netconfig|default({}) | combine(new_item, recursive=true)}}"
-  vars:
-    new_item: "{'{{task_item.key}}': '{{task_item.value}}'}"
-  loop:
-    - { key: 'ipaddress1', value: '{{ipaddress1}}'}
-    - { key: 'ipaddress2', value: '{{ipaddress2}}'}
-  loop_control:
-    loop_var: task_item
-  no_log: true
+  - name: update netconfig with IP addresses
+    set_fact:
+      netconfig: "{{netconfig|default({}) | combine(new_item, recursive=true)}}"
+    vars:
+      new_item: "{'{{task_item.key}}': '{{task_item.value}}'}"
+    loop:
+      - { key: 'ipaddress1', value: '{{ipaddress1}}'}
+      - { key: 'ipaddress2', value: '{{ipaddress2}}'}
+    loop_control:
+      loop_var: task_item
+    no_log: true
   tags: always

@@ -3,14 +3,14 @@
 - block:
   - name: check if there is a cert on the VM
     stat:
-      path: "/etc/puppetlabs/puppet/ssl/certs/{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}.pem"
+      path: "/etc/puppetlabs/puppet/ssl/certs/{{vm.name}}.{{sysconfig.domain_name}}.pem"
     register: client_cert_status
   - debug:
       msg: "Found no client certificate on {{inventory_hostname}}"
     when: not client_cert_status.stat.exists
 
   - name: check if there is a cert on the puppet server
-    shell: puppet cert list {{'em7release.' if 'em7' in group_names else ''}}{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}} | cut -d '(' -f2
+    shell: puppet cert list {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}} | cut -d '(' -f2
     args:
       chdir: '/usr/local/bin'
     check_mode: no
@@ -25,7 +25,7 @@
       - "'Could not find a certificate for' in client_cert_on_server.stderr"
 
   - name: check if client cert fingerprint matches cert on server
-    shell: openssl x509 -text -noout -{{client_cert_on_server.stdout.split(' ')[0] | replace(')', '')}} -fingerprint -in certs/{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}.pem | tail -1 | cut -d '=' -f2 | grep {{client_cert_on_server.stdout.split(' ')[1]}}
+    shell: openssl x509 -text -noout -{{client_cert_on_server.stdout.split(' ')[0] | replace(')', '')}} -fingerprint -in certs/{{vm.name}}.{{sysconfig.domain_name}}.pem | tail -1 | cut -d '=' -f2 | grep {{client_cert_on_server.stdout.split(' ')[1]}}
     args:
       chdir: '/etc/puppetlabs/puppet/ssl'
     register: client_cert_match
@@ -73,7 +73,7 @@
         fail_msg: 'Script to delete the certificates does not exist. Aborting!'
       run_once: true
     - name: delete the VM certificate
-      shell: puppet cert clean {{'em7release.' if 'em7' in group_names else ''}}{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}
+      shell: puppet cert clean {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}}
       args:
         chdir: '/usr/local/bin'
     when: delete_client_cert_on_server | default(false) | bool

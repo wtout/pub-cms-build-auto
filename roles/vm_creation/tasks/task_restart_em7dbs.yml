@@ -7,7 +7,7 @@
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
       password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
       validate_certs: false
-      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+      name: "{{vm.name}}"
       state: powered-off
       state_change_timeout: 60
   - name: Set the state of EM7 DB01 to powered-on
@@ -16,7 +16,7 @@
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
       password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
       validate_certs: false
-      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+      name: "{{vm.name}}"
       state: powered-on
       state_change_timeout: 60
     when: inventory_hostname is search('01')
@@ -30,7 +30,7 @@
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
       password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
       validate_certs: false
-      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+      name: "{{vm.name}}"
       state: powered-on
       state_change_timeout: 60
     when: inventory_hostname is search('02')

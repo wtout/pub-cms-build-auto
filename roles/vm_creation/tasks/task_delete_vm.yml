@@ -9,7 +9,7 @@
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
       password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
-      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+      name: "{{vm.name}}"
       datacenter: "{{datacenter.name}}"
       cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
       folder: "{{datacenter.name}}/vm/{{fldr_name}}"

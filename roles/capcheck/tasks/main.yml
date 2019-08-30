@@ -47,5 +47,5 @@
         - "{{(ndb_ds_total_fs|default(0)|int / 1024|pow(4))|string + ' TiB' if ndb_ds_total_fs|default('0')|length > 12 else (ndb_ds_total_fs|default(0)|int / 1024|pow(3))|string + ' GiB'}}"
 
   when: capcheck | default(false) | bool
-  tags: ['capcheck', 'vms']
+  tags: ['capcheck', 'vm_creation']
 

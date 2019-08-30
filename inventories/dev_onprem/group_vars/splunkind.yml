@@ -3,12 +3,11 @@
 vm:
   cpu: '4'
   memory: '8'     # GiB
-  disk: '262'     # GiB
   disk0: '37'     # GiB
   disk1: '25'     # GiB
   disk2: '100'    # GiB
   disk3: '100'    # GiB
-  name: "splind{{datacenters[datacenter.name]['deptype']}}"
+  name: "{{customer.name_prefix}}splind{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
 
 netconfig:
   octetpool1: "{{range(24, 25 + 1)|list}}"

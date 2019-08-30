@@ -1,5 +1,5 @@
 ---
-# tasks to get VMs info
+# tasks to define hosts variables lists
 - block:
   - name: define hosts info
     set_fact:
@@ -15,7 +15,7 @@
       ipvar2: "{{hostvars[member_item]['netconfig']['ippool2'][index|int - 1] if hostvars[member_item]['netconfig']['ippool2'] is defined else ''}}"
       octetvar1: "{{customer.octets + '.' + hostvars[member_item]['netconfig']['octetpool1'][index|int - 1]|string if (hostvars[member_item]['netconfig']['octetpool1'] is defined and hostvars[member_item]['netconfig']['octetpool1'] != [] and index|int <= hostvars[member_item]['netconfig']['octetpool1']|length) else ''}}"
       octetvar2: "{{customer.octets + '.' + hostvars[member_item]['netconfig']['octetpool2'][index|int - 1]|string if (hostvars[member_item]['netconfig']['octetpool2'] is defined and hostvars[member_item]['netconfig']['octetpool2'] != [] and index|int <= hostvars[member_item]['netconfig']['octetpool2']|length) else ''}}"
-      namevar: "{{customer.name_prefix}}{{hostvars[member_item]['vm']['name']}}{{member_item[-2:]}}"
+      namevar: "{{hostvars[member_item]['vm']['name']}}"
       cpuvar: "{{hostvars[member_item]['vm']['cpu']}}"
       memvar: "{{hostvars[member_item]['vm']['memory']}}"
       typevar: "{{'db/\"Database:' if 'em7db' in hostvars[member_item]['group_names'] else 'ap/\"Admin Portal:' if 'em7prt' in hostvars[member_item]['group_names'] else 'mc/\"Message Collector:' if 'em7mc' in hostvars[member_item]['group_names'] else 'dc/\"Data Collector:'}}"

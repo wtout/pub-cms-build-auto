@@ -3,9 +3,8 @@
 vm:
   cpu: '8'
   memory: '28'    # GiB
-  disk: '62'      # GiB
   disk0: '62'     # GiB
-  name: "em7prt{{datacenters[datacenter.name]['deptype']}}"
+  name: "{{customer.name_prefix}}em7prt{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
 
 netconfig:
   octetpool1: "{{range(3, 4 + 1)|list}}"

@@ -7,10 +7,9 @@ credentials:
 vm:
   cpu: '2'
   memory: '8'     # GiB
-  disk: '62'      # GiB
   disk0: '37'     # GiB
   disk1: '25'     # GiB
-  name: "lnxjmp{{datacenters[datacenter.name]['deptype']}}"
+  name: "{{customer.name_prefix}}lnxjmp{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
 
 netconfig:
   octetpool1: [ '58', '56' ]

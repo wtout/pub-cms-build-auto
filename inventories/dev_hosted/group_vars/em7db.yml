@@ -3,9 +3,8 @@
 vm:
   cpu: '12'
   memory: '256'   # GiB
-  disk: '1024'    # GiB
   disk0: '1024'   # GiB
-  name: "em7db{{datacenters[datacenter.name]['deptype']}}"
+  name: "{{customer.name_prefix}}em7db{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
 
 netconfig:
   octetpool1: [ '13', '14' ]

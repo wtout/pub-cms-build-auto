@@ -19,7 +19,7 @@
         class_list2: "{{'EM7PrimaryDB' if ('em7db' in group_names and '01' in inventory_hostname) else 'EM7SecondaryDB' if ('em7db' in group_names and '02' in inventory_hostname) else 'EM7ApplicationServer' if 'em7prt' in group_names else 'LinuxJumpServer' if 'linuxjs' in group_names else 'RelayServer' if 'relay' in group_names else 'SplunkSearchHead01' if inventory_hostname == 'splunksrc01' else 'SplunkSearchHead02' if inventory_hostname == 'splunksrc02' else 'SplunkIndexer' if 'splunkind' in group_names else 'SplunkClusterMaster' if 'splunkmas' in group_names else 'SplunkDeployer' if 'splunkdpl' in group_names else ''}}"
         class_list3: "{{'MariaDBPrimary' if inventory_hostname == 'relay01' else ''}}"
     - name: add VM to puppet classes
-      shell: ./updateNode.pl {{class_item}} {{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}} add
+      shell: ./updateNode.pl {{class_item}} {{vm.name}} add
       args:
         chdir: '/opt/puppet/qs_scripts'
       loop: "{{vmtype_class_list}}"

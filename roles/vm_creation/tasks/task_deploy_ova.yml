@@ -19,7 +19,7 @@
       cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
       datastore: "{{vm_ds}}"
       folder: "{{datacenter.name}}/vm/{{fldr_name}}"
-      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+      name: "{{vm.name}}"
       networks: {}
       ova: "{{ova_dir}}/{{ova_name}}"
       power_on: no

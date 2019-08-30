@@ -3,10 +3,9 @@
 vm:
   cpu: '8'
   memory: '16'    # GiB
-  disk: '62'      # GiB
   disk0: '37'     # GiB
   disk1: '25'     # GiB
-  name: "splsrc{{datacenters[datacenter.name]['deptype']}}"
+  name: "{{customer.name_prefix}}splsrc{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
 
 netconfig:
   octetpool1: [ '20', '21' ]

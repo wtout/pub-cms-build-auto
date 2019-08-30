@@ -8,7 +8,7 @@ vm:
   cpu: '2'
   memory: '8'     # GiB
   disk: '200'     # GiB
-  name: "winjmp{{datacenters[datacenter.name]['deptype']}}"
+  name: "{{customer.name_prefix}}winjmp{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
 
 netconfig:
   octetpool1: [ '59', '57' ]

@@ -8,7 +8,7 @@ vm:
   cpu: '2'
   memory: '4'     # GiB
   disk: '8'       # GiB
-  name: "csr{{datacenters[datacenter.name]['deptype']}}"
+  name: "{{customer.name_prefix}}csr{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
 
 netconfig:
   octetpool1: "{{range(60, 62 + 1)|list}}"

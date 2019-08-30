@@ -25,7 +25,7 @@
       license_appliance_environment: "{{'trial' if 'dev' in customer.name|lower else 'production'}}"
   - name: define license hostname
     set_fact:
-      license_hostname: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+      license_hostname: "{{vm.name}}"
   - name: define license MAC address
     set_fact:
       license_mac_address: "{{host_mac.stdout.split()[1]}}"

@@ -7,7 +7,7 @@
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
       password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
       validate_certs: false
-      name: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+      name: "{{vm.name}}"
   - name: Pause for 30 seconds to ensure VM finished booting
     wait_for:
       timeout: 30
@@ -25,7 +25,7 @@
         password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
         datacenter: "{{datacenter.name}}"
         validate_certs: false
-        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+        vm_id: "{{vm.name}}"
         vm_username: "{{ credentials.username }}"
         vm_password: "{{ credentials.password }}"
         copy:
@@ -42,7 +42,7 @@
         password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
         datacenter: "{{datacenter.name}}"
         validate_certs: false
-        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+        vm_id: "{{vm.name}}"
         vm_username: "{{ credentials.username }}"
         vm_password: "{{ credentials.password }}"
         vm_shell: '/usr/bin/sudo'
@@ -57,7 +57,7 @@
         password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
         datacenter: "{{datacenter.name}}"
         validate_certs: false
-        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+        vm_id: "{{vm.name}}"
         vm_username: "{{ credentials.username }}"
         vm_password: "{{ credentials.password }}"
         copy:
@@ -74,7 +74,7 @@
         password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
         datacenter: "{{datacenter.name}}"
         validate_certs: false
-        vm_id: "{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}"
+        vm_id: "{{vm.name}}"
         vm_username: "{{ credentials.username }}"
         vm_password: "{{ credentials.password }}"
         vm_shell: '/bin/systemctl'

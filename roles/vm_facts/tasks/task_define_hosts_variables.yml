@@ -1,13 +1,17 @@
 ---
-# Tasks to get hosts info
+# Tasks to define hosts variables
 - block:
-#  - name: define the list of groups in the stack
-#    set_fact:
-#      group_list: "{{group_list|default([]) + [group_item] if (groups[group_item] is defined and groups[group_item] != []) else group_list|default([])}}"
-#    loop: [ 'csr', 'nsc', 'winjmp', 'em7db', 'em7dc', 'em7mc', 'em7prt', 'splunkdpl', 'splunkind', 'splunkmas', 'splunksrc', 'linuxjs', 'relay' ]
-#    loop_control:
-#      loop_var: group_item
-#    run_once: true
+  - name: define total disk size per VM
+    set_fact:
+      vm: "{{hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true)}}"
+    vars:
+      new_var: "{'disk': '{{hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|default(0)|int + hostvars[vm_item]['vm']['disk2']|default(0)|int + hostvars[vm_item]['vm']['disk3']|default(0)|int}}'}"
+    delegate_to: "{{vm_item}}"
+    delegate_facts: true
+    loop: "{{groups['stack']}}"
+    loop_control:
+      loop_var: vm_item
+    run_once: true
 
   - name: get list of groups in stack
     set_fact:

@@ -21,7 +21,7 @@
         owner: em7release
       loop:
         - '[agent]'
-        - 'certname = em7release.{{customer.name_prefix}}{{vm.name}}{{inventory_hostname[-2:]}}.{{sysconfig.domain_name}}'
+        - 'certname = em7release.{{vm.name}}.{{sysconfig.domain_name}}'
         - 'server = {{puppet.fqdn}}'
       loop_control:
         loop_var: line_item
