@@ -1,14 +1,14 @@
 ---
 # Validate credentials (always run)
-- name: Validate user's credentials
+- name: Validate credentials
   hosts: localhost
   gather_facts: no
 
   roles:
     - role: check_creds
 
-# Play to determine what to do and to define vms facts(always run)
-- name: determine what to do
+# Play to determine what to do and to define vm facts(always run)
+- name: Define variables
   hosts: all
   any_errors_fatal: true
   gather_facts: no
@@ -17,8 +17,8 @@
     - role: todo
     - role: vm_facts
 
-# Plays to deploy the ssh_keys to bastion server(s) and to perform the infrastructure capacity check
-- name: Deploy ssh keys if applicable and perform capacity check
+# Play to deploy the ssh_keys to bastion server(s), to perform the infrastructure capacity check and to download the release package
+- name: Pre-deploy preparation
   hosts: all
   any_errors_fatal: true
   gather_facts: no
@@ -28,8 +28,8 @@
   - {role: capcheck, when: capcheck | default(false) | bool}
   - {role: get_release, when: get_release | default(false) | bool}
 
-# Plays to set up the remote hosts and install the software
-- name: Setup hosts and install the software
+# Plays to create, configure the VMs and to create the puppet certificates
+- name: deploy VMs
   hosts: all
   gather_facts: no
 
@@ -39,8 +39,8 @@
   - {role: certificates, when: create_certs | default(false) | bool}
 #  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
 
-# Plays to uninstall the software and rollback the remote hosts
-- name: Uninstall the software and rollback the remote hosts
+# Plays to delete the VMs
+- name: Rollback
   hosts: all
   order: reverse_inventory
   gather_facts: no
@@ -50,7 +50,7 @@
   - {role: ssh_keys, when: rollback_ssh_keys | default(false) | bool}
 
 # Play to notify via Webex Teams
-- name: send a notification via Webex Teams
+- name: Send notification
   hosts: all
   gather_facts: no
 
