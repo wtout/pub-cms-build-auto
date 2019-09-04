@@ -16,10 +16,10 @@
   - name: flush handlers
     meta: flush_handlers
   - include_tasks: task_update_cluster_vip.yml
+  - name: flush handlers
+    meta: flush_handlers
   - include_tasks: task_update_exports_file.yml
   - include_tasks: task_update_dbconns_file.yml
   - include_tasks: task_get_em7_license.yml
-  - name: flush handlers
-    meta: flush_handlers
 
   tags: vm_configuration

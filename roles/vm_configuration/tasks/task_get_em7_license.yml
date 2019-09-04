@@ -1,6 +1,12 @@
 ---
 # tasks to license the EM7 VM
 - block:
+  - name: wait until db vip is reachable
+    shell: ping {{vip.db}} -c 3
+    retries: 20
+    delay: 30
+    when: inventory_hostname is search('prt')
+
   - name: get MAC address
     shell: ip a show ens160 | grep ether
     register: host_mac
@@ -86,4 +92,11 @@
     shell: /usr/local/silo/proc/appliance_init.py -l < /home/em7admin/license/em7.lic
     become: "{{true if 'em7' in group_names else false}}"
   when: "'em7' in group_names"
+  tags: vm_configuration
+
+- name: reboot the VM
+  reboot:
+    post_reboot_delay: 10
+  become: "{{true if 'em7' in group_names else false}}"
+  when: "'em7dc' in group_names or 'em7mc' in group_names"
   tags: vm_configuration

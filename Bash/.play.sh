@@ -1,5 +1,13 @@
 # Functions declaration
 
+function check_arguments() {
+	if [[ "$(echo ${@} | egrep -w '\-\-envname')" == "" ]]
+		then
+			printf "\nEnvironment name is required!\nRe-run the script with ${BOLD}--envname${NORMAL} <environment name as defined under Inventories>\n\n"
+			exit 1
+		fi
+}
+
 function check_concurrency() {
 	PID=${$}
 	ps -ef | grep $(basename ${0}) | grep -v grep | grep -v ${PID}
@@ -84,18 +92,6 @@ function install_packages() {
 			printf " Installed version $(yum list ${pkg} | tail -1 | awk '{print $2}')\n"
 		fi
 	done
-	if [ "x$(which pip 2>/dev/null)" == "x" ]
-	then
-		if [[ "x${SUDO_PASS}" == "x" ]]
-		then
-			echo
-			SUDO_PASS=$(get_sudopass) || FS=${?}
-			[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}" && exit ${FS}
-		fi
-		printf "\nInstalling pip on localhost ..."
-		sudo -S yum install -y python-pip --quiet <<< ${SUDO_PASS} 2>/dev/null
-		printf " Installed version $(pip -V 2>/dev/null | awk '{print $2}')\n"
-	fi
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
 		printf "\nInstalling ansible on localhost ..."
@@ -276,12 +272,13 @@ ANSIBLE_CFG="./ansible.cfg"
 OFILE="${PWD}/Bash/override.sh"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
-PKG_LIST='epel-release sshpass'
+PKG_LIST='epel-release sshpass python2-pip'
 ANSIBLE_VERSION='2.8.2'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 BBVAULT="/var/tmp/.bbvault"
 
 # Main
+check_arguments ${@}
 CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})

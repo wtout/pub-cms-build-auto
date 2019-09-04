@@ -8,7 +8,7 @@
       vmname: "{{namevar}}"
       vmcpu: "{{cpuvar}}"
       vmmem: "{{memvar}}"
-      appliance: "[{{ipvar1 if ipvar1 != '' else octetvar1}}/{{typevar}} {{ipvar1 if ipvar1 != '' else octetvar1}}\"/CUG]"
+      appliance: "[{{namevar}}/{{ipvar1 if ipvar1 != '' else octetvar1}}/{{typevar}} {{ipvar1 if ipvar1 != '' else octetvar1}}\"/CUG]"
     vars:
       index: "{{member_item[-2:]}}"
       ipvar1: "{{hostvars[member_item]['netconfig']['ippool1'][index|int - 1] if hostvars[member_item]['netconfig']['ippool1'] is defined else ''}}"
@@ -155,11 +155,9 @@
   - name: define em7 dc lists
     set_fact:
       dc_ip1_list: "{{dc_ip1_list | default([]) + ipvar1 if (dc_ip1_list is defined and dc_ip1_list != '') else ipvar1}}"
-      half_dc_ip1_list: "{{half_dc_ip1_list | default([]) + halfvar1 if (half_dc_ip1_list is defined and half_dc_ip1_list != '') else halfvar1}}"
       dc_hst_list: "{{dc_hst_list | default([]) + hstvar if (dc_hst_list is defined and dc_hst_list != '') else hstvar}}"
     vars:
       ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item.0) | map(attribute='ansible_facts.ipaddress1') | list}}"
-      halfvar1: "{{info.results | selectattr('member_item', 'equalto', info_item.0) | map(attribute='ansible_facts.ipaddress1') | list if info_item.1|int <= groups['em7dc']|length/2 - 1|int else []}}"
       hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item.0) | map(attribute='ansible_facts.vmname') | list}}"
     loop: "{{groups['em7dc'] | zip(range(0, (groups['em7dc']|length)|int)) | list}}"
     loop_control:
