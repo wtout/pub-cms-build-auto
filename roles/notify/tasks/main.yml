@@ -19,9 +19,11 @@
       - '========================================================='
       - ' '
       - "{{userid.stdout.split('\n') | join('<br/>') | replace ('This script was run', 'Job started') | replace ('#', '') | regex_replace ('(Machine )([a-z]+.[a-z]+)( [0-9])', '\\1**`\\2`**\\3') | replace('<br/>An', 'An')}}"
-      - "**`{{playbook_dir | basename}}`** Script **{{SNAME}} {{SARG | replace ('dash', '-') | replace ('*', '')}}** completed {{'successfully:' if (fe == '' and playbook_status.stdout != 'No Play Recap found') else 'with **`errors`**:'}}"
+      - "**`{{playbook_dir | basename}}`** Script **{{SNAME}} {{SARG | replace ('dash', '-') | replace ('*', '')}}** completed {{'successfully' if (fe == '' and playbook_status.stdout != 'No Play Recap found') else 'with **`errors`**:'}}"
       - "{{user_abort.stdout if user_abort is succeeded else ''}}"
-      - "{{playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n')}}"
+      - "{{playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else ''}}"
+      - ''
+      - "The log file is **`{{LFILE}}`**"
       - ' '
       - '========================================================='
   - name: get proxy setting
