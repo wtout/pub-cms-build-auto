@@ -9,7 +9,7 @@
     register: user_abort
     ignore_errors: true
   - name: Get playbook status from {{LFILE}}
-    shell: "grep 'PLAY RECAP' {{LFILE}} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ansible_play_hosts|length}};i++){print $0;getline}}' {{LFILE}} | grep -v awk || echo 'No Play Recap found'"
+    shell: "grep 'PLAY RECAP' {{LFILE}} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ansible_play_hosts|length}};i++){print $0;getline}}' {{LFILE}} | grep -v awk | egrep 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
     register: playbook_status
   - set_fact:
       NOTIF_MSG: "{{NOTIF_MSG | default ([]) + [item] | list}}"
