@@ -56,7 +56,7 @@ with the script name being one of the following options:
 
 ####*Note: Running multiple instances of the same script for a given customer simultaneously is prohibited*
 
-2- Script output is automatically saved to a log file. The file is saved under _``/var/tmp/<script-name>.<customer-name>.log.<time-stamp>``_ on the Ansible control machine
+2- Script output is automatically saved to a log file. The file is saved under _``/var/tmp/ansible/<script-name>.<customer-name>.log.<time-stamp>``_ on the Ansible control machine
 
 3- Answer the prompts on the CLI. If you simply hit enter, default values will be used unless an input is required. In such a case you will be prompted again to enter a value
 
