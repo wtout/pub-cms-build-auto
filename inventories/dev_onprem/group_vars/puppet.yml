@@ -5,8 +5,6 @@ ssh_address: "{{hostvars[groups['bastion'][0]]['ansible_host'] if (groups['basti
 ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ssh_username}}@{{ssh_address}}"'
 ansible_ssh_common_args: "{{ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else ''}}"
 
-#ansible_user: 'root'
-#ansible_ssh_pass: 'ast4roslab'
 ansible_user: "{{'cmsbuild' if (puppet.vmname is search('pupp01') or puppet.vmname is search('pupp02')) else 'root'}}"
 ansible_ssh_pass: "{{'3Yo4SSNVgcZho3KBB6yn' if (puppet.vmname is search('pupp01') or puppet.vmname is search('pupp02')) else 'ast4roslab'}}"
 ansible_become_pass: "{{ansible_ssh_pass}}"
