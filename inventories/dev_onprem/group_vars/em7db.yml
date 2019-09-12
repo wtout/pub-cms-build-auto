@@ -1,20 +1,25 @@
 ---
 # Variables for em7 databases
 vm:
-  cpu: '12'
-  memory: '256'   # GiB
-  disk0: '1024'   # GiB
-  name: "{{customer.name_prefix}}em7db{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
+  cpu: "{{vm_vars.em7.em7db.cpu}}"
+  memory: "{{vm_vars.em7.em7db.memory}}"
+  disk0: "{{vm_vars.em7.em7db.disk0}}"
+  disk1: "{{vm_vars.em7.em7db.disk1 | default(0)}}"
+  disk2: "{{vm_vars.em7.em7db.disk2 | default(0)}}"
+  disk3: "{{vm_vars.em7.em7db.disk3 | default(0)}}"
+  name: "{{customer.name_prefix}}{{inventory_hostname[:-2]}}{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
 
 netconfig:
-  octetpool1: "{{range(13, 14 + 1)|list}}"
-#  octetpool1: [ '13', '14' ]
-  gateway1: "{{customer.octets}}.62"
-  netmask1: '255.255.255.192'
-  network1: "Internal-Net"
-  netname1: 'ens160'
-  ippool2: [ '192.170.170.9', '192.170.170.10' ]
-  gateway2: ''
-  netmask2: '255.255.255.252'
-  network2: "EM7-DB-Heartbeat-Link"
-  netname2: 'ens192'
+  netname1: "{{vm_vars.em7.em7db.nic1.name}}"
+  ippool1: "{{vm_vars.em7.em7db.nic1.ip_pool | default([])}}"
+  octetpool1: "{{vm_vars.em7.em7db.nic1.ip_octetpool | default([])}}"
+  gateway1: "{{customer.octets + '.' + vm_vars.em7.em7db.nic1.gtw_octet if vm_vars.em7.em7db.nic1.gtw_octet != '' else ''}}"
+  netmask1: "{{vm_vars.em7.em7db.nic1.netmask}}"
+  network1: "{{vm_vars.em7.em7db.nic1.network}}"
+
+  netname2: "{{vm_vars.em7.em7db.nic2.name}}"
+  ippool2: "{{vm_vars.em7.em7db.nic2.ip_pool | default([])}}"
+  octetpool2: "{{vm_vars.em7.em7db.nic2.ip_octetpool | default([])}}"
+  gateway2: "{{customer.octets + '.' + vm_vars.em7.em7db.nic2.gtw_octet if vm_vars.em7.em7db.nic2.gtw_octet != '' else ''}}"
+  netmask2: "{{vm_vars.em7.em7db.nic2.netmask}}"
+  network2: "{{vm_vars.em7.em7db.nic2.network}}"

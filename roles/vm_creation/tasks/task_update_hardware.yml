@@ -38,7 +38,8 @@
     ignore_errors: true
     when:
       - ova_nets.stdout_lines|length == 1
-      - "'relay' not in group_names"
+      - "'rly' not in group_names"
+      - "'lnxjmp' not in group_names"
   - name: Update VM hardware settings with two NICs
     vmware_guest:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -70,7 +71,7 @@
     register: vmguest_2net
     ignore_errors: true
     when:
-      - ova_nets.stdout_lines|length == 2 or 'relay' in group_names
+      - ova_nets.stdout_lines|length == 2 or 'rly' in group_names or 'lnxjmp' in group_names
   - fail:
       msg: "{{vmguest_1net.msg}}"
     when:

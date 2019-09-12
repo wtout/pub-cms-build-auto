@@ -6,24 +6,27 @@ customer:
   octets: '172.19.112'
   release: 'R9.1.3'
 
+# Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC
+datacenter:
+  name: 'cdra-Build-Development'
+  resources: []
+
 bastion:
   address: []
 #  address: ["10.225.228.240", "10.225.228.240"]
   username: "{{BASTION_USER | default('')}}"
   password: "{{BASTION_PASS | default('')}}"
 
-# Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC
-datacenter:
-  name: 'cdra-Build-Development'
-  resources: []
-
 puppet:
-#  vmname: 'alln1qspupp03'
-#  fqdn: 'alln1qspupp03.cisco-cms.com'
-#  ipaddress: '172.19.251.34'
   vmname: 'alln1qspupp01'
   fqdn: 'alln1qspupp01.cisco-cms.com'
   ipaddress: '172.19.251.53'
+#  vmname: 'alln1qspupp02'
+#  fqdn: 'alln1qspupp02.cisco-cms.com'
+#  ipaddress: '172.19.251.59'
+#  vmname: 'alln1qspupp03'
+#  fqdn: 'alln1qspupp03.cisco-cms.com'
+#  ipaddress: '172.19.251.34'
 
 repo:
   baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'
@@ -57,3 +60,245 @@ vip:
   src: "{{customer.octets}}.41"
   rly: "{{customer.octets}}.120"
   rly_db: "{{customer.octets}}.1"
+
+vm_vars:
+  em7:
+    em7db:
+      cpu: '12'
+      memory: '256'   # GiB
+      disk0: '1024'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(13, 14 + 1)|list}}"
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: 'ens192'
+        ip_pool: [ '192.170.170.9', '192.170.170.10' ]
+        gtw_octet: ''
+        netmask: '255.255.255.252'
+        network: 'EM7-DB-Heartbeat-Link'
+
+    em7dc:
+      cpu: '24'
+      memory: '24'   # GiB
+      disk0: '150'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '9', '11', '10', '12', '15', '17', '16', '18', '26', '27', '28', '29' ]
+        gtw_octet: ''
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: 'ens192'
+        ip_octetpool: [ '65', '66', '67', '68', '69', '70', '71', '72', '86', '87', '88', '89' ]
+        gtw_octet: '94'
+        netmask: '255.255.255.224'
+        network: 'Customer-Net-Inside'
+
+    em7mc:
+      cpu: '2'
+      memory: '12'   # GiB
+      disk0: '90'    # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '5', '7' ]
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    em7prt:
+      cpu: '8'
+      memory: '28'   # GiB
+      disk0: '62'    # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(3, 4 + 1)|list}}"
+        gtw_octet: ''
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: 'ens192'
+        ip_octetpool: [ '98', '100' ]
+        gtw_octet: '123'
+        netmask: '255.255.255.224'
+        network: 'Loadbalancer-Net'
+
+  splunk:
+    spldpl:
+      cpu: '2'
+      memory: '8'   # GiB
+      disk0: '37'   # GiB
+      disk1: '25'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '23', '39' ]
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    splind:
+      cpu: '4'
+      memory: '8'   # GiB
+      disk0: '37'   # GiB
+      disk1: '25'   # GiB
+      disk2: '100'  # GiB
+      disk3: '100'  # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(24, 25 + 1)|list}}"
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    splmas:
+      cpu: '2'
+      memory: '8'   # GiB
+      disk0: '37'   # GiB
+      disk1: '25'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '22', '38' ]
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    splsrc:
+      cpu: '8'
+      memory: '16'  # GiB
+      disk0: '37'   # GiB
+      disk1: '25'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(20, 21 + 1)|list}}"
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+  lnxjmp:
+    cpu: '2'
+    memory: '8'   # GiB
+    disk0: '37'   # GiB
+    disk1: '25'   # GiB
+    nic1:
+      name: 'ens160'
+      ip_octetpool: [ '58', '56' ]
+      gtw_octet: ''
+      netmask: '255.255.255.192'
+      network: 'Internal-Net'
+    nic2:
+      name: 'ens192'
+      ip_octetpool: [ '76', '74' ]
+      gtw_octet: '94'
+      netmask: '255.255.255.224'
+      network: 'Customer-Net-Inside'
+
+  rly:
+    cpu: '4'
+    memory: '8'   # GiB
+    disk0: '37'   # GiB
+    disk1: '25'   # GiB
+    disk2: '100'  # GiB
+    disk3: '450'  # GiB
+    nic1:
+      name: 'ens160'
+      ip_octetpool: "{{range(1, 2 + 1)|list}}"
+      gtw_octet: ''
+      netmask: '255.255.255.192'
+      network: 'Internal-Net'
+    nic2:
+      name: 'ens192'
+      ip_octetpool: [ '97', '99' ]
+      gtw_octet: '126'
+      netmask: '255.255.255.224'
+      network: 'Loadbalancer-Net'
+
+  infra:
+    csr:
+      cpu: '2'
+      memory: '4' # GiB
+      disk0: '8'  # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(60, 61 + 1)|list}}"
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: 'ens192'
+        ip_octetpool: "{{range(92, 93 + 1)|list}}"
+        gtw_octet: '94'
+        netmask: '255.255.255.224'
+        network: 'Customer-Net-Inside'
+      nic3:
+        name: 'ens224'
+        ip_octetpool: "{{range(124, 125 + 1)|list}}"
+        gtw_octet: '126'
+        netmask: '255.255.255.224'
+        network: 'Loadbalancer-Net'
+
+    nsvpx:
+      cpu: '2'
+      memory: '2' # GiB
+      disk0: '20' # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(53, 54 + 1)|list}}"
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    winjmp:
+      cpu: '2'
+      memory: '8'  # GiB
+      disk0: '100' # GiB
+      disk1: '100' # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '59', '57' ]
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: 'Internal-Net'
+      nic2:
+        name: 'ens192'
+        ip_octetpool: [ '75', '73' ]
+        gtw_octet: '94'
+        netmask: '255.255.255.224'
+        network: 'Customer-Net-Inside'

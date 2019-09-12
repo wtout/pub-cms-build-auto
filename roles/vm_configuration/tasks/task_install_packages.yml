@@ -23,7 +23,7 @@
         state: installed
       notify: start nfs
     when:
-      - "'relay' in group_names"
+      - "'rly' in group_names"
   become: "{{true if 'em7' in group_names else false}}"
   when: "'em7' not in group_names"
   tags: vm_configuration

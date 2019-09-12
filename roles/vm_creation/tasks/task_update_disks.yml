@@ -20,6 +20,7 @@
     when:
       - disk_facts.guest_disk_facts | dict2items | length >= 1
       - vm.disk0 is defined
+      - vm.disk0|float > 0
   - name: Define VM disk1
     set_fact:
       disk1_unit_number: "{{disk_facts.guest_disk_facts | dict2items | selectattr('key','equalto', '1') | map(attribute='value.unit_number') | list| to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '')}}"
@@ -30,6 +31,7 @@
     when:
       - disk_facts.guest_disk_facts | dict2items | length >= 2
       - vm.disk1 is defined
+      - vm.disk1|float > 0
   - name: Define VM disk2
     set_fact:
       disk2_unit_number: "{{(disk1_unit_number|int + 1)}}"
@@ -38,6 +40,7 @@
     when:
       - vm.disk2 is defined
       - vm.disk2 != ''
+      - vm.disk2|float > 0
   - name: Define VM disk3
     set_fact:
       disk3_unit_number: "{{(disk2_unit_number|int + 1)}}"
@@ -46,6 +49,7 @@
     when:
       - vm.disk3 is defined
       - vm.disk3 != ''
+      - vm.disk3|float > 0
 
   - name: Update VM Disk0 settings
     vmware_guest_disk:
@@ -66,6 +70,7 @@
     notify: expand disk0
     when:
       - vm.disk0 is defined
+      - vm.disk0|float > 0
   - name: Update VM Disk1 settings
     vmware_guest_disk:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -85,6 +90,7 @@
     notify: expand disk1
     when:
       - vm.disk1 is defined
+      - vm.disk1|float > 0
   - name: Update VM Disk2 settings
     vmware_guest_disk:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -105,6 +111,7 @@
     when:
       - vm.disk2 is defined
       - vm.disk2 != ''
+      - vm.disk2|float > 0
   - name: Update VM Disk3 settings
     vmware_guest_disk:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
@@ -125,6 +132,7 @@
     when:
       - vm.disk3 is defined
       - vm.disk3 != ''
+      - vm.disk3|float > 0
   when: not ansible_check_mode
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: vm_creation

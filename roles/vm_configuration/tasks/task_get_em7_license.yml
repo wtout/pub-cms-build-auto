@@ -3,7 +3,7 @@
 - block:
   - name: wait until db vip is reachable
     shell: ping {{vip.db}} -c 3
-    retries: 20
+    retries: 30
     delay: 30
     when: inventory_hostname is search('prt')
 
@@ -100,3 +100,9 @@
   become: "{{true if 'em7' in group_names else false}}"
   when: "'em7dc' in group_names or 'em7mc' in group_names"
   tags: vm_configuration
+
+- name: wait 60 seconds for VM to become reachable
+  wait_for_connection:
+    timeout: 60
+  tags: vm_configuration
+

@@ -20,6 +20,12 @@ puppet:
   vmname: 'alln1qspupp01'
   fqdn: 'alln1qspupp01.cisco-cms.com'
   ipaddress: '172.19.251.53'
+#  vmname: 'alln1qspupp02'
+#  fqdn: 'alln1qspupp02.cisco-cms.com'
+#  ipaddress: '172.19.251.59'
+#  vmname: 'alln1qspupp03'
+#  fqdn: 'alln1qspupp03.cisco-cms.com'
+#  ipaddress: '172.19.251.34'
 
 repo:
   baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'
@@ -53,6 +59,186 @@ vip:
   src: "{{customer.octets}}.41"
   rly: "{{customer.octets}}.120"
   rly_db: "{{customer.octets}}.1"
-  msa: ''
-  casesentry: ''
 
+vm_vars:
+  em7:
+    em7db:
+      cpu: '12'
+      memory: '256'   # GiB
+      disk0: '1024'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(13, 14 + 1)|list}}"
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      nic2:
+        name: 'ens192'
+        ip_pool: [ '192.170.170.9', '192.170.170.10' ]
+        gtw_octet: ''
+        netmask: '255.255.255.252'
+        network: "QS-{{customer.name_prefix}}-db-heartbeat"
+
+    em7dc:
+      cpu: '24'
+      memory: '24'   # GiB
+      disk0: '150'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '9', '11', '10', '12', '15', '17', '16', '18', '26', '27', '28', '29' ]
+        gtw_octet: ''
+        netmask: '255.255.255.192'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      nic2:
+        name: 'ens192'
+        ip_octetpool: [ '65', '66', '67', '68', '69', '70', '71', '72', '86', '87', '88', '89' ]
+        gtw_octet: '94'
+        netmask: '255.255.255.224'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-64-27-cust"
+
+    em7mc:
+      cpu: '2'
+      memory: '12'   # GiB
+      disk0: '90'    # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '5', '7' ]
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    em7prt:
+      cpu: '8'
+      memory: '28'   # GiB
+      disk0: '62'    # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(3, 4 + 1)|list}}"
+        gtw_octet: ''
+        netmask: '255.255.255.192'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      nic2:
+        name: 'ens192'
+        ip_octetpool: [ '98', '100' ]
+        gtw_octet: '123'
+        netmask: '255.255.255.224'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-96-27-lbnet"
+
+  splunk:
+    spldpl:
+      cpu: '2'
+      memory: '8'   # GiB
+      disk0: '37'   # GiB
+      disk1: '25'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '23', '39' ]
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    splind:
+      cpu: '4'
+      memory: '8'   # GiB
+      disk0: '37'   # GiB
+      disk1: '25'   # GiB
+      disk2: '100'  # GiB
+      disk3: '100'  # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(24, 25 + 1)|list}}"
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    splmas:
+      cpu: '2'
+      memory: '8'   # GiB
+      disk0: '37'   # GiB
+      disk1: '25'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: [ '22', '38' ]
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+    splsrc:
+      cpu: '8'
+      memory: '16'  # GiB
+      disk0: '37'   # GiB
+      disk1: '25'   # GiB
+      nic1:
+        name: 'ens160'
+        ip_octetpool: "{{range(20, 21 + 1)|list}}"
+        gtw_octet: '62'
+        netmask: '255.255.255.192'
+        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      nic2:
+        name: ''
+        ip_octetpool: []
+        gtw_octet: ''
+        netmask: ''
+        network: ''
+
+  lnxjmp:
+    cpu: '2'
+    memory: '8'   # GiB
+    disk0: '37'   # GiB
+    disk1: '25'   # GiB
+    nic1:
+      name: 'ens160'
+      ip_octetpool: [ '58', '56' ]
+      gtw_octet: ''
+      netmask: '255.255.255.192'
+      network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+    nic2:
+      name: 'ens192'
+      ip_octetpool: [ '76', '74' ]
+      gtw_octet: '94'
+      netmask: '255.255.255.224'
+      network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-64-27-cust"
+
+  rly:
+    cpu: '4'
+    memory: '8'   # GiB
+    disk0: '37'   # GiB
+    disk1: '25'   # GiB
+    disk2: '100'  # GiB
+    disk3: '450'  # GiB
+    nic1:
+      name: 'ens160'
+      ip_octetpool: "{{range(1, 2 + 1)|list}}"
+      gtw_octet: ''
+      netmask: '255.255.255.192'
+      network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+    nic2:
+      name: 'ens192'
+      ip_octetpool: [ '97', '99' ]
+      gtw_octet: '126'
+      netmask: '255.255.255.224'
+      network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-96-27-lbnet"

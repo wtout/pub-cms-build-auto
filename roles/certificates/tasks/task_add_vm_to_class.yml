@@ -16,10 +16,11 @@
         vmtype_class_list: "{{[class_list1] + [class_list2] + [class_list3] if class_list3 != '' else [class_list1] + [class_list2]}}"
       vars:
         class_list1: "{{'EM7QSUtils' if 'em7' in group_names else 'QSUtils'}}"
-        class_list2: "{{'EM7PrimaryDB' if ('em7db' in group_names and '01' in inventory_hostname) else 'EM7SecondaryDB' if ('em7db' in group_names and '02' in inventory_hostname) else 'EM7ApplicationServer' if 'em7prt' in group_names else 'LinuxJumpServer' if 'linuxjs' in group_names else 'RelayServer' if 'relay' in group_names else 'SplunkSearchHead01' if inventory_hostname == 'splunksrc01' else 'SplunkSearchHead02' if inventory_hostname == 'splunksrc02' else 'SplunkIndexer' if 'splunkind' in group_names else 'SplunkClusterMaster' if 'splunkmas' in group_names else 'SplunkDeployer' if 'splunkdpl' in group_names else ''}}"
-        class_list3: "{{'MariaDBPrimary' if inventory_hostname == 'relay01' else ''}}"
+        class_list2: "{{'EM7PrimaryDB' if ('em7db' in group_names and '01' in inventory_hostname) else 'EM7SecondaryDB' if ('em7db' in group_names and '02' in inventory_hostname) else 'EM7ApplicationServer' if 'em7prt' in group_names else 'LinuxJumpServer' if 'lnxjmp' in group_names else 'RelayServer' if 'rly' in group_names else 'SplunkSearchHead01' if inventory_hostname == 'splsrc01' else 'SplunkSearchHead02' if inventory_hostname == 'splsrc02' else 'SplunkIndexer' if 'splind' in group_names else 'SplunkClusterMaster' if 'splmas' in group_names else 'SplunkDeployer' if 'spldpl' in group_names else ''}}"
+        class_list3: "{{'MariaDBPrimary' if inventory_hostname == 'rly01' else ''}}"
     - name: add VM to puppet classes
-      shell: ./updateNode.pl {{class_item}} {{vm.name}} add
+      shell: >
+        {{'sudo ' if (puppet.vmname is search('01') or puppet.vmname is search('02')) else ''}}./updateNode.pl {{class_item}} {{vm.name}} add
       args:
         chdir: '/opt/puppet/qs_scripts'
       loop: "{{vmtype_class_list}}"

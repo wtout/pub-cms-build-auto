@@ -10,19 +10,19 @@
 
 {{vip.mc}} em7-message-collector-vip em7-message-collector-vip
 {{vip.src}} splunk-search-head-vip splunk-search-head-vip
-{{splunkdpl_ip1_list[0]}} splunk-deployer-server splunk-deployer-server
+{{spldpl_ip1_list[0]}} splunk-deployer-server splunk-deployer-server
 {{vip.rly}} relay-vip relay-vip
 
-{{linuxjs_ip1_list[0] + ' ' + linuxjs_hst_list[0] + ' ' + linuxjs_hst_list[0] + '.' + sysconfig.domain_name}}
-{{linuxjs_ip1_list[1] + ' ' + linuxjs_hst_list[1] + ' ' + linuxjs_hst_list[1] + '.' + sysconfig.domain_name if mc_ip1_list|length >= 2 else ''}}
+{{lnxjmp_ip1_list[0] + ' ' + lnxjmp_hst_list[0] + ' ' + lnxjmp_hst_list[0] + '.' + sysconfig.domain_name}}
+{{lnxjmp_ip1_list[1] + ' ' + lnxjmp_hst_list[1] + ' ' + lnxjmp_hst_list[1] + '.' + sysconfig.domain_name if mc_ip1_list|length >= 2 else ''}}
 
-{{relay_ip1_list[0] + ' ' + relay_hst_list[0] + ' ' + relay_hst_list[0] + '.' + sysconfig.domain_name}}
-{{relay_ip1_list[1] + ' ' + relay_hst_list[1] + ' ' + relay_hst_list[1] + '.' + sysconfig.domain_name if mc_ip1_list|length >= 2 else ''}}
-{{splunkind_ip1_list[0]}} splunk-site1-indexer01 splunk-site1-indexer01
-{{splunkind_ip1_list[1] + ' splunk-site2-indexer01 splunk-site2-indexer01' if splunkind_ip1_list|length >= 2 else ''}}
-{{splunksrc_ip1_list[0]}} splunk-site1-search-head01 splunk-site1-search-head01
-{{splunksrc_ip1_list[1] + ' splunk-site2-search-head01 splunk-site2-search-head01' if splunksrc_ip1_list|length >= 2 else ''}}
-{{splunkmas_ip1_list[0]}} splunk-cluster-master splunk-cluster-master
+{{rly_ip1_list[0] + ' ' + rly_hst_list[0] + ' ' + rly_hst_list[0] + '.' + sysconfig.domain_name}}
+{{rly_ip1_list[1] + ' ' + rly_hst_list[1] + ' ' + rly_hst_list[1] + '.' + sysconfig.domain_name if mc_ip1_list|length >= 2 else ''}}
+{{splind_ip1_list[0]}} splunk-site1-indexer01 splunk-site1-indexer01
+{{splind_ip1_list[1] + ' splunk-site2-indexer01 splunk-site2-indexer01' if splind_ip1_list|length >= 2 else ''}}
+{{splsrc_ip1_list[0]}} splunk-site1-search-head01 splunk-site1-search-head01
+{{splsrc_ip1_list[1] + ' splunk-site2-search-head01 splunk-site2-search-head01' if splsrc_ip1_list|length >= 2 else ''}}
+{{splmas_ip1_list[0]}} splunk-cluster-master splunk-cluster-master
 
 {{db_ip1_list[0] + ' ' + db_hst_list[0] + ' ' + db_hst_list[0] + '.' + sysconfig.domain_name}}
 {{db_ip1_list[1] + ' ' + db_hst_list[1] + ' ' + db_hst_list[1] + '.' + sysconfig.domain_name if db_ip1_list|length >= 2 else ''}}

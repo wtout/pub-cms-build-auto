@@ -9,7 +9,7 @@
       validate_certs: false
       name: "{{vm.name}}"
     delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
-  - name: wait 60 seconds for {{inventory_hostname}} to become reachable
+  - name: wait 60 seconds for VM to become reachable
     wait_for_connection:
       timeout: 60
     when:

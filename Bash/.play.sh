@@ -221,10 +221,15 @@ function enable_logging() {
 	LOG=true
 	if [ "${LOG}" == "true" ]
 	then
-		LOG_FILE="/var/tmp/$(basename ${0} | awk -F '.' '{print $1}').${ENAME}.log"
-		[ "$(grep ^log_path ${ANSIBLE_CFG} | grep ${LOG_FILE})" != "" ] && printf "\nRunning multiple instances of ${BOLD}$(basename ${0})${NORMAL} is prohibited. Aborting!\n\n" && exit 1
-		[ "$(grep ^log_path ${ANSIBLE_CFG} | grep ${LOG_FILE})" == "" ] && sed -i "s|^\(log_path = .*\)$|\1\nlog_path = ${LOG_FILE}|" ${ANSIBLE_CFG}
-		[ "$(grep ^log_path ${ANSIBLE_CFG})" == "" ] && sed -i "s|^\(# Set the log_path\)$|\1\nlog_path = ${LOG_FILE}|" ${ANSIBLE_CFG}
+		[[ ! -d "${ANSIBLE_LOG_LOCATION}" ]] && mkdir -p ${ANSIBLE_LOG_LOCATION}
+		LOG_FILE="${ANSIBLE_LOG_LOCATION}/$(basename ${0} | awk -F '.' '{print $1}').${ENAME}.log"
+		[[ "$( grep ^log_path ${ANSIBLE_CFG} )" != "" ]] && sed -i '/^log_path = .*\$/d' ${ANSIBLE_CFG}
+		if [[ -f ${LOG_FILE} ]] && [[ "$( ps -ef | grep ${ENAME} | grep $(basename ${0} | awk -F '.' '{print $1}') )" != "" ]]
+		then
+			printf "\nRunning multiple instances of ${BOLD}$(basename ${0})${NORMAL} is prohibited. Aborting!\n\n" && exit 1
+		else
+			export ANSIBLE_LOG_PATH=${LOG_FILE}
+		fi
 		printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by $(git config user.name) ($(git config remote.origin.url | sed -e 's|.*\/\/\(.*\)@.*|\1|')) on $(date)\n############################################################\n\n" > ${LOG_FILE}
 	fi
 }
@@ -249,8 +254,7 @@ function run_playbook() {
 function disable_logging() {
 	if [ "${LOG}" == "true" ] && [ -f ${LOG_FILE} ]
 	then
-		ELF=$(echo ${LOG_FILE} | sed 's|/|\\/|g')
-		sed -i "/^log_path.*${ELF}$/,+d" ${ANSIBLE_CFG}
+		unset ANSIBLE_LOG_PATH
 		NEW_LOG_FILE=${LOG_FILE}.$(ls --full-time ${LOG_FILE} | awk '{print $6"-"$7}')
 		mv ${LOG_FILE} ${NEW_LOG_FILE}
 		printf "\nThe log file is ${BOLD}${NEW_LOG_FILE}${NORMAL}\n\n"
@@ -269,6 +273,7 @@ function send_notification() {
 
 # Parameters definition
 ANSIBLE_CFG="./ansible.cfg"
+ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
 OFILE="${PWD}/Bash/override.sh"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)

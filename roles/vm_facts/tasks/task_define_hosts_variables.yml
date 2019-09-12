@@ -5,7 +5,7 @@
     set_fact:
       vm: "{{hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true)}}"
     vars:
-      new_var: "{'disk': '{{hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|default(0)|int + hostvars[vm_item]['vm']['disk2']|default(0)|int + hostvars[vm_item]['vm']['disk3']|default(0)|int}}'}"
+      new_var: "{'disk': '{{hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[vm_item]['vm']['disk3']|int}}'}"
     delegate_to: "{{vm_item}}"
     delegate_facts: true
     loop: "{{groups['stack']}}"

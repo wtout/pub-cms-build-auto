@@ -32,7 +32,6 @@
     no_log: true
     when:
       - vm_creds2.stdout is search('Password changed')
-#  - meta: reset_connection
 
   - name: puppet agent test
     shell: /usr/local/bin/puppet agent --server {{puppet.fqdn}} --test
@@ -42,6 +41,7 @@
     when: not ansible_check_mode
   - name: Wait for puppet agent test to start
     wait_for:
+      delay: 20
       path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
       state: present
       timeout: 1800
@@ -53,8 +53,8 @@
     register: vm_creds3
     no_log: true
     until: vm_creds3.stdout is search('Password changed')
-    retries: 30
-    delay: 60
+    retries: 60
+    delay: 30
     delegate_to: 'localhost'
     when:
       - ansible_ssh_pass != pppp
@@ -67,7 +67,6 @@
       - ansible_ssh_pass != pppp
       - vm_creds3.stdout is search('Password changed')
       - not ansible_check_mode
-#  - meta: reset_connection
 
   - name: Wait for puppet agent test to finish
     wait_for:

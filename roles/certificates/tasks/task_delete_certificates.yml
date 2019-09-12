@@ -10,7 +10,8 @@
     when: not client_cert_status.stat.exists
 
   - name: check if there is a cert on the puppet server
-    shell: puppet cert list {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}} | cut -d '(' -f2
+    shell: >
+      {{'sudo ' if (puppet.vmname is search('01') or puppet.vmname is search('02')) else ''}}puppet cert list {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}} | cut -d '(' -f2
     args:
       chdir: '/usr/local/bin'
     check_mode: no
@@ -73,7 +74,8 @@
         fail_msg: 'Script to delete the certificates does not exist. Aborting!'
       run_once: true
     - name: delete the VM certificate
-      shell: puppet cert clean {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}}
+      shell: >
+        {{'sudo ' if (puppet.vmname is search('01') or puppet.vmname is search('02')) else ''}}puppet cert clean {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}}
       args:
         chdir: '/usr/local/bin'
     when: delete_client_cert_on_server | default(false) | bool

@@ -11,10 +11,10 @@
       appliance: "[{{namevar}}/{{ipvar1 if ipvar1 != '' else octetvar1}}/{{typevar}} {{ipvar1 if ipvar1 != '' else octetvar1}}\"/CUG]"
     vars:
       index: "{{member_item[-2:]}}"
-      ipvar1: "{{hostvars[member_item]['netconfig']['ippool1'][index|int - 1] if hostvars[member_item]['netconfig']['ippool1'] is defined else ''}}"
-      ipvar2: "{{hostvars[member_item]['netconfig']['ippool2'][index|int - 1] if hostvars[member_item]['netconfig']['ippool2'] is defined else ''}}"
-      octetvar1: "{{customer.octets + '.' + hostvars[member_item]['netconfig']['octetpool1'][index|int - 1]|string if (hostvars[member_item]['netconfig']['octetpool1'] is defined and hostvars[member_item]['netconfig']['octetpool1'] != [] and index|int <= hostvars[member_item]['netconfig']['octetpool1']|length) else ''}}"
-      octetvar2: "{{customer.octets + '.' + hostvars[member_item]['netconfig']['octetpool2'][index|int - 1]|string if (hostvars[member_item]['netconfig']['octetpool2'] is defined and hostvars[member_item]['netconfig']['octetpool2'] != [] and index|int <= hostvars[member_item]['netconfig']['octetpool2']|length) else ''}}"
+      ipvar1: "{{hostvars[member_item]['netconfig']['ippool1'][index|int - 1] if hostvars[member_item]['netconfig']['ippool1']|length >= index|int else ''}}"
+      ipvar2: "{{hostvars[member_item]['netconfig']['ippool2'][index|int - 1] if hostvars[member_item]['netconfig']['ippool2']|length >= index|int else ''}}"
+      octetvar1: "{{customer.octets + '.' + hostvars[member_item]['netconfig']['octetpool1'][index|int - 1]|string if hostvars[member_item]['netconfig']['octetpool1']|length >= index|int else ''}}"
+      octetvar2: "{{customer.octets + '.' + hostvars[member_item]['netconfig']['octetpool2'][index|int - 1]|string if hostvars[member_item]['netconfig']['octetpool2']|length >= index|int else ''}}"
       namevar: "{{hostvars[member_item]['vm']['name']}}"
       cpuvar: "{{hostvars[member_item]['vm']['cpu']}}"
       memvar: "{{hostvars[member_item]['vm']['memory']}}"
@@ -34,88 +34,88 @@
       loop_var: info_item
     when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
-  - name: define linuxjs lists
+  - name: define lnxjmp lists
     set_fact:
-      linuxjs_ip1_list: "{{linuxjs_ip1_list | default([]) + ipvar1 if (linuxjs_ip1_list is defined and linuxjs_ip1_list != '') else ipvar1}}"
-      linuxjs_hst_list: "{{linuxjs_hst_list | default([]) + hstvar if (linuxjs_hst_list is defined and linuxjs_hst_list != '') else hstvar}}"
+      lnxjmp_ip1_list: "{{lnxjmp_ip1_list | default([]) + ipvar1 if (lnxjmp_ip1_list is defined and lnxjmp_ip1_list != '') else ipvar1}}"
+      lnxjmp_hst_list: "{{lnxjmp_hst_list | default([]) + hstvar if (lnxjmp_hst_list is defined and lnxjmp_hst_list != '') else hstvar}}"
     vars:
       ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
       hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list}}"
-    loop: "{{groups['linuxjs']}}"
+    loop: "{{groups['lnxjmp']}}"
     loop_control:
       loop_var: info_item
     when:
-      - groups['linuxjs'] is defined
+      - groups['lnxjmp'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
-  - name: define relay lists
+  - name: define rly lists
     set_fact:
-      relay_ip1_list: "{{relay_ip1_list | default([]) + ipvar1 if (relay_ip1_list is defined and relay_ip1_list != '') else ipvar1}}"
-      relay_hst_list: "{{relay_hst_list | default([]) + hstvar if (relay_hst_list is defined and relay_hst_list != '') else hstvar}}"
+      rly_ip1_list: "{{rly_ip1_list | default([]) + ipvar1 if (rly_ip1_list is defined and rly_ip1_list != '') else ipvar1}}"
+      rly_hst_list: "{{rly_hst_list | default([]) + hstvar if (rly_hst_list is defined and rly_hst_list != '') else hstvar}}"
     vars:
       ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
       hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list}}"
-    loop: "{{groups['relay']}}"
+    loop: "{{groups['rly']}}"
     loop_control:
       loop_var: info_item
     when:
-      - groups['relay'] is defined
+      - groups['rly'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
-  - name: define splunkdpl lists
+  - name: define spldpl lists
     set_fact:
-      splunkdpl_ip1_list: "{{splunkdpl_ip1_list | default([]) + ipvar1 if (splunkdpl_ip1_list is defined and splunkdpl_ip1_list != '') else ipvar1}}"
-      splunkdpl_hst_list: "{{splunkdpl_hst_list | default([]) + hstvar if (splunkdpl_hst_list is defined and splunkdpl_hst_list != '') else hstvar}}"
+      spldpl_ip1_list: "{{spldpl_ip1_list | default([]) + ipvar1 if (spldpl_ip1_list is defined and spldpl_ip1_list != '') else ipvar1}}"
+      spldpl_hst_list: "{{spldpl_hst_list | default([]) + hstvar if (spldpl_hst_list is defined and spldpl_hst_list != '') else hstvar}}"
     vars:
       ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
       hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list}}"
-    loop: "{{groups['splunkdpl']}}"
+    loop: "{{groups['spldpl']}}"
     loop_control:
       loop_var: info_item
     when:
-      - groups['splunkdpl'] is defined
+      - groups['spldpl'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
-  - name: define splunkind lists
+  - name: define splind lists
     set_fact:
-      splunkind_ip1_list: "{{splunkind_ip1_list | default([]) + ipvar1 if (splunkind_ip1_list is defined and splunkind_ip1_list != '') else ipvar1}}"
-      splunkind_hst_list: "{{splunkind_hst_list | default([]) + hstvar if (splunkind_hst_list is defined and splunkind_hst_list != '') else hstvar}}"
+      splind_ip1_list: "{{splind_ip1_list | default([]) + ipvar1 if (splind_ip1_list is defined and splind_ip1_list != '') else ipvar1}}"
+      splind_hst_list: "{{splind_hst_list | default([]) + hstvar if (splind_hst_list is defined and splind_hst_list != '') else hstvar}}"
     vars:
       ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
       hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list}}"
-    loop: "{{groups['splunkind']}}"
+    loop: "{{groups['splind']}}"
     loop_control:
       loop_var: info_item
     when:
-      - groups['splunkind'] is defined
+      - groups['splind'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
-  - name: define splunkmas lists
+  - name: define splmas lists
     set_fact:
-      splunkmas_ip1_list: "{{splunkmas_ip1_list | default([]) + ipvar1 if (splunkmas_ip1_list is defined and splunkmas_ip1_list != '') else ipvar1}}"
-      splunkmas_hst_list: "{{splunkmas_hst_list | default([]) + hstvar if (splunkmas_hst_list is defined and splunkmas_hst_list != '') else hstvar}}"
+      splmas_ip1_list: "{{splmas_ip1_list | default([]) + ipvar1 if (splmas_ip1_list is defined and splmas_ip1_list != '') else ipvar1}}"
+      splmas_hst_list: "{{splmas_hst_list | default([]) + hstvar if (splmas_hst_list is defined and splmas_hst_list != '') else hstvar}}"
     vars:
       ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
       hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list}}"
-    loop: "{{groups['splunkmas']}}"
+    loop: "{{groups['splmas']}}"
     loop_control:
       loop_var: info_item
     when:
-      - groups['splunkmas'] is defined
+      - groups['splmas'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
-  - name: define splunksrc lists
+  - name: define splsrc lists
     set_fact:
-      splunksrc_ip1_list: "{{splunksrc_ip1_list | default([]) + ipvar1 if (splunksrc_ip1_list is defined and splunksrc_ip1_list != '') else ipvar1}}"
-      splunksrc_hst_list: "{{splunksrc_hst_list | default([]) + hstvar if (splunksrc_hst_list is defined and splunkmas_hst_list != '') else hstvar}}"
+      splsrc_ip1_list: "{{splsrc_ip1_list | default([]) + ipvar1 if (splsrc_ip1_list is defined and splsrc_ip1_list != '') else ipvar1}}"
+      splsrc_hst_list: "{{splsrc_hst_list | default([]) + hstvar if (splsrc_hst_list is defined and splsrc_hst_list != '') else hstvar}}"
     vars:
       ipvar1: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list}}"
       hstvar: "{{info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list}}"
-    loop: "{{groups['splunksrc']}}"
+    loop: "{{groups['splsrc']}}"
     loop_control:
       loop_var: info_item
     when:
-      - groups['splunksrc'] is defined
+      - groups['splsrc'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define em7prt lists
