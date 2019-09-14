@@ -67,7 +67,7 @@
           unit_number: "{{disk0_unit_number}}"
       validate_certs: no
     register: vmguest_disk
-    notify: expand disk0
+#    notify: expand disk0
     when:
       - vm.disk0 is defined
       - vm.disk0|float > 0
@@ -87,7 +87,7 @@
           unit_number: "{{disk1_unit_number}}"
       validate_certs: no
     register: vmguest_disk
-    notify: expand disk1
+#    notify: expand disk1
     when:
       - vm.disk1 is defined
       - vm.disk1|float > 0
@@ -107,7 +107,7 @@
           unit_number: "{{disk2_unit_number}}"
       validate_certs: no
     register: vmguest_disk
-    notify: expand disk2
+#    notify: expand disk2
     when:
       - vm.disk2 is defined
       - vm.disk2 != ''
@@ -128,7 +128,7 @@
           unit_number: "{{disk3_unit_number}}"
       validate_certs: no
     register: vmguest_disk
-    notify: expand disk3
+#    notify: expand disk3
     when:
       - vm.disk3 is defined
       - vm.disk3 != ''

@@ -2,9 +2,11 @@
 # tasks to license the EM7 VM
 - block:
   - name: wait until db vip is reachable
-    shell: ping {{vip.db}} -c 3
+    shell: ping {{vip.db}} -c 1
     retries: 30
     delay: 30
+    register: db_vip_reachable
+    until: db_vip_reachable is succeeded
     when: inventory_hostname is search('prt')
 
   - name: get MAC address
