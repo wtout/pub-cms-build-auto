@@ -11,18 +11,14 @@
       - name: Update SSH password
         set_fact:
           ansible_ssh_pass: "{{postppp}}"
-      - name: check VM credentials
+      - name: check updated VM credentials
         wait_for_connection:
           timeout: 1800
         register: connection_status1
-        ignore_errors: true
       - name: reset SSH password
         set_fact:
-          ansible_ssh_pass: "{{preppp}}"
+          ansible_ssh_pass: "{{postppp}}"
         when: connection_status1 is failed
-      when:
-        - ansible_ssh_pass != postppp
-#        - not ansible_check_mode
     - name: wait for puppet push to finish
       wait_for:
         path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
@@ -76,21 +72,17 @@
           timeout: 1800
         when:
           - not ansible_check_mode
-      - block:
-        - name: Update SSH password
-          set_fact:
-            ansible_ssh_pass: "{{postppp}}"
-        - name: check VM credentials
-          wait_for_connection:
-            timeout: 1800
-          register: connection_status2
-          ignore_errors: true
-        - name: reset SSH password
-          set_fact:
-            ansible_ssh_pass: "{{preppp}}"
-          when: connection_status2 is failed
-        when:
-          - ansible_ssh_pass != postppp
+      - name: Update SSH password
+        set_fact:
+          ansible_ssh_pass: "{{postppp}}"
+      - name: check updated VM credentials
+        wait_for_connection:
+          timeout: 1800
+        register: connection_status2
+      - name: reset SSH password
+        set_fact:
+          ansible_ssh_pass: "{{preppp}}"
+        when: connection_status2 is failed
       - name: Wait for puppet push to finish
         wait_for:
           path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
