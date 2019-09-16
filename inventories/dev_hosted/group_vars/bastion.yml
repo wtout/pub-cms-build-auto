@@ -1,2 +1,2 @@
-ansible_user: "{{bastion.username}}"
-ansible_ssh_pass: "{{bastion.password}}"
+ansible_user: "{{BASTION_USER | default('')}}"
+ansible_ssh_pass: "{{BASTION_PASS | default('')}}"

@@ -9,7 +9,7 @@
   - name: Add the local time server to the chrony config file
     lineinfile:
       path: "{{chrony_file}}"
-      line: "server {{customer.octets}}.{{sysconfig.ntp_server_fo}} iburst"
+      line: "server {{ntp_server}} iburst"
       insertafter: '^# Please consider.*$'
     when: not ansible_check_mode
     notify: restart chrony
