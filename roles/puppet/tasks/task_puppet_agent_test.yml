@@ -105,4 +105,4 @@
     when: not puppet_push_running.stat.exists
 
   when: "'em7' not in group_names"
-  tags: certificates
+  tags: puppet

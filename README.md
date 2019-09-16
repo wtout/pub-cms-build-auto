@@ -70,7 +70,7 @@ with the script name being one of the following options:
   - **vm_facts**: defines the individual VM facts required in the playbook
   - **vm_creation**: deploys the system's VMs
   - **vm_configuration**: configures the system's VMs
-  - **certificates**: installs the puppet agent, generates the puppet certificates and triggers the puppet push for the non-EM7 VMs
+  - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push for the non-EM7 VMs
   - **check_requiretty**: checks for and disables requiretty on the hosts
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 

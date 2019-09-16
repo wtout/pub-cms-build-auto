@@ -29,4 +29,4 @@
       when: class_item != ''
     when: script_stat.stat.exists
   delegate_to: "{{groups['puppet']|first}}"
-  tags: certificates
+  tags: puppet

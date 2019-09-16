@@ -28,4 +28,4 @@
     when: script_stat.stat.exists
     become: "{{true if 'em7' in group_names else false}}"
   when: "'em7' in group_names"
-  tags: certificates
+  tags: puppet

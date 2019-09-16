@@ -34,8 +34,8 @@
       delegate_to: "{{groups['puppet']|first}}"
     when: "'No puppet-agent installed' in puppet_installed.stdout"
   when: "'em7' not in group_names"
-  tags: certificates
+  tags: puppet
 
 - name: flush handlers
   meta: flush_handlers
-  tags: certificates
+  tags: puppet

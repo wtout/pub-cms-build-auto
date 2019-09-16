@@ -28,7 +28,7 @@
   - {role: capcheck, when: capcheck | default(false) | bool}
   - {role: get_release, when: get_release | default(false) | bool}
 
-# Plays to create, configure the VMs and to create the puppet certificates
+# Plays to create, configure the VMs and to run the puppet push
 - name: deploy VMs
   hosts: all
   gather_facts: no
@@ -36,7 +36,7 @@
   roles:
   - {role: vm_creation, when: create_vms | default(false) | bool}
   - {role: vm_configuration, when: configure_vms | default(false) | bool}
-  - {role: certificates, when: create_certs | default(false) | bool}
+  - {role: puppet, when: push_puppet | default(false) | bool}
 #  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
 
 # Plays to delete the VMs

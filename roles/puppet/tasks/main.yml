@@ -1,5 +1,5 @@
 ---
-# tasks file for certificates
+# tasks file for puppet
 - block:
   - block:
     - name: check VM reachable
@@ -31,6 +31,5 @@
   - include_tasks: task_generate_cert_for_nonem7.yml
   - include_tasks: task_puppet_agent_test.yml
   when:
-    - "'stack' in group_names"
-    - (deploy | default(false) | bool) or (upgrade | default(false) | bool)
-  tags: certificates
+    - push_puppet | default(false) | bool
+  tags: puppet

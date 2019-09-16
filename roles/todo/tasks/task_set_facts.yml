@@ -59,13 +59,13 @@
     - inventory_hostname in groups['stack']
   tags: vm_configuration
 
-- name: define create_certs
+- name: define push_puppet
   set_fact:
-    create_certs: true
+    push_puppet: true
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack']
-  tags: certificates
+  tags: puppet
 
 - name: define check_requiretty
   set_fact:
