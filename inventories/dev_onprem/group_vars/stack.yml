@@ -9,4 +9,5 @@ ansible_user: "{{credentials.username}}"
 ansible_ssh_pass: "{{credentials.password}}"
 ansible_become_pass: "{{ansible_ssh_pass}}"
 
-pppp: 'OdOrXextxfgH7cxBhXYi'
+preppp: "{{ansible_ssh_pass}}"
+postppp: 'OdOrXextxfgH7cxBhXYi'
