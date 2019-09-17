@@ -30,7 +30,7 @@
   tags: ['capcheck', 'vm_creation']
 
 - block:
-  - name: define lists of datastores that have enough space for half the vm_creation
+  - name: define lists of datastores that have enough space for half the vms
     set_fact:
       db_ds_names: "{{hs_ds_names if groups['em7db'] is defined else []}}"
       ndb_ds_names: "{{hs_ds_names}}"
@@ -40,7 +40,7 @@
   tags: ['capcheck', 'vm_creation']
 
 - block:
-  - name: define list of datastores to host the DB vm_creation
+  - name: define list of datastores to host the DB vms
     set_fact:
       db_ds_names: "{{db_ds_names|default([]) + [item.name]}}"
     loop: "{{datastore_facts.datastores | sort(attribute='freeSpace', reverse=true)}}"
@@ -60,7 +60,7 @@
       myvar: "{{datastore_facts.datastores|selectattr('name', 'equalto', item)|map(attribute='freeSpace', reverse=true)|list}}"
     loop: "{{db_ds_names|default([])}}"
     when: myvar[0] >= (required_space|float * 1024|pow(3)) / 2
-  - name: define the list of datastores to host the non-DB vm_creation
+  - name: define the list of datastores to host the non-DB vms
     set_fact:
       ndb_ds_names: "{{com_ds_names|default([]) | union(intndb_ds_names) | unique}}"
   when: hs_ds_names|length < 2
