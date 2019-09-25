@@ -6,5 +6,5 @@
     when: configure_vms | default(false) | bool
   when:
     - inventory_hostname in groups['stack']
-    - (deploy | default(false) | bool) or (upgrade | default(false) | bool)
+    - (deploy | default(false) | bool) or (rollback | default(false) | bool)
   tags: always

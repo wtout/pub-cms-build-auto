@@ -1,18 +1,20 @@
 ---
 # tasks file for vm_configuration
 - block:
+  - name: check VM reachable
+    shell: ping {{ansible_host}} -c 1
+    register: vco_vm_reachable
+    ignore_errors: true
+    check_mode: no
+    delegate_to: localhost
   - block:
-    - name: check VM reachable
-      shell: ping {{ansible_host}} -c 1
-      register: vco_vm_reachable
-      ignore_errors: true
-      delegate_to: localhost
     - block:
       - name: check VM credentials
         wait_for_connection:
           timeout: 6
         register: vco_vm_creds
         ignore_errors: true
+        check_mode: no
       - name: Update SSH password
         set_fact:
           ansible_ssh_pass: "{{postppp}}"
@@ -20,11 +22,11 @@
         when:
           - vco_vm_creds is failed
           - vco_vm_creds.msg is search('Invalid/incorrect username/password')
-      when: vco_vm_reachable is succeeded
-    when:
-      - ansible_ssh_pass != postppp
-      - "'em7' not in group_names"
+      when:
+        - ansible_ssh_pass != postppp
+        - "'em7' not in group_names"
 
-  - include_tasks: task_configure_vms.yml
+    - include_tasks: task_configure_vms.yml
+    when: vco_vm_reachable is succeeded
   when: configure_vms | default(false) | bool
   tags: vm_configuration

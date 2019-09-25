@@ -2,7 +2,8 @@
 # tasks to define the on-prem datastore for each host
 - name: define on-prem datastores list for each host group
   set_fact:
-    vm_ds_names: "{{hostvars[groups['vcenter'][0]]['db_ds_names'] if vm_group == 'em7db' else hostvars[groups['vcenter'][0]]['ndb_ds_names']}}"
+    vm_ds_names: "{{hostvars[groups['vcenter']|first][vm_group + '_ds_names']}}"
+#    vm_ds_names: "{{hostvars[groups['vcenter'][0]]['db_ds_names'] if vm_group == 'em7db' else hostvars[groups['vcenter'][0]]['ndb_ds_names']}}"
   when: inventory_hostname == groups[vm_group][pair_num] or (inventory_hostname == groups[vm_group][pair_num + 1] and groups[vm_group][pair_num] not in ansible_play_hosts)
   tags: vm_creation
 

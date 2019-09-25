@@ -2,7 +2,8 @@
 # handlers file for puppet
 - name: puppet sign certs
   shell: >
-    {{'sudo ' if (puppet.vmname is search('01') or puppet.vmname is search('02')) else ''}}/usr/local/bin/puppet cert sign {{vm.name}}.{{sysconfig.domain_name}}
+    /usr/local/bin/puppet cert sign {{vm.name}}.{{sysconfig.domain_name}}
+  become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
   delegate_to: "{{groups['puppet']|first}}"
   ignore_errors: true
   tags: puppet

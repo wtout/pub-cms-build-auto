@@ -67,6 +67,14 @@
     - inventory_hostname in groups['stack']
   tags: puppet
 
+- name: define rollback_puppet
+  set_fact:
+    rollback_puppet: true
+  when:
+    - rollback | default(false) | bool
+    - inventory_hostname in groups['stack']
+  tags: puppet
+
 - name: define check_requiretty
   set_fact:
     check_requiretty: true

@@ -14,6 +14,7 @@
   register: vm_facts
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   tags: vm_creation
+
 - name: define vm names list
   set_fact:
     vm_names: "{{vm_names|default([]) + [host_item.virtual_machines | map(attribute='guest_name') | list] | flatten}}"

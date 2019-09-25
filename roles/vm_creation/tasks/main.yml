@@ -7,6 +7,7 @@
         shell: ping {{ansible_host}} -c 1
         register: vcr_vm_reachable
         ignore_errors: true
+        check_mode: no
         delegate_to: localhost
       - block:
         - name: check VM credentials
@@ -14,6 +15,7 @@
             timeout: 6
           register: vcr_vm_creds
           ignore_errors: true
+          check_mode: no
         - name: Update SSH password
           set_fact:
             ansible_ssh_pass: "{{postppp}}"

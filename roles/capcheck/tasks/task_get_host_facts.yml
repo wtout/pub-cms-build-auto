@@ -1,54 +1,103 @@
 ---
 # tasks to get host info
-- name: Get host facts
-  vmware_host_facts:
-    hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
-    username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
-    password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
-    esxi_hostname: "{{item}}"
-    validate_certs: no
-  loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
-  register: host_facts
-  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
-  tags: ['capcheck', 'vm_creation']
+- block:
+  - name: Get host facts
+    vmware_host_facts:
+      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
+      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
+      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
+      esxi_hostname: "{{item}}"
+      validate_certs: no
+    loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+    register: host_facts
+    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
 
-- name: define list of datastores
-  set_fact:
-    ssd_ds: "{{ssd_ds|default([]) | union(item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list)}}"
-    sas_ds: "{{sas_ds|default([]) | union(item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list)}}"
-  loop: "{{host_facts.results}}"
-  tags: ['capcheck', 'vm_creation']
+  - name: define host cluster
+    set_fact:
+      host_cluster: "{{ host_cluster|default({}) | combine( {loop_item.item: loop_item.ansible_facts.cluster} ) }}"
+    loop: "{{ host_facts.results }}"
+    loop_control:
+      loop_var: loop_item
 
-- name: define list of db datastores
-  set_fact:
-    db_ds_names: "{{db_ds_names|default([]) + [item.0]}}"
-  vars:
-    myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
-  loop: "{{ ssd_ds|zip(host_facts.results)|list }}"
-  when: myvar[0] >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
-  tags: ['capcheck', 'vm_creation']
+  - debug:
+      msg:
+        - "{{ host_cluster[host_item] }}"
+    loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+    loop_control:
+      loop_var: host_item
 
-- name: define list of non-db datastores
-  set_fact:
-    ndb_ds_names: "{{ndb_ds_names|default([]) + [item.0]}}"
-  vars:
-    myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
-  loop: "{{ sas_ds|zip(host_facts.results)|list }}"
-  when: myvar[0] >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
-  tags: ['capcheck', 'vm_creation']
+  - name: define list of ssd datastores with enough free space
+    set_fact:
+      ssd_ds_names: "{{ssd_ds_names|default([]) | union(item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list)}}"
+    vars:
+      myvar: "{{item.ansible_facts.ansible_datastore|map(attribute='free')|list|replace(' TB', '')}}"
+    loop: "{{host_facts.results}}"
+    when: myvar[0] >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
 
-- name: define db_ds_total_fs
-  set_fact:
-    db_ds_total_fs: "{{db_ds_total_fs|default(0)|float + myvar[0]|float * 1024|pow(4)}}"
-  vars:
-    myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
-  loop: "{{ ssd_ds|zip(host_facts.results)|list }}"
-  tags: ['capcheck', 'vm_creation']
+  - assert:
+      that:
+        - "ssd_ds_names|length >= 2"
+      fail_msg: "Not enough SSD storage space to deploy EM7 databases"
+      success_msg: "Found {{ssd_ds_names|length}} SSD datastores to deploy EM7 databases"
+    when:
+      - groups['em7db'] is defined
+      - groups['em7db'] != []
 
-- name: define ndb_ds_total_fs
-  set_fact:
-    ndb_ds_total_fs: "{{ndb_ds_total_fs|default(0)|float + myvar[0]|float * 1024|pow(4)}}"
-  vars:
-    myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
-  loop: "{{ sas_ds|zip(host_facts.results)|list }}"
+  - name: define list of sas datastores with enough free space
+    set_fact:
+      sas_ds_names: "{{sas_ds_names|default([]) | union(item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list)}}"
+    vars:
+      myvar: "{{item.ansible_facts.ansible_datastore|map(attribute='free')|list|replace(' TB', '')}}"
+    loop: "{{host_facts.results}}"
+    when: myvar[0] >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
+
+  - assert:
+      that:
+        - "sas_ds_names|length >= 2"
+      fail_msg: "Not enough SAS storage space to deploy the non-DB VMs"
+      success_msg: "Found {{sas_ds_names|length}} SAS datastores to deploy the non-DB VMs"
+    when:
+      - groups['stack'] | difference(groups['em7db']) | length >= 1
+
+  - name: define ssd_ds_total_fs
+    set_fact:
+      ssd_ds_total_fs: "{{ssd_ds_total_fs|default(0)|float + myvar[0]|float * 1024|pow(4)}}"
+    vars:
+      myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
+    loop: "{{ ssd_ds_names|zip(host_facts.results)|list }}"
+
+  - name: define sas_ds_total_fs
+    set_fact:
+      sas_ds_total_fs: "{{sas_ds_total_fs|default(0)|float + myvar[0]|float * 1024|pow(4)}}"
+    vars:
+      myvar: "{{item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', item.0)|map(attribute='free')|list|replace(' TB', '')}}"
+    loop: "{{ sas_ds_names|zip(host_facts.results)|list }}"
+
+  - name: define lists of datastores to host the VMs
+    set_fact:
+      "{{ group_item + '_ds_names' }}": "{{ssd_ds_names if group_item is search('em7db') else sas_ds_names}}"
+    loop: "{{ group_list }}"
+    loop_control:
+      loop_var: group_item
+
+  - name: define list of usable datastores
+    set_fact:
+      usable_ds_list: "{{ ssd_ds_names | union(sas_ds_names) }}" 
+
+  - name: define total free space on usable datastores
+    set_fact:
+      total_fs: "{{ssd_ds_total_fs|float + sas_ds_total_fs|float}}"
+
+  - assert:
+      that:
+        - "(total_fs|float / 1024|pow(3)) >= required_space|float"
+      fail_msg: "Not enough storage space to deploy all the VMs"
+
+  - debug:
+      msg:
+        - "Total available system storage space: {{(total_fs|float / 1024|pow(4))|string + ' TiB' if (total_fs|int)|string|length > 12 else (total_fs|float / 1024|pow(3))|string + ' GiB'}}"
+        - "{{ssd_ds_names|default([])}}"
+        - "{{(ssd_ds_total_fs|default(0)|int / 1024|pow(4))|string + ' TiB' if ssd_ds_total_fs|default('0')|length > 12 else (ssd_ds_total_fs|default(0)|int / 1024|pow(3))|string + ' GiB'}}"
+        - "{{sas_ds_names|default([])}}"
+        - "{{(sas_ds_total_fs|default(0)|int / 1024|pow(4))|string + ' TiB' if sas_ds_total_fs|default('0')|length > 12 else (sas_ds_total_fs|default(0)|int / 1024|pow(3))|string + ' GiB'}}"
   tags: ['capcheck', 'vm_creation']

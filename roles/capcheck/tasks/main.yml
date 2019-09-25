@@ -20,32 +20,6 @@
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
 
-  - assert:
-      that:
-        - "db_ds_names|length >= 2"
-      fail_msg: "Not enough storage space to deploy EM7 databases"
-      success_msg: "Found {{db_ds_names|length}} datastores to deploy EM7 databases"
-    when:
-      - groups['em7db'] is defined
-      - groups['em7db'] != []
-
-  - assert:
-      that:
-        - "ndb_ds_names|length >= 2"
-      fail_msg: "Not enough storage space to deploy the non-DB VMs"
-      success_msg: "Found {{ndb_ds_names|length}} datastores to deploy the non-DB VMs"
-    when:
-      - groups['stack'] | difference(groups['em7db']) | length >= 1
-
-  - debug:
-      msg:
-        - "{{db_ds_names|default([])}}"
-#        - "{{db_ds_names|first}}: {{datastore_facts.datastores|selectattr('name', 'equalto', db_ds_names|first)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
-        - "{{(db_ds_total_fs|default(0)|int / 1024|pow(4))|string + ' TiB' if db_ds_total_fs|default('0')|length > 12 else (db_ds_total_fs|default(0)|int / 1024|pow(3))|string + ' GiB'}}"
-        - "{{ndb_ds_names|default([])}}"
-#        - "{{ndb_ds_names|first}}: {{datastore_facts.datastores|selectattr('name', 'equalto', ndb_ds_names|first)|map(attribute='freeSpace')|list|regex_replace('\\[|\\]', '')}}"
-        - "{{(ndb_ds_total_fs|default(0)|int / 1024|pow(4))|string + ' TiB' if ndb_ds_total_fs|default('0')|length > 12 else (ndb_ds_total_fs|default(0)|int / 1024|pow(3))|string + ' GiB'}}"
-
   when: capcheck | default(false) | bool
   tags: ['capcheck', 'vm_creation']
 

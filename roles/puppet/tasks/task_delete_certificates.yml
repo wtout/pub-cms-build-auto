@@ -11,9 +11,10 @@
 
   - name: check if there is a cert on the puppet server
     shell: >
-      {{'sudo ' if (puppet.vmname is search('01') or puppet.vmname is search('02')) else ''}}puppet cert list {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}} | cut -d '(' -f2
+      puppet cert list {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}} | cut -d '(' -f2
     args:
       chdir: '/usr/local/bin'
+    become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
     check_mode: no
     ignore_errors: true
     register: client_cert_on_server
@@ -31,6 +32,7 @@
       chdir: '/etc/puppetlabs/puppet/ssl'
     register: client_cert_match
     check_mode: no
+    ignore_errors: true
     when:
       - client_cert_status.stat.exists
       - client_cert_on_server.stdout != ''
@@ -63,21 +65,12 @@
     become: "{{true if 'em7' in group_names else false}}"
     when: delete_client_cert_on_vm | default(false) | bool
 
-  - block:
-    - name: check if cleancert.sh exists
-      stat:
-        path: '/opt/puppet/qs_scripts/cleancert.sh'
-      register: script_stat
-      run_once: true
-    - assert:
-        that: script_stat.stat.exists
-        fail_msg: 'Script to delete the certificates does not exist. Aborting!'
-      run_once: true
-    - name: delete the VM certificate
-      shell: >
-        {{'sudo ' if (puppet.vmname is search('01') or puppet.vmname is search('02')) else ''}}puppet cert clean {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}}
-      args:
-        chdir: '/usr/local/bin'
+  - name: delete the VM certificate
+    shell: >
+      puppet cert clean {{'em7release.' if 'em7' in group_names else ''}}{{vm.name}}.{{sysconfig.domain_name}}
+    args:
+      chdir: '/usr/local/bin'
+    become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
     when: delete_client_cert_on_server | default(false) | bool
     delegate_to: "{{groups['puppet']|first}}"
   tags: puppet

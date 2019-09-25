@@ -46,6 +46,7 @@
   gather_facts: no
 
   roles:
+  - {role: puppet, when: rollback_puppet | default(false) | bool}
   - {role: vm_creation, when: rollback_vms | default(false) | bool}
   - {role: ssh_keys, when: rollback_ssh_keys | default(false) | bool}
 

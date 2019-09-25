@@ -9,6 +9,8 @@
       path: '/etc/snmp/snmpd.conf'
       line: "engineid {{ens160_mac.stdout | replace(':', '')}}"
     notify: restart snmpd service 
-  when: "'em7' in group_names"
+  when:
+    - not ansible_check_mode
+    - "'em7' in group_names"
   become: "{{true if 'em7' in group_names else false}}"
   tags: vm_configuration

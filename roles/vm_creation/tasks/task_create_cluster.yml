@@ -12,6 +12,14 @@
       validate_certs: no
     register: cust_cluster
 
+  - name: Check if hosts are in a different cluster
+    assert:
+      that:
+        - hostvars[groups['vcenter']|first]['host_cluster'][host_item] == none or (hostvars[groups['vcenter']|first]['host_cluster'][host_item] != none and hostvars[groups['vcenter']|first]['host_cluster'][host_item] == hostvars[groups['vcenter'][0]]['information']['cluster'])
+    loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+    loop_control:
+      loop_var: host_item
+
   - name: Add hosts to the '{{hostvars[groups['vcenter'][0]]['information']['cluster']}}' cluster
     vmware_host:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
