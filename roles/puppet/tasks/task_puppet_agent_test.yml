@@ -12,6 +12,7 @@
         set_fact:
           ansible_ssh_pass: "{{postppp}}"
         no_log: true
+        when: ansible_ssh_pass != postppp
       - name: check updated VM credentials
         wait_for_connection:
           timeout: 1800

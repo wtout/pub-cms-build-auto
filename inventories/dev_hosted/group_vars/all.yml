@@ -24,7 +24,7 @@ customer:
 ##################################################################################
 bastion:
   address: []
-#  address: ["10.225.228.240", "10.225.228.240"]
+#  address: [ '10.225.228.240' ]
 
 
 ##################################################################################
@@ -39,6 +39,14 @@ datacenter:
   # For hosted deployments DO NOT TOUCH
   resources: []
 
+  # ONLY for on-premise deployments, define the esxi hosts username if different than the standard
+  # For hosted deployments DO NOT TOUCH
+  hostuser: ''
+
+  # ONLY for on-premise deployments, define the esxi hosts password if different than the standard
+  # For hosted deployments DO NOT TOUCH
+  hostpass: ''
+
 
 ##################################################################################
 # System configuration variables
@@ -46,13 +54,13 @@ datacenter:
 sysconfig:
 
   # DNS servers list
-  dns_servers: ["172.19.251.21", "172.19.251.22"]
+  dns_servers: [ '172.19.251.21', '172.19.251.22' ]
 
   # Domain name to use
   domain_name: 'cisco-cms.com'
 
   # NTP server
-  ntp_server: "{{customer.octets}}.62"
+  ntp_server: "{{ customer.octets }}.62"
 
 
 ##################################################################################
@@ -61,19 +69,18 @@ sysconfig:
 puppet:
 
   # VM name
-  vmname: 'alln1qspupp01'
+#  vmname: 'alln1qspupp01'
+  vmname: 'alln1qspupp02'
+#  vmname: 'alln1qspupp03'
 
   # FQDN
-  fqdn: 'alln1qspupp01.cisco-cms.com'
+#  fqdn: 'alln1qspupp01.cisco-cms.com'
+  fqdn: 'alln1qspupp02.cisco-cms.com'
+#  fqdn: 'alln1qspupp03.cisco-cms.com'
 
   # ip address
-  ipaddress: '172.19.251.53'
-
-#  vmname: 'alln1qspupp02'
-#  fqdn: 'alln1qspupp02.cisco-cms.com'
-#  ipaddress: '172.19.251.59'
-#  vmname: 'alln1qspupp03'
-#  fqdn: 'alln1qspupp03.cisco-cms.com'
+#  ipaddress: '172.19.251.53'
+  ipaddress: '172.19.251.59'
 #  ipaddress: '172.19.251.34'
 
 
@@ -140,22 +147,22 @@ splunk:
 vip:
 
   # Message collectors VIP
-  mc: "{{customer.octets}}.42"
+  mc: "{{ customer.octets }}.42"
 
   # EM7 portals (application servers) VIP
-  prt: "{{customer.octets}}.49"
+  prt: "{{ customer.octets }}.49"
 
   # EM7 databases VIP
-  db: "{{customer.octets}}.40"
+  db: "{{ customer.octets }}.40"
 
   # Splunk search heads VIP
-  src: "{{customer.octets}}.41"
+  src: "{{ customer.octets }}.41"
 
   # Relay servers VIP
-  rly: "{{customer.octets}}.120"
+  rly: "{{ customer.octets }}.120"
 
   # Relay servers database VIP
-  rly_db: "{{customer.octets}}.1"
+  rly_db: "{{ customer.octets }}.1"
 
 
 ##################################################################################
@@ -190,7 +197,7 @@ vm_vars:
         name: 'ens160'
 
         # IP fourth octet pool
-        ip_octetpool: "{{range(13, 14 + 1)|list}}"
+        ip_octetpool: "{{ range(13, 14 + 1)|list }}"
 
         # Gateway fourth octet
         gtw_octet: '62'
@@ -199,7 +206,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
       # Network interface 2
       ################
@@ -218,7 +225,7 @@ vm_vars:
         netmask: '255.255.255.252'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-db-heartbeat"
+        network: "QS-{{ customer.name_prefix }}-db-heartbeat"
 
 
     ################
@@ -252,7 +259,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
       # Network interface 2
       ################
@@ -271,7 +278,7 @@ vm_vars:
         netmask: '255.255.255.224'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-64-27-cust"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-64-27-cust"
 
 
     ################
@@ -305,7 +312,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
       # Network interface 2
       ################
@@ -349,7 +356,7 @@ vm_vars:
         name: 'ens160'
 
         # IP fourth octet pool
-        ip_octetpool: "{{range(3, 4 + 1)|list}}"
+        ip_octetpool: "{{ range(3, 4 + 1)|list }}"
 
         # Gateway fourth octet
         gtw_octet: ''
@@ -358,7 +365,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
       # Network interface 2
       ################
@@ -377,7 +384,7 @@ vm_vars:
         netmask: '255.255.255.224'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-96-27-lbnet"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-96-27-lbnet"
 
 
   ################
@@ -417,7 +424,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
       # Network interface 2
       ################
@@ -464,7 +471,7 @@ vm_vars:
         name: 'ens160'
 
         # IP fourth octet pool
-        ip_octetpool: "{{range(24, 25 + 1)|list}}"
+        ip_octetpool: "{{ range(24, 25 + 1)|list }}"
 
         # Gateway fourth octet
         gtw_octet: '62'
@@ -473,7 +480,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
       # Network interface 2
       ################
@@ -527,7 +534,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
       # Network interface 2
       ################
@@ -572,7 +579,7 @@ vm_vars:
         name: 'ens160'
 
         # IP fourth octet pool
-        ip_octetpool: "{{range(20, 21 + 1)|list}}"
+        ip_octetpool: "{{ range(20, 21 + 1)|list }}"
 
         # Gateway fourth octet
         gtw_octet: '62'
@@ -581,7 +588,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+        network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
       # Network interface 2
       ################
@@ -635,7 +642,7 @@ vm_vars:
       netmask: '255.255.255.192'
 
       # Network name
-      network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
     # Network interface 2
     ################
@@ -682,7 +689,7 @@ vm_vars:
       name: 'ens160'
 
       # IP fourth octet pool
-      ip_octetpool: "{{range(1, 2 + 1)|list}}"
+      ip_octetpool: "{{ range(1, 2 + 1)|list }}"
 
       # Gateway fourth octet
       gtw_octet: ''
@@ -691,7 +698,7 @@ vm_vars:
       netmask: '255.255.255.192'
 
       # Network name
-      network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-0-26-int"
+      network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-0-26-int"
 
     # Network interface 2
     ################
@@ -710,4 +717,4 @@ vm_vars:
       netmask: '255.255.255.224'
 
       # Network name
-      network: "QS-{{customer.name_prefix}}-{{customer.octets | replace('.', '-')}}-96-27-lbnet"
+      network: "QS-{{ customer.name_prefix }}-{{ customer.octets | replace('.', '-') }}-96-27-lbnet"

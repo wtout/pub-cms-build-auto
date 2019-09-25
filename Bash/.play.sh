@@ -110,7 +110,7 @@ function encrypt_vault() {
 	[[ $- =~ x ]] && debug=1 && set +x
 	echo ${3} > ${2}
 	[[ ${debug} == 1 ]] && set -x
-	[[ -f ${1} ]] && ansible-vault --vault-id ${2} encrypt ${1} &>/dev/null
+	[[ -f ${1} ]] && ansible-vault --vault-password-file ${2} encrypt ${1} &>/dev/null
 	rm -f ${2}
 }
 
@@ -118,7 +118,7 @@ function decrypt_vault() {
 	[[ $- =~ x ]] && debug=1 && set +x
 	echo ${3} > ${2}
 	[[ ${debug} == 1 ]] && set -x
-	[[ -f ${1} ]] && ansible-vault --vault-id ${2} decrypt ${1} &>/dev/null
+	[[ -f ${1} ]] && ansible-vault --vault-password-file ${2} decrypt ${1} &>/dev/null
 	rm -f ${2}
 }
 
@@ -246,8 +246,17 @@ function get_credentials() {
 function run_playbook() {
 	if [[ ${GET_CREDS_STATUS} == 0 || -f ${CRVAULT} ]]
 	then
+		[[ ! -f ${VAULTC} ]] && git config remote.origin.url | awk -F '/' '{print $NF}' > ${VAULTC}
+		local vaultc_path=$( echo ${VAULTC} | awk -F '/' '{print $(NF-1)"/"$NF}' )
+		if [[ $(grep vault_password_file ${ANSIBLE_CFG}) != "" ]]
+		then
+			sed -i "s|\(^vault_password_file =\).*$|\1 inventories/${ENAME}/${vaultc_path}|" ${ANSIBLE_CFG}
+		else
+			echo "vault_password_file = inventories/${ENAME}/${vaultc_path}" >> ${ANSIBLE_CFG}
+		fi
 		[[ ! -f ${VAULTP} ]] && echo ${BBPASS} > ${VAULTP}
-		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS}
+		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSVAULT} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS}
+		sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
 	fi
 }
 
@@ -280,15 +289,17 @@ NORMAL=$(tput sgr0)
 PKG_LIST='epel-release sshpass python2-pip'
 ANSIBLE_VERSION='2.8.2'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
-BBVAULT="/var/tmp/.bbvault"
+PASSVAULT="${PWD}/vars/passwords.yml"
 
 # Main
 check_arguments ${@}
 CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
+BBVAULT="${PWD}/inventories/${ENAME}/group_vars/.bbvault.yml"
 CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
-VAULTP="${PWD}/inventories/${ENAME}/group_vars/vaultp"
+VAULTP="${PWD}/inventories/${ENAME}/group_vars/.vaultp"
+VAULTC="${PWD}/inventories/${ENAME}/group_vars/.vaultc"
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config

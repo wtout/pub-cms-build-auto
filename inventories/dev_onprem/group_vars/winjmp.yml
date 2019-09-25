@@ -1,29 +1,29 @@
 ---
 # Variables for winjmp hosts
 credentials:
-  username: "root"
-  password: "V1c3gr1p"
+  username: 'root'
+  password: "{{ WINJMP_PASS|default('') }}"
 
 vm:
-  cpu: "{{vm_vars.winjmp.cpu}}"
-  memory: "{{vm_vars.winjmp.memory}}"
-  disk0: "{{vm_vars.winjmp.disk0}}"
-  disk1: "{{vm_vars.winjmp.disk1 | default(0)}}"
-  disk2: "{{vm_vars.winjmp.disk2 | default(0)}}"
-  disk3: "{{vm_vars.winjmp.disk3 | default(0)}}"
-  name: "{{customer.name_prefix}}{{inventory_hostname[:-2]}}{{datacenters[datacenter.name]['deptype']}}{{inventory_hostname[-2:]}}"
+  cpu: "{{ vm_vars.winjmp.cpu }}"
+  memory: "{{ vm_vars.winjmp.memory }}"
+  disk0: "{{ vm_vars.winjmp.disk0 }}"
+  disk1: "{{ vm_vars.winjmp.disk1 | default(0) }}"
+  disk2: "{{ vm_vars.winjmp.disk2 | default(0) }}"
+  disk3: "{{ vm_vars.winjmp.disk3 | default(0) }}"
+  name: "{{ customer.name_prefix }}{{ inventory_hostname[:-2] }}{{ datacenters[datacenter.name]['deptype'] }}{{ inventory_hostname[-2:] }}"
 
 netconfig:
-  netname1: "{{vm_vars.winjmp.nic1.name}}"
-  ippool1: "{{vm_vars.winjmp.nic1.ip_pool | default([])}}"
-  octetpool1: "{{vm_vars.winjmp.nic1.ip_octetpool | default([])}}"
-  gateway1: "{{vm_vars.winjmp.nic1.gtw_octet}}"
-  netmask1: "{{vm_vars.winjmp.nic1.netmask}}"
-  network1: "{{vm_vars.winjmp.nic1.network}}"
+  netname1: "{{ vm_vars.winjmp.nic1.name }}"
+  ippool1: "{{ vm_vars.winjmp.nic1.ip_pool | default([]) }}"
+  octetpool1: "{{ vm_vars.winjmp.nic1.ip_octetpool | default([]) }}"
+  gateway1: "{{ vm_vars.winjmp.nic1.gtw_octet }}"
+  netmask1: "{{ vm_vars.winjmp.nic1.netmask }}"
+  network1: "{{ vm_vars.winjmp.nic1.network }}"
 
-  netname2: "{{vm_vars.winjmp.nic2.name}}"
-  ippool2: "{{vm_vars.winjmp.nic2.ip_pool | default([])}}"
-  octetpool2: "{{vm_vars.winjmp.nic2.ip_octetpool | default([])}}"
-  gateway2: "{{vm_vars.winjmp.nic2.gtw_octet}}"
-  netmask2: "{{vm_vars.winjmp.nic2.netmask}}"
-  network2: "{{vm_vars.winjmp.nic2.network}}"
+  netname2: "{{ vm_vars.winjmp.nic2.name }}"
+  ippool2: "{{ vm_vars.winjmp.nic2.ip_pool | default([]) }}"
+  octetpool2: "{{ vm_vars.winjmp.nic2.ip_octetpool | default([]) }}"
+  gateway2: "{{ vm_vars.winjmp.nic2.gtw_octet }}"
+  netmask2: "{{ vm_vars.winjmp.nic2.netmask }}"
+  network2: "{{ vm_vars.winjmp.nic2.network }}"

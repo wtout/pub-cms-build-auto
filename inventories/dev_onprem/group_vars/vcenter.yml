@@ -1,20 +1,20 @@
 ---
 # Variables for vcenter
-ssh_username: "{{hostvars[groups['bastion'][0]]['ansible_user'] if (groups['bastion'][0] is defined and bastion.address != []) else ''}}"
-ssh_address: "{{hostvars[groups['bastion'][0]]['ansible_host'] if (groups['bastion'][0] is defined and bastion.address != []) else ''}}"
-ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ssh_username}}@{{ssh_address}}"'
-ansible_ssh_common_args: "{{ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else ''}}"
+ssh_username: "{{ hostvars[groups['bastion'][0]]['ansible_user'] if (groups['bastion'][0] is defined and bastion.address != []) else '' }}"
+ssh_address: "{{ hostvars[groups['bastion'][0]]['ansible_host'] if (groups['bastion'][0] is defined and bastion.address != []) else '' }}"
+ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ ssh_username }}@{{ ssh_address }}"'
+ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else '' }}"
 
 credentials:
-  username: "{{VCENTER_USER | default('')}}"
-  password: "{{VCENTER_PASS | default('')}}"
+  username: "{{ VCENTER_USER | default('') }}"
+  password: "{{ VCENTER_PASS | default('') }}"
 
 information:
-  address: "{{datacenters[datacenter.name]['vsphere']}}"
-  datacenter: "{{datacenter.name}}"
-  deptype: "{{datacenters[datacenter.name]['deptype']}}"
-  resources: "{{datacenter.resources if (datacenter.resources != [] and datacenter.resources != ['']) else datacenters[datacenter.name]['resources'] if datacenters[datacenter.name]['resources'] is defined else ''}}"
-  hostuser: "{{datacenter.hostuser if (datacenter.hostuser is defined and datacenter.hostuser != '') else datacenters[datacenter.name]['hostuser'] if datacenters[datacenter.name]['hostuser'] is defined else ''}}"
-  hostpass: "{{datacenter.hostpass if (datacenter.hostpass is defined and datacenter.hostpass != '') else datacenters[datacenter.name]['hostpass'] if datacenters[datacenter.name]['hostpass'] is defined else ''}}"
-  cluster: "{{datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ customer.name_prefix if datacenters[datacenter.name]['deptype'] == 'a' else ''}}"
-  folder: "{{datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else ''}}"
+  address: "{{ datacenters[datacenter.name]['vsphere'] }}"
+  datacenter: "{{ datacenter.name }}"
+  deptype: "{{ datacenters[datacenter.name]['deptype'] }}"
+  resources: "{{ datacenter.resources if (datacenter.resources != [] and datacenter.resources != ['']) else datacenters[datacenter.name]['resources'] if datacenters[datacenter.name]['resources'] is defined else '' }}"
+  hostuser: "{{ datacenter.hostuser if (datacenter.hostuser is defined and datacenter.hostuser != '') else ESXI_HOST_USER if ESXI_HOST_USER is defined else '' }}"
+  hostpass: "{{ datacenter.hostpass if (datacenter.hostpass is defined and datacenter.hostpass != '') else ESXI_HOST_PASS if ESXI_HOST_PASS is defined else '' }}"
+  cluster: "{{ datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ customer.name_prefix if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
+  folder: "{{ datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else '' }}"
