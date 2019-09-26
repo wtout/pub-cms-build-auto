@@ -51,6 +51,7 @@
   - name: get proxy setting
     shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
     register: proxy_string
+    check_mode: no
   - name: connect to sciencelogic api to get a license
     uri:
       url: https://portal.sciencelogic.com/portal/license_api
@@ -93,14 +94,15 @@
   - name: load the EM7 license
     shell: /usr/local/silo/proc/appliance_init.py -l < /home/em7admin/license/em7.lic
     become: "{{true if 'em7' in group_names else false}}"
-  when: "'em7' in group_names"
-  tags: vm_configuration
-
-- name: reboot the VM
-  reboot:
-    post_reboot_delay: 10
-  become: "{{true if 'em7' in group_names else false}}"
-  when: "'em7dc' in group_names or 'em7mc' in group_names"
+  - name: reboot the VM
+    reboot:
+      post_reboot_delay: 10
+    become: "{{true if 'em7' in group_names else false}}"
+    when:
+      - "'em7dc' in group_names or 'em7mc' in group_names"
+  when:
+    - get_cert.json is defined
+    - "'em7' in group_names"
   tags: vm_configuration
 
 - name: wait 60 seconds for VM to become reachable

@@ -1,11 +1,34 @@
 # Functions declaration
 
 function check_arguments() {
-	if [[ "$(echo ${@} | egrep -w '\-\-envname')" == "" ]]
+	if [[ "x$(echo ${@} | egrep -w '\-\-envname')" == "x" ]]
 		then
 			printf "\nEnvironment name is required!\nRe-run the script with ${BOLD}--envname${NORMAL} <environment name as defined under Inventories>\n\n"
 			exit 1
 		fi
+}
+
+function check_hosts_limit() {
+	if [[ "x$(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/')" == "xdeploy" ]]
+	then
+		if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]] && [[ "x$(echo ${@} | egrep -w 'vcenter')" == "x" ]]
+		then
+			local MYHOSTS=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}')
+			[[ "x$(echo ${@} | egrep -w '\-\-tags')" != "x" ]] && local MYTAGS=$(echo ${@} | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
+			[[ "x$(echo ${MYTAGS})" == "x" ]] && local update_args=1
+			[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation')" != "x" ]] && local update_args=1
+			if [[ ${update_args} -eq 1 ]]
+			then
+				local ARG_NAME="--limit"
+				for arg
+				do
+					shift
+					[[ "${arg}" == "${MYHOSTS}" ]] && set -- ${@} "${MYHOSTS},vcenter" || set -- ${@} ${arg}
+				done
+			fi
+		fi
+	fi
+	echo ${@}
 }
 
 function check_concurrency() {
@@ -293,6 +316,8 @@ PASSVAULT="${PWD}/vars/passwords.yml"
 
 # Main
 check_arguments ${@}
+NEW_ARGS=$(check_hosts_limit "${@}")
+set -- && set -- ${@} ${NEW_ARGS}
 CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})

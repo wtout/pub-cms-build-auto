@@ -3,7 +3,7 @@
 - block:
   - name: get list of groups in play
     set_fact:
-      play_group_list: "{{play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'splunk', 'infra', 'vcenter'])}}"
+      play_group_list: "{{play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'spl', 'infra', 'vcenter'])}}"
     loop: "{{ansible_play_hosts}}"
     run_once: true
   - include_tasks: task_create_folder.yml

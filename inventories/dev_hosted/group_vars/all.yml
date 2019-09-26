@@ -390,7 +390,7 @@ vm_vars:
   ################
   # Splunk VMs
   ################
-  splunk:
+  spl:
 
     ################
     # Splunk deployment
