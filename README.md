@@ -68,9 +68,9 @@ with the script name being one of the following options:
   - **ssh_keys**: creates and deploys SSH keys to the bastion server(s) if applicable
   - **capcheck**: performs a capacity check of the infrastructure
   - **vm_facts**: defines the individual VM facts required in the playbook
-  - **vm_creation**: deploys the system's VMs
-  - **vm_configuration**: configures the system's VMs
-  - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push for the non-EM7 VMs
+  - **vm_creation**: deploys the stack's VMs
+  - **vm_configuration**: configures the stack's VMs
+  - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
   - **check_requiretty**: checks for and disables requiretty on the hosts
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
@@ -85,6 +85,14 @@ To skip specific role(s), add "_--skip-tags 'role1,role2,...'_" as argument to t
 **_Example2_**: to run all roles except os and ntp, run the script as follows:
 
     $> sh Bash/<script-name> --envname <customer-name> --skip-tags 'os,ntp'
+
+To limit the processing to specific host(s) or group(s) or a combination of both, add "_--limit 'group1,host1,...'_" as argument to the script.
+
+**_Example3_**: to install/uninstall docker and ntp on the linux jump servers and on relay01, run the script as follows:
+
+    $> sh Bash/<script-name> --envname <customer-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'
+
+####*Note: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 
 
 ### Contribution guidelines ###
