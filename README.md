@@ -12,7 +12,7 @@ This repository contains Ansible scripts to be used in the full deployment of th
 
 ### How do I get set up? ###
 
-On a newly installed Linux **CentOS 7** VM run the following commands to install the required packages:
+On a newly installed Linux **CentOS 7** VM that is able to access the internet, run the following commands to install the required packages:
 
 1- Install the git package
 
@@ -28,15 +28,11 @@ On a newly installed Linux **CentOS 7** VM run the following commands to install
 
 #### Configuration:
 
-####*Note: If you choose to make changes to git tracked items such as folder names or file names or content of files downloaded from the repository, be aware that your changes will be lost everytime the automated installation package is updated*
+####***Note**: If you choose to make changes to git tracked items such as folder names or file names or content of files downloaded from the repository, be aware that your changes will be lost everytime the automated installation package is updated*
 
-1- Create your own environment directory structure under the _``inventories/<customer-name>``_ folder to contain the information defining the environment to deploy. Use the included _``<environment-name>_hosted``_ or _``<environment-name>_onprem``_ as templates
+1- Create your own system definition file under the _``Definitions``_ folder to contain the information defining the stack to deploy. Use the included _``<cust_build_info.yml``_ file as template
 
-2- Use the included hosts file as a template and ensure the number of hosts of each type is correct. For example, the line ``em7db[01:02]`` in the hosts file represents a list of two hosts; ``em7db01`` and ``em7db02``
-
-3- Update the file _``inventories/<customer-name>/group_vars/all.yml``_ with the values defining your environment. **Do not add or delete variables**
-
-4- Host specific settings are to be added to a dedicated file under _``inventories/<customer-name>/host_vars``_ directory. The name of the variables file has to match the name of the host as defined in the hosts.yml file
+2- Host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file has to match the name of the host as defined in the hosts.yml file
 
 #### Dependencies:
 
@@ -46,7 +42,7 @@ All packages listed in "how to get set up" section need to be installed on the m
 
 1- From the automation root directory (containing site.yml playbook), run one of the bash scripts under the Bash folder depending on what you want to do. 
 
-    $> sh Bash/<script name> --envname <customer-name>
+    $> sh Bash/<script name> --envname <system-name>
 
 with the script name being one of the following options:
 
@@ -54,19 +50,21 @@ with the script name being one of the following options:
 
 - ``play_rollback.sh``
 
-####*Note: Running multiple instances of the same script for a given customer simultaneously is prohibited*
+####***Note**: Running multiple instances of the same script for a given customer simultaneously is prohibited*
 
-2- Script output is automatically saved to a log file. The file is saved under _``/var/tmp/ansible/<script-name>.<customer-name>.log.<time-stamp>``_ on the Ansible control machine
+2- Script output is automatically saved to a log file. The file is saved under _``/var/tmp/ansible/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
 
 3- Answer the prompts on the CLI. If you simply hit enter, default values will be used unless an input is required. In such a case you will be prompted again to enter a value
 
 4- The list of roles used in the playbooks:
 
+  - **define_inventory**: generates the system inventory from the system definition file
   - **collect_info**: prompts the user for required information
   - **check_creds**: validates the user's credentials
   - **todo**: determines what roles and/or tasks to execute
   - **ssh_keys**: creates and deploys SSH keys to the bastion server(s) if applicable
   - **capcheck**: performs a capacity check of the infrastructure
+  - **get_release**: dowloads the release package from the repository
   - **vm_facts**: defines the individual VM facts required in the playbook
   - **vm_creation**: deploys the stack's VMs
   - **vm_configuration**: configures the stack's VMs
@@ -80,19 +78,19 @@ To skip specific role(s), add "_--skip-tags 'role1,role2,...'_" as argument to t
 
 **_Example1_**: to install/uninstall docker and ntp, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <customer-name> --tags 'docker,ntp'
+    $> sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp'
 
 **_Example2_**: to run all roles except os and ntp, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <customer-name> --skip-tags 'os,ntp'
+    $> sh Bash/<script-name> --envname <system-name> --skip-tags 'os,ntp'
 
 To limit the processing to specific host(s) or group(s) or a combination of both, add "_--limit 'group1,host1,...'_" as argument to the script.
 
 **_Example3_**: to install/uninstall docker and ntp on the linux jump servers and on relay01, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <customer-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'
+    $> sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'
 
-####*Note: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
+####***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 
 
 ### Contribution guidelines ###

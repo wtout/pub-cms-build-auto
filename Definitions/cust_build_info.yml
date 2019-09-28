@@ -1,0 +1,46 @@
+---
+# Customer build information
+
+  # Official customer name (string)
+  customer_name: devo
+
+  # Deployment model (string as/hs/ax/hx)
+  deployment_model: as
+
+  # Disaster recovery (boolean yes/no)
+  disaster_recovery: no
+
+  # Primary site name prefix (string)
+  primary_name_prefix: devo
+
+  # Primary site first 3 octets (string)
+  primary_octets: 172.19.112
+
+  # Secondary site name prefix (string)
+  secondary_name_prefix:
+
+  # Secondary site first 3 octets (string)
+  secondary_octets:
+
+  # Release version (string)
+  release_version: R9.1.3
+
+
+##################################################################################
+# Datacenter where the stack is to be built
+##################################################################################
+
+ # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC (string)
+  datacenter_name: cdra-Build-Development
+
+  # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
+  # For hosted deployments DO NOT TOUCH
+  datacenter_resources:
+
+  # ONLY for on-premise deployments, define the esxi hosts username ONLY if different than the standard (string)
+  # For hosted deployments DO NOT TOUCH
+  esxi_host_username:
+
+  # ONLY for on-premise deployments, define the esxi hosts password ONLY if different than the standard (string)
+  # For hosted deployments DO NOT TOUCH
+  esxi_host_password:

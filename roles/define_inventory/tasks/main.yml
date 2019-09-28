@@ -1,0 +1,34 @@
+---
+# tasks file for define_inventory
+- block:
+  - name: read customer definition
+    include_vars:
+      file: "{{ SYS_NAME }}"
+      name: 'customer_definition'
+
+  - debug: var=customer_definition
+
+  - name: define template variables
+    set_fact:
+      number_of_dcs: "{{ '12' if customer_definition.deployment_model is search('x') else '08' }}"
+
+  - name: generate customer inventory
+    copy:
+      src: "files/inventory{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}/"
+      dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name }}"
+
+  - name: define customer inventory
+    template:
+      src: "templates/{{tmpl_item.name}}.yml.tmpl"
+      dest: "{{ tmpl_item.dest }}"
+    loop:
+      - { name: 'custall', dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/group_vars/all.yml' }}" }
+      - { name: "hosts{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}", dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/hosts.yml' }}" }
+    loop_control:
+      loop_var: tmpl_item
+
+  - name: append static variables to {{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/group_vars/all.yml' }}
+    shell: >
+      cat {{ role_path }}/templates/all{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}.yml.tmpl >> {{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/group_vars/all.yml' }}
+  check_mode: no
+  tags: [ 'always', 'define_inventory' ]

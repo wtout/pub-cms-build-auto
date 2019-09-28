@@ -1,0 +1,678 @@
+##################################################################################
+# If a bastion server (a.k.a linux jump server) is to be used, the address must be provided
+##################################################################################
+bastion:
+  address: []
+#  address: [ '10.225.228.240' ]
+
+
+##################################################################################
+# System configuration variables
+##################################################################################
+sysconfig:
+
+  # DNS servers list
+  dns_servers: [ '172.19.251.21', '172.19.251.22' ]
+
+  # Domain name to use
+  domain_name: 'cisco-cms.com'
+
+  # NTP server
+  ntp_server: "{{ customer.octets }}.62"
+
+
+##################################################################################
+# Puppet server information: ensure you are pointing to the correct puppet server
+##################################################################################
+puppet:
+
+  # VM name
+#  vmname: 'alln1qspupp01'
+  vmname: 'alln1qspupp02'
+#  vmname: 'alln1qspupp03'
+
+  # FQDN
+#  fqdn: 'alln1qspupp01.cisco-cms.com'
+  fqdn: 'alln1qspupp02.cisco-cms.com'
+#  fqdn: 'alln1qspupp03.cisco-cms.com'
+
+  # ip address
+#  ipaddress: '172.19.251.53'
+  ipaddress: '172.19.251.59'
+#  ipaddress: '172.19.251.34'
+
+
+##################################################################################
+# Yum server information
+##################################################################################
+repo:
+
+  # baseurl
+  baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'
+
+  # VM name
+  vmname: 'alln1qsyumrpp01'
+
+  # FQDN
+  fqdn: 'alln1qsyumrpp01.cisco-cms.com'
+
+  # ip address
+  ipaddress: '172.19.251.54'
+
+
+##################################################################################
+# Splunk information. Although the values in this section do not typically change from one customer to another, ensure they are correct 
+##################################################################################
+splunk:
+
+  # license master ip
+  license_master_ip: '172.19.252.22'
+
+  # head-end indexer ip (hostname)
+  he_indexer01_ip: 'alln1splidxp01'
+  he_indexer02_ip: ''
+
+  # head-end search-head ip (hostname)
+  he_searchhead01_ip: 'alln1splsrcp01'
+  he_searchhead02_ip: 'alln1splsrcp02'
+
+  # head-end deployment server ip
+  he_deployment_server_ip: '172.19.252.21'
+
+  # head-end deployment server hostname
+  he_deployment_server: 'alln1-spl-ds-p01'
+
+  # mom indexer ip
+  mom_indexer1_ip: '172.19.252.28'
+  mom_indexer2_ip: '172.19.252.29'
+
+  # mom cluster master ip
+  mom_clustermaster_ip: ''
+
+  # tile server hostname
+  tile: 'alln1spltlsp01'
+
+
+#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
+##################################################################################
+# Do NOT change anything below this line
+##################################################################################
+#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
+
+##################################################################################
+# Service VIPs
+##################################################################################
+vip:
+
+  # Message collectors VIP
+  mc: "{{ customer.octets }}.42"
+
+  # EM7 portals (application servers) VIP
+  prt: "{{ customer.octets }}.49"
+
+  # EM7 databases VIP
+  db: "{{ customer.octets }}.40"
+
+  # Splunk search heads VIP
+  src: "{{ customer.octets }}.41"
+
+  # Relay servers VIP
+  rly: "{{ customer.octets }}.120"
+
+  # Relay servers database VIP
+  rly_db: "{{ customer.octets }}.1"
+
+
+##################################################################################
+# VM specific information
+##################################################################################
+vm_vars:
+
+  ################
+  # EM7 VMs
+  ################
+  em7:
+
+    ################
+    # EM7 Databases
+    ################
+    em7db:
+
+      # number of CPUs
+      cpu: '12'
+
+      # Memory size in GiB
+      memory: '256'
+
+      # Disks sizing in GiB
+      disk0: '1024'
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: "{{ range(13, 14 + 1)|list }}"
+
+        # Gateway fourth octet
+        gtw_octet: '62'
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: 'ens192'
+
+        # IP fourth octet pool
+        ip_pool: [ '192.170.170.9', '192.170.170.10' ]
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: '255.255.255.252'
+
+        # Network name
+        network: 'EM7-DB-Heartbeat-Link'
+
+
+    ################
+    # EM7 Data collectors
+    ################
+    em7dc:
+
+      # number of CPUs
+      cpu: '24'
+
+      # Memory size in GiB
+      memory: '24'
+
+      # Disks sizing in GiB
+      disk0: '150'
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: [ '9', '11', '10', '12', '15', '17', '16', '18', '26', '27', '28', '29' ]
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: 'ens192'
+
+        # IP fourth octet pool
+        ip_octetpool: [ '65', '66', '67', '68', '69', '70', '71', '72', '86', '87', '88', '89' ]
+
+        # Gateway fourth octet
+        gtw_octet: '94'
+
+        # Netmask
+        netmask: '255.255.255.224'
+
+        # Network name
+        network: 'Customer-Net-Inside'
+
+
+    ################
+    # EM7 Message collectors
+    ################
+    em7mc:
+
+      # number of CPUs
+      cpu: '2'
+
+      # Memory size in GiB
+      memory: '12'
+
+      # Disks sizing in GiB
+      disk0: '90' 
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: [ '5', '7' ]
+
+        # Gateway fourth octet
+        gtw_octet: '62'
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: ''
+
+        # IP fourth octet pool
+        ip_octetpool: []
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: ''
+
+        # Network name
+        network: ''
+
+
+    ################
+    # EM7 portals
+    ################
+    em7prt:
+
+      # number of CPUs
+      cpu: '8'
+
+      # Memory size in GiB
+      memory: '28'
+
+      # Disks sizing in GiB
+      disk0: '62' 
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: "{{ range(3, 4 + 1)|list }}"
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: 'ens192'
+
+        # IP fourth octet pool
+        ip_octetpool: [ '98', '100' ]
+
+        # Gateway fourth octet
+        gtw_octet: '123'
+
+        # Netmask
+        netmask: '255.255.255.224'
+
+        # Network name
+        network: 'Loadbalancer-Net'
+
+
+  ################
+  # Splunk VMs
+  ################
+  spl:
+
+    ################
+    # Splunk deployment
+    ################
+    spldpl:
+
+      # number of CPUs
+      cpu: '2'
+
+      # Memory size in GiB
+      memory: '8'
+
+      # Disks sizing in GiB
+      disk0: '37'
+      disk1: '25'
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: [ '23', '39' ]
+
+        # Gateway fourth octet
+        gtw_octet: '62'
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: ''
+
+        # IP fourth octet pool
+        ip_octetpool: []
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: ''
+
+        # Network name
+        network: ''
+
+
+    ################
+    # Splunk indexers
+    ################
+    splind:
+
+      # number of CPUs
+      cpu: '4'
+
+      # Memory size in GiB
+      memory: '8'
+
+      # Disks sizing in GiB
+      disk0: '37'
+      disk1: '25'
+      disk2: '100'
+      disk3: '100'
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: "{{ range(24, 25 + 1)|list }}"
+
+        # Gateway fourth octet
+        gtw_octet: '62'
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: ''
+
+        # IP fourth octet pool
+        ip_octetpool: []
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: ''
+
+        # Network name
+        network: ''
+
+
+    ################
+    # Splunk cluster masters
+    ################
+    splmas:
+
+      # number of CPUs
+      cpu: '2'
+
+      # Memory size in GiB
+      memory: '8'
+
+      # Disks sizing in GiB
+      disk0: '37'
+      disk1: '25'
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: [ '22', '38' ]
+
+        # Gateway fourth octet
+        gtw_octet: '62'
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: ''
+
+        # IP fourth octet pool
+        ip_octetpool: []
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: ''
+
+        # Network name
+        network: ''
+
+
+    ################
+    # Splunk search heads
+    ################
+    splsrc:
+
+      # number of CPUs
+      cpu: '8'
+
+      # Memory size in GiB
+      memory: '16'
+
+      # Disks sizing in GiB
+      disk0: '37'
+      disk1: '25'
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: "{{ range(20, 21 + 1)|list }}"
+
+        # Gateway fourth octet
+        gtw_octet: '62'
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: ''
+
+        # IP fourth octet pool
+        ip_octetpool: []
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: ''
+
+        # Network name
+        network: ''
+
+
+  ################
+  # Linux jump servers
+  ################
+  lnxjmp:
+
+    # number of CPUs
+    cpu: '2'
+
+    # Memory size in GiB
+    memory: '8'
+
+    # Disks sizing in GiB
+    disk0: '37'
+    disk1: '25'
+
+    # Network interface 1
+    ################
+    nic1:
+
+      # Interface name
+      name: 'ens160'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '58', '56' ]
+
+      # Gateway fourth octet
+      gtw_octet: ''
+
+      # Netmask
+      netmask: '255.255.255.192'
+
+      # Network name
+      network: 'Internal-Net'
+
+    # Network interface 2
+    ################
+    nic2:
+
+      # Interface name
+      name: 'ens192'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '76', '74' ]
+
+      # Gateway fourth octet
+      gtw_octet: '94'
+
+      # Netmask
+      netmask: '255.255.255.224'
+
+      # Network name
+      network: 'Customer-Net-Inside'
+
+
+  ################
+  # Relay servers
+  ################
+  rly:
+
+    # number of CPUs
+    cpu: '4'
+
+    # Memory size in GiB
+    memory: '8'
+
+    # Disks sizing in GiB
+    disk0: '37'
+    disk1: '25'
+    disk2: '100'
+    disk3: '450'
+
+    # Network interface 1
+    ################
+    nic1:
+
+      # Interface name
+      name: 'ens160'
+
+      # IP fourth octet pool
+      ip_octetpool: "{{ range(1, 2 + 1)|list }}"
+
+      # Gateway fourth octet
+      gtw_octet: ''
+
+      # Netmask
+      netmask: '255.255.255.192'
+
+      # Network name
+      network: 'Internal-Net'
+
+    # Network interface 2
+    ################
+    nic2:
+
+      # Interface name
+      name: 'ens192'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '97', '99' ]
+
+      # Gateway fourth octet
+      gtw_octet: '126'
+
+      # Netmask
+      netmask: '255.255.255.224'
+
+      # Network name
+      network: 'Loadbalancer-Net'

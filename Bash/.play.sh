@@ -213,6 +213,10 @@ function get_sleeptime() {
 	echo $((${HOSTNUM} + ${HOSTNUM} / 4))
 }
 
+function reset_inventory() {
+	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
+}
+
 function update_inventory() {
 	if [[ "${ENAME}" != "" ]]
 	then
@@ -254,6 +258,17 @@ function enable_logging() {
 			export ANSIBLE_LOG_PATH=${LOG_FILE}
 		fi
 		printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by $(git config user.name) ($(git config remote.origin.url | sed -e 's|.*\/\/\(.*\)@.*|\1|')) on $(date)\n############################################################\n\n" > ${LOG_FILE}
+	fi
+}
+
+function get_inventory() {
+	if [[ -f ${SYS_DEF} ]]
+	then
+		ansible-playbook define_inventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@}
+		GET_INVENTORY_STATUS=${?}
+	else
+		echo -e "\nStack definition file for ${ENAME} cannot be found. Aborting!"
+		exit 1
 	fi
 }
 
@@ -325,10 +340,13 @@ BBVAULT="${PWD}/inventories/${ENAME}/group_vars/.bbvault.yml"
 CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
 VAULTP="${PWD}/inventories/${ENAME}/group_vars/.vaultp"
 VAULTC="${PWD}/inventories/${ENAME}/group_vars/.vaultc"
+SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
+reset_inventory
+get_inventory ${@}
 check_updates ${BBVAULT} ${VAULTP}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 update_inventory
