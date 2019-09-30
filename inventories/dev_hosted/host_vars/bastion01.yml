@@ -1,1 +1,0 @@
-ansible_host: "{{bastion.address[0] if bastion.address[0] is defined else ''}}"

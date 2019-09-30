@@ -16,35 +16,35 @@ On a newly installed Linux **CentOS 7** VM that is able to access the internet, 
 
 1- Install the git package
 
-    $> sudo yum install -y git
+    $> ``sudo yum install -y git``
 
 6- Download the Ansible automation package
 
-    $> git clone https://<your-bitbucket-username>@bitbucket-eng-rtp1.cisco.com/bitbucket/scm/cc/cmsp-auto-deploy.git
+    $> ``git clone https://<your-bitbucket-username>@bitbucket-eng-rtp1.cisco.com/bitbucket/scm/cc/cmsp-auto-deploy.git``
 
 7- Go to the newly cloned cmsp-auto-deploy directory
 
-    $> cd cmsp-auto-deploy
+    $> ``cd cmsp-auto-deploy``
 
 #### Configuration:
 
 ####***Note**: If you choose to make changes to git tracked items such as folder names or file names or content of files downloaded from the repository, be aware that your changes will be lost everytime the automated installation package is updated*
 
-1- Create your own system definition file under the _``Definitions``_ folder to contain the information defining the stack to deploy. Use the included _``<cust_build_info.yml``_ file as template
+1- Create your own system definition file under the _``Definitions``_ folder to contain the information defining the stack to deploy. Use the included _``cust_build_info.yml``_ file as template
 
 2- Host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file has to match the name of the host as defined in the hosts.yml file
 
 #### Dependencies:
 
-All packages listed in "how to get set up" section need to be installed on the machine before running the Automation script(s)
+All packages listed in "how do I get set up" section need to be installed on the machine before running the Automation script(s)
 
 #### Deployment instructions:
 
 1- From the automation root directory (containing site.yml playbook), run one of the bash scripts under the Bash folder depending on what you want to do. 
 
-    $> sh Bash/<script name> --envname <system-name>
+    $> ``sh Bash/<script name> --envname <system-name>``
 
-with the script name being one of the following options:
+with the system-name being the name of the system definition file from "Configuration" step 1 and the script name being one of the following options:
 
 - ``play_deploy.sh``
 
@@ -78,17 +78,17 @@ To skip specific role(s), add "_--skip-tags 'role1,role2,...'_" as argument to t
 
 **_Example1_**: to install/uninstall docker and ntp, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp'
+    $> ``sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp'``
 
 **_Example2_**: to run all roles except os and ntp, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --skip-tags 'os,ntp'
+    $> ``sh Bash/<script-name> --envname <system-name> --skip-tags 'os,ntp'``
 
 To limit the processing to specific host(s) or group(s) or a combination of both, add "_--limit 'group1,host1,...'_" as argument to the script.
 
 **_Example3_**: to install/uninstall docker and ntp on the linux jump servers and on relay01, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'
+    $> ``sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'``
 
 ####***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 

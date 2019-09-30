@@ -1,4 +1,0 @@
----
-# Variables for bastion hosts
-ansible_user: "{{ BASTION_USER | default('') }}"
-ansible_ssh_pass: "{{ BASTION_PASS | default('') }}"

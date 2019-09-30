@@ -213,10 +213,6 @@ function get_sleeptime() {
 	echo $((${HOSTNUM} + ${HOSTNUM} / 4))
 }
 
-function reset_inventory() {
-	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
-}
-
 function update_inventory() {
 	if [[ "${ENAME}" != "" ]]
 	then
@@ -262,6 +258,7 @@ function enable_logging() {
 }
 
 function get_inventory() {
+	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
 	if [[ -f ${SYS_DEF} ]]
 	then
 		ansible-playbook define_inventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@}
@@ -273,7 +270,7 @@ function get_inventory() {
 }
 
 function get_credentials() {
-	if [[ ! -f ${CRVAULT} ]]
+	if [[ ${GET_INVENTORY_STATUS} == 0 && ! -f ${CRVAULT} ]]
 	then
 		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@}
 		GET_CREDS_STATUS=${?}
@@ -345,7 +342,6 @@ NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
-reset_inventory
 get_inventory ${@}
 check_updates ${BBVAULT} ${VAULTP}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
