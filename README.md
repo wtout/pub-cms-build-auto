@@ -45,7 +45,7 @@ The system definition file name **must match the customer name** as defined in t
 
       Supported values are:
 
-        **as**, **hs**, **ax** and **hx**
+      **as**, **hs**, **ax** and **hx**
 
       where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandard – 8 DCs” and **x** represents “e**x**panded – 12 DCs”
 
