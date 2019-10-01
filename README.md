@@ -2,13 +2,16 @@
 
 This README provides instructions and information to get your Ansible control machine up and running with the automation package to deploy the CMS stack.
 
+
 ### What is this repository for? ###
 
 This repository contains Ansible playbooks to be used in the full deployment of the CMS stack.
 
+
 ### Disclaimer ###
 
 The deployment procedure has to be the same for all deployments. Ansible code contained in this repository is to automate the standard deployment procedure. Customization for a given customer is limited to the environment variables used during installation. Do not modify the Ansible code on the fly during a customer installation. Ansible code is NOT meant to be touched/edited except in the context of standard deployment procedure automation development. The usage information below gives the user the needed information to set up and execute the supported automated procedures.
+
 
 ### Installation ###
 
@@ -28,6 +31,7 @@ On a newly installed Linux **CentOS 7** VM that can access the internet, bitbuck
 
 ***Note**: you might need to disable the proxy to be able to download the package*
 
+
 ### System definition ###
 
 Create your own system definition file under the _``Definitions``_ folder to contain the information defining the stack to deploy. Use the included _``cust_build_info.yml``_ file as template
@@ -38,16 +42,21 @@ The system definition file name **must match the customer name** as defined in t
 
   - **customer_name** (_String_): Required
   - **deployment_model** (_String_): Required
+
         Supported values are:
+
           **as**, **hs**, **ax** and **hx**
+
         where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandard – 8 DCs” and **x** represents “e**x**panded – 12 DCs”
   - **disaster_recovery** (_Boolean_ **yes**/**no**): Required
+
         Default value “**no**”
   - **primary_name_prefix** (_String_): Required
   - **primary_octets** (_String_): Required
   - **secondary_name_prefix** (_String_): Required when disaster_recovery is “yes”
   - **secondary_octets** (_String_): Required when disaster_recovery is “yes”
   - **release_version** (_String_): Required
+
         Must start with **R** to match the naming convention in Maven
   - **datacenter_name** (_String_): Required
   - **datacenter_resources** (_String_): Required for on-prem deployments
@@ -60,6 +69,7 @@ To create the system inventory without deploying the system, issue the following
 
     $> sh Bash/play_deploy.sh –-envname <system-name> --tags none
 
+
 ### Artifacts ###
 
 The tool automatically downloads and checks the CMS software package(s) to the _``Packages``_ folder on the Ansible machine or on the bastion server, if applicable. To minimize deployment run time, consider downloading the artifacts prior to starting the deployment process. However, because the artifacts repository is currently disorganized, it is highly recommended to ensure they are manually transferred to the Ansible control machine.
@@ -69,6 +79,7 @@ If the automated procedure is preferred, the user must ensure that the correct a
 To download the artifacts without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
 
     $> sh Bash/play_deploy.sh –-envname <system-name> --tags get_release
+
 
 ### System Deployment ###
 
@@ -87,6 +98,7 @@ with the system-name being the name of the system definition file from "Configur
 ***Note**: Running multiple instances of the same script for a given customer simultaneously is prohibited*
 
 2- Answer the prompts on the CLI. If you simply hit enter, default values will be used unless an input is required. In such a case you will be prompted again to enter a value
+
 
 ### Tips and tricks ###
 
@@ -125,11 +137,13 @@ To limit the processing to specific host(s) or group(s) or a combination of both
 
 ***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 
+
 ### Contribution guidelines ###
 
 * Writing tests
 * Code review
 * Other guidelines
+
 
 ### Who do I talk to? ###
 
