@@ -43,21 +43,21 @@ The system definition file name **must match the customer name** as defined in t
   - **customer_name** (_String_): Required
   - **deployment_model** (_String_): Required
 
-        Supported values are:
+      Supported values are:
 
           **as**, **hs**, **ax** and **hx**
 
-        where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandard – 8 DCs” and **x** represents “e**x**panded – 12 DCs”
+      where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandard – 8 DCs” and **x** represents “e**x**panded – 12 DCs”
   - **disaster_recovery** (_Boolean_ **yes**/**no**): Required
 
-        Default value “**no**”
+      Default value “**no**”
   - **primary_name_prefix** (_String_): Required
   - **primary_octets** (_String_): Required
   - **secondary_name_prefix** (_String_): Required when disaster_recovery is “yes”
   - **secondary_octets** (_String_): Required when disaster_recovery is “yes”
   - **release_version** (_String_): Required
 
-        Must start with **R** to match the naming convention in Maven
+      Must start with **R** to match the naming convention in Maven
   - **datacenter_name** (_String_): Required
   - **datacenter_resources** (_String_): Required for on-prem deployments
   - **esxi_host_username** (_String_): Required for on_prem deployments if different than standard creds
