@@ -129,6 +129,18 @@ function install_packages() {
 	fi
 }
 
+function get_inventory() {
+	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
+	if [[ -f ${SYS_DEF} ]]
+	then
+		ansible-playbook define_inventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@}
+		GET_INVENTORY_STATUS=${?}
+	else
+		echo -e "\nStack definition file for ${ENAME} cannot be found. Aborting!"
+		exit 1
+	fi
+}
+
 function encrypt_vault() {
 	[[ $- =~ x ]] && debug=1 && set +x
 	echo ${3} > ${2}
@@ -254,18 +266,6 @@ function enable_logging() {
 			export ANSIBLE_LOG_PATH=${LOG_FILE}
 		fi
 		printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by $(git config user.name) ($(git config remote.origin.url | sed -e 's|.*\/\/\(.*\)@.*|\1|')) on $(date)\n############################################################\n\n" > ${LOG_FILE}
-	fi
-}
-
-function get_inventory() {
-	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
-	if [[ -f ${SYS_DEF} ]]
-	then
-		ansible-playbook define_inventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@}
-		GET_INVENTORY_STATUS=${?}
-	else
-		echo -e "\nStack definition file for ${ENAME} cannot be found. Aborting!"
-		exit 1
 	fi
 }
 

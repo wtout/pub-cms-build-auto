@@ -2,45 +2,77 @@
 
 This README provides instructions and information to get your Ansible control machine up and running with the automation package to deploy the CMS stack.
 
+### What is this repository for? ###
+
+This repository contains Ansible playbooks to be used in the full deployment of the CMS stack.
+
 ### Disclaimer ###
 
 The deployment procedure has to be the same for all deployments. Ansible code contained in this repository is to automate the standard deployment procedure. Customization for a given customer is limited to the environment variables used during installation. Do not modify the Ansible code on the fly during a customer installation. Ansible code is NOT meant to be touched/edited except in the context of standard deployment procedure automation development. The usage information below gives the user the needed information to set up and execute the supported automated procedures.
 
-### What is this repository for? ###
+### Installation ###
 
-This repository contains Ansible scripts to be used in the full deployment of the CMS stack. The automation tool automatically downloads the CMS software package(s) to  the _``Packages``_ folder on the Ansible machine or on the bastion server if applicable.
-
-### How do I get set up? ###
-
-On a newly installed Linux **CentOS 7** VM that is able to access the internet, run the following commands to install the required packages:
+On a newly installed Linux **CentOS 7** VM that can access the internet, bitbucket and the VM infrastructure, run the following commands to install the required packages:
 
 1- Install the git package
 
     $> sudo yum install -y git
 
-6- Download the Ansible automation package
+2- Download the Ansible automation package
 
     $> git clone https://<your-bitbucket-username>@bitbucket-eng-rtp1.cisco.com/bitbucket/scm/cc/cmsp-auto-deploy.git
 
-7- Go to the newly cloned cmsp-auto-deploy directory
+3- Go to the newly cloned cmsp-auto-deploy directory
 
     $> cd cmsp-auto-deploy
 
-#### Configuration:
+***Note**: you might need to disable the proxy to be able to download the package*
 
-####***Note**: If you choose to make changes to git tracked items such as folder names or file names or content of files downloaded from the repository, be aware that your changes will be lost everytime the automated installation package is updated*
+### System definition ###
 
-1- Create your own system definition file under the _``Definitions``_ folder to contain the information defining the stack to deploy. Use the included _``cust_build_info.yml``_ file as template
+Create your own system definition file under the _``Definitions``_ folder to contain the information defining the stack to deploy. Use the included _``cust_build_info.yml``_ file as template
 
-2- Host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file has to match the name of the host as defined in the hosts.yml file
+***Note**: If you choose to make changes to git tracked items such as folder names or file names or content of files downloaded from the repository, be aware that your changes will be lost every time the automated installation package is updated*
 
-#### Dependencies:
+The system definition file name **must match the customer name** as defined in the system definition file. The system definition file consists of the following variables:
 
-All packages listed in "how do I get set up" section need to be installed on the machine before running the Automation script(s)
+  - **customer_name** (_String_): Required
+  - **deployment_model** (_String_): Required
+        Supported values are:
+          **as**, **hs**, **ax** and **hx**
+        where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandard – 8 DCs” and **x** represents “e**x**panded – 12 DCs”
+  - **disaster_recovery** (_Boolean_ **yes**/**no**): Required
+        Default value “**no**”
+  - **primary_name_prefix** (_String_): Required
+  - **primary_octets** (_String_): Required
+  - **secondary_name_prefix** (_String_): Required when disaster_recovery is “yes”
+  - **secondary_octets** (_String_): Required when disaster_recovery is “yes”
+  - **release_version** (_String_): Required
+        Must start with **R** to match the naming convention in Maven
+  - **datacenter_name** (_String_): Required
+  - **datacenter_resources** (_String_): Required for on-prem deployments
+  - **esxi_host_username** (_String_): Required for on_prem deployments if different than standard creds
+  - **esxi_host_password** (_String_): Required for on_prem deployments if different than standard creds
 
-#### Deployment instructions:
+Non-standard host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file must match the name of the host as defined in the hosts.yml file. This can only be done after the system inventory has been created.
 
-1- From the automation root directory (containing site.yml playbook), run one of the bash scripts under the Bash folder depending on what you want to do. 
+To create the system inventory without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
+
+    $> sh Bash/play_deploy.sh –-envname <system-name> --tags none
+
+### Artifacts ###
+
+The tool automatically downloads and checks the CMS software package(s) to the _``Packages``_ folder on the Ansible machine or on the bastion server, if applicable. To minimize deployment run time, consider downloading the artifacts prior to starting the deployment process. However, because the artifacts repository is currently disorganized, it is highly recommended to ensure they are manually transferred to the Ansible control machine.
+
+If the automated procedure is preferred, the user must ensure that the correct and complete package is available at the location the Ansible code expects it to be, _``http://engci-maven-master.cisco.com/artifactory/cms-quicksilver-release/<release_version>/Puppet/``_
+
+To download the artifacts without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
+
+    $> sh Bash/play_deploy.sh –-envname <system-name> --tags get_release
+
+### System Deployment ###
+
+1- From the automation root directory (cmsp-auto-deploy), run one of the bash scripts under the Bash folder depending on what you want to do. 
 
     $> sh Bash/<script name> --envname <system-name>
 
@@ -50,13 +82,15 @@ with the system-name being the name of the system definition file from "Configur
 
 - ``play_rollback.sh``
 
-####***Note**: Running multiple instances of the same script for a given customer simultaneously is prohibited*
+  Script output is automatically saved to a log file. The file is saved under _``/var/tmp/ansible/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
 
-2- Script output is automatically saved to a log file. The file is saved under _``/var/tmp/ansible/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
+***Note**: Running multiple instances of the same script for a given customer simultaneously is prohibited*
 
-3- Answer the prompts on the CLI. If you simply hit enter, default values will be used unless an input is required. In such a case you will be prompted again to enter a value
+2- Answer the prompts on the CLI. If you simply hit enter, default values will be used unless an input is required. In such a case you will be prompted again to enter a value
 
-4- The list of roles used in the playbooks:
+### Tips and tricks ###
+
+The list of roles used in the playbooks:
 
   - **define_inventory**: generates the system inventory from the system definition file
   - **collect_info**: prompts the user for required information
@@ -64,12 +98,11 @@ with the system-name being the name of the system definition file from "Configur
   - **todo**: determines what roles and/or tasks to execute
   - **ssh_keys**: creates and deploys SSH keys to the bastion server(s) if applicable
   - **capcheck**: performs a capacity check of the infrastructure
-  - **get_release**: dowloads the release package from the repository
+  - **get_release**: downloads the release package from the repository
   - **vm_facts**: defines the individual VM facts required in the playbook
   - **vm_creation**: deploys the stack's VMs
   - **vm_configuration**: configures the stack's VMs
   - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
-  - **check_requiretty**: checks for and disables requiretty on the hosts
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
 To execute specific role(s), add "_--tags 'role1,role2,...'_" as argument to the script.
@@ -90,8 +123,7 @@ To limit the processing to specific host(s) or group(s) or a combination of both
 
     $> sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'
 
-####***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
-
+***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 
 ### Contribution guidelines ###
 
