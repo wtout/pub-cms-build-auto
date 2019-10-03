@@ -16,14 +16,11 @@ datacenters:
     vsphere: '172.30.240.248'
     deptype: 'a'
     folder: ''
-    resources: [ '172.30.240.205', '172.30.240.206', '172.30.240.207' ]
 
   PAE-Customer-Build:
     vsphere: '172.30.240.248'
     deptype: 'a'
     folder: ''
-    resources: ['172.30.240.200', '172.30.240.201']
-#    resources: ['172.30.240.210', '172.30.240.211']
 
   RTP5:
     vsphere: 'rtp5vcsap01.cisco-cms.com'
