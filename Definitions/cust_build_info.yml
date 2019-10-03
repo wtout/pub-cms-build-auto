@@ -30,11 +30,13 @@
 # Datacenter where the stack is to be built
 ##################################################################################
 
- # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC (string)
+  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC (string)
   datacenter_name: cdra-Build-Development
 
   # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
   # For hosted deployments DO NOT TOUCH
+  # Use ',', ';' or space as separator when you have more than one host
+  # DR host address must be the last in the list
   datacenter_resources:
 
   # ONLY for on-premise deployments, define the esxi hosts username ONLY if different than the standard (string)
@@ -44,3 +46,10 @@
   # ONLY for on-premise deployments, define the esxi hosts password ONLY if different than the standard (string)
   # For hosted deployments DO NOT TOUCH
   esxi_host_password:
+
+##################################################################################
+# Puppet server to be used
+##################################################################################
+
+  # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03 (string)
+  puppet_server_name:

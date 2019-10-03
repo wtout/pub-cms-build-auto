@@ -1,0 +1,11 @@
+{% if customer_definition.deployment_model is search('a') %}
+{% include 'templates/hostsa.yml.tmpl' %}
+{% if customer_definition.disaster_recovery %}
+{% include 'templates/drhostsa.yml.tmpl' %}
+{% endif %}
+{% else %}
+{% include 'templates/hostsh.yml.tmpl' %}
+{% if customer_definition.disaster_recovery %}
+{% include 'templates/drhostsh.yml.tmpl' %}
+{% endif %}
+{% endif %}

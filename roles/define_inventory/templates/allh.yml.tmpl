@@ -1,3 +1,54 @@
+---
+# Variables for all hosts
+
+##################################################################################
+# Customer specific information
+##################################################################################
+customer:
+
+  # Official build name
+  name: '{{ customer_definition.customer_name }}'
+
+  # Primary name prefix
+  name_prefix: '{{ customer_definition.primary_name_prefix }}'
+
+  # Primary first 3 octets
+  octets: '{{ customer_definition.primary_octets }}'
+
+  # Disaster recovery (boolean yes/no)
+  disaster_recovery: {{ customer_definition.disaster_recovery }}
+
+  # Secondary name prefix
+  secondary_name_prefix: '{{ customer_definition.secondary_name_prefix }}'
+
+  # Secondary first 3 octets
+  secondary_octets: '{{ customer_definition.secondary_octets }}'
+
+  # Release version
+  release: '{{ customer_definition.release_version }}'
+
+
+##################################################################################
+# Datacenter where the stack is to be built in
+##################################################################################
+datacenter:
+
+  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC
+  name: '{{ customer_definition.datacenter_name }}'
+
+  # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use
+  # For hosted deployments DO NOT TOUCH
+  resources: [ '{{  resources|join(',')|replace(",", "', '")  }}' ]
+
+  # ONLY for on-premise deployments, define the esxi hosts username ONLY if different than the standard
+  # For hosted deployments DO NOT TOUCH
+  hostuser: '{{ customer_definition.esxi_host_username }}'
+
+  # ONLY for on-premise deployments, define the esxi hosts password ONLY if different than the standard
+  # For hosted deployments DO NOT TOUCH
+  hostpass: '{{ customer_definition.esxi_host_password }}'
+
+
 ##################################################################################
 # If a bastion server (a.k.a linux jump server) is to be used, the address must be provided
 ##################################################################################
@@ -18,7 +69,7 @@ sysconfig:
   domain_name: 'cisco-cms.com'
 
   # NTP server
-  ntp_server: "{{ customer.octets }}.62"
+  ntp_server: "{{ '{{' }} customer.octets {{ '}}' }}.62"
 
 
 ##################################################################################
@@ -27,19 +78,13 @@ sysconfig:
 puppet:
 
   # VM name
-#  vmname: 'alln1qspupp01'
-  vmname: 'alln1qspupp02'
-#  vmname: 'alln1qspupp03'
+  vmname: '{{ customer_definition.puppet_server_name }}'
 
   # FQDN
-#  fqdn: 'alln1qspupp01.cisco-cms.com'
-  fqdn: 'alln1qspupp02.cisco-cms.com'
-#  fqdn: 'alln1qspupp03.cisco-cms.com'
+  fqdn: '{{ customer_definition.puppet_server_name }}.cisco-cms.com'
 
   # ip address
-#  ipaddress: '172.19.251.53'
-  ipaddress: '172.19.251.59'
-#  ipaddress: '172.19.251.34'
+  ipaddress: '{{ [ "172.19.251.53", "172.19.251.59", "172.19.251.34" ][customer_definition.puppet_server_name[-1:]|int-1] }}'
 
 
 ##################################################################################
@@ -105,22 +150,22 @@ splunk:
 vip:
 
   # Message collectors VIP
-  mc: "{{ customer.octets }}.42"
+  mc: "{{ '{{' }} customer.octets {{ '}}' }}.42"
 
   # EM7 portals (application servers) VIP
-  prt: "{{ customer.octets }}.49"
+  prt: "{{ '{{' }} customer.octets {{ '}}' }}.49"
 
   # EM7 databases VIP
-  db: "{{ customer.octets }}.40"
+  db: "{{ '{{' }} customer.octets {{ '}}' }}.40"
 
   # Splunk search heads VIP
-  src: "{{ customer.octets }}.41"
+  src: "{{ '{{' }} customer.octets {{ '}}' }}.41"
 
   # Relay servers VIP
-  rly: "{{ customer.octets }}.120"
+  rly: "{{ '{{' }} customer.octets {{ '}}' }}.120"
 
   # Relay servers database VIP
-  rly_db: "{{ customer.octets }}.1"
+  rly_db: "{{ '{{' }} customer.octets {{ '}}' }}.1"
 
 
 ##################################################################################

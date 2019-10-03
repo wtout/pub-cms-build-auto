@@ -48,7 +48,7 @@ function clean_arguments() {
 	for arg
 	do
 		shift
-		[[ "${arg}" == "${OPTION_NAME}" || "${ENVNAME}" == *"${arg}"* ]] && continue
+		[[ ${arg} == ${OPTION_NAME} || ${ENVNAME} == ${arg} ]] && continue
 		set -- ${@} ${arg}
 	done
 	echo ${@}
@@ -133,7 +133,7 @@ function get_inventory() {
 	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
 	if [[ -f ${SYS_DEF} ]]
 	then
-		ansible-playbook define_inventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@}
+		ansible-playbook define_inventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS}
 		GET_INVENTORY_STATUS=${?}
 	else
 		echo -e "\nStack definition file for ${ENAME} cannot be found. Aborting!"
@@ -180,10 +180,10 @@ function check_updates() {
 		if [ ${?} -eq 0 ]
 		then
 			local LOCALID=$(git rev-parse --short HEAD)
-			[[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true" && unset https_proxy
+			[[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true"
 			[[ $- =~ x ]] && debug=1 && set +x
-			local REMOTEID=$(git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD 2>/dev/null | cut -c1-7)
-			[[ ${debug} == 1 ]] && set -x
+			local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy && git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD 2>/dev/null | cut -c1-7)
+			#[[ ${debug} == 1 ]] && set -x
 			[[ "${REMOTEID}" == "" ]] && printf "\nYour Bitbucket credentials are invalid!\n\n" && rm -f ${1} && exit
 			if [[ "${LOCALID}" != "${REMOTEID}" ]]
 			then
@@ -202,7 +202,7 @@ function check_updates() {
 					EC='continue'
 				fi
 			fi
-			[[ ${reset_proxy} == "true" ]] && source ~/.bashrc
+			[[ ${reset_proxy} == "true" ]] && source ~/.bashrc /etc/profile /etc/environment
 			${EC}
 		fi
 	fi

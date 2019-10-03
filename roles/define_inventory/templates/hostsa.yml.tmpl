@@ -29,7 +29,7 @@ all:
                 em7db[01:02]:
             em7dc:
               hosts:
-                em7dc[01:{{number_of_dcs}}]:
+                em7dc[01:{{ '%02d' | format(number_of_dcs|int) }}]:
             em7mc:
               hosts:
                 em7mc[01:02]:

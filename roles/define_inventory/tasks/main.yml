@@ -8,27 +8,65 @@
 
   - debug: var=customer_definition
 
+  - name: verify if selected datacenter supports deployment model
+    assert:
+      that:
+        - "customer_definition.deployment_model|list|first == datacenters[customer_definition.datacenter_name]['deptype']"
+      fail_msg: "The datacenter selected, {{ customer_definition.datacenter_name }}, only supports the {{ 'on-prem' if datacenters[customer_definition.datacenter_name]['deptype'] == 'a' else 'hosted' }} deployment model. Aborting!"
+
+  - name: verify if selected deployment model supports disaster recovery
+    assert:
+      that:
+        - "customer_definition.deployment_model|list|first == 'a'"
+      fail_msg: "The disaster recovery is only supported with the on-prem deployment model. Aborting!"
+    when: customer_definition.disaster_recovery
+
+  - block:
+    - name: verify if resources are separated
+      assert:
+        that:
+          - customer_definition.datacenter_resources | regex_search('\d{1,3}[,|;|\s]\s?\d{1,3}')
+        fail_msg: "The resources list {{ customer_definition.datacenter_resources }} is not a valid IP address list. Aborting!"
+      when:
+        - customer_definition.datacenter_resources | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*\d{1,3}\.')
+    - name: define the resources list separator
+      set_fact:
+        separator: "{{ ', ' if customer_definition.datacenter_resources is search(', ') else ',' if customer_definition.datacenter_resources is search(',') else '; ' if customer_definition.datacenter_resources is search('; ') else ';' if customer_definition.datacenter_resources is search(';') else ' ' }}"
+    - name: verify that resources are valid
+      assert:
+        that:
+          - ip_item | ipaddr
+        fail_msg: "The resources list {{ customer_definition.datacenter_resources }} is not a valid IP address list. Aborting!"
+      loop: "{{ customer_definition.datacenter_resources.split(separator) }}"
+      loop_control:
+        loop_var: ip_item
+    - name: reformat resources list
+      set_fact:
+        resources: "{{ resources|default([]) + [ip_item] }}"
+      loop: "{{ customer_definition.datacenter_resources.split(separator) }}"
+      loop_control:
+        loop_var: ip_item
+    when:
+      - customer_definition.deployment_model|list|first == 'a'
+
   - name: define template variables
     set_fact:
-      number_of_dcs: "{{ '12' if customer_definition.deployment_model is search('x') else '08' }}"
+      number_of_dcs: "{{ 12 if customer_definition.deployment_model is search('x') else 8 }}"
 
   - name: generate customer inventory
     copy:
       src: "files/inventory{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}/"
       dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name }}"
 
-  - name: define customer inventory
+  - name: customize inventory
     template:
-      src: "templates/{{tmpl_item.name}}.yml.tmpl"
+      src: "{{tmpl_item.name}}"
       dest: "{{ tmpl_item.dest }}"
     loop:
-      - { name: 'custall', dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/group_vars/all.yml' }}" }
-      - { name: "hosts{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}", dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/hosts.yml' }}" }
+      - { name: 'templates/hosts.j2', dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/hosts.yml' }}" }
+      - { name: 'templates/all.j2', dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/group_vars/all.yml' }}" }
     loop_control:
       loop_var: tmpl_item
 
-  - name: append static variables to {{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/group_vars/all.yml' }}
-    shell: >
-      cat {{ role_path }}/templates/all{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}.yml.tmpl >> {{ playbook_dir + '/inventories/' + customer_definition.customer_name + '/group_vars/all.yml' }}
   check_mode: no
   tags: [ 'always', 'define_inventory' ]

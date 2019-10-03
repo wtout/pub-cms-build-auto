@@ -1,0 +1,5 @@
+{% if customer_definition.deployment_model is search('a') %}
+{% include 'templates/alla.yml.tmpl' %}
+{% else %}
+{% include 'templates/allh.yml.tmpl' %}
+{% endif %}

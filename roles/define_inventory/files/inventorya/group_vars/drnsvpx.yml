@@ -11,13 +11,14 @@ vm:
   disk1: "{{ vm_vars.nsvpx.disk1 | default(0) }}"
   disk2: "{{ vm_vars.nsvpx.disk2 | default(0) }}"
   disk3: "{{ vm_vars.nsvpx.disk3 | default(0) }}"
-  name: "{{ customer.name_prefix }}{{ inventory_hostname[:-2] }}{{ datacenters[datacenter.name]['deptype'] }}{{ inventory_hostname[-2:] }}"
+  name: "{{ customer.secondary_name_prefix }}{{ inventory_hostname[2:-2] }}{{ datacenters[datacenter.name]['deptype'] }}{{ inventory_hostname[-2:] }}"
 
 netconfig:
   netname1: "{{ vm_vars.nsvpx.nic1.name }}"
   ippool1: "{{ vm_vars.nsvpx.nic1.ip_pool | default([]) }}"
   octetpool1: "{{ vm_vars.nsvpx.nic1.ip_octetpool | default([]) }}"
-  gateway1: "{{ customer.octets + '.' + vm_vars.nsvpx.nic1.gtw_octet if vm_vars.nsvpx.nic1.gtw_octet != '' else '' }}"
+  gateway1: "{{ customer.secondary_octets + '.' + vm_vars.nsvpx.nic1.gtw_octet if vm_vars.nsvpx.nic1.gtw_octet != '' else '' }}"
+  gateway1: "{{ vm_vars.nsvpx.nic1.gtw_octet }}"
   netmask1: "{{ vm_vars.nsvpx.nic1.netmask }}"
   network1: "{{ vm_vars.nsvpx.nic1.network }}"
 
