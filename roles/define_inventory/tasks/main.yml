@@ -40,6 +40,13 @@
       loop: "{{ customer_definition.datacenter_resources.split(separator) }}"
       loop_control:
         loop_var: ip_item
+    - name: verify that there are enough resources
+      assert:
+        that:
+          - customer_definition.datacenter_resources.split(separator) | length >= required_number_resources|int
+        fail_msg: "The resources list contains only {{ customer_definition.datacenter_resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
+      vars:
+        required_number_resources: "{{ 3 if customer_definition.disaster_recovery else 2 }}"
     - name: reformat resources list
       set_fact:
         resources: "{{ resources|default([]) + [ip_item] }}"

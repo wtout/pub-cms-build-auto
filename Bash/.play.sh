@@ -279,7 +279,7 @@ function get_credentials() {
 }
 
 function run_playbook() {
-	if [[ ${GET_CREDS_STATUS} == 0 || -f ${CRVAULT} ]]
+	if [[ ${GET_INVENTORY_STATUS} == 0 && (${GET_CREDS_STATUS} == 0 || -f ${CRVAULT}) ]]
 	then
 		[[ ! -f ${VAULTC} ]] && git config remote.origin.url | awk -F '/' '{print $NF}' > ${VAULTC}
 		local vaultc_path=$( echo ${VAULTC} | awk -F '/' '{print $(NF-1)"/"$NF}' )
