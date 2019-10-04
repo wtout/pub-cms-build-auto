@@ -5,6 +5,6 @@
   - include_tasks: task_define_hosts_variables.yml
     when: configure_vms | default(false) | bool
   when:
-    - inventory_hostname in groups['stack'] or (inventory_hostname in groups['dr'] and customer.disaster_recovery)
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - (deploy | default(false) | bool) or (rollback | default(false) | bool)
   tags: always

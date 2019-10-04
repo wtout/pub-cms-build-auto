@@ -32,7 +32,7 @@
     get_release: true
   when:
     - deploy | default(false) | bool
-    - inventory_hostname in groups['stack'] or (inventory_hostname in groups['dr'] and customer.disaster_recovery)
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
   tags: get_release
 
 - name: define create_vms
@@ -40,7 +40,7 @@
     create_vms: true
   when:
     - deploy | default(false) | bool
-    - inventory_hostname in groups['stack'] or (inventory_hostname in groups['dr'] and customer.disaster_recovery)
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
   tags: vm_creation
 
 - name: define rollback_vms
@@ -48,7 +48,7 @@
     rollback_vms: true
   when:
     - rollback | default(false) | bool
-    - inventory_hostname in groups['stack'] or (inventory_hostname in groups['dr'] and customer.disaster_recovery)
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
   tags: vm_creation
 
 - name: define configure_vms
@@ -56,7 +56,7 @@
     configure_vms: true
   when:
     - deploy | default(false) | bool
-    - inventory_hostname in groups['stack'] or (inventory_hostname in groups['dr'] and customer.disaster_recovery)
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
   tags: vm_configuration
 
 - name: define push_puppet
@@ -64,7 +64,7 @@
     push_puppet: true
   when:
     - deploy | default(false) | bool
-    - inventory_hostname in groups['stack']
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
   tags: puppet
 
 - name: define rollback_puppet
@@ -72,7 +72,7 @@
     rollback_puppet: true
   when:
     - rollback | default(false) | bool
-    - inventory_hostname in groups['stack']
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
   tags: puppet
 
 #- name: define check_requiretty
