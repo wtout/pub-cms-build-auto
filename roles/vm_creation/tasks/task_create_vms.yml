@@ -3,8 +3,8 @@
 - block:
   - name: get list of groups in play
     set_fact:
-      play_group_list: "{{play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'spl', 'infra', 'vcenter'])}}"
-    loop: "{{ansible_play_hosts}}"
+      play_group_list: "{{ play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'spl', 'infra', 'vcenter', 'dr', 'drem7', 'drspl', 'drinfra']) }}"
+    loop: "{{ ansible_play_hosts }}"
     run_once: true
   - include_tasks: task_create_folder.yml
     when:
@@ -18,8 +18,8 @@
       file: task_create_vm_pair.yml
       apply:
         vars:
-          vm_group: "{{item}}"
-    loop: "{{play_group_list}}"
+          vm_group: "{{ item }}"
+    loop: "{{ play_group_list }}"
     when: inventory_hostname in groups[item]
   - name: flush handlers
     meta: flush_handlers

@@ -4,34 +4,35 @@
   service:
     name: chronyd
     state: restarted
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
 - name: yum clean all
   command: yum clean all
   args:
     warn: no
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
 - name: restart snmpd service
   service:
     name: 'snmpd'
     state: restarted
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
 - name: restart drbd
   service:
     name: 'drbd'
     state: restarted
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   notify:
     - mount drbd1
     - start mysql
     - start em7
     - restart pacemaker
     - restart corosync
+  when: "'dr' not in group_names"
   tags: vm_configuration
 
 - name: mount drbd1
@@ -39,7 +40,7 @@
     drbd-overview | grep -i secondary/secondary && /sbin/drbdadm primary r0
     mount /dev/drbd1 /data.local/db
     df | grep /drbd1
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   when: inventory_hostname is search('01')
   tags: vm_configuration
 
@@ -47,7 +48,7 @@
   service:
     name: mysql
     state: started
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   when: inventory_hostname is search('01')
   tags: vm_configuration
 
@@ -55,7 +56,7 @@
   service:
     name: em7
     state: started
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   when: inventory_hostname is search('01')
   tags: vm_configuration
 
@@ -63,20 +64,20 @@
   service:
     name: pacemaker
     state: restarted
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
 - name: restart corosync
   service:
     name: corosync
     state: restarted
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
 - name: start nfs
   service:
     name: nfs
     state: started
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 

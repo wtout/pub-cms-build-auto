@@ -6,7 +6,10 @@
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
     run_once: true
-  - include_tasks: task_delete_cluster.yml
+  - block:
+    - include_tasks: task_delete_cluster.yml
+    - include_tasks: task_delete_drcluster.yml
+      when: customer.disaster_recovery
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
     run_once: true

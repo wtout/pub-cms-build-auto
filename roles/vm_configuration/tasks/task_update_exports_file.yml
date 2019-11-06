@@ -9,12 +9,12 @@
   - name: Add the lines to /etc/exports file
     lineinfile:
       path: /etc/exports
-      line: "{{line_item}}"
+      line: "{{ line_item }}"
     loop:
-      - /backup/em7/config {{customer.octets}}.13(rw,all_squash,anonuid=600,anongid=600)
-      - /backup/em7/full {{customer.octets}}.13(rw,all_squash,anonuid=600,anongid=600) 
-      - /backup/em7/config {{customer.octets}}.14(rw,all_squash,anonuid=600,anongid=600)
-      - /backup/em7/full {{customer.octets}}.14(rw,all_squash,anonuid=600,anongid=600)
+      - /backup/em7/config {{ customer.secondary_octets if 'dr' in group_names else customer.octets }}.13(rw,all_squash,anonuid=600,anongid=600)
+      - /backup/em7/full {{ customer.secondary_octets if 'dr' in group_names else customer.octets }}.13(rw,all_squash,anonuid=600,anongid=600) 
+      - /backup/em7/config {{ customer.secondary_octets if 'dr' in group_names else customer.octets }}.14(rw,all_squash,anonuid=600,anongid=600)
+      - /backup/em7/full {{ customer.secondary_octets if 'dr' in group_names else customer.octets }}.14(rw,all_squash,anonuid=600,anongid=600)
     loop_control:
       loop_var: line_item
     register: exports_update
@@ -22,7 +22,7 @@
 #    command: exportfs -ar
 #    when:
 #      - not ansible_check_mode
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   when:
-    - "'rly' in group_names"
+    - inventory_hostname is search('rly')
   tags: vm_configuration

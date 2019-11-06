@@ -4,9 +4,11 @@
   - name: Update drbd file on VM
     replace:
       path: '/etc/drbd.d/r0.res'
-      regexp: '{{string_to_replace}}'
-      replace: '{{vm.name[:-2]}}'
+      regexp: '{{ string_to_replace }}'
+      replace: '{{ vm_name[:-2] }}'
+    vars:
+      vm_name: "{{ hostvars[groups['em7db']|first]['vm']['name'] if 'dr' in group_names else vm.name }}"
     notify: restart drbd
-  when: "'em7db' in group_names"
-  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('em7db')
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

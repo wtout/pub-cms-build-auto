@@ -4,12 +4,12 @@
   - name: Update 80_allow_db_conns.conf on VM
     replace:
       path: /opt/em7/share/config/firewalld.d/80_allow_db_conns.conf
-      regexp: '^(.*{{task_item.param}}")[0-9]+[\\.][0-9]+[\\.][0-9]+([\\.][0-9]+.*)$'
-      replace: '\g<1>{{task_item.value}}\g<2>'
+      regexp: '^(.*{{ task_item.param }}")[0-9]+[\\.][0-9]+[\\.][0-9]+([\\.][0-9]+.*)$'
+      replace: '\g<1>{{ task_item.value }}\g<2>'
     loop:
-      - { param: 'source address=', value: "{{customer.octets}}" }
+      - { param: 'source address=', value: "{{ customer.secondary_octets if 'dr' in group_names else customer.octets }}" }
     loop_control:
       loop_var: task_item
-  when: "'em7dc' in group_names or 'em7mc' in group_names"
-  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('em7dc') or inventory_hostname is search('em7mc')
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

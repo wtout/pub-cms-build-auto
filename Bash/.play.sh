@@ -130,11 +130,24 @@ function install_packages() {
 }
 
 function get_inventory() {
+	sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
 	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
 	if [[ -f ${SYS_DEF} ]]
 	then
+		if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]]
+		then
+			local MYHOSTS=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}')
+			local ARG_NAME="--limit"
+			for arg
+			do
+				shift
+				[[ ${arg} == ${ARG_NAME} || ${arg} == ${MYHOSTS} ]] && continue
+				set -- ${@} ${arg}
+			done
+		fi
 		ansible-playbook define_inventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS}
 		GET_INVENTORY_STATUS=${?}
+		[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
 	else
 		echo -e "\nStack definition file for ${ENAME} cannot be found. Aborting!"
 		exit 1
@@ -274,6 +287,7 @@ function get_credentials() {
 	then
 		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@}
 		GET_CREDS_STATUS=${?}
+		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
 		encrypt_vault ${CRVAULT} ${VAULTP} ${BBPASS}
 	fi
 }

@@ -10,16 +10,17 @@
     - block:
       - name: Update SSH password
         set_fact:
-          ansible_ssh_pass: "{{postppp}}"
+          ansible_ssh_pass: "{{ postppp }}"
         no_log: true
         when: ansible_ssh_pass != postppp
       - name: check updated VM credentials
         wait_for_connection:
-          timeout: 1800
+          sleep: 10
+          timeout: "{{ 2700 if customer.disaster_recovery else 1800 }}"
         register: connection_status1
       - name: reset SSH password
         set_fact:
-          ansible_ssh_pass: "{{postppp}}"
+          ansible_ssh_pass: "{{ postppp }}"
         no_log: true
         when: connection_status1 is failed
     - name: wait for puppet push to finish
@@ -53,7 +54,7 @@
         check_mode: no
       - name: display previous puppet push status
         debug:
-          msg: "{{'Previous Puppet push did not complete successfully. Re-running puppet push' if puppet_push_status2.stdout is search('Puppet push failed') else 'Previous Puppet push completed successfully'}}"
+          msg: "{{ 'Previous Puppet push did not complete successfully. Re-running puppet push' if puppet_push_status2.stdout is search('Puppet push failed') else 'Previous Puppet push completed successfully' }}"
       - name: trigger puppet push start
         set_fact:
           start_puppet_push: 'false'
@@ -62,7 +63,7 @@
 
     - block:
       - name: puppet agent test
-        shell: /usr/local/bin/puppet agent --server {{puppet.fqdn}} --test
+        shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
         register: puppet_agent
         async: 30
         poll: 0
@@ -77,15 +78,16 @@
           - not ansible_check_mode
       - name: Update SSH password
         set_fact:
-          ansible_ssh_pass: "{{postppp}}"
+          ansible_ssh_pass: "{{ postppp }}"
         no_log: true
       - name: check updated VM credentials
         wait_for_connection:
-          timeout: 1800
+          sleep: 10
+          timeout: "{{ 2700 if customer.disaster_recovery else 1800 }}"
         register: connection_status2
       - name: reset SSH password
         set_fact:
-          ansible_ssh_pass: "{{preppp}}"
+          ansible_ssh_pass: "{{ preppp }}"
         no_log: true
         when: connection_status2 is failed
       - name: Wait for puppet push to finish
@@ -105,5 +107,6 @@
         - start_puppet_push | default(true) | bool
     when: not puppet_push_running.stat.exists
 
-  when: "'em7' not in group_names"
+  when:
+     - inventory_hostname is not search('em7')
   tags: puppet

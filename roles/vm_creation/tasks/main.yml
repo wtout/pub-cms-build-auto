@@ -4,7 +4,7 @@
   - block:
     - block:
       - name: check VM reachable
-        shell: ping {{ansible_host}} -c 1
+        shell: ping {{ ansible_host }} -c 1
         register: vcr_vm_reachable
         ignore_errors: true
         check_mode: no
@@ -18,7 +18,7 @@
           check_mode: no
         - name: Update SSH password
           set_fact:
-            ansible_ssh_pass: "{{postppp}}"
+            ansible_ssh_pass: "{{ postppp }}"
           no_log: true
           when:
             - vcr_vm_creds is failed
@@ -26,7 +26,7 @@
         when: vcr_vm_reachable is succeeded
       when:
         - ansible_ssh_pass != postppp
-        - "'em7' not in group_names"
+        - inventory_hostname is not search('em7')
 
     - include_tasks: task_create_vms.yml
     when: create_vms | default(false) | bool

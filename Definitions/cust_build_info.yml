@@ -2,25 +2,25 @@
 # Customer build information
 
   # Official customer name (string)
-  customer_name: devo
+  customer_name: build3
 
-  # Deployment model (string as/hs/ax/hx)
+  # Deployment model (string as/ax/hs/hm/hx)
   deployment_model: as
 
   # Disaster recovery (boolean yes/no)
-  disaster_recovery: no
+  disaster_recovery: yes
 
   # Primary site name prefix (string)
-  primary_name_prefix: devo
+  primary_name_prefix: build3
 
   # Primary site first 3 octets (string)
   primary_octets: 172.19.112
 
   # Secondary site name prefix (string)
-  secondary_name_prefix:
+  secondary_name_prefix: blddr
 
   # Secondary site first 3 octets (string)
-  secondary_octets:
+  secondary_octets: 172.19.115
 
   # Release version (string)
   release_version: R9.1.3
@@ -37,7 +37,7 @@
   # For hosted deployments DO NOT TOUCH
   # Use ',', ';' or space as separator when you have more than one host
   # DR host address must be the last in the list
-  datacenter_resources:
+  datacenter_resources: 172.30.240.205, 172.30.240.206, 172.30.240.207
 
   # ONLY for on-premise deployments, define the esxi hosts username ONLY if different than the standard (string)
   # For hosted deployments DO NOT TOUCH
@@ -51,5 +51,5 @@
 # Puppet server to be used
 ##################################################################################
 
-  # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03 (string)
-  puppet_server_name:
+  # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03, alln1qspupp04 (string)
+  puppet_server_name: alln1qspupp01

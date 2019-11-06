@@ -17,4 +17,5 @@ information:
   hostuser: "{{ datacenter.hostuser if (datacenter.hostuser is defined and datacenter.hostuser != '') else ESXI_HOST_USER if ESXI_HOST_USER is defined else '' }}"
   hostpass: "{{ datacenter.hostpass if (datacenter.hostpass is defined and datacenter.hostpass != '') else ESXI_HOST_PASS if ESXI_HOST_PASS is defined else '' }}"
   cluster: "{{ datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ customer.name_prefix if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
+  drcluster: "{{ 'CMSP - '+ customer.secondary_name_prefix if customer.disaster_recovery else '' }}"
   folder: "{{ datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else '' }}"

@@ -21,11 +21,11 @@
         owner: em7release
       loop:
         - '[agent]'
-        - 'certname = em7release.{{vm.name}}.{{sysconfig.domain_name}}'
+        - 'certname = em7release.{{ vm.name }}.{{ sysconfig.domain_name }}'
         - 'server = {{puppet.fqdn}}'
       loop_control:
         loop_var: line_item
     when: script_stat.stat.exists
-    become: "{{true if 'em7' in group_names else false}}"
-  when: "'em7' in group_names"
+    become: "{{ true if inventory_hostname is search('em7') else false }}"
+  when: inventory_hostname is search('em7')
   tags: puppet

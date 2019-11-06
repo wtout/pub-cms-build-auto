@@ -41,7 +41,7 @@ Create your own system definition file under the _``Definitions``_ folder to con
 The system definition file name **must match the customer name** as defined in the system definition file. The system definition file consists of the following variables:
 
   - **customer_name** (_String_): Required
-  - **deployment_model** (_String_): Required. Supported values are: **as**, **hs**, **ax** and **hx**, where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandard – 8 DCs” and **x** represents “e**x**panded – 12 DCs”
+  - **deployment_model** (_String_): Required. Valid values are: **as**, **ax**, **hs**, **hm** and **hx**, where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandard”, **m** represents “**m**edium” and **x** represents “e**x**panded”
   - **disaster_recovery** (_Boolean_ **yes**/**no**): Required. Default value “**no**”
   - **primary_name_prefix** (_String_): Required
   - **primary_octets** (_String_): Required
@@ -52,6 +52,7 @@ The system definition file name **must match the customer name** as defined in t
   - **datacenter_resources** (_String_): Required for on-prem deployments
   - **esxi_host_username** (_String_): Required for on_prem deployments if different than standard creds
   - **esxi_host_password** (_String_): Required for on_prem deployments if different than standard creds
+  - **puppet_server_name** (_String_): Required. Valid values are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
 
 Non-standard host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file must match the name of the host as defined in the hosts.yml file. This can only be done after the system inventory has been created.
 

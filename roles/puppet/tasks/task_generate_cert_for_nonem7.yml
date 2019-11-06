@@ -9,10 +9,10 @@
   - block:
     - name: Download Puppet to non-EM7 VM
       get_url:
-        url: "https://{{puppet.fqdn}}:8140/packages/current/install.bash"
+        url: "https://{{ puppet.fqdn }}:8140/packages/current/install.bash"
         dest: /tmp
-        url_username: "{{hostvars[groups['puppet']|first]['ansible_user']}}"
-        url_password: "{{hostvars[groups['puppet']|first]['ansible_ssh_pass']}}"
+        url_username: "{{ hostvars[groups['puppet']|first]['ansible_user'] }}"
+        url_password: "{{ hostvars[groups['puppet']|first]['ansible_ssh_pass'] }}"
         validate_certs: no
       register: download_action
     - name: Install Puppet on non-EM7 VM
@@ -26,15 +26,15 @@
         - puppet sign certs
     - name: wait for certificate to be created
       shell: >
-        puppet cert list {{vm.name}}.{{sysconfig.domain_name}} || echo 'Found no certificate'
+        puppet cert list {{ vm.name }}.{{ sysconfig.domain_name }} || echo 'Found no certificate'
       become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
       register: cert_exists
       until: cert_exists.stdout is not search('Found no certificate')
       retries: 3
       delay: 5
-      delegate_to: "{{groups['puppet']|first}}"
+      delegate_to: "{{ groups['puppet']|first }}"
     when: "'No puppet-agent installed' in puppet_installed.stdout"
-  when: "'em7' not in group_names"
+  when: inventory_hostname is not search('em7')
   tags: puppet
 
 - name: flush handlers

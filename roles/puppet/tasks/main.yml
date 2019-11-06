@@ -3,7 +3,7 @@
 - block:
   - block:
     - name: check VM reachable
-      shell: ping {{ansible_host}} -c 1
+      shell: ping {{ ansible_host }} -c 1
       register: pp_vm_reachable
       check_mode: no
       ignore_errors: true
@@ -17,7 +17,7 @@
         check_mode: no
       - name: Update SSH password
         set_fact:
-          ansible_ssh_pass: "{{postppp}}"
+          ansible_ssh_pass: "{{ postppp }}"
         no_log: true
         when:
           - pp_vm_creds1 is failed
@@ -25,13 +25,25 @@
       when: pp_vm_reachable is succeeded
     when:
       - ansible_ssh_pass != postppp
-      - "'em7' not in group_names"
+      - inventory_hostname is not search('em7')
 
-  - include_tasks: task_delete_certificates.yml
-  - include_tasks: task_add_vm_to_class.yml
-  - include_tasks: task_generate_cert_for_em7.yml
-  - include_tasks: task_generate_cert_for_nonem7.yml
-  - include_tasks: task_puppet_agent_test.yml
+  - block:
+    - include_tasks: task_delete_certificates.yml
+    - include_tasks: task_add_vm_to_class.yml
+    - include_tasks: task_generate_cert_for_em7.yml
+    - include_tasks: task_generate_cert_for_nonem7.yml
+    - include_tasks: task_puppet_agent_test.yml
+    when:
+      - "'stack' in group_names"
+
+  - block:
+    - include_tasks: task_delete_certificates.yml
+    - include_tasks: task_add_vm_to_class.yml
+    - include_tasks: task_generate_cert_for_em7.yml
+    - include_tasks: task_generate_cert_for_nonem7.yml
+    - include_tasks: task_puppet_agent_test.yml
+    when:
+      - "'dr' in group_names"
   when:
     - push_puppet | default(false) | bool
   tags: puppet
@@ -39,7 +51,7 @@
 - block:
   - block:
     - name: check VM reachable
-      shell: ping {{ansible_host}} -c 1
+      shell: ping {{ ansible_host }} -c 1
       register: pp_vm_reachable
       check_mode: no
       ignore_errors: true

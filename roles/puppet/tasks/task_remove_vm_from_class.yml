@@ -13,20 +13,20 @@
   - block:
     - name: define VM's puppet class names list
       set_fact:
-        vmtype_class_list: "{{[class_list1] + [class_list2] + [class_list3] if class_list3 != '' else [class_list1] + [class_list2]}}"
+        vmtype_class_list: "{{ [class_list1] + [class_list2] + [class_list3] if class_list3 != '' else [class_list1] + [class_list2] }}"
       vars:
-        class_list1: "{{'EM7QSUtils' if 'em7' in group_names else 'QSUtils'}}"
-        class_list2: "{{'EM7PrimaryDB' if ('em7db' in group_names and '01' in inventory_hostname) else 'EM7SecondaryDB' if ('em7db' in group_names and '02' in inventory_hostname) else 'EM7ApplicationServer' if 'em7prt' in group_names else 'LinuxJumpServer' if 'lnxjmp' in group_names else 'RelayServer' if 'rly' in group_names else 'SplunkSearchHead01' if inventory_hostname == 'splsrc01' else 'SplunkSearchHead02' if inventory_hostname == 'splsrc02' else 'SplunkIndexer' if 'splind' in group_names else 'SplunkClusterMaster' if 'splmas' in group_names else 'SplunkDeployer' if 'spldpl' in group_names else ''}}"
-        class_list3: "{{'MariaDBPrimary' if inventory_hostname == 'rly01' else ''}}"
+        class_list1: "{{ 'EM7QSUtils' if inventory_hostname is search('em7') else 'QSUtils' }}"
+        class_list2: "{{ 'EM7PrimaryDB' if (inventory_hostname is search('em7db') and inventory_hostname is search('01')) else 'EM7SecondaryDB' if (inventory_hostname is search('em7db') and inventory_hostname is search('02')) else 'EM7ApplicationServer' if inventory_hostname is search('em7prt') else 'LinuxJumpServer' if inventory_hostname is search('lnxjmp') else 'RelayServer' if inventory_hostname is search('rly') else 'SplunkSearchHead01' if (inventory_hostname is search('splsrc') and inventory_hostname is search('01')) else 'SplunkSearchHead02' if (inventory_hostname is search('splsrc') and inventory_hostname is search('02')) else 'SplunkIndexer' if inventory_hostname is search('splind') else 'SplunkClusterMaster' if inventory_hostname is search('splmas') else 'SplunkDeployer' if inventory_hostname is search('spldpl') else '' }}"
+        class_list3: "{{ 'MariaDBPrimary' if inventory_hostname is search('rly01') else '' }}"
     - name: remove VM from puppet classes
       shell: >
-        ./updateNode.pl {{class_item}} {{vm.name}} remove;
+        ./updateNode.pl {{ class_item }} {{ vm.name }} remove;
         grep {{ vm.name }} {{ class_item }} || echo "updateNode succeeded"
       args:
         chdir: '/opt/puppet/qs_scripts'
       become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
       register: puppet_class
-      loop: "{{vmtype_class_list}}"
+      loop: "{{ vmtype_class_list }}"
       loop_control:
         loop_var: class_item
       when:
@@ -36,5 +36,5 @@
       retries: 3
       failed_when: puppet_class.stdout is not search('updateNode succeeded')
     when: script_stat.stat.exists
-  delegate_to: "{{groups['puppet']|first}}"
+  delegate_to: "{{ groups['puppet']|first }}"
   tags: puppet

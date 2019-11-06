@@ -8,13 +8,15 @@
   - name: Update /etc/corosync/corosync.conf file on VM
     replace:
       path: '/etc/corosync/corosync.conf'
-      regexp: '{{task_item.regexp_string}}'
-      replace: '{{task_item.replace_string}}'
+      regexp: '{{ task_item.regexp_string }}'
+      replace: '{{ task_item.replace_string }}'
     loop:
-      - { regexp_string: '{{coro_string_to_replace.stdout.split(": ")[1].split(".")[:-1] | join(".")}}', replace_string: '{{customer.octets}}' }
-      - { regexp_string: '^(.* name: ).*(\d{2})$', replace_string: '\g<1>{{vm.name[:-2]}}\g<2>' }
+      - { regexp_string: '{{ coro_string_to_replace.stdout.split(": ")[1].split(".")[:-1] | join(".") }}', replace_string: '{{ customer.secondary_octets if "dr" in group_names else customer.octets }}' }
+      - { regexp_string: '^(.* name: ).*(\d{2})$', replace_string: '\g<1>{{ vm_name[:-2] }}\g<2>' }
+    vars:
+      vm_name: "{{ hostvars[groups['em7db']|first]['vm']['name'] if 'dr' in group_names else vm.name }}"
     loop_control:
       loop_var: task_item
-  when: "'em7db' in group_names"
-  become: "{{true if 'em7' in group_names else false}}"
+  when: inventory_hostname is search('em7db')
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

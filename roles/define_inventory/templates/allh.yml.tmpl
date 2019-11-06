@@ -38,7 +38,7 @@ datacenter:
 
   # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use
   # For hosted deployments DO NOT TOUCH
-  resources: [ '{{  resources|join(',')|replace(",", "', '")  }}' ]
+  resources: [ '{{ resources|join(',')|replace(",", "', '") if customer_definition.disaster_recovery else "" }}' ]
 
   # ONLY for on-premise deployments, define the esxi hosts username ONLY if different than the standard
   # For hosted deployments DO NOT TOUCH
@@ -69,7 +69,8 @@ sysconfig:
   domain_name: 'cisco-cms.com'
 
   # NTP server
-  ntp_server: "{{ '{{' }} customer.octets {{ '}}' }}.62"
+  ntp_server: "{{ '{{ customer.octets }}' + '.62' }}"
+  secondary_ntp_server: "{{ '{{ customer.secondary_octets }}' + '.62' if customer_definition.disaster_recovery else '' }}"
 
 
 ##################################################################################

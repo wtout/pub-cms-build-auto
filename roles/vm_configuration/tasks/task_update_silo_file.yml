@@ -4,34 +4,46 @@
   - name: Update silo.conf on VM
     replace:
       path: /etc/silo.conf
-      regexp: '^({{task_item.param}}) (.*)$'
-      replace: '\g<1> {{task_item.value}}'
+      regexp: '^({{ task_item.param }}) (.*)$'
+      replace: '\g<1> {{ task_item.value }}'
     loop:
-      - { param: 'ipaddress =', value: "{{ansible_host}}" }
-      - { param: 'dbipaddrs =', value: "{{db_ip1_list|join(',') + ',' + vip.db}}" }
+      - { param: 'ipaddress =', value: "{{ ansible_host }}" }
+      - { param: 'dbipaddrs =', value: "{{ (drdb_ip1_list|join(',') + ',' + vip.db) if 'dr' in group_names else (db_ip1_list|join(',') + ',' + vip.db) }}" }
     loop_control:
       loop_var: task_item
   - name: Update ipaddr in silo.conf on VM
     replace:
       path: /etc/silo.conf
-      regexp: '^({{task_item.param}}) (.*)$'
-      replace: '\g<1> {{task_item.value}}'
+      regexp: '^({{ task_item.param }}) (.*)$'
+      replace: '\g<1> {{ task_item.value }}'
     loop:
-      - { param: 'ipaddr =', value: "{{db_ip2_list[0] if inventory_hostname == groups['em7db'][1] else db_ip2_list[1]}}" }
-    loop_control:
-      loop_var: task_item
-    when: "'em7db' in group_names"
-  - name: Update dbserver in silo.conf on VM
-    replace:
-      path: /etc/silo.conf
-      regexp: '^({{task_item.param}}) (.*)$'
-      replace: '\g<1> {{task_item.value}}'
-    loop:
-      - { param: 'dbserver =', value: "{{vip.db}}" }
+      - { param: 'ipaddr =', value: "{{ vip.db if inventory_hostname in groups['drem7db'] else db_ip2_list[0] if inventory_hostname == groups['em7db'][1] else db_ip2_list[1] }}" }
     loop_control:
       loop_var: task_item
     when:
-      - "'em7prt' in group_names"
-  when: "'em7' in group_names"
-  become: "{{true if 'em7' in group_names else false}}"
+      - inventory_hostname is search('em7db')
+  - name: Update dbserver in silo.conf on portals
+    replace:
+      path: /etc/silo.conf
+      regexp: '^({{ task_item.param }}) (.*)$'
+      replace: '\g<1> {{ task_item.value }}'
+    loop:
+      - { param: 'dbserver =', value: "{{ vip.db }}" }
+    loop_control:
+      loop_var: task_item
+    when:
+      - inventory_hostname is search('em7prt')
+  - name: Update dbpasswd in silo.conf on DR portal
+    replace:
+      path: /etc/silo.conf
+      regexp: '^({{ task_item.param }}) (.*)$'
+      replace: '\g<1> {{ task_item.value }}'
+    loop:
+      - { param: 'dbpasswd =', value: 'oV5kiFEpzVFwkCBa5mzY' }
+    loop_control:
+      loop_var: task_item
+    when:
+      - inventory_hostname is search('drem7prt')
+  when: inventory_hostname is search('em7')
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

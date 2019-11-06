@@ -23,7 +23,8 @@
         state: installed
       notify: start nfs
     when:
-      - "'rly' in group_names"
-  become: "{{true if 'em7' in group_names else false}}"
-  when: "'em7' not in group_names"
+      - inventory_hostname is search('rly')
+  become: "{{ true if inventory_hostname is search('em7') else false}}"
+  when:
+    - inventory_hostname is not search('em7')
   tags: vm_configuration

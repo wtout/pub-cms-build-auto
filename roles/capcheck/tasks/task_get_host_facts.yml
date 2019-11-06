@@ -8,7 +8,7 @@
       password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
       esxi_hostname: "{{item}}"
       validate_certs: no
-    loop: "{{hostvars[groups['vcenter'][0]]['information']['resources']}}"
+    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
     register: host_facts
     delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
 
@@ -40,8 +40,8 @@
       fail_msg: "Not enough SSD storage space to deploy EM7 databases"
       success_msg: "Found {{ssd_ds_names|length}} SSD datastores to deploy EM7 databases"
     when:
-      - groups['em7db'] is defined
-      - groups['em7db'] != []
+      - groups['em7db'] is defined or groups['drem7db'] is defined
+      - groups['em7db'] != [] or groups['drem7db'] is defined
 
   - name: define list of sas datastores with enough free space
     set_fact:
@@ -57,7 +57,7 @@
       fail_msg: "Not enough SAS storage space to deploy the non-DB VMs"
       success_msg: "Found {{sas_ds_names|length}} SAS datastores to deploy the non-DB VMs"
     when:
-      - groups['stack'] | difference(groups['em7db']) | length >= 1
+      - (groups['stack'] | difference(groups['em7db']) | length >= 1) or (groups['dr'] | difference(groups['drem7db']) | length >= 1)
 
   - name: define ssd_ds_total_fs
     set_fact:
@@ -79,6 +79,14 @@
     loop: "{{ group_list }}"
     loop_control:
       loop_var: group_item
+
+  - name: define lists of datastores to host the DR VMs
+    set_fact:
+      "{{ group_item + '_ds_names' }}": "{{ssd_ds_names if group_item is search('drem7db') else sas_ds_names}}"
+    loop: "{{ drgroup_list }}"
+    loop_control:
+      loop_var: group_item
+    when: customer.disaster_recovery
 
   - name: define list of usable datastores
     set_fact:

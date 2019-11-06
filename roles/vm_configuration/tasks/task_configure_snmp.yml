@@ -11,6 +11,6 @@
     notify: restart snmpd service 
   when:
     - not ansible_check_mode
-    - "'em7' in group_names"
-  become: "{{true if 'em7' in group_names else false}}"
+    - inventory_hostname is search('em7')
+  become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration

@@ -24,27 +24,28 @@
       license_authorization_key: '61ee336f-fe0b-4e20-9586-2a41771b4b21'
   - name: define license registration key file content
     set_fact:
-      license_registration_key_file_contents: "{{registration_key.stdout}}\n"
+      license_registration_key_file_contents: "{{ registration_key.stdout }}\n"
   - name: define license appliance type
     set_fact:
-      license_appliance_type: "{{'db' if 'em7db' in group_names else 'cu' if 'em7dc' in group_names else 'mc' if 'em7mc' in group_names else 'ap' if 'em7prt' in group_names else 'is' if 'is4' in group_names else 'ao' if 'aio' in group_names else ''}}"
+      license_appliance_type: "{{ 'db' if inventory_hostname is search('em7db') else 'cu' if inventory_hostname is search('em7dc') else 'mc' if inventory_hostname is search('em7mc') else 'ap' if inventory_hostname is search('em7prt') else 'is' if inventory_hostname is search('is4') else 'ao' if inventory_hostname is search('aio') else '' }}"
   - name: define license appliance environment
     set_fact:
-      license_appliance_environment: "{{'trial' if 'dev' in customer.name|lower else 'production'}}"
+      license_appliance_environment: "{{ 'trial' if 'dev' in customer.name|lower else 'production' }}"
   - name: define license hostname
     set_fact:
-      license_hostname: "{{vm.name}}"
+      license_hostname: "{{ vm.name }}"
   - name: define license MAC address
     set_fact:
-      license_mac_address: "{{host_mac.stdout.split()[1]}}"
+      license_mac_address: "{{ host_mac.stdout.split()[1] }}"
 #  - name: define license duration
 #    set_fact:
 #      license_duration_requested: "{{'2 years' if 'dev' in customer.name|lower else '5 years'}}"
 #  - name: define license reason
 #    set_fact:
 #      license_reason_for_request: "{{'Trial' if 'dev' in customer.name|lower else 'Production'}}"
-  when: "'em7' in group_names"
-  become: "{{true if 'em7' in group_names else false}}"
+  when:
+    - inventory_hostname is search('em7')
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration
 
 - block:
@@ -58,13 +59,13 @@
       method: POST
       body_format: json
       body:
-        permanent: "{{'no' if 'dev' in customer.name|lower else 'yes'}}"
-        authorization_key: "{{license_authorization_key}}"
-        registration_key_file_contents: "{{license_registration_key_file_contents}}"
-        appliance_type: "{{license_appliance_type}}"
-        appliance_environment: "{{license_appliance_environment}}"
-        hostname: "{{license_hostname}}"
-        mac_address: "{{license_mac_address}}"
+        permanent: "{{ 'no' if 'dev' in customer.name|lower else 'yes' }}"
+        authorization_key: "{{ license_authorization_key }}"
+        registration_key_file_contents: "{{ license_registration_key_file_contents }}"
+        appliance_type: "{{ license_appliance_type }}"
+        appliance_environment: "{{ license_appliance_environment }}"
+        hostname: "{{ license_hostname }}"
+        mac_address: "{{ license_mac_address }}"
 #        duration_requested: "{{license_duration_requested}}"
 #        reason_for_request: "{{license_reason_for_request}}"
     register: get_cert
@@ -72,16 +73,17 @@
     retries: 3
     delay: 5
     environment:
-      http_proxy: "{{proxy_string.stdout}}"
-      https_proxy: "{{proxy_string.stdout}}"
-  when: "'em7' in group_names"
-  delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+      http_proxy: "{{ proxy_string.stdout }}"
+      https_proxy: "{{ proxy_string.stdout }}"
+  when:
+    - inventory_hostname is search('em7')
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_configuration
 
 - block:
   - debug:
       msg:
-        - "{{get_cert.json}}"
+        - "{{ get_cert.json }}"
   - name: create the license folder on the EM7 VM
     file:
       path: /home/em7admin/license
@@ -89,24 +91,22 @@
       mode: 0755
   - name: save the license on the EM7 VM under {{ansible_user}} home directory
     copy:
-      content: "{{get_cert.json.license}}"
+      content: "{{ get_cert.json.license }}"
       dest: /home/em7admin/license/em7.lic
   - name: load the EM7 license
     shell: /usr/local/silo/proc/appliance_init.py -l < /home/em7admin/license/em7.lic
-    become: "{{true if 'em7' in group_names else false}}"
-  - name: reboot the VM
-    reboot:
-      post_reboot_delay: 10
-    become: "{{true if 'em7' in group_names else false}}"
+    become: "{{ true if inventory_hostname is search('em7') else false }}"
+  - block:
+    - name: reboot the VM
+      reboot:
+        post_reboot_delay: 10
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
+    - name: wait 90 seconds for VM to become reachable
+      wait_for_connection:
+        timeout: 90
     when:
-      - "'em7dc' in group_names or 'em7mc' in group_names"
+      - inventory_hostname is search('em7mc') or inventory_hostname is search('em7dc')
   when:
     - get_cert.json is defined
-    - "'em7' in group_names"
+    - inventory_hostname is search('em7')
   tags: vm_configuration
-
-- name: wait 60 seconds for VM to become reachable
-  wait_for_connection:
-    timeout: 60
-  tags: vm_configuration
-

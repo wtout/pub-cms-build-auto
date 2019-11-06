@@ -2,23 +2,39 @@
 # tasks to define the on-prem datastore for each host
 - name: define on-prem datastores list for each host group
   set_fact:
-    vm_ds_names: "{{hostvars[groups['vcenter']|first][vm_group + '_ds_names']}}"
+    vm_ds_names: "{{ hostvars[groups['vcenter']|first][vm_group + '_ds_names'] }}"
 #    vm_ds_names: "{{hostvars[groups['vcenter'][0]]['db_ds_names'] if vm_group == 'em7db' else hostvars[groups['vcenter'][0]]['ndb_ds_names']}}"
   when: inventory_hostname == groups[vm_group][pair_num] or (inventory_hostname == groups[vm_group][pair_num + 1] and groups[vm_group][pair_num] not in ansible_play_hosts)
   tags: vm_creation
 
-- name: define on-prem datastore for each even seq host
-  set_fact:
-    vm_ds: "{{vm_ds_names[0]}}"
-  when:
-    - (inventory_hostname[-2:]|int - 1) % 2 == 0
-    - inventory_hostname == groups[vm_group][pair_num]
+- block:
+  - name: define on-prem datastore for each primary even seq host
+    set_fact:
+      vm_ds: "{{ vm_ds_names[0] }}"
+    when:
+      - (inventory_hostname[-2:]|int - 1) % 2 == 0
+      - inventory_hostname == groups[vm_group][pair_num]
+  - name: define on-prem datastore for each primary odd seq host
+    set_fact:
+      vm_ds: "{{ hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1] if groups[vm_group][pair_num] in ansible_play_hosts else vm_ds_names[1] }}"
+    when:
+      - (inventory_hostname[-2:]|int - 1) % 2 != 0
+      - inventory_hostname == groups[vm_group][pair_num + 1]
+  when: "'dr' not in group_names"
   tags: vm_creation
 
-- name: define on-prem datastore for each odd seq host
-  set_fact:
-    vm_ds: "{{hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1] if groups[vm_group][pair_num] in ansible_play_hosts else vm_ds_names[1]}}"
-  when:
-    - (inventory_hostname[-2:]|int - 1) % 2 != 0
-    - inventory_hostname == groups[vm_group][pair_num + 1]
+- block:
+  - name: define on-prem datastore for each DR even seq host
+    set_fact:
+      vm_ds: "{{ vm_ds_names[2] }}"
+    when:
+      - (inventory_hostname[-2:]|int - 1) % 2 == 0
+      - inventory_hostname == groups[vm_group][pair_num]
+  - name: define on-prem datastore for each primary odd seq host
+    set_fact:
+      vm_ds: "{{ hostvars[groups[vm_group][pair_num]]['vm_ds_names'][2] if groups[vm_group][pair_num] in ansible_play_hosts else vm_ds_names[2] }}"
+    when:
+      - (inventory_hostname[-2:]|int - 1) % 2 != 0
+      - inventory_hostname == groups[vm_group][pair_num + 1]
+  when: "'dr' in group_names"
   tags: vm_creation

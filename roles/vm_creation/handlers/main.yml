@@ -5,7 +5,7 @@
     device: /dev/sda
     unit: MiB
     number: 2
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   register: parted_info
   changed_when: parted_info is succeeded
   notify: define parted_start
@@ -13,8 +13,8 @@
 
 - name: define parted_start
   set_fact:
-    parted_start: "{{task_item.begin | default(0)}}"
-  loop: "{{parted_info.partitions}}"
+    parted_start: "{{ task_item.begin | default(0) }}"
+  loop: "{{ parted_info.partitions }}"
   loop_control:
     loop_var: task_item
   when: task_item.num == 2
@@ -27,7 +27,7 @@
     device: /dev/sda
     number: 2
     state: absent
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: create new disk0 partition
   tags: vm_creation
 
@@ -36,9 +36,9 @@
     device: /dev/sda
     number: 2
     flags: [ lvm ]
-    part_start: "{{parted_start}}MiB"
+    part_start: "{{ parted_start }}MiB"
     state: present
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: reboot vm
   tags: vm_creation
 
@@ -46,12 +46,12 @@
   reboot:
     post_reboot_delay: 10
     reboot_timeout: 60
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_creation
 
 - name: expand disk1
   shell: partprobe; pvresize /dev/sdb; lvresize -l +100%FREE -r /dev/mapper/vgroup2-opt
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_creation
 
 - name: expand disk2
@@ -60,7 +60,7 @@
     pvcreate /dev/sdc1
     vgcreate vgroup3 /dev/sdc1
     lvcreate -l100%FREE -n data01 /dev/vgroup3
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: create disk2 filesystem
   tags: vm_creation
 
@@ -68,7 +68,7 @@
   filesystem:
     fstype: ext4
     device: /dev/vgroup3/data01
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: set data01 mount points
   tags: vm_creation
 
@@ -81,7 +81,7 @@
     state: mounted
     dump: '1'
     passno: '2'
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: set permissions and ownership of /data01
   tags: vm_creation
 
@@ -92,7 +92,7 @@
     mode: 0755
     owner: root
     group: root
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_creation
 
 - name: expand disk3
@@ -101,7 +101,7 @@
     pvcreate /dev/sdd1
     vgcreate vgroup4 /dev/sdd1
     lvcreate -l100%FREE -n data02 /dev/vgroup4
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: create disk3 filesystem
   tags: vm_creation
 
@@ -109,7 +109,7 @@
   filesystem:
     fstype: ext4
     device: /dev/vgroup4/data02
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: set data02 mount points
   tags: vm_creation
 
@@ -122,7 +122,7 @@
     state: mounted
     dump: '1'
     passno: '2'
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: set permissions and ownership of /data02
   tags: vm_creation
 
@@ -133,5 +133,5 @@
     mode: 0755
     owner: root
     group: root
-  become: "{{true if 'em7' in group_names else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_creation

@@ -8,7 +8,7 @@ all:
         vcenter[01:01]:
     puppet:
       hosts:
-        puppet[01:01]:
+        puppet[{{ customer_definition.puppet_server_name[-2:] }}:{{ customer_definition.puppet_server_name[-2:] }}]:
     stack:
       children:
         em7:
@@ -41,7 +41,7 @@ all:
                 spldpl[01:02]:
         lnxjmp:
           hosts:
-            lnxjmp[01:02]:
+            lnxjmp[01:{{ '02' if customer_definition.deployment_model is search('a') else '01' }}]:
         rly:
           hosts:
             rly[01:02]:

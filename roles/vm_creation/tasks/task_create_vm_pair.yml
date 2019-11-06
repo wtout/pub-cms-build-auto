@@ -4,15 +4,15 @@
   - include_tasks: task_get_ova_name.yml
   - name: define vm_seq for each host
     set_fact:
-      vm_seq: "{{range(0, groups[vm_group]|length, 2)|list}}"
+      vm_seq: "{{ range(0, groups[vm_group]|length, 2)|list }}"
 
   - include_tasks:
       file:
         task_create_configure_vms.yml
       apply:
         vars:
-          - pair_num: "{{seq_item}}"
-    loop: "{{vm_seq}}"
+          - pair_num: "{{ seq_item }}"
+    loop: "{{ vm_seq }}"
     loop_control:
       loop_var: seq_item
   tags: vm_creation
