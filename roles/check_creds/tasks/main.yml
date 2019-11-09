@@ -11,6 +11,7 @@
   when:
     - groups['bastion']|length >= 1
     - hostvars[task_item]['ansible_host'] != ''
+  run_once: true
   tags: always
 
 - include_tasks:
@@ -25,6 +26,7 @@
     - groups['vcenter'] | length >= 1
     - (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion_creds is succeeded) or (bastion.address == [] or bastion.address == [''])
     - not abort_play | default(false) | bool
+  run_once: true
   tags: always
 
 - block:

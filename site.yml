@@ -1,7 +1,9 @@
 ---
 # Validate credentials (always run)
 - name: Validate credentials
-  hosts: localhost
+  hosts: all
+  connection: local
+  any_errors_fatal: true
   gather_facts: no
 
   roles:
@@ -49,11 +51,3 @@
   - {role: puppet, when: rollback_puppet | default(false) | bool}
   - {role: vm_creation, when: rollback_vms | default(false) | bool}
   - {role: ssh_keys, when: rollback_ssh_keys | default(false) | bool}
-
-# Play to notify via Webex Teams
-- name: Send notification
-  hosts: all
-  gather_facts: no
-
-  roles:
-  - role: notify

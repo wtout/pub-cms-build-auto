@@ -1,0 +1,8 @@
+---
+# Play to notify via Webex Teams
+- name: Send notification
+  hosts: all
+  gather_facts: no
+
+  roles:
+  - role: notify

@@ -33,17 +33,6 @@
       loop_var: task_item
     when:
       - inventory_hostname is search('em7prt')
-  - name: Update dbpasswd in silo.conf on DR portal
-    replace:
-      path: /etc/silo.conf
-      regexp: '^({{ task_item.param }}) (.*)$'
-      replace: '\g<1> {{ task_item.value }}'
-    loop:
-      - { param: 'dbpasswd =', value: 'oV5kiFEpzVFwkCBa5mzY' }
-    loop_control:
-      loop_var: task_item
-    when:
-      - inventory_hostname is search('drem7prt')
   when: inventory_hostname is search('em7')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

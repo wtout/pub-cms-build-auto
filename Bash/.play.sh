@@ -132,6 +132,7 @@ function install_packages() {
 function get_inventory() {
 	sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
 	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
+	sed -i "s|\(^forks =\).*$|\1 5|" ${ANSIBLE_CFG}
 	if [[ -f ${SYS_DEF} ]]
 	then
 		if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]]
@@ -145,7 +146,7 @@ function get_inventory() {
 				set -- ${@} ${arg}
 			done
 		fi
-		ansible-playbook define_inventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS}
+		ansible-playbook getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS}
 		GET_INVENTORY_STATUS=${?}
 		[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
 	else
@@ -158,7 +159,7 @@ function encrypt_vault() {
 	[[ $- =~ x ]] && debug=1 && set +x
 	echo ${3} > ${2}
 	[[ ${debug} == 1 ]] && set -x
-	[[ -f ${1} ]] && ansible-vault --vault-password-file ${2} encrypt ${1} &>/dev/null
+	[[ -f ${1} ]] && ansible-vault encrypt --vault-password-file ${2} ${1} &>/dev/null
 	rm -f ${2}
 }
 
@@ -166,7 +167,7 @@ function decrypt_vault() {
 	[[ $- =~ x ]] && debug=1 && set +x
 	echo ${3} > ${2}
 	[[ ${debug} == 1 ]] && set -x
-	[[ -f ${1} ]] && ansible-vault --vault-password-file ${2} decrypt ${1} &>/dev/null
+	[[ -f ${1} ]] && ansible-vault decrypt --vault-password-file ${2} ${1} &>/dev/null
 	rm -f ${2}
 }
 
@@ -194,9 +195,13 @@ function check_updates() {
 		then
 			local LOCALID=$(git rev-parse --short HEAD)
 			[[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true"
-			[[ $- =~ x ]] && debug=1 && set +x
-			local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy && git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD 2>/dev/null | cut -c1-7)
-			[[ ${debug} == 1 ]] && set -x
+			for i in {1..3}
+			do
+				[[ $- =~ x ]] && debug=1 && set +x
+				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD 2>/dev/null | cut -c1-7)
+				[[ ${debug} == 1 ]] && set -x
+				[[ ${REMOTEID} == "" ]] && sleep 3 || break
+			done
 			[[ "${REMOTEID}" == "" ]] && printf "\nYour Bitbucket credentials are invalid!\n\n" && rm -f ${1} && exit
 			if [[ "${LOCALID}" != "${REMOTEID}" ]]
 			then
@@ -257,8 +262,16 @@ function get_hosts() {
 	then
 		HOST_LIST=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}' | sed -e 's/,/ /g')
 	else
-		HOST_LIST=$(ansible localhost -m debug -a 'var=ansible_play_batch' | sort -u | egrep -v "\[|\]|{|}" | sed -e 's/.*"\(.*\)".*/\1/g')
+		HOST_LIST=$(ansible all -m debug -a var=ansible_play_hosts | grep '[0-9]\{2\}"' | sort -u | sed -e 's/^.*"\(.*[0-9]\{2\}\)".*$/\1/g')
 	fi
+}
+
+function set_forks_num() {
+	local FORKSHOSTS=$(echo ${HOST_LIST} | sed -e "s/ /,/g")
+	forks_num=$(ansible ${FORKSHOSTS} -m debug -a var=ansible_play_hosts | grep '[0-9]\{2\}"' | sort -u | sed -e 's/^.*"\(.*[0-9]\{2\}\)".*$/\1/g' | wc -l)
+	[[ ${forks_num} -lt 5 ]] && forks_num=5
+	[[ ${forks_num} -gt 50 ]] && forks_num=50
+	sed -i "s/\(^forks =\).*$/\1 ${forks_num}/" ${ANSIBLE_CFG}
 }
 
 function check_mode() {
@@ -325,7 +338,7 @@ function send_notification() {
 		SCRIPT_ARG=$(echo ${@} | sed -e 's/-/dash/g')
 		[ $(echo ${HOST_LIST} | wc -w) -gt 1 ] && HL=$(echo ${HOST_LIST} | sed 's/ /,/g') || HL=${HOST_LIST}
 		# Send playbook status notification
-		ansible-playbook site.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}'}" --limit ${HL} --tags notify &>/dev/null &
+		ansible-playbook notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}'}" --limit ${HL} --tags notify &>/dev/null &
 	fi
 }
 
@@ -361,6 +374,7 @@ check_updates ${BBVAULT} ${VAULTP}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 update_inventory
 get_hosts ${@}
+set_forks_num
 get_credentials ${@}
 enable_logging ${@}
 [[ -f ${OFILE} ]] && source ${OFILE}

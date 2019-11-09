@@ -58,7 +58,7 @@
     username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
     password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
     datacenter: "{{ datacenter.name }}"
-    name: "{{ vm_item} }"
+    name: "{{ vm_item }}"
     validate_certs: no
   loop: "{{ drvm_names }}"
   loop_control:
