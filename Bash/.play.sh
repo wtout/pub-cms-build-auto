@@ -176,6 +176,9 @@ function check_updates() {
 	then
 		if [[ -f ${1} ]]
 		then
+			[[ $- =~ x ]] && debug=1 && set +x
+			[[ ! -f ${2} ]] && printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
+			[[ ${debug} == 1 ]] && set -x
 			decrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
 			[[ $- =~ x ]] && debug=1 && set +x
 			source ${1}
@@ -185,7 +188,10 @@ function check_updates() {
 			echo
 			read -sp "Enter your Bitbucket password [ENTER]: " BBPASS
 			[[ $- =~ x ]] && debug=1 && set +x
+			[[ -f ${1} ]] && rm -f ${1}
+			[[ -f ${2} ]] && rm -f ${2}
 			printf "BBPASS=${BBPASS}\n" > ${1}
+			printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
 			[[ ${debug} == 1 ]] && set -x
 			encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
 			echo
@@ -298,6 +304,17 @@ function enable_logging() {
 function get_credentials() {
 	if [[ ${GET_INVENTORY_STATUS} == 0 && ! -f ${CRVAULT} ]]
 	then
+		if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]]
+		then
+			local MYHOSTS=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}')
+			local ARG_NAME="--limit"
+			for arg
+			do
+				shift
+				[[ ${arg} == ${ARG_NAME} || ${arg} == ${MYHOSTS} ]] && continue
+				set -- ${@} ${arg}
+			done
+		fi
 		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@}
 		GET_CREDS_STATUS=${?}
 		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
@@ -309,14 +326,15 @@ function run_playbook() {
 	if [[ ${GET_INVENTORY_STATUS} == 0 && (${GET_CREDS_STATUS} == 0 || -f ${CRVAULT}) ]]
 	then
 		[[ ! -f ${VAULTC} ]] && git config remote.origin.url | awk -F '/' '{print $NF}' > ${VAULTC}
-		local vaultc_path=$( echo ${VAULTC} | awk -F '/' '{print $(NF-1)"/"$NF}' )
 		if [[ $(grep vault_password_file ${ANSIBLE_CFG}) != "" ]]
 		then
-			sed -i "s|\(^vault_password_file =\).*$|\1 inventories/${ENAME}/${vaultc_path}|" ${ANSIBLE_CFG}
+			sed -i "s|\(^vault_password_file =\).*$|\1 ${VAULTC}|" ${ANSIBLE_CFG}
 		else
-			echo "vault_password_file = inventories/${ENAME}/${vaultc_path}" >> ${ANSIBLE_CFG}
+			echo "vault_password_file = ${VAULTC}" >> ${ANSIBLE_CFG}
 		fi
+		[[ $- =~ x ]] && debug=1 && set +x
 		[[ ! -f ${VAULTP} ]] && echo ${BBPASS} > ${VAULTP}
+		[[ ${debug} == 1 ]] && set -x
 		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSVAULT} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS}
 		sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
 	fi
@@ -360,10 +378,10 @@ set -- && set -- ${@} ${NEW_ARGS}
 CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
-BBVAULT="${PWD}/inventories/${ENAME}/group_vars/.bbvault.yml"
+BBVAULT="${PWD}/.bbvault.yml"
 CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
-VAULTP="${PWD}/inventories/${ENAME}/group_vars/.vaultp"
-VAULTC="${PWD}/inventories/${ENAME}/group_vars/.vaultc"
+VAULTP="${PWD}/.vaultp"
+VAULTC="${PWD}/.vaultc"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}

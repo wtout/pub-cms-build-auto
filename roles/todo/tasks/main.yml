@@ -1,18 +1,5 @@
 ---
 # Tasks for todo
-- block:
-  - name: delete vault file
-    file:
-      path: "{{ file_item }}"
-      state: absent
-    loop:
-      - "{{ VPFILE }}"
-      - "{{ VCFILE }}"
-    loop_control:
-      loop_var: file_item
-    check_mode: no
-    delegate_to: localhost
-    run_once: true
-  - include_tasks: task_set_facts.yml
+- include_tasks: task_set_facts.yml
   when: (deploy | default(false) | bool) or (rollback | default(false) | bool) or (upgrade | default(false) | bool)
   tags: always

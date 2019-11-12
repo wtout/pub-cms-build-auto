@@ -1,5 +1,20 @@
 ---
 # tasks file for check_creds
+- name: delete vault file
+  file:
+    path: "{{ file_item }}"
+    state: absent
+  loop:
+    - "{{ VPFILE }}"
+    - "{{ VCFILE }}"
+  loop_control:
+    loop_var: file_item
+  check_mode: no
+  delegate_to: localhost
+  run_once: true
+  no_log: true
+  tags: always
+
 - include_tasks:
     file: task_validate_bastion_creds.yml
     apply:
