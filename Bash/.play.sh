@@ -369,8 +369,8 @@ NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
-get_inventory ${@}
 check_updates ${BBVAULT} ${VAULTP}
+get_inventory ${@}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 update_inventory
 get_hosts ${@}

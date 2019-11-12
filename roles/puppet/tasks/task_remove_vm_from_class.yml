@@ -35,6 +35,7 @@
       until: puppet_class.stdout is search('updateNode succeeded')
       retries: 3
       failed_when: puppet_class.stdout is not search('updateNode succeeded')
+      no_log: true
     when: script_stat.stat.exists
   delegate_to: "{{ groups['puppet']|first }}"
   tags: puppet
