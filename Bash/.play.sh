@@ -367,7 +367,7 @@ OFILE="${PWD}/Bash/override.sh"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST='epel-release sshpass python2-pip'
-ANSIBLE_VERSION='2.8.2'
+ANSIBLE_VERSION='2.9.0'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
 

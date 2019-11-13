@@ -17,7 +17,7 @@
       regexp: '^({{ task_item.param }}) (.*)$'
       replace: '\g<1> {{ task_item.value }}'
     loop:
-      - { param: 'ipaddr =', value: "{{ vip.db if inventory_hostname in groups['drem7db'] else db_ip2_list[0] if inventory_hostname == groups['em7db'][1] else db_ip2_list[1] }}" }
+      - { param: 'ipaddr =', value: "{{ vip.db if 'drem7db' in group_names else db_ip2_list[0] if inventory_hostname == groups['em7db'][1] else db_ip2_list[1] }}" }
     loop_control:
       loop_var: task_item
     when:

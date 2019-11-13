@@ -19,10 +19,10 @@ customer:
   disaster_recovery: {{ customer_definition.disaster_recovery }}
 
   # Secondary name prefix
-  secondary_name_prefix: '{{ customer_definition.secondary_name_prefix }}'
+  secondary_name_prefix: '{{ customer_definition.secondary_name_prefix if customer_definition.disaster_recovery else "" }}'
 
   # Secondary first 3 octets
-  secondary_octets: '{{ customer_definition.secondary_octets }}'
+  secondary_octets: '{{ customer_definition.secondary_octets if customer_definition.disaster_recovery else "" }}'
 
   # Release version
   release: '{{ customer_definition.release_version }}'
@@ -38,15 +38,15 @@ datacenter:
 
   # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use
   # For hosted deployments DO NOT TOUCH
-  resources: [ '{{ resources|join(',')|replace(",", "', '") if customer_definition.disaster_recovery else "" }}' ]
+  resources: [ '{{ resources|join(',')|replace(",", "', '") if customer_definition.deployment_model|list|first == 'a' else "" }}' ]
 
   # ONLY for on-premise deployments, define the esxi hosts username ONLY if different than the standard
   # For hosted deployments DO NOT TOUCH
-  hostuser: '{{ customer_definition.esxi_host_username }}'
+  hostuser: '{{ customer_definition.esxi_host_username if customer_definition.deployment_model|list|first == 'a' else "" }}'
 
   # ONLY for on-premise deployments, define the esxi hosts password ONLY if different than the standard
   # For hosted deployments DO NOT TOUCH
-  hostpass: '{{ customer_definition.esxi_host_password }}'
+  hostpass: '{{ customer_definition.esxi_host_password if customer_definition.deployment_model|list|first == 'a' else "" }}'
 
 
 ##################################################################################
