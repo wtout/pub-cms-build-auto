@@ -1,24 +1,6 @@
 ---
 # Tasks to define hosts variables
 - block:
-  - name: define total disk size per Stack VM
-    set_fact:
-      vm: "{{hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true)}}"
-    vars:
-      new_var: "{'disk': '{{hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[vm_item]['vm']['disk3']|int}}'}"
-    delegate_to: "{{vm_item}}"
-    delegate_facts: true
-    loop: "{{ groups['stack'] }}"
-    loop_control:
-      loop_var: vm_item
-    run_once: true
-
-  - name: get list of groups in stack
-    set_fact:
-      group_list: "{{group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'spl', 'infra'])}}"
-    loop: "{{groups['stack']}}"
-    run_once: true
-
   - include_tasks:
       file: task_define_hosts_variables_lists.yml
       apply:
@@ -27,33 +9,13 @@
     loop: "{{group_list}}"
     loop_control:
       loop_var: group_item
-
-  - block:
-    - name: define total disk size per DR VM
-      set_fact:
-        vm: "{{hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true)}}"
-      vars:
-        new_var: "{'disk': '{{hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[ vm_item]['vm']['disk3']|int}}'}"
-      delegate_to: "{{vm_item}}"
-      delegate_facts: true
-      loop: "{{ groups['dr'] }}"
-      loop_control:
-        loop_var: vm_item
-      run_once: true
-
-    - name: get list of groups in dr
-      set_fact:
-        drgroup_list: "{{drgroup_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['dr', 'drem7', 'drspl', 'drinfra'])}}"
-      loop: "{{groups['dr']}}"
-      run_once: true
-
-    - include_tasks:
-        file: task_define_dr_hosts_variables_lists.yml
-        apply:
-          vars:
-            vm_group: "{{group_item}}"
-      loop: "{{drgroup_list}}"
-      loop_control:
-        loop_var: group_item
+  - include_tasks:
+      file: task_define_dr_hosts_variables_lists.yml
+      apply:
+        vars:
+          vm_group: "{{group_item}}"
+    loop: "{{drgroup_list}}"
+    loop_control:
+      loop_var: group_item
     when:  customer.disaster_recovery
   tags: always

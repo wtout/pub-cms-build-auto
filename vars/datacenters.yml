@@ -6,7 +6,7 @@ datacenters:
   PAE-HX-DC:
     vsphere: '172.30.251.20'
     deptype: 'h'
-    folder: 'Bld-Auto-test'
+    folder: 'HX Hosted'
     cluster: 'PAE-RTP-HX'
   RTP-PAE:
     vsphere: '172.30.251.20'

@@ -18,7 +18,7 @@
   - name: define hosted datastore names
     set_fact:
       ds_names: "{{ ds_names|default([]) + [task_item.name] }}"
-    loop: "{{ datastore_facts.datastores | sort(attribute='freeSpace', reverse=true) }}"
+    loop: "{{ datastore_facts.datastores | sort(attribute='freeSpace') }}"
     loop_control:
       loop_var: task_item
     when: task_item.freeSpace >= ((vm.disk|float + vm.memory|float) * 1024|pow(3))
@@ -26,7 +26,7 @@
 
   - name: define hosted datastores list for each host group
     set_fact:
-      vm_ds_names: "{{ ds_names | intersect(hostvars[groups['vcenter']|first][vm_group + '_ds_names']) | sort }}"
+      vm_ds_names: "{{ ds_names | intersect(hostvars[groups['vcenter']|first][vm_group + '_ds_names']) }}"
 #      vm_ds_names: "{{ds_names | intersect(hostvars[groups['vcenter'][0]]['db_ds_names']) if vm_group == 'em7db' else ds_names | intersect(hostvars[groups['vcenter'][0]]['ndb_ds_names'])}}"
   - name: assert 1
     assert:

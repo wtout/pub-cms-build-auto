@@ -14,7 +14,7 @@
 {{ vip.rly }} relay-vip relay-vip
 
 {{ drlnxjmp_ip1_list[0] + ' ' + drlnxjmp_hst_list[0] + ' ' + drlnxjmp_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drlnxjmp_ip1_list[1] + ' ' + drlnxjmp_hst_list[1] + ' ' + drlnxjmp_hst_list[1] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 2 else '' }}
+{{ (drlnxjmp_ip1_list[1] + ' ' + drlnxjmp_hst_list[1] + ' ' + drlnxjmp_hst_list[1] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 2 else '') if drlnxjmp_ip1_list|length >= 2 else '' }}
 
 {{ drrly_ip1_list[0] + ' ' + drrly_hst_list[0] + ' ' + drrly_hst_list[0] + '.' + sysconfig.domain_name }}
 {{ drrly_ip1_list[1] + ' ' + drrly_hst_list[1] + ' ' + drrly_hst_list[1] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 2 else '' }}

@@ -2,6 +2,8 @@
 # Tasks for vm_facts
 - block:
   - include_tasks: task_define_vm_ip.yml
+  - include_tasks: task_define_vm_disk_size.yml
+  - include_tasks: task_define_groups_list.yml
   - include_tasks: task_define_hosts_variables.yml
     when: configure_vms | default(false) | bool
   when:

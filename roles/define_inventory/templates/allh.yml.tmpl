@@ -69,8 +69,8 @@ sysconfig:
   domain_name: 'cisco-cms.com'
 
   # NTP server
-  ntp_server: "{{ '{{ customer.octets }}' + '.62' }}"
-  secondary_ntp_server: "{{ '{{ customer.secondary_octets }}' + '.62' if customer_definition.disaster_recovery else '' }}"
+  ntp_server: '{{ "{{ customer.octets }}" + ".62" }}'
+  secondary_ntp_server: '{{ "{{ customer.secondary_octets }}" + ".62" if customer_definition.disaster_recovery else "" }}'
 
 
 ##################################################################################
@@ -210,7 +210,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: 'Internal-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -229,7 +229,7 @@ vm_vars:
         netmask: '255.255.255.252'
 
         # Network name
-        network: 'EM7-DB-Heartbeat-Link'
+        network: '{{ "QS-{{ customer.name_prefix }}-db-heartbeat" }}'
 
 
     ################
@@ -263,7 +263,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: 'Internal-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -282,7 +282,7 @@ vm_vars:
         netmask: '255.255.255.224'
 
         # Network name
-        network: 'Customer-Net-Inside'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\")}}-64-27-cust" }}'
 
 
     ################
@@ -316,7 +316,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: 'Internal-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -369,7 +369,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: 'Internal-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -388,7 +388,7 @@ vm_vars:
         netmask: '255.255.255.224'
 
         # Network name
-        network: 'Loadbalancer-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-96-27-lbnet" }}'
 
 
   ################
@@ -428,7 +428,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: 'Internal-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -484,7 +484,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: 'Internal-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -538,7 +538,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: 'Internal-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -592,7 +592,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: 'Internal-Net'
+        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -646,7 +646,7 @@ vm_vars:
       netmask: '255.255.255.192'
 
       # Network name
-      network: 'Internal-Net'
+      network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
     # Network interface 2
     ################
@@ -665,7 +665,7 @@ vm_vars:
       netmask: '255.255.255.224'
 
       # Network name
-      network: 'Customer-Net-Inside'
+      network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-64-27-cust" }}'
 
 
   ################
@@ -702,7 +702,7 @@ vm_vars:
       netmask: '255.255.255.192'
 
       # Network name
-      network: 'Internal-Net'
+      network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
     # Network interface 2
     ################
@@ -721,4 +721,4 @@ vm_vars:
       netmask: '255.255.255.224'
 
       # Network name
-      network: 'Loadbalancer-Net'
+      network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-96-27-lbnet" }}'

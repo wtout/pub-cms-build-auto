@@ -14,7 +14,7 @@
         http_proxy: "{{proxy_string.stdout}}"
         https_proxy: "{{proxy_string.stdout}}"
     - name: Validate vcenter credentials
-      vmware_about_facts:
+      vmware_about_info:
         hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
         username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
         password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
