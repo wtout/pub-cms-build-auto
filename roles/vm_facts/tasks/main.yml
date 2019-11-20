@@ -2,11 +2,13 @@
 # Tasks for vm_facts
 - block:
   - include_tasks: task_define_vm_ip.yml
-  - include_tasks: task_define_vm_disk_size.yml
-  - include_tasks: task_define_groups_list.yml
-  - include_tasks: task_define_hosts_variables.yml
-    when: configure_vms | default(false) | bool
+  - block:
+    - include_tasks: task_define_vm_disk_size.yml
+    - include_tasks: task_define_groups_list.yml
+    - include_tasks: task_define_hosts_variables.yml
+      when: configure_vms | default(false) | bool
+    when:
+      - deploy | default(false) | bool
   when:
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
-    - (deploy | default(false) | bool) or (rollback | default(false) | bool)
   tags: always
