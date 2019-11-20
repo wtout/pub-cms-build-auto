@@ -60,7 +60,7 @@
       datacenter: "{{ datacenter.name }}"
       disk:
         - size_kb: "{{ disk0_size_kb }}"
-          type: thick
+          type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
           datastore: "{{ disk0_datastore }}"
           state: present
           scsi_controller: 0
@@ -80,7 +80,7 @@
       datacenter: "{{ datacenter.name }}"
       disk:
         - size_kb: "{{ disk1_size_kb }}"
-          type: thick
+          type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
           datastore: "{{ disk1_datastore }}"
           state: present
           scsi_controller: 0
@@ -100,7 +100,7 @@
       datacenter: "{{ datacenter.name }}"
       disk:
         - size_kb: "{{ disk2_size_kb }}"
-          type: thick
+          type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
           datastore: "{{ disk2_datastore }}"
           state: present
           scsi_controller: 0
@@ -121,7 +121,7 @@
       datacenter: "{{ datacenter.name }}"
       disk:
         - size_kb: "{{ disk3_size_kb }}"
-          type: thick
+          type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
           datastore: "{{ disk3_datastore }}"
           state: present
           scsi_controller: 0

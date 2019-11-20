@@ -1,7 +1,6 @@
 ---
 # Tasks to create VM pairs
 - block:
-  - include_tasks: task_get_ova_name.yml
   - name: define vm_seq for each host
     set_fact:
       vm_seq: "{{ range(0, groups[vm_group]|length, 2)|list }}"

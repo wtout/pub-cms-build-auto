@@ -15,8 +15,7 @@
   - name: copy default route file locally
     template:
       src: "templates/{{ 'dr_' if 'dr' in group_names else '' }}route-ens160.tmpl"
-      dest: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-route-ens160"
-    run_once: true
+      dest: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-{{ inventory_hostname }}-route-ens160"
   - block:
     - name: copy default route file to VM
       vmware_guest_file_operation:
@@ -29,7 +28,7 @@
         vm_username: "{{ ansible_user }}"
         vm_password: "{{ ansible_ssh_pass }}"
         copy:
-            src: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-route-ens160"
+            src: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-{{ inventory_hostname }}-route-ens160"
             dest: "/tmp/route-ens160"
             overwrite: false
       environment:
@@ -61,7 +60,7 @@
         vm_username: "{{ ansible_user }}"
         vm_password: "{{ ansible_ssh_pass }}"
         copy:
-            src: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-route-ens160"
+            src: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-{{ inventory_hostname }}-route-ens160"
             dest: "/etc/sysconfig/network-scripts/route-ens160"
             overwrite: false
       environment:
@@ -84,9 +83,8 @@
       - inventory_hostname is not search('em7')
   - name: delete default route file locally
     file:
-      path: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-route-ens160"
+      path: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-{{ inventory_hostname }}-route-ens160"
       state: absent
-    run_once: true
   when:
     - ansible_ssh_pass != postppp
     - netconfig.gateway1 == ''

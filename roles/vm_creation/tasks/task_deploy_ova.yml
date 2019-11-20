@@ -15,9 +15,9 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ datacenter.name }}"
-      disk_provisioning: thick
+      disk_provisioning: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
       cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if inventory_hostname is search('dr') else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-      datastore: "{{ vm_ds }}"
+      datastore: "{{ 'HX-Datastore-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else vm_ds }}"
       folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
       name: "{{ vm.name }}"
       networks: {}

@@ -1,27 +1,39 @@
 ---
 # tasks file to create vms
 - block:
-  - name: get list of groups in play
-    set_fact:
-      play_group_list: "{{ play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'spl', 'infra', 'vcenter', 'dr', 'drem7', 'drspl', 'drinfra']) }}"
-    loop: "{{ ansible_play_hosts }}"
-    run_once: true
-  - include_tasks: task_create_folder.yml
+  - include_tasks: task_get_ova_name.yml
+
+  - block:
+    - include_tasks: task_create_folder.yml
+      run_once: true
+    - name: get list of groups in play
+      set_fact:
+        play_group_list: "{{ play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['bastion', 'puppet', 'stack', 'em7', 'spl', 'infra', 'vcenter', 'dr', 'drem7', 'drspl', 'drinfra']) }}"
+      loop: "{{ ansible_play_hosts }}"
+      run_once: true
+    - include_tasks:
+        file: task_create_vm_pair.yml
+        apply:
+          vars:
+            vm_group: "{{ item }}"
+      loop: "{{ play_group_list }}"
+      when: inventory_hostname in groups[item]
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
-    run_once: true
-  - include_tasks: task_create_cluster.yml
+
+  - block:
+    - include_tasks: task_create_cluster.yml
+      run_once: true
+    - include_tasks: task_get_vm_datastore.yml
+    - include_tasks: task_deploy_ova.yml
+    - include_tasks: task_update_disks.yml
+    - include_tasks: task_update_hardware.yml
+    - include_tasks: task_update_default_route.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
-    run_once: true
-  - include_tasks:
-      file: task_create_vm_pair.yml
-      apply:
-        vars:
-          vm_group: "{{ item }}"
-    loop: "{{ play_group_list }}"
-    when: inventory_hostname in groups[item]
+
   - name: flush handlers
     meta: flush_handlers
+
   - include_tasks: task_update_vmwaretools.yml
   tags: vm_creation

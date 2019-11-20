@@ -27,7 +27,6 @@
   - name: define hosted datastores list for each host group
     set_fact:
       vm_ds_names: "{{ ds_names | intersect(hostvars[groups['vcenter']|first][vm_group + '_ds_names']) }}"
-#      vm_ds_names: "{{ds_names | intersect(hostvars[groups['vcenter'][0]]['db_ds_names']) if vm_group == 'em7db' else ds_names | intersect(hostvars[groups['vcenter'][0]]['ndb_ds_names'])}}"
   - name: assert 1
     assert:
       that:
