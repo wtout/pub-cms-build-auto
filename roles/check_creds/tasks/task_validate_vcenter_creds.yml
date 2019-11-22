@@ -6,7 +6,7 @@
       shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
       register: proxy_string
       check_mode: no
-    - name: install PyVmomi if it is not installed
+    - name: install Python's PyVmomi if it is not installed
       pip:
         name: PyVmomi
         extra_args: --user

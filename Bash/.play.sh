@@ -63,7 +63,7 @@ function git_config() {
 			then
 				read -p "Enter your full name [ENTER]: " NAME SURNAME && git config user.name "${NAME} ${SURNAME}" || EC=1
 			else
-				read -p "Enter your full name [ENTER]: " NAME SURNAME && [[ "${SURNAME}" != "" && "$(git config remote.origin.url | sed -e 's/.*\/\/\(.*\)@.*/\1/')" == *$(echo ${SURNAME} | tr '[A-Z]' '[a-z]')* ]] && git config user.name "${NAME} ${SURNAME}" || EC=1
+				read -p "Enter your full name [ENTER]: " NAME SURNAME && [[ "${SURNAME}" != "" && "$(git config remote.origin.url | sed -e 's/.*\/\/\(.*\)@.*/\1/')" == *$(echo ${SURNAME:0:5} | tr '[A-Z]' '[a-z]')* ]] && git config user.name "${NAME} ${SURNAME}" || EC=1
 			fi
 		fi
 		[[ ${EC} -eq 1 ]] && echo "Invalid ID. Aborting!" && exit ${EC}
@@ -73,9 +73,9 @@ function git_config() {
 			SURNAME=$(git config user.name | awk '{print $NF}' | tr '[A-Z]' '[a-z]')
 			if [[ "$(git config remote.origin.url)" == "" ]]
 			then
-				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME}* || "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME}*) ]] && git config user.email ${GIT_EMAIL_ADDRESS} || EC=1
+				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) ]] && git config user.email ${GIT_EMAIL_ADDRESS} || EC=1
 			else
-				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME}* || "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME}*) && "$(git config remote.origin.url)" == *$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/^.*@\(.*\)\..*$/\1/')* ]] && git config user.email ${GIT_EMAIL_ADDRESS} || EC=1
+				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) && "$(git config remote.origin.url)" == *$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/^.*@\(.*\)\..*$/\1/')* ]] && git config user.email ${GIT_EMAIL_ADDRESS} || EC=1
 			fi
 		fi
 		[[ ${EC} -eq 1 ]] && echo "Invalid email address. Aborting!" && exit ${EC}
@@ -112,19 +112,20 @@ function install_packages() {
 			[[ ${pkg} == ${PKG_ARR[0]} ]] && printf "\n\nInstalling ${pkg} on localhost ..." || \
 			printf "\nInstalling ${pkg} on localhost ..."
 			sudo -S yum install -y ${pkg} --quiet <<< ${SUDO_PASS} 2>/dev/null
-			printf " Installed version $(yum list ${pkg} | tail -1 | awk '{print $2}')\n"
+			[[ ${?} == 0 ]] && printf " Installed version $(yum list ${pkg} | tail -1 | awk '{print $2}')\n" || exit 1
 		fi
 	done
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
 		printf "\nInstalling ansible on localhost ..."
 		pip install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION}
-		printf " Installed version ${ANSIBLE_VERSION}\n"
+		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 	else
 		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
 		then
-			echo "Upgrading ansible to the required ${ANSIBLE_VERSION} version"
+			echo "Upgrading Ansible from version $(ansible --version | grep '^ansible' | cut -d ' ' -f2)"
 			pip install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION}
+			[[ ${?} == 0 ]] && printf " Upgraded Ansible to   version ${ANSIBLE_VERSION}\n" || exit 1
 		fi
 	fi
 }
@@ -204,7 +205,8 @@ function check_updates() {
 			for i in {1..3}
 			do
 				[[ $- =~ x ]] && debug=1 && set +x
-				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") HEAD 2>/dev/null | cut -c1-7)
+				local BBPWD=$(echo ${BBPASS} | sed -e 's/@/%40/g')
+				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPWD}@|") HEAD 2>/dev/null | cut -c1-7)
 				[[ ${debug} == 1 ]] && set -x
 				[[ ${REMOTEID} == "" ]] && sleep 3 || break
 			done
@@ -318,7 +320,13 @@ function get_credentials() {
 		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@}
 		GET_CREDS_STATUS=${?}
 		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
-		encrypt_vault ${CRVAULT} ${VAULTP} ${BBPASS}
+		if [[ ${BBPASS} != "" ]]
+		then
+			encrypt_vault ${CRVAULT} ${VAULTP} ${BBPASS}
+		else
+			echo "Bitbucket password is not defined. Aborting!"
+			exit 1
+		fi
 	fi
 }
 
