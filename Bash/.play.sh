@@ -290,7 +290,7 @@ function enable_logging() {
 	LOG=true
 	if [ "${LOG}" == "true" ]
 	then
-		if [[ ! -d "${ANSIBLE_LOG_LOCATION}" || ! -w "${ANSIBLE_LOG_LOCATION}" ]]
+		if [[ ! -d "${ANSIBLE_LOG_LOCATION}" ]]
 		then
 			if [[ "x${SUDO_PASS}" == "x" ]]
 			then
@@ -299,6 +299,17 @@ function enable_logging() {
 				[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
 			fi
 			sudo -S mkdir -m 777 -p ${ANSIBLE_LOG_LOCATION} <<< ${SUDO_PASS}
+		else
+			if [[ ! -w "${ANSIBLE_LOG_LOCATION}" ]]
+			then
+				if [[ "x${SUDO_PASS}" == "x" ]]
+				then
+					echo
+					SUDO_PASS=$(get_sudopass) || FS=${?}
+					[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
+				fi
+				sudo -S chmod 777 ${ANSIBLE_LOG_LOCATION} <<< ${SUDO_PASS}
+			fi
  		fi
 		LOG_FILE="${ANSIBLE_LOG_LOCATION}/$(basename ${0} | awk -F '.' '{print $1}').${ENAME}.log"
 		[[ "$( grep ^log_path ${ANSIBLE_CFG} )" != "" ]] && sed -i '/^log_path = .*\$/d' ${ANSIBLE_CFG}
