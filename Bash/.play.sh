@@ -133,7 +133,6 @@ function install_packages() {
 function get_inventory() {
 	sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
 	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
-	sed -i "s|\(^forks =\).*$|\1 5|" ${ANSIBLE_CFG}
 	if [[ -f ${SYS_DEF} ]]
 	then
 		if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]]
@@ -274,14 +273,6 @@ function get_hosts() {
 	fi
 }
 
-function set_forks_num() {
-	local FORKSHOSTS=$(echo ${HOST_LIST} | sed -e "s/ /,/g")
-	forks_num=$(ansible ${FORKSHOSTS} -m debug -a var=ansible_play_hosts | grep '[0-9]\{2\}"' | sort -u | sed -e 's/^.*"\(.*[0-9]\{2\}\)".*$/\1/g' | wc -l)
-	[[ ${forks_num} -lt 5 ]] && forks_num=5
-	[[ ${forks_num} -gt 50 ]] && forks_num=50
-	sed -i "s/\(^forks =\).*$/\1 ${forks_num}/" ${ANSIBLE_CFG}
-}
-
 function check_mode() {
 	[[ "$(echo ${@} | egrep -w '\-\-check')" != "" ]] && echo " in check mode " || echo " "
 }
@@ -420,7 +411,6 @@ get_inventory ${@}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 update_inventory
 get_hosts ${@}
-set_forks_num
 get_credentials ${@}
 enable_logging ${@}
 [[ -f ${OFILE} ]] && source ${OFILE}

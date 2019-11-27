@@ -27,7 +27,7 @@
     - name: wait for certificate to be created
       shell: >
         puppet cert list {{ vm.name }}.{{ sysconfig.domain_name }} || echo 'Found no certificate'
-      become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
+      become: true
       register: cert_exists
       until: cert_exists.stdout is not search('Found no certificate')
       retries: 3

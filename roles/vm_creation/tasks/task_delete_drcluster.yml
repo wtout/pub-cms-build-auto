@@ -53,7 +53,7 @@
   tags: vm_creation
 
 - name: Get the DR guest_facts
-  vmware_guest_facts:
+  vmware_guest_info:
     hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
     username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
     password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"

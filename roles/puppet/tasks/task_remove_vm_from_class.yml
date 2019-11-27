@@ -24,7 +24,7 @@
         grep {{ vm.name }} {{ class_item }} || echo "updateNode succeeded"
       args:
         chdir: '/opt/puppet/qs_scripts'
-      become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
+      become: true
       register: puppet_class
       loop: "{{ vmtype_class_list }}"
       loop_control:

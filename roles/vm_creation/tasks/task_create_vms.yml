@@ -24,11 +24,7 @@
   - block:
     - include_tasks: task_create_cluster.yml
       run_once: true
-    - include_tasks: task_get_vm_datastore.yml
-    - include_tasks: task_deploy_ova.yml
-    - include_tasks: task_update_disks.yml
-    - include_tasks: task_update_hardware.yml
-    - include_tasks: task_update_default_route.yml
+    - include_tasks: task_create_configure_vms.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
 

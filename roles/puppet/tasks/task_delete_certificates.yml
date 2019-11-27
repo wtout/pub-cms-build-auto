@@ -14,7 +14,7 @@
       puppet cert list {{ 'em7release.' if 'em7' in group_names else '' }}{{ vm.name }}.{{ sysconfig.domain_name }} | cut -d '(' -f2
     args:
       chdir: '/usr/local/bin'
-    become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
+    become: true
     check_mode: no
     ignore_errors: true
     register: client_cert_on_server
@@ -70,7 +70,7 @@
       puppet cert clean {{ 'em7release.' if 'em7' in group_names else '' }}{{ vm.name }}.{{ sysconfig.domain_name }}
     args:
       chdir: '/usr/local/bin'
-    become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
+    become: true
     when: delete_client_cert_on_server | default(false) | bool
     delegate_to: "{{groups['puppet']|first}}"
   tags: puppet
