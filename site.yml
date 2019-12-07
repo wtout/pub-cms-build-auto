@@ -39,6 +39,7 @@
   - {role: vm_creation, when: create_vms | default(false) | bool}
   - {role: vm_configuration, when: configure_vms | default(false) | bool}
   - {role: puppet, when: push_puppet | default(false) | bool}
+  - {role: vm_ppp_configuration, when: configure_ppp_vms | default(false) | bool}
 #  - {role: check_requiretty, when: check_requiretty | default(false) | bool}
 
 # Plays to delete the VMs

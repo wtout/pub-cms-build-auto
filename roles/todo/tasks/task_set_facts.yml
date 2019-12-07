@@ -75,6 +75,15 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
   tags: puppet
 
+- name: define configure_ppp_vms
+  set_fact:
+    configure_ppp_vms: true
+  when:
+    - deploy | default(false) | bool
+    - customer.disaster_recovery
+    - inventory_hostname in groups['stack'] or inventory_hostname in groups['dr']
+  tags: vm_ppp_configuration
+
 #- name: define check_requiretty
 #  set_fact:
 #    check_requiretty: true

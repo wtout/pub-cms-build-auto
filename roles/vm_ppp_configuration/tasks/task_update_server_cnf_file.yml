@@ -1,0 +1,13 @@
+---
+# tasks to update /etc/my.cnf.d/server.cnf on relay
+- name: Update server.cnf on relay
+  replace:
+    path: /etc/my.cnf.d/server.cnf
+    regexp: '^({{ task_item.param }})(.*)$'
+    replace: '\g<1>{{ task_item.value }}'
+  loop:
+    - { param: 'wsrep_cluster_address=', value: "\"gcomm://{{ rly_ip1_list | union(drrly_ip1_list) | product(['4567']) | map('join',':') | join(',') }}\"" }
+  loop_control:
+    loop_var: task_item
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  tags: vm_ppp_configuration

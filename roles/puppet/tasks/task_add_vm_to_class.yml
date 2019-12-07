@@ -17,7 +17,7 @@
       vars:
         class_list1: "{{ 'EM7QSUtils' if inventory_hostname is search('em7') else 'QSUtils' }}"
         class_list2: "{{ 'EM7PrimaryDB' if (inventory_hostname is search('em7db') and inventory_hostname is search('01')) else 'EM7SecondaryDB' if (inventory_hostname is search('em7db') and inventory_hostname is search('02')) else 'EM7ApplicationServer' if inventory_hostname is search('em7prt') else 'LinuxJumpServer' if inventory_hostname is search('lnxjmp') else 'RelayServer' if inventory_hostname is search('rly') else 'SplunkSearchHead01' if (inventory_hostname is search('splsrc') and inventory_hostname is search('01')) else 'SplunkSearchHead02' if (inventory_hostname is search('splsrc') and inventory_hostname is search('02')) else 'SplunkIndexer' if inventory_hostname is search('splind') else 'SplunkClusterMaster' if inventory_hostname is search('splmas') else 'SplunkDeployer' if inventory_hostname is search('spldpl') else '' }}"
-        class_list3: "{{ 'MariaDBPrimary' if inventory_hostname is search('rly01') else '' }}"
+        class_list3: "{{ 'MariaDBPrimary' if (inventory_hostname is search('rly01') and 'dr' not in group_names) else '' }}"
     - name: add VM to puppet classes
       shell: >
         ./updateNode.pl {{ class_item }} {{ vm.name }} add;
@@ -32,8 +32,10 @@
       when:
         - not ansible_check_mode
         - class_item != ''
-      until: puppet_class.stdout is not search('updateNode failed')
-      retries: 3
+      until:
+        - puppet_class.stdout is not search('updateNode failed')
+        - puppet_class.stdout is not search('could not serialize access due to concurrent update')
+      retries: 5
       failed_when: puppet_class.stdout is search('updateNode failed')
       no_log: true
     when: script_stat.stat.exists

@@ -1,0 +1,3 @@
+---
+# vars file for vm_ppp_configuration
+relay_db_password: "{{ RLY_DB_PASS }}"

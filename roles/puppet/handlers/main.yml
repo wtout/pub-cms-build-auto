@@ -3,7 +3,7 @@
 - name: puppet sign certs
   shell: >
     /usr/local/bin/puppet cert sign {{vm.name}}.{{sysconfig.domain_name}}
-  become: "{{ true if (puppet.vmname is search('01') or puppet.vmname is search('02')) else false }}"
+  become: true
   delegate_to: "{{groups['puppet']|first}}"
   ignore_errors: true
   tags: puppet

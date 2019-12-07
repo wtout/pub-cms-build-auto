@@ -8,7 +8,7 @@
       replace: '\g<1> {{ task_item.value }}'
     loop:
       - { param: 'ipaddress =', value: "{{ ansible_host }}" }
-      - { param: 'dbipaddrs =', value: "{{ (drdb_ip1_list|join(',') + ',' + vip.db) if 'dr' in group_names else (db_ip1_list|join(',') + ',' + vip.db) }}" }
+      - { param: 'dbipaddrs =', value: "{{ (db_ip1_list|join(',') + ',' + vip.db + ',' + drdb_ip1_list|join(',')) if ('drem7dc' in group_names or 'drem7mc' in group_names) else (drdb_ip1_list|join(',') + ',' + vip.db) if 'dr' in group_names else (db_ip1_list|join(',') + ',' + vip.db) }}" }
     loop_control:
       loop_var: task_item
   - name: Update ipaddr in silo.conf on VM

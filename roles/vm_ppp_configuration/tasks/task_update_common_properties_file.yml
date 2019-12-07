@@ -1,0 +1,24 @@
+---
+# tasks to update /opt/CSCO-CMS/relayweb/conf/common.properties on relay
+- block:
+  - name: Update /opt/CSCO-CMS/relayweb/conf/common.properties on relay
+    replace:
+      path: /opt/CSCO-CMS/relayweb/conf/common.properties
+      regexp: '^({{ task_item.param }})(.*)$'
+      replace: '\g<1> {{ task_item.value }}'
+    loop:
+      - { param: 'relay.peer =', value: "{{ rly_ip1_list | union(drrly_ip1_list) | difference(ansible_host) | join(',') }}" }
+      - { param: 'cluster.relay.dbpeer =', value: "{{ rly_ip1_list | union(drrly_ip1_list) | join(',') }}" }
+    loop_control:
+      loop_var: task_item
+  - block:
+    - name: run RestSyslogConfInvoker.py
+      shell: python /opt/CSCO-CMS/relayweb/relay_invoker/RestSyslogConfInvoker.py
+      register: python_script
+      failed_when:
+        - "'Going to refresh Relay configuration......' not in python_script.stdout_lines" 
+        - "'Inside is_relay_heathy......' not in python_script.stdout_lines"
+        - "'Inside refresh_relay_configurations......' not in python_script.stdout_lines"
+        - "'Refreshing Relay and notifing peer Relays to get initialized ......' not in python_script.stdout_lines"
+    when: inventory_hostname == groups['rly']|first
+  tags: vm_ppp_configuration

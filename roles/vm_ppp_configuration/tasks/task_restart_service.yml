@@ -1,0 +1,8 @@
+---
+# Tasks to restart {{ vc_name }} on the relay
+- name: restart {{ svc_name }}
+  service:
+    name: "{{ svc_name }}"
+    state: restarted
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  tags: vm_ppp_configuration
