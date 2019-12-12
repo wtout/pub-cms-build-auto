@@ -8,6 +8,10 @@ function check_arguments() {
 		fi
 }
 
+function check_repeat_job() {
+	repeat_job=$( ps -ef | grep ${ENAME} | grep $(basename ${0} | awk -F '.' '{print $1}') | grep -v ${PID} )
+}
+
 function check_hosts_limit() {
 	if [[ "x$(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/')" == "xdeploy" ]]
 	then
@@ -32,7 +36,6 @@ function check_hosts_limit() {
 }
 
 function check_concurrency() {
-	PID=${$}
 	ps -ef | grep $(basename ${0}) | grep -v grep | grep -v ${PID}
 }
 
@@ -190,7 +193,7 @@ function check_updates() {
 			[[ $- =~ x ]] && debug=1 && set +x
 			[[ -f ${1} ]] && rm -f ${1}
 			[[ -f ${2} ]] && rm -f ${2}
-			printf "BBPASS=${BBPASS}\n" > ${1}
+			printf "BBPASS='${BBPASS}'\n" > ${1}
 			printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
 			[[ ${debug} == 1 ]] && set -x
 			encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
@@ -304,7 +307,7 @@ function enable_logging() {
  		fi
 		LOG_FILE="${ANSIBLE_LOG_LOCATION}/$(basename ${0} | awk -F '.' '{print $1}').${ENAME}.log"
 		[[ "$( grep ^log_path ${ANSIBLE_CFG} )" != "" ]] && sed -i '/^log_path = .*\$/d' ${ANSIBLE_CFG}
-		if [[ -f ${LOG_FILE} ]] && [[ "$( ps -ef | grep ${ENAME} | grep $(basename ${0} | awk -F '.' '{print $1}') )" != "" ]]
+		if [[ -f ${LOG_FILE} ]] && [[ "${repeat_job}" != "" ]]
 		then
 			printf "\nRunning multiple instances of ${BOLD}$(basename ${0})${NORMAL} is prohibited. Aborting!\n\n" && exit 1
 		else
@@ -391,6 +394,7 @@ ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
 
 # Main
+PID=${$}
 check_arguments ${@}
 NEW_ARGS=$(check_hosts_limit "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
@@ -402,6 +406,7 @@ CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
 VAULTP="${PWD}/.vaultp"
 VAULTC="${PWD}/.vaultc"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
+check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
