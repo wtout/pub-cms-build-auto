@@ -8,26 +8,28 @@
 
   - block:
     - name: check if puppet agent test is already running
-      shell: ps -ef | grep agent | grep -e '--test\|-t' | grep -v grep
+      stat:
+        path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
       register: ppr3
-      ignore_errors: true
-
-    - block:
-      - include_tasks:
-          file:
-            task_restart_service.yml
-          apply:
-            vars:
-              - svc_name: "{{ svc_item }}"
-        loop:
-          - mariadb
-        loop_control:
-          loop_var: svc_item
-      - name: recheck cluster size on relay
-        shell: mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
-        register: query_db2
-        failed_when: query_db2.stdout|int != 3
-      when: ppr3.stdout == ''
+    - name: Wait for puppet push to finish
+      wait_for:
+        path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
+        state: absent
+        timeout: 1800
+      when: ppr3.stat.exists
+    - include_tasks:
+        file:
+          task_restart_service.yml
+        apply:
+          vars:
+            - svc_name: "{{ svc_item }}"
+      loop:
+        - mariadb
+      loop_control:
+        loop_var: svc_item
+    - name: recheck cluster size on relay
+      shell: mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
+      register: query_db2
+      failed_when: query_db2.stdout|int != 3
     when: query_db1.stdout|int > 3
-
   tags: vm_ppp_configuration

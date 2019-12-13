@@ -1,21 +1,21 @@
 ---
 # tasks to get hosts list
 - block:
-  - name: Get hosts list
-    vmware_host_service_facts:
+  - name: Get hosts info
+    vmware_host_service_info:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
       password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
       cluster_name: "{{cluster_name[0] if cluster_name is defined else hostvars[groups['vcenter'][0]]['information']['cluster']}}"
       validate_certs: no
-    register: host_facts
+    register: host_service_info
     delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
     no_log: true
 
   - name: define hosts_list
     set_fact:
       hosts_list: "{{hosts_list|default([]) + [item.key]}}"
-    loop:  "{{host_facts.host_service_facts|dict2items}}"
+    loop:  "{{host_service_info.host_service_facts|dict2items}}"
     no_log: true
 
   - name: define information.resources

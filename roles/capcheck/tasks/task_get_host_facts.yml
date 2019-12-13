@@ -1,7 +1,7 @@
 ---
 # tasks to get host info
 - block:
-  - name: Get host facts
+  - name: Get host info
     vmware_host_facts:
       hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
       username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
