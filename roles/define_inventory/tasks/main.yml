@@ -15,6 +15,8 @@
     set_fact:
       cn: "{{ 'customer_name is not defined' if customer_definition.customer_name == none else '' }}"
       dm: "{{ 'deployment_model is not defined' if customer_definition.deployment_model == none else '' }}"
+      np: "{{ 'primary number of Portals is not defined' if customer_definition.primary_number_of_prts == none else '' }}"
+      nm: "{{ 'primary number of Message Collectors is not defined' if customer_definition.primary_number_of_mcs == none else '' }}"
       dr: "{{ 'disaster_recovery is not defined' if customer_definition.disaster_recovery == none else '' }}"
       pn: "{{ 'primary_name_prefix is not defined' if customer_definition.primary_name_prefix == none else '' }}"
       po: "{{ 'primary_octets is not defined' if customer_definition.primary_octets == none else '' }}"
@@ -30,13 +32,29 @@
       that:
         - vars[item] == ''
       fail_msg: "{{ vars[item] }}"
-    loop: [ cn, dm, dr, pn, po, sn, so, rv, dn, dh, ps ]
+    loop: [ cn, dm, dr, np, nm, pn, po, sn, so, rv, dn, dh, ps ]
 
   - name: check if deployment model value is valid
     assert:
       that:
         - not customer_definition.deployment_model | lower | regex_search('as|ax|hs|hm|hx') == none
       fail_msg: "deployment_model is not valid. Only as, ax, hs, hm and hx are valid"
+
+  - name: check if number of Portals value is valid
+    assert:
+      that:
+        - customer_definition.primary_number_of_prts | int >= 2
+        - customer_definition.primary_number_of_prts | int <= 4
+        - customer_definition.primary_number_of_prts | int % 2 == 0
+      fail_msg: "primary_number_of_prts is not valid. Only 2 and 4 are valid"
+
+  - name: check if number of Message Collectors value is valid
+    assert:
+      that:
+        - customer_definition.primary_number_of_mcs | int >= 2
+        - customer_definition.primary_number_of_mcs | int <= 6
+        - customer_definition.primary_number_of_mcs | int % 2 == 0
+      fail_msg: "primary_number_of_mcs is not valid. Only 2, 4 and 6 are valid"
 
   - name: check if disaster recovery value is valid
     assert:
@@ -141,6 +159,8 @@
   - name: define template variables
     set_fact:
       number_of_dcs: "{{ 12 if customer_definition.deployment_model is search('x') else 8 if (customer_definition.deployment_model is search('as') or customer_definition.deployment_model is search('hm')) else 4 }}"
+      number_of_prts: "{{ customer_definition.primary_number_of_prts }}"
+      number_of_mcs: "{{ customer_definition.primary_number_of_mcs }}"
 
   - name: generate customer inventory
     copy:

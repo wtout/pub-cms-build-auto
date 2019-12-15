@@ -31,9 +31,15 @@
 
 {{ drprt_ip1_list[0] + ' ' + drprt_hst_list[0] + ' ' + drprt_hst_list[0] + '.' + sysconfig.domain_name }}
 {{ drprt_ip1_list[1] + ' ' + drprt_hst_list[1] + ' ' + drprt_hst_list[1] + '.' + sysconfig.domain_name if drprt_ip1_list|length >= 2 else '' }}
+{{ drprt_ip1_list[2] + ' ' + drprt_hst_list[2] + ' ' + drprt_hst_list[2] + '.' + sysconfig.domain_name if drprt_ip1_list|length >= 3 else '' }}
+{{ drprt_ip1_list[3] + ' ' + drprt_hst_list[3] + ' ' + drprt_hst_list[3] + '.' + sysconfig.domain_name if drprt_ip1_list|length >= 4 else '' }}
 
 {{ drmc_ip1_list[0] + ' ' + drmc_hst_list[0] + ' ' + drmc_hst_list[0] + '.' + sysconfig.domain_name }}
 {{ drmc_ip1_list[1] + ' ' + drmc_hst_list[1] + ' ' + drmc_hst_list[1] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 2 else '' }}
+{{ drmc_ip1_list[2] + ' ' + drmc_hst_list[2] + ' ' + drmc_hst_list[2] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 3 else '' }}
+{{ drmc_ip1_list[3] + ' ' + drmc_hst_list[3] + ' ' + drmc_hst_list[3] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 4 else '' }}
+{{ drmc_ip1_list[4] + ' ' + drmc_hst_list[4] + ' ' + drmc_hst_list[4] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 5 else '' }}
+{{ drmc_ip1_list[5] + ' ' + drmc_hst_list[5] + ' ' + drmc_hst_list[5] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 6 else '' }}
 
 {{ drdc_ip1_list[0] + ' ' + drdc_hst_list[0] + ' ' + drdc_hst_list[0] + '.' + sysconfig.domain_name }}
 {{ drdc_ip1_list[1] + ' ' + drdc_hst_list[1] + ' ' + drdc_hst_list[1] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 2 else '' }}

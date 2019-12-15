@@ -21,10 +21,10 @@ all:
                 em7dc[01:{{ '%02d' | format(number_of_dcs|int) }}]:
             em7mc:
               hosts:
-                em7mc[01:02]:
+                em7mc[01:{{ '%02d' | format(number_of_mcs|int) }}]:
             em7prt:
               hosts:
-                em7prt[01:02]:
+                em7prt[01:{{ '%02d' | format(number_of_prts|int) }}]:
         spl:
           children:
             splsrc:

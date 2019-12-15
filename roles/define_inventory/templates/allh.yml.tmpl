@@ -307,7 +307,7 @@ vm_vars:
         name: 'ens160'
 
         # IP fourth octet pool
-        ip_octetpool: [ '5', '7' ]
+        ip_octetpool: [ '5', '7', '30', '31', '32', '33' ]
 
         # Gateway fourth octet
         gtw_octet: '62'
@@ -360,7 +360,7 @@ vm_vars:
         name: 'ens160'
 
         # IP fourth octet pool
-        ip_octetpool: "{{ range(3, 4 + 1)|list }}"
+        ip_octetpool: "{{ range(3, 4 + 1)|list + range(47, 48 + 1)|list }}"
 
         # Gateway fourth octet
         gtw_octet: ''
@@ -379,7 +379,7 @@ vm_vars:
         name: 'ens192'
 
         # IP fourth octet pool
-        ip_octetpool: [ '98', '100' ]
+        ip_octetpool: [ '98', '100', '101', '102' ]
 
         # Gateway fourth octet
         gtw_octet: '123'

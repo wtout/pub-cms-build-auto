@@ -1,13 +1,13 @@
 ---
-# tasks to update /etc/silo.conf on EM7 portal VM
+# tasks to restore /etc/silo.conf on EM7 portal VM
 - block:
-  - name: Update dbpasswd in silo.conf on DR portal
+  - name: Restore dbpasswd in silo.conf on DR portal
     replace:
       path: /etc/silo.conf
-      regexp: '^({{ task_item.param }}) (.*)$'
+      regexp: '^({{ task_item.param }}) {{ task_item.regexp}}$'
       replace: '\g<1> {{ task_item.value }}'
     loop:
-      - { param: 'dbpasswd =', value: '{{ EM7PPP_PASS }}' }
+      - { param: 'dbpasswd =', regexp: '{{ EM7PPP_PASS }}', value: 'em7admin' }
     loop_control:
       loop_var: task_item
     when:
