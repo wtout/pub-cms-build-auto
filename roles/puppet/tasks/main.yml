@@ -38,15 +38,14 @@
   tags: puppet
 
 - block:
-  - block:
-    - name: check VM reachable
-      shell: ping {{ ansible_host }} -c 1
-      register: pp_vm_reachable
-      check_mode: no
-      ignore_errors: true
-      delegate_to: localhost
-    - include_tasks: task_remove_vm_from_class.yml
-      when: pp_vm_reachable is succeeded
+  - name: check VM reachable
+    shell: ping {{ ansible_host }} -c 1
+    register: pp_vm_reachable
+    check_mode: no
+    ignore_errors: true
+    delegate_to: localhost
+  - include_tasks: task_remove_vm_from_class.yml
+    when: pp_vm_reachable is succeeded
   when:
     - rollback_puppet | default(false) | bool
   tags: puppet

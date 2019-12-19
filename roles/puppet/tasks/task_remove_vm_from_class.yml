@@ -1,43 +1,23 @@
 ---
 # Tasks to add vm to puppet class
 - block:
-  - name: check if updateNode.pl exists
-    stat:
-      path: '/opt/puppet/qs_scripts/updateNode.pl'
-    register: script_stat
-    run_once: true
-  - assert:
-      that: script_stat.stat.exists
-      fail_msg: 'Script to add vm to puppet class does not exist. Aborting!'
-    run_once: true
-  - block:
-    - name: define VM's puppet class names list
-      set_fact:
-        vmtype_class_list: "{{ [class_list1] + [class_list2] + [class_list3] if class_list3 != '' else [class_list1] + [class_list2] }}"
-      vars:
-        class_list1: "{{ 'EM7QSUtils' if inventory_hostname is search('em7') else 'QSUtils' }}"
-        class_list2: "{{ 'EM7PrimaryDB' if (inventory_hostname is search('em7db') and inventory_hostname is search('01')) else 'EM7SecondaryDB' if (inventory_hostname is search('em7db') and inventory_hostname is search('02')) else 'EM7ApplicationServer' if inventory_hostname is search('em7prt') else 'LinuxJumpServer' if inventory_hostname is search('lnxjmp') else 'RelayServer' if inventory_hostname is search('rly') else 'SplunkSearchHead01' if (inventory_hostname is search('splsrc') and inventory_hostname is search('01')) else 'SplunkSearchHead02' if (inventory_hostname is search('splsrc') and inventory_hostname is search('02')) else 'SplunkIndexer' if inventory_hostname is search('splind') else 'SplunkClusterMaster' if inventory_hostname is search('splmas') else 'SplunkDeployer' if inventory_hostname is search('spldpl') else '' }}"
-        class_list3: "{{ 'MariaDBPrimary' if (inventory_hostname is search('rly01') and 'dr' not in group_names) else '' }}"
-    - name: remove VM from puppet classes
-      shell: >
-        ./updateNode.pl {{ class_item }} {{ vm.name }} remove;
-        grep {{ vm.name }} {{ class_item }} || echo "updateNode succeeded"
-      args:
-        chdir: '/opt/puppet/qs_scripts'
-      become: true
-      register: puppet_class
-      loop: "{{ vmtype_class_list }}"
-      loop_control:
-        loop_var: class_item
-      when:
-        - not ansible_check_mode
-        - class_item != ''
-      until:
-        - puppet_class.stdout is search('updateNode succeeded')
-        - puppet_class.stdout is not search('could not serialize access due to concurrent update')
-      retries: 5
-      failed_when: puppet_class.stdout is not search('updateNode succeeded')
-      no_log: true
-    when: script_stat.stat.exists
-  delegate_to: "{{ groups['puppet']|first }}"
+  - name: define VM's puppet class names list
+    set_fact:
+      vmtype_class_list: "{{ [class_list1] + [class_list2] + [class_list3] if class_list3 != '' else [class_list1] + [class_list2] }}"
+    vars:
+      class_list1: "{{ 'EM7QSUtils' if inventory_hostname is search('em7') else 'QSUtils' }}"
+      class_list2: "{{ 'EM7PrimaryDB' if (inventory_hostname is search('em7db') and inventory_hostname is search('01')) else 'EM7SecondaryDB' if (inventory_hostname is search('em7db') and inventory_hostname is search('02')) else 'EM7ApplicationServer' if inventory_hostname is search('em7prt') else 'LinuxJumpServer' if inventory_hostname is search('lnxjmp') else 'RelayServer' if inventory_hostname is search('rly') else 'SplunkSearchHead01' if (inventory_hostname is search('splsrc') and inventory_hostname is search('01')) else 'SplunkSearchHead02' if (inventory_hostname is search('splsrc') and inventory_hostname is search('02')) else 'SplunkIndexer' if inventory_hostname is search('splind') else 'SplunkClusterMaster' if inventory_hostname is search('splmas') else 'SplunkDeployer' if inventory_hostname is search('spldpl') else '' }}"
+      class_list3: "{{ 'MariaDBPrimary' if (inventory_hostname is search('rly01') and 'dr' not in group_names) else '' }}"
+  - name: remove VM from puppet classes
+    include_tasks:
+      file: task_update_node.yml
+      apply:
+        vars:
+          - class_name: "{{ class_item }}"
+          - action: 'remove'
+    loop: "{{ vmtype_class_list }}"
+    loop_control:
+      loop_var: class_item
+    when:
+      - class_item != ''
   tags: puppet
