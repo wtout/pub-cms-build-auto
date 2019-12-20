@@ -157,9 +157,9 @@
 
   - name: define template variables
     set_fact:
-      number_of_dcs: "{{ 12 if customer_definition.deployment_model is search('x') else 8 if (customer_definition.deployment_model is search('as') or customer_definition.deployment_model is search('hm')) else 4 }}"
       number_of_prts: "{{ customer_definition.primary_number_of_prts }}"
       number_of_mcs: "{{ customer_definition.primary_number_of_mcs }}"
+      number_of_dcs: "{{ customer_definition.primary_number_of_dcs }}"
 
   - name: generate customer inventory
     copy:
