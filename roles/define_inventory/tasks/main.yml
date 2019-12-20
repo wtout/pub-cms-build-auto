@@ -17,6 +17,7 @@
       dm: "{{ 'deployment_model is not defined' if customer_definition.deployment_model == none else '' }}"
       np: "{{ 'primary number of Portals is not defined' if customer_definition.primary_number_of_prts == none else '' }}"
       nm: "{{ 'primary number of Message Collectors is not defined' if customer_definition.primary_number_of_mcs == none else '' }}"
+      nd: "{{ 'primary number of Data Collectors is not defined' if customer_definition.primary_number_of_dcs == none else '' }}"
       dr: "{{ 'disaster_recovery is not defined' if customer_definition.disaster_recovery == none else '' }}"
       pn: "{{ 'primary_name_prefix is not defined' if customer_definition.primary_name_prefix == none else '' }}"
       po: "{{ 'primary_octets is not defined' if customer_definition.primary_octets == none else '' }}"
@@ -32,29 +33,27 @@
       that:
         - vars[item] == ''
       fail_msg: "{{ vars[item] }}"
-    loop: [ cn, dm, dr, np, nm, pn, po, sn, so, rv, dn, dh, ps ]
+    loop: [ cn, dm, dr, np, nm, nd, pn, po, sn, so, rv, dn, dh, ps ]
 
   - name: check if deployment model value is valid
     assert:
       that:
-        - not customer_definition.deployment_model | lower | regex_search('as|ax|hs|hm|hx') == none
-      fail_msg: "deployment_model is not valid. Only as, ax, hs, hm and hx are valid"
+        - not customer_definition.deployment_model | lower | regex_search('a|h') == none
+      fail_msg: "deployment_model is not valid. Only a and h are valid"
 
-  - name: check if number of Portals value is valid
+  - name: check if number of EM7 Portals, MCs and DCs value is valid
     assert:
       that:
-        - customer_definition.primary_number_of_prts | int >= 2
-        - customer_definition.primary_number_of_prts | int <= 4
-        - customer_definition.primary_number_of_prts | int % 2 == 0
-      fail_msg: "primary_number_of_prts is not valid. Only 2 and 4 are valid"
-
-  - name: check if number of Message Collectors value is valid
-    assert:
-      that:
-        - customer_definition.primary_number_of_mcs | int >= 2
-        - customer_definition.primary_number_of_mcs | int <= 6
-        - customer_definition.primary_number_of_mcs | int % 2 == 0
-      fail_msg: "primary_number_of_mcs is not valid. Only 2, 4 and 6 are valid"
+        - "customer_definition.primary_number_of_{{ loop_item.name }} | int >= 2"
+        - "customer_definition.primary_number_of_{{ loop_item.name }} | int <= loop_item.max_value"
+        - "customer_definition.primary_number_of_{{ loop_item.name }} | int % 2 == 0"
+      fail_msg: "customer_definition.primary_number_of_{{ loop_item.name }} is not valid. Only even numbers in [2-{{ loop_item.max_value }}] are valid"
+    loop:
+      - { 'name': 'prts', 'max_value': 4 }
+      - { 'name': 'mcs', 'max_value': 6 }
+      - { 'name': 'dcs', 'max_value': 12 }
+    loop_control:
+      loop_var: loop_item
 
   - name: check if disaster recovery value is valid
     assert:
@@ -166,6 +165,12 @@
     copy:
       src: "files/inventory{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}/"
       dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name|lower }}"
+
+  - name: add disaster recovery to customer inventory
+    copy:
+      src: "files/drinventory{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}/"
+      dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name|lower }}"
+    when: customer_definition.disaster_recovery
 
   - name: customize inventory
     template:

@@ -13,6 +13,9 @@
   # Number of primary EM7 Message Collectors (integer, even) [2 - 6]
   primary_number_of_mcs: 2
 
+  # Number of primary EM7 Data Collectors (integer, even) [2 - 12]
+  primary_number_of_dcs: 2
+
   # Disaster recovery (boolean yes/no)
   disaster_recovery: yes
 

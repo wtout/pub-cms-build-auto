@@ -41,7 +41,10 @@ Create your own system definition file under the _``Definitions``_ folder to con
 The system definition file name **must match the customer name** as defined in the system definition file. The system definition file consists of the following variables:
 
   - **customer_name** (_String_): Required
-  - **deployment_model** (_String_): Required. Valid values are: **as**, **ax**, **hs**, **hm** and **hx**, where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandard”, **m** represents “**m**edium” and **x** represents “e**x**panded”
+  - **deployment_model** (_String_): Required. Valid values are: **a** and **h**, where **a** represents “**a**ppliance” and **h** represents “**h**osted”
+  - **primary_number_of_prts** (_String_): Required. Number of EM7 portals in primary stack. Valid values are even numbers in [2-4]
+  - **primary_number_of_mcs** (_String_): Required. Number of EM7 message collectors in primary stack. Valid values are even numbers in [2-6]
+  - **primary_number_of_dcs** (_String_): Required. Number of EM7 data collectors in primary stack. Valid values are even numbers in [2-12]
   - **disaster_recovery** (_Boolean_ **yes**/**no**): Required. Default value “**no**”
   - **primary_name_prefix** (_String_): Required
   - **primary_octets** (_String_): Required
@@ -106,6 +109,7 @@ The list of roles used in the playbooks:
   - **vm_creation**: deploys the stack's VMs
   - **vm_configuration**: configures the stack's VMs
   - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
+  - **vm_ppp_configuration**: configures the stack's VMs post initial puppet push
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
 To execute specific role(s), add "_--tags 'role1,role2,...'_" as argument to the script.
