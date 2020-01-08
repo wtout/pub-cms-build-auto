@@ -92,25 +92,7 @@
       delay: 5
       register: db_vip_reachable1
       ignore_errors: true
-    - block:
-      - name: reboot the EM7 DBs
-        reboot:
-          post_reboot_delay: 10
-        become: "{{ true if inventory_hostname is search('em7') else false }}"
-        delegate_to: "{{ db_item }}"
-        loop: "{{ groups['em7db'] }}"
-        loop_control:
-          loop_var: db_item
-        run_once: true
-      - name: wait 90 seconds for VM to become reachable
-        wait_for_connection:
-          timeout: 90
-      - name: wait until db vip is reachable
-        shell: ping {{vip.db}} -c 1
-        retries: 30
-        delay: 30
-        register: db_vip_reachable2
-        until: db_vip_reachable2 is succeeded
+    - include_tasks: task_reboot_em7dbs.yml
       when: db_vip_reachable1 is failed
     when: inventory_hostname is search('prt')
   - name: load the EM7 license
@@ -120,10 +102,8 @@
     - name: reboot the VM
       reboot:
         post_reboot_delay: 10
+        reboot_timeout: 90
       become: "{{ true if inventory_hostname is search('em7') else false }}"
-    - name: wait 90 seconds for VM to become reachable
-      wait_for_connection:
-        timeout: 90
     when:
       - inventory_hostname is search('em7mc') or inventory_hostname is search('em7dc')
   when:
