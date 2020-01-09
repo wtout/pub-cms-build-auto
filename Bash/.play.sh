@@ -126,9 +126,9 @@ function install_packages() {
 	else
 		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
 		then
-			echo "Upgrading Ansible from version $(ansible --version | grep '^ansible' | cut -d ' ' -f2)"
+			printf "\nUpgrading Ansible from version $(ansible --version | grep '^ansible' | cut -d ' ' -f2)"
 			pip install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION}
-			[[ ${?} == 0 ]] && printf " Upgraded Ansible to   version ${ANSIBLE_VERSION}\n" || exit 1
+			[[ ${?} == 0 ]] && printf " to version ${ANSIBLE_VERSION}\n" || exit 1
 		fi
 	fi
 }

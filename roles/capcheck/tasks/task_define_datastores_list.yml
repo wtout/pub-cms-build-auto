@@ -1,7 +1,7 @@
 ---
 # Tasks to define lists of datastores
 - block:
-  - name: define list of datastores to host the {{vm_group}} VMs
+  - name: define list of datastores to host the {{ vm_group }} VMs
     set_fact:
       mylist: "{{ mylist|default([]) + [ds_item.name] }}"
     loop: "{{ ds_list }}"
@@ -10,6 +10,7 @@
     when:
       - ds_item.freeSpace >= (hostvars[groups[vm_group]|first]['vm']['disk']|int + hostvars[groups[vm_group]|first]['vm']['memory']|int) * 1024|pow(3)
       - ds_item.name is not search('Do Not Use')
+      - ds_item.maintenanceMode is search('normal')
 
   - name: check if there is at least 2 datastores to host {{vm_group}}
     assert:
@@ -19,26 +20,26 @@
 
   - name: define {{vm_group}} required space
     set_fact:
-      vm_required_space: "{{vm_required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int}}"
-    loop: "{{groups[vm_group]}}"
+      vm_required_space: "{{ vm_required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int }}"
+    loop: "{{ groups[vm_group] }}"
     loop_control:
       loop_var: task_item
 
-  - name: define {{vm_group}} datastores free space
+  - name: define {{ vm_group }} datastores free space
     set_fact:
-      vm_free_space: "{{vm_free_space|default(0)|int + myvar[0]}}"
+      vm_free_space: "{{ vm_free_space|default(0)|int + myvar[0] }}"
     vars:
-      myvar: "{{ds_list|selectattr('name', 'equalto', ds_item)|map(attribute='freeSpace')|list}}"
-    loop: "{{mylist}}"
+      myvar: "{{ ds_list|selectattr('name', 'equalto', ds_item)|map(attribute='freeSpace')|list }}"
+    loop: "{{ mylist }}"
     loop_control:
       loop_var: ds_item
 
   - debug:
       msg:
-        - "{{vm_group}} required storage space: {{(vm_required_space|float / 1024)|string + ' TiB' if (vm_required_space|int)|string|length > 3 else vm_required_space|string + ' GiB'}}"
-        - "{{vm_group}} available storage space: {{(vm_free_space|float / 1024|pow(4))|string + ' TiB' if ((vm_free_space|int)|string|length > 12 and (vm_required_space|int)|string|length > 3) else (vm_free_space|float / 1024|pow(3))|string + ' GiB'}}"
+        - "{{ vm_group }} required storage space: {{ (vm_required_space|float / 1024)|string + ' TiB' if (vm_required_space|int)|string|length > 3 else vm_required_space|string + ' GiB' }}"
+        - "{{ vm_group }} available storage space: {{ (vm_free_space|float / 1024|pow(4))|string + ' TiB' if ((vm_free_space|int)|string|length > 12 and (vm_required_space|int)|string|length > 3) else (vm_free_space|float / 1024|pow(3))|string + ' GiB' }}"
 
-  - name: check if there is enough space to host {{vm_group}} VMs
+  - name: check if there is enough space to host {{ vm_group }} VMs
     assert:
       that:
         - "vm_free_space|float / 1023|pow(3) >= vm_required_space|float"
