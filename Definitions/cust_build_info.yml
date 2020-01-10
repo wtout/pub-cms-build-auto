@@ -4,8 +4,8 @@
   # Official customer name (string)
   customer_name: build3
 
-  # Deployment model (string as/ax/hs/hm/hx)
-  deployment_model: as
+  # Deployment model (string a/h)
+  deployment_model: a
 
   # Number of primary EM7 Portals (integer, even) [2 - 4]
   primary_number_of_prts: 2
@@ -14,7 +14,7 @@
   primary_number_of_mcs: 2
 
   # Number of primary EM7 Data Collectors (integer, even) [2 - 12]
-  primary_number_of_dcs: 2
+  primary_number_of_dcs: 8
 
   # Disaster recovery (boolean yes/no)
   disaster_recovery: yes
