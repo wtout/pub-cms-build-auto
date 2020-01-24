@@ -1,0 +1,1 @@
+ansible_host: "{{netconfig.ippool1[1] if netconfig.ippool1 | length >= 2 else customer.octets + '.' + netconfig.octetpool1[1]|string}}"

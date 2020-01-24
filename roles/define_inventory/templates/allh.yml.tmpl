@@ -1,174 +1,3 @@
----
-# Variables for all hosts
-
-##################################################################################
-# Customer specific information
-##################################################################################
-customer:
-
-  # Official build name
-  name: '{{ customer_definition.customer_name }}'
-
-  # Primary name prefix
-  name_prefix: '{{ customer_definition.primary_name_prefix }}'
-
-  # Primary first 3 octets
-  octets: '{{ customer_definition.primary_octets }}'
-
-  # Disaster recovery (boolean yes/no)
-  disaster_recovery: {{ customer_definition.disaster_recovery }}
-
-  # Secondary name prefix
-  secondary_name_prefix: '{{ customer_definition.secondary_name_prefix if customer_definition.disaster_recovery else "" }}'
-
-  # Secondary first 3 octets
-  secondary_octets: '{{ customer_definition.secondary_octets if customer_definition.disaster_recovery else "" }}'
-
-  # Release version
-  release: '{{ customer_definition.release_version }}'
-
-
-##################################################################################
-# Datacenter where the stack is to be built in
-##################################################################################
-datacenter:
-
-  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC
-  name: '{{ customer_definition.datacenter_name }}'
-
-  # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use
-  # For hosted deployments DO NOT TOUCH
-  resources: [ '{{ resources|join(',')|replace(",", "', '") if customer_definition.deployment_model|list|first == 'a' else "" }}' ]
-
-  # ONLY for on-premise deployments, define the esxi hosts username ONLY if different than the standard
-  # For hosted deployments DO NOT TOUCH
-  hostuser: '{{ customer_definition.esxi_host_username if customer_definition.deployment_model|list|first == 'a' else "" }}'
-
-  # ONLY for on-premise deployments, define the esxi hosts password ONLY if different than the standard
-  # For hosted deployments DO NOT TOUCH
-  hostpass: '{{ customer_definition.esxi_host_password if customer_definition.deployment_model|list|first == 'a' else "" }}'
-
-
-##################################################################################
-# If a bastion server (a.k.a linux jump server) is to be used, the address must be provided
-##################################################################################
-bastion:
-  address: []
-#  address: [ '10.225.228.240' ]
-
-
-##################################################################################
-# System configuration variables
-##################################################################################
-sysconfig:
-
-  # DNS servers list
-  dns_servers: [ '172.19.251.21', '172.19.251.22' ]
-
-  # Domain name to use
-  domain_name: 'cisco-cms.com'
-
-  # NTP server
-  ntp_server: '{{ "{{ customer.octets }}" + ".62" }}'
-  secondary_ntp_server: '{{ "{{ customer.secondary_octets }}" + ".62" if customer_definition.disaster_recovery else "" }}'
-
-
-##################################################################################
-# Puppet server information: ensure you are pointing to the correct puppet server
-##################################################################################
-puppet:
-
-  # VM name
-  vmname: '{{ customer_definition.puppet_server_name }}'
-
-  # FQDN
-  fqdn: '{{ customer_definition.puppet_server_name }}.cisco-cms.com'
-
-  # ip address
-  ipaddress: '{{ [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][customer_definition.puppet_server_name[-1:]|int-1] }}'
-
-
-##################################################################################
-# Yum server information
-##################################################################################
-repo:
-
-  # baseurl
-  baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'
-
-  # VM name
-  vmname: 'alln1qsyumrpp01'
-
-  # FQDN
-  fqdn: 'alln1qsyumrpp01.cisco-cms.com'
-
-  # ip address
-  ipaddress: '172.19.251.54'
-
-
-##################################################################################
-# Splunk information. Although the values in this section do not typically change from one customer to another, ensure they are correct 
-##################################################################################
-splunk:
-
-  # license master ip
-  license_master_ip: '172.19.252.22'
-
-  # head-end indexer ip (hostname)
-  he_indexer01_ip: 'alln1splidxp01'
-  he_indexer02_ip: ''
-
-  # head-end search-head ip (hostname)
-  he_searchhead01_ip: 'alln1splsrcp01'
-  he_searchhead02_ip: 'alln1splsrcp02'
-
-  # head-end deployment server ip
-  he_deployment_server_ip: '172.19.252.21'
-
-  # head-end deployment server hostname
-  he_deployment_server: 'alln1-spl-ds-p01'
-
-  # mom indexer ip
-  mom_indexer1_ip: '172.19.252.28'
-  mom_indexer2_ip: '172.19.252.29'
-
-  # mom cluster master ip
-  mom_clustermaster_ip: ''
-
-  # tile server hostname
-  tile: 'alln1spltlsp01'
-
-
-#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
-##################################################################################
-# Do NOT change anything below this line
-##################################################################################
-#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
-
-##################################################################################
-# Service VIPs
-##################################################################################
-vip:
-
-  # Message collectors VIP
-  mc: "{{ '{{' }} customer.octets {{ '}}' }}.42"
-
-  # EM7 portals (application servers) VIP
-  prt: "{{ '{{' }} customer.octets {{ '}}' }}.49"
-
-  # EM7 databases VIP
-  db: "{{ '{{' }} customer.octets {{ '}}' }}.40"
-
-  # Splunk search heads VIP
-  src: "{{ '{{' }} customer.octets {{ '}}' }}.41"
-
-  # Relay servers VIP
-  rly: "{{ '{{' }} customer.octets {{ '}}' }}.120"
-
-  # Relay servers database VIP
-  rly_db: "{{ '{{' }} customer.octets {{ '}}' }}.1"
-
-
 ##################################################################################
 # VM specific information
 ##################################################################################
@@ -185,13 +14,16 @@ vm_vars:
     em7db:
 
       # number of CPUs
-      cpu: '12'
+      cpu: "{{ environment_definition.vm_size.em7.em7db.cpu if (environment_definition.vm_size.em7.em7db.cpu is defined and environment_definition.vm_size.em7.em7db.cpu != none) else '12' }}"
 
       # Memory size in GiB
-      memory: '256'
+      memory: "{{ environment_definition.vm_size.em7.em7db.memory if (environment_definition.vm_size.em7.em7db.memory is defined and environment_definition.vm_size.em7.em7db.memory != none) else '256' }}"
 
       # Disks sizing in GiB
-      disk0: '1024'
+      disk0: "{{ environment_definition.vm_size.em7.em7db.disk0 if (environment_definition.vm_size.em7.em7db.disk0 is defined and environment_definition.vm_size.em7.em7db.disk0 != none) else '1024' }}"
+      disk1: "{{ environment_definition.vm_size.em7.em7db.disk1 if (environment_definition.vm_size.em7.em7db.disk1 is defined and environment_definition.vm_size.em7.em7db.disk1 != none) else '0' }}"
+      disk2: "{{ environment_definition.vm_size.em7.em7db.disk2 if (environment_definition.vm_size.em7.em7db.disk2 is defined and environment_definition.vm_size.em7.em7db.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.em7.em7db.disk3 if (environment_definition.vm_size.em7.em7db.disk3 is defined and environment_definition.vm_size.em7.em7db.disk3 != none) else '0' }}"
 
       # Network interface 1
       ################
@@ -238,13 +70,16 @@ vm_vars:
     em7dc:
 
       # number of CPUs
-      cpu: '24'
+      cpu: "{{ environment_definition.vm_size.em7.em7dc.cpu if (environment_definition.vm_size.em7.em7dc.cpu is defined and environment_definition.vm_size.em7.em7dc.cpu != none) else '24' }}"
 
       # Memory size in GiB
-      memory: '24'
+      memory: "{{ environment_definition.vm_size.em7.em7dc.memory if (environment_definition.vm_size.em7.em7dc.memory is defined and environment_definition.vm_size.em7.em7dc.memory != none) else '24' }}"
 
       # Disks sizing in GiB
-      disk0: '150'
+      disk0: "{{ environment_definition.vm_size.em7.em7dc.disk0 if (environment_definition.vm_size.em7.em7dc.disk0 is defined and environment_definition.vm_size.em7.em7dc.disk0 != none) else '150' }}"
+      disk1: "{{ environment_definition.vm_size.em7.em7dc.disk1 if (environment_definition.vm_size.em7.em7dc.disk1 is defined and environment_definition.vm_size.em7.em7dc.disk1 != none) else '0' }}"
+      disk2: "{{ environment_definition.vm_size.em7.em7dc.disk2 if (environment_definition.vm_size.em7.em7dc.disk2 is defined and environment_definition.vm_size.em7.em7dc.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.em7.em7dc.disk3 if (environment_definition.vm_size.em7.em7dc.disk3 is defined and environment_definition.vm_size.em7.em7dc.disk3 != none) else '0' }}"
 
       # Network interface 1
       ################
@@ -291,13 +126,16 @@ vm_vars:
     em7mc:
 
       # number of CPUs
-      cpu: '2'
+      cpu: "{{ environment_definition.vm_size.em7.em7mc.cpu if (environment_definition.vm_size.em7.em7mc.cpu is defined and environment_definition.vm_size.em7.em7mc.cpu != none) else '2' }}"
 
       # Memory size in GiB
-      memory: '12'
+      memory: "{{ environment_definition.vm_size.em7.em7mc.memory if (environment_definition.vm_size.em7.em7mc.memory is defined and environment_definition.vm_size.em7.em7mc.memory != none) else '12' }}"
 
       # Disks sizing in GiB
-      disk0: '90' 
+      disk0: "{{ environment_definition.vm_size.em7.em7mc.disk0 if (environment_definition.vm_size.em7.em7mc.disk0 is defined and environment_definition.vm_size.em7.em7mc.disk0 != none) else '90' }}"
+      disk1: "{{ environment_definition.vm_size.em7.em7mc.disk1 if (environment_definition.vm_size.em7.em7mc.disk1 is defined and environment_definition.vm_size.em7.em7mc.disk1 != none) else '0' }}"
+      disk2: "{{ environment_definition.vm_size.em7.em7mc.disk2 if (environment_definition.vm_size.em7.em7mc.disk2 is defined and environment_definition.vm_size.em7.em7mc.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.em7.em7mc.disk3 if (environment_definition.vm_size.em7.em7mc.disk3 is defined and environment_definition.vm_size.em7.em7mc.disk3 != none) else '0' }}"
 
       # Network interface 1
       ################
@@ -344,13 +182,16 @@ vm_vars:
     em7prt:
 
       # number of CPUs
-      cpu: '8'
+      cpu: "{{ environment_definition.vm_size.em7.em7prt.cpu if (environment_definition.vm_size.em7.em7prt.cpu is defined and environment_definition.vm_size.em7.em7prt.cpu != none) else '8' }}"
 
       # Memory size in GiB
-      memory: '28'
+      memory: "{{ environment_definition.vm_size.em7.em7prt.memory if (environment_definition.vm_size.em7.em7prt.memory is defined and environment_definition.vm_size.em7.em7prt.memory != none) else '28' }}"
 
       # Disks sizing in GiB
-      disk0: '62' 
+      disk0: "{{ environment_definition.vm_size.em7.em7prt.disk0 if (environment_definition.vm_size.em7.em7prt.disk0 is defined and environment_definition.vm_size.em7.em7prt.disk0 != none) else '62' }}"
+      disk1: "{{ environment_definition.vm_size.em7.em7prt.disk1 if (environment_definition.vm_size.em7.em7prt.disk1 is defined and environment_definition.vm_size.em7.em7prt.disk1 != none) else '0' }}"
+      disk2: "{{ environment_definition.vm_size.em7.em7prt.disk2 if (environment_definition.vm_size.em7.em7prt.disk2 is defined and environment_definition.vm_size.em7.em7prt.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.em7.em7prt.disk3 if (environment_definition.vm_size.em7.em7prt.disk3 is defined and environment_definition.vm_size.em7.em7prt.disk3 != none) else '0' }}"
 
       # Network interface 1
       ################
@@ -402,14 +243,16 @@ vm_vars:
     spldpl:
 
       # number of CPUs
-      cpu: '2'
+      cpu: "{{ environment_definition.vm_size.spl.spldpl.cpu if (environment_definition.vm_size.spl.spldpl.cpu is defined and environment_definition.vm_size.spl.spldpl.cpu != none) else '2' }}"
 
       # Memory size in GiB
-      memory: '8'
+      memory: "{{ environment_definition.vm_size.spl.spldpl.memory if (environment_definition.vm_size.spl.spldpl.memory is defined and environment_definition.vm_size.spl.spldpl.memory != none) else '8' }}"
 
       # Disks sizing in GiB
-      disk0: '37'
-      disk1: '25'
+      disk0: "{{ environment_definition.vm_size.spl.spldpl.disk0 if (environment_definition.vm_size.spl.spldpl.disk0 is defined and environment_definition.vm_size.spl.spldpl.disk0 != none) else '37' }}"
+      disk1: "{{ environment_definition.vm_size.spl.spldpl.disk1 if (environment_definition.vm_size.spl.spldpl.disk1 is defined and environment_definition.vm_size.spl.spldpl.disk1 != none) else '25' }}"
+      disk2: "{{ environment_definition.vm_size.spl.spldpl.disk2 if (environment_definition.vm_size.spl.spldpl.disk2 is defined and environment_definition.vm_size.spl.spldpl.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.spl.spldpl.disk3 if (environment_definition.vm_size.spl.spldpl.disk3 is defined and environment_definition.vm_size.spl.spldpl.disk3 != none) else '0' }}"
 
       # Network interface 1
       ################
@@ -456,16 +299,16 @@ vm_vars:
     splind:
 
       # number of CPUs
-      cpu: '4'
+      cpu: "{{ environment_definition.vm_size.spl.splind.cpu if (environment_definition.vm_size.spl.splind.cpu is defined and environment_definition.vm_size.spl.splind.cpu != none) else '4' }}"
 
       # Memory size in GiB
-      memory: '8'
+      memory: "{{ environment_definition.vm_size.spl.splind.memory if (environment_definition.vm_size.spl.splind.memory is defined and environment_definition.vm_size.spl.splind.memory != none) else '8' }}"
 
       # Disks sizing in GiB
-      disk0: '37'
-      disk1: '25'
-      disk2: '100'
-      disk3: '100'
+      disk0: "{{ environment_definition.vm_size.spl.splind.disk0 if (environment_definition.vm_size.spl.splind.disk0 is defined and environment_definition.vm_size.spl.splind.disk0 != none) else '37' }}"
+      disk1: "{{ environment_definition.vm_size.spl.splind.disk1 if (environment_definition.vm_size.spl.splind.disk1 is defined and environment_definition.vm_size.spl.splind.disk1 != none) else '25' }}"
+      disk2: "{{ environment_definition.vm_size.spl.splind.disk2 if (environment_definition.vm_size.spl.splind.disk2 is defined and environment_definition.vm_size.spl.splind.disk2 != none) else '100' }}"
+      disk3: "{{ environment_definition.vm_size.spl.splind.disk3 if (environment_definition.vm_size.spl.splind.disk3 is defined and environment_definition.vm_size.spl.splind.disk3 != none) else '100' }}"
 
       # Network interface 1
       ################
@@ -512,14 +355,16 @@ vm_vars:
     splmas:
 
       # number of CPUs
-      cpu: '2'
+      cpu: "{{ environment_definition.vm_size.spl.splmas.cpu if (environment_definition.vm_size.spl.splmas.cpu is defined and environment_definition.vm_size.spl.splmas.cpu != none) else '2' }}"
 
       # Memory size in GiB
-      memory: '8'
+      memory: "{{ environment_definition.vm_size.spl.splmas.memory if (environment_definition.vm_size.spl.splmas.memory is defined and environment_definition.vm_size.spl.splmas.memory != none) else '8' }}"
 
       # Disks sizing in GiB
-      disk0: '37'
-      disk1: '25'
+      disk0: "{{ environment_definition.vm_size.spl.splmas.disk0 if (environment_definition.vm_size.spl.splmas.disk0 is defined and environment_definition.vm_size.spl.splmas.disk0 != none) else '37' }}"
+      disk1: "{{ environment_definition.vm_size.spl.splmas.disk1 if (environment_definition.vm_size.spl.splmas.disk1 is defined and environment_definition.vm_size.spl.splmas.disk1 != none) else '25' }}"
+      disk2: "{{ environment_definition.vm_size.spl.splmas.disk2 if (environment_definition.vm_size.spl.splmas.disk2 is defined and environment_definition.vm_size.spl.splmas.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.spl.splmas.disk3 if (environment_definition.vm_size.spl.splmas.disk3 is defined and environment_definition.vm_size.spl.splmas.disk3 != none) else '0' }}"
 
       # Network interface 1
       ################
@@ -566,14 +411,16 @@ vm_vars:
     splsrc:
 
       # number of CPUs
-      cpu: '8'
+      cpu: "{{ environment_definition.vm_size.spl.splsrc.cpu if (environment_definition.vm_size.spl.splsrc.cpu is defined and environment_definition.vm_size.spl.splsrc.cpu != none) else '8' }}"
 
       # Memory size in GiB
-      memory: '16'
+      memory: "{{ environment_definition.vm_size.spl.splsrc.memory if (environment_definition.vm_size.spl.splsrc.memory is defined and environment_definition.vm_size.spl.splsrc.memory != none) else '16' }}"
 
       # Disks sizing in GiB
-      disk0: '37'
-      disk1: '25'
+      disk0: "{{ environment_definition.vm_size.spl.splsrc.disk0 if (environment_definition.vm_size.spl.splsrc.disk0 is defined and environment_definition.vm_size.spl.splsrc.disk0 != none) else '37' }}"
+      disk1: "{{ environment_definition.vm_size.spl.splsrc.disk1 if (environment_definition.vm_size.spl.splsrc.disk1 is defined and environment_definition.vm_size.spl.splsrc.disk1 != none) else '25' }}"
+      disk2: "{{ environment_definition.vm_size.spl.splsrc.disk2 if (environment_definition.vm_size.spl.splsrc.disk2 is defined and environment_definition.vm_size.spl.splsrc.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.spl.splsrc.disk3 if (environment_definition.vm_size.spl.splsrc.disk3 is defined and environment_definition.vm_size.spl.splsrc.disk3 != none) else '0' }}"
 
       # Network interface 1
       ################
@@ -620,14 +467,16 @@ vm_vars:
   lnxjmp:
 
     # number of CPUs
-    cpu: '2'
+    cpu: "{{ environment_definition.vm_size.lnxjmp.cpu if (environment_definition.vm_size.lnxjmp.cpu is defined and environment_definition.vm_size.lnxjmp.cpu != none) else '2' }}"
 
     # Memory size in GiB
-    memory: '8'
+    memory: "{{ environment_definition.vm_size.lnxjmp.memory if (environment_definition.vm_size.lnxjmp.memory is defined and environment_definition.vm_size.lnxjmp.memory != none) else '8' }}"
 
     # Disks sizing in GiB
-    disk0: '37'
-    disk1: '25'
+    disk0: "{{ environment_definition.vm_size.lnxjmp.disk0 if (environment_definition.vm_size.lnxjmp.disk0 is defined and environment_definition.vm_size.lnxjmp.disk0 != none) else '37' }}"
+    disk1: "{{ environment_definition.vm_size.lnxjmp.disk1 if (environment_definition.vm_size.lnxjmp.disk1 is defined and environment_definition.vm_size.lnxjmp.disk1 != none) else '25' }}"
+    disk2: "{{ environment_definition.vm_size.lnxjmp.disk2 if (environment_definition.vm_size.lnxjmp.disk2 is defined and environment_definition.vm_size.lnxjmp.disk2 != none) else '0' }}"
+    disk3: "{{ environment_definition.vm_size.lnxjmp.disk3 if (environment_definition.vm_size.lnxjmp.disk3 is defined and environment_definition.vm_size.lnxjmp.disk3 != none) else '0' }}"
 
     # Network interface 1
     ################
@@ -674,16 +523,16 @@ vm_vars:
   rly:
 
     # number of CPUs
-    cpu: '4'
+    cpu: "{{ environment_definition.vm_size.rly.cpu if (environment_definition.vm_size.rly.cpu is defined and environment_definition.vm_size.rly.cpu != none) else '4' }}"
 
     # Memory size in GiB
-    memory: '8'
+    memory: "{{ environment_definition.vm_size.rly.memory if (environment_definition.vm_size.rly.memory is defined and environment_definition.vm_size.rly.memory != none) else '8' }}"
 
     # Disks sizing in GiB
-    disk0: '37'
-    disk1: '25'
-    disk2: '100'
-    disk3: '450'
+    disk0: "{{ environment_definition.vm_size.rly.disk0 if (environment_definition.vm_size.rly.disk0 is defined and environment_definition.vm_size.rly.disk0 != none) else '37' }}"
+    disk1: "{{ environment_definition.vm_size.rly.disk1 if (environment_definition.vm_size.rly.disk1 is defined and environment_definition.vm_size.rly.disk1 != none) else '25' }}"
+    disk2: "{{ environment_definition.vm_size.rly.disk2 if (environment_definition.vm_size.rly.disk2 is defined and environment_definition.vm_size.rly.disk2 != none) else '100' }}"
+    disk3: "{{ environment_definition.vm_size.rly.disk3 if (environment_definition.vm_size.rly.disk3 is defined and environment_definition.vm_size.rly.disk3 != none) else '450' }}"
 
     # Network interface 1
     ################

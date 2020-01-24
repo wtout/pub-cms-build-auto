@@ -4,29 +4,29 @@
   - name: read customer definition
     include_vars:
       file: "{{ SYS_NAME }}"
-      name: 'customer_definition'
+      name: 'environment_definition'
 
-  - debug: var=customer_definition
+  - debug: var=environment_definition
   - debug:
       msg:
-        - "{{ customer_definition.deployment_model }}"
+        - "{{ environment_definition.customer.deployment_model }}"
 
   - name: check if required variables are defined
     set_fact:
-      cn: "{{ 'customer_name is not defined' if customer_definition.customer_name == none else '' }}"
-      dm: "{{ 'deployment_model is not defined' if customer_definition.deployment_model == none else '' }}"
-      np: "{{ 'primary number of Portals is not defined' if customer_definition.primary_number_of_prts == none else '' }}"
-      nm: "{{ 'primary number of Message Collectors is not defined' if customer_definition.primary_number_of_mcs == none else '' }}"
-      nd: "{{ 'primary number of Data Collectors is not defined' if customer_definition.primary_number_of_dcs == none else '' }}"
-      dr: "{{ 'disaster_recovery is not defined' if customer_definition.disaster_recovery == none else '' }}"
-      pn: "{{ 'primary_name_prefix is not defined' if customer_definition.primary_name_prefix == none else '' }}"
-      po: "{{ 'primary_octets is not defined' if customer_definition.primary_octets == none else '' }}"
-      sn: "{{ 'secondary_name_prefix is not defined' if (customer_definition.disaster_recovery and customer_definition.secondary_name_prefix == none) else '' }}"
-      so: "{{ 'secondary_octets is not defined' if (customer_definition.disaster_recovery and customer_definition.secondary_octets == none) else '' }}"
-      rv: "{{ 'release_version is not defined' if customer_definition.release_version == none else '' }}"
-      dn: "{{ 'datacenter_name is not defined' if customer_definition.datacenter_name == none else '' }}"
-      dh: "{{ 'datacenter_resources is not defined' if (customer_definition.deployment_model != none and customer_definition.deployment_model is search('a') and customer_definition.datacenter_resources == none) else '' }}"
-      ps: "{{ 'puppet_server_name is not defined' if customer_definition.puppet_server_name == none else '' }}"
+      cn: "{{ 'customer name is not defined' if environment_definition.customer.name == none else '' }}"
+      dm: "{{ 'deployment model is not defined' if environment_definition.customer.deployment_model == none else '' }}"
+      np: "{{ 'primary number of Portals is not defined' if environment_definition.customer.primary.number_of_prts == none else '' }}"
+      nm: "{{ 'primary number of Message Collectors is not defined' if environment_definition.customer.primary.number_of_mcs == none else '' }}"
+      nd: "{{ 'primary number of Data Collectors is not defined' if environment_definition.customer.primary.number_of_dcs == none else '' }}"
+      dr: "{{ 'disaster recovery is not defined' if environment_definition.customer.disaster_recovery == none else '' }}"
+      pn: "{{ 'primary name_prefix is not defined' if environment_definition.customer.primary.name_prefix == none else '' }}"
+      po: "{{ 'primary octets is not defined' if environment_definition.customer.primary.octets == none else '' }}"
+      sn: "{{ 'secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.name_prefix == none) else '' }}"
+      so: "{{ 'secondary octets is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.octets == none) else '' }}"
+      rv: "{{ 'release_version is not defined' if environment_definition.customer.release_version == none else '' }}"
+      dn: "{{ 'datacenter name is not defined' if environment_definition.datacenter.name == none else '' }}"
+      dh: "{{ 'datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.datacenter.resources == none) else '' }}"
+      ps: "{{ 'puppet server_name is not defined' if environment_definition.puppet.server_name == none else '' }}"
 
   - name: verify that all variables are defined
     assert:
@@ -38,16 +38,16 @@
   - name: check if deployment model value is valid
     assert:
       that:
-        - not customer_definition.deployment_model | lower | regex_search('a|h') == none
-      fail_msg: "deployment_model is not valid. Only a and h are valid"
+        - not environment_definition.customer.deployment_model | lower | regex_search('a|h') == none
+      fail_msg: "deployment_model is not valid. Only a, h and u are valid"
 
   - name: check if number of EM7 Portals, MCs and DCs value is valid
     assert:
       that:
-        - "customer_definition.primary_number_of_{{ loop_item.name }} | int >= 2"
-        - "customer_definition.primary_number_of_{{ loop_item.name }} | int <= loop_item.max_value"
-        - "customer_definition.primary_number_of_{{ loop_item.name }} | int % 2 == 0"
-      fail_msg: "customer_definition.primary_number_of_{{ loop_item.name }} is not valid. Only even numbers in [2-{{ loop_item.max_value }}] are valid"
+        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int >= 2"
+        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int <= loop_item.max_value"
+        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int % 2 == 0"
+      fail_msg: "environment_definition.customer.primary.number_of_{{ loop_item.name }} is not valid. Only even numbers in [2-{{ loop_item.max_value }}] are valid"
     loop:
       - { 'name': 'prts', 'max_value': 4 }
       - { 'name': 'mcs', 'max_value': 6 }
@@ -58,58 +58,58 @@
   - name: check if disaster recovery value is valid
     assert:
       that:
-        - not customer_definition.disaster_recovery | lower | regex_search('yes|no|true|false') == none
+        - not environment_definition.customer.disaster_recovery | lower | regex_search('yes|no|true|false') == none
       fail_msg: "disaster_recovery is not valid. Only yes/no/true/false are valid"
 
   - name: check if primary octets value is valid
     assert:
       that:
-        - not customer_definition.primary_octets | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}$') == none
-      fail_msg: "primary_octets is not valid. Only three octets (xxx.xxx.xxx) format is valid"
+        - not environment_definition.customer.primary.octets | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}$') == none
+      fail_msg: "primary octets is not valid. Only three octets (xxx.xxx.xxx) format is valid"
 
   - name: check if secondary octets value is valid
     assert:
       that:
-        - not customer_definition.secondary_octets | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}$') == none
-      fail_msg: "secondary_octets is not valid. Only three octets (xxx.xxx.xxx) format is valid"
-    when: customer_definition.disaster_recovery
+        - not environment_definition.customer.secondary.octets | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}$') == none
+      fail_msg: "secondary octets is not valid. Only three octets (xxx.xxx.xxx) format is valid"
+    when: environment_definition.customer.disaster_recovery
 
   - name: check if release version value is valid
     assert:
       that:
-        - not customer_definition.release_version | upper | regex_search('R\d+') == none
+        - not environment_definition.customer.release_version | upper | regex_search('R\d+') == none
       fail_msg: "release_version is not valid. Only R followed by version number (Ex. R9.1.3) format is valid"
 
   - name: check if puppet server name value is valid
     assert:
       that:
-        - not customer_definition.puppet_server_name | lower | regex_search('alln1qspupp01|alln1qspupp02|alln1qspupp03|alln1qspupp04') == none
-      fail_msg: "puppet_server_name is not valid. Only alln1qspupp01, alln1qspupp02, alln1qspupp03 and alln1qspupp04 are valid"
+        - not environment_definition.puppet.server_name | lower | regex_search('alln1qspupp01|alln1qspupp02|alln1qspupp03|alln1qspupp04') == none
+      fail_msg: "puppet server_name is not valid. Only alln1qspupp01, alln1qspupp02, alln1qspupp03 and alln1qspupp04 are valid"
 
   - name: verify if selected datacenter supports deployment model
     assert:
       that:
-        - "customer_definition.deployment_model|list|first == datacenters[customer_definition.datacenter_name]['deptype']"
-      fail_msg: "The datacenter selected, {{ customer_definition.datacenter_name }}, only supports the {{ 'on-prem' if datacenters[customer_definition.datacenter_name]['deptype'] == 'a' else 'hosted' }} deployment model. Aborting!"
+        - "datacenters[environment_definition.datacenter.name]['deptype'] is search(environment_definition.customer.deployment_model)"
+      fail_msg: "The datacenter selected, {{ environment_definition.datacenter.name }}, only supports the {{ 'on-prem' if datacenters[environment_definition.datacenter.name]['deptype'] is search('a') else 'hosted' }} deployment model. Aborting!"
 
   - name: verify if selected deployment model supports disaster recovery
     assert:
       that:
-        - "customer_definition.deployment_model|list|first == 'a'"
-      fail_msg: "The disaster recovery is only supported with the on-prem deployment model. Aborting!"
-    when: customer_definition.disaster_recovery
+        - "environment_definition.customer.deployment_model is search('a')"
+      fail_msg: "The disaster recovery is only supported with the on-prem or ucm deployment model. Aborting!"
+    when: environment_definition.customer.disaster_recovery
 
   - block:
     - name: verify if resources are separated
       assert:
         that:
-          - customer_definition.datacenter_resources | regex_search('\d{1,3}[,|;|\s]\s?\d{1,3}')
-        fail_msg: "The resources list {{ customer_definition.datacenter_resources }} is not a valid IP address list. Aborting!"
+          - environment_definition.datacenter.resources | regex_search('\d{1,3}[,|;|\s]\s?\d{1,3}')
+        fail_msg: "The resources list {{ environment_definition.datacenter.resources }} is not a valid IP address list. Aborting!"
       when:
-        - customer_definition.datacenter_resources | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*\d{1,3}\.')
+        - environment_definition.datacenter.resources | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*\d{1,3}\.')
     - name: define the resources list separator
       set_fact:
-        separator: "{{ ', ' if customer_definition.datacenter_resources is search(', ') else ',' if customer_definition.datacenter_resources is search(',') else '; ' if customer_definition.datacenter_resources is search('; ') else ';' if customer_definition.datacenter_resources is search(';') else ' ' }}"
+        separator: "{{ ', ' if environment_definition.datacenter.resources is search(', ') else ',' if environment_definition.datacenter.resources is search(',') else '; ' if environment_definition.datacenter.resources is search('; ') else ';' if environment_definition.datacenter.resources is search(';') else ' ' }}"
     - name: get proxy setting
       shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
       register: proxy_string
@@ -126,59 +126,59 @@
       assert:
         that:
           - ip_item | ipaddr
-        fail_msg: "The resources list {{ customer_definition.datacenter_resources }} is not a valid IP address list. Aborting!"
-      loop: "{{ customer_definition.datacenter_resources.split(separator) }}"
+        fail_msg: "The resources list {{ environment_definition.datacenter.resources }} is not a valid IP address list. Aborting!"
+      loop: "{{ environment_definition.datacenter.resources.split(separator) }}"
       loop_control:
         loop_var: ip_item
     - name: verify that there are enough resources
       assert:
         that:
-          - customer_definition.datacenter_resources.split(separator) | length >= required_number_resources|int
-        fail_msg: "The resources list contains only {{ customer_definition.datacenter_resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
+          - environment_definition.datacenter.resources.split(separator) | length >= required_number_resources|int
+        fail_msg: "The resources list contains only {{ environment_definition.datacenter.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
       vars:
-        required_number_resources: "{{ 3 if customer_definition.disaster_recovery else 2 }}"
+        required_number_resources: "{{ 3 if environment_definition.customer.disaster_recovery else 2 }}"
     - name: reformat resources list
       set_fact:
         resources: "{{ resources|default([]) + [ip_item] }}"
-      loop: "{{ customer_definition.datacenter_resources.split(separator) }}"
+      loop: "{{ environment_definition.datacenter.resources.split(separator) }}"
       loop_control:
         loop_var: ip_item
     when:
-      - customer_definition.deployment_model is search('a')
+      - environment_definition.customer.deployment_model is search('a')
 
   - block:
     - name: verify if resources are provided
       assert:
         that:
-          - customer_definition.datacenter_resources == none
-        fail_msg: "The resources list {{ customer_definition.datacenter_resources }} is not valid for a hosted deployment. Aborting!"
+          - environment_definition.datacenter.resources == none
+        fail_msg: "The resources list {{ environment_definition.datacenter.resources }} is not valid for a hosted deployment. Aborting!"
     when:
-      - customer_definition.deployment_model is search('h')
+      - environment_definition.customer.deployment_model is search('h')
 
   - name: define template variables
     set_fact:
-      number_of_prts: "{{ customer_definition.primary_number_of_prts }}"
-      number_of_mcs: "{{ customer_definition.primary_number_of_mcs }}"
-      number_of_dcs: "{{ customer_definition.primary_number_of_dcs }}"
+      number_of_prts: "{{ environment_definition.customer.primary.number_of_prts }}"
+      number_of_mcs: "{{ environment_definition.customer.primary.number_of_mcs }}"
+      number_of_dcs: "{{ environment_definition.customer.primary.number_of_dcs }}"
 
   - name: generate customer inventory
     copy:
-      src: "files/inventory{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}/"
-      dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name|lower }}"
+      src: "files/inventory{{ 'u' if environment_definition.customer.name|lower is search('ucm') else environment_definition.customer.deployment_model }}/"
+      dest: "{{ playbook_dir + '/inventories/' + environment_definition.customer.name|lower }}"
 
   - name: add disaster recovery to customer inventory
     copy:
-      src: "files/drinventory{{ 'a' if customer_definition.deployment_model is search('a') else 'h' }}/"
-      dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name|lower }}"
-    when: customer_definition.disaster_recovery
+      src: "files/drinventory{{ 'u' if environment_definition.customer.name|lower is search('ucm') else environment_definition.customer.deployment_model }}/"
+      dest: "{{ playbook_dir + '/inventories/' + environment_definition.customer.name|lower }}"
+    when: environment_definition.customer.disaster_recovery
 
   - name: customize inventory
     template:
       src: "{{tmpl_item.name}}"
       dest: "{{ tmpl_item.dest }}"
     loop:
-      - { name: 'templates/hosts.j2', dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name|lower + '/hosts.yml' }}" }
-      - { name: 'templates/all.j2', dest: "{{ playbook_dir + '/inventories/' + customer_definition.customer_name|lower + '/group_vars/all.yml' }}" }
+      - { name: 'templates/hosts.j2', dest: "{{ playbook_dir + '/inventories/' + environment_definition.customer.name|lower + '/hosts.yml' }}" }
+      - { name: 'templates/all.j2', dest: "{{ playbook_dir + '/inventories/' + environment_definition.customer.name|lower + '/group_vars/all.yml' }}" }
     loop_control:
       loop_var: tmpl_item
 

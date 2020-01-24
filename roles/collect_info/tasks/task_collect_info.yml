@@ -17,7 +17,6 @@
     register: bastion_pass
     until: bastion_pass.user_input != ''
     run_once: true
-    no_log: true
 
   - pause:
       prompt: "Confirm the Bastion password [ENTER]"
@@ -27,18 +26,35 @@
     register: bastion_pass2
     until: bastion_pass2.user_input == bastion_pass.user_input
     run_once: true
-    no_log: true
 
 ### Set Facts ###
   - block:
+    - name: process Bastion credentials
+      set_fact:
+        new_buser: '{{ bastion_user.user_input | regex_replace("\\", "\\\\") }}'
+        new_bpass: '{{ bastion_pass.user_input | regex_replace("\\", "\\\\") }}'
+    - name: process Bastion password with "
+      set_fact:
+        new_bpass: \'{{ new_bpass }}\'
+      when: bastion_pass.user_input is search('"')
+    - name: process Bastion password with '
+      set_fact:
+        new_bpass: \"{{ new_bpass | regex_replace("'", "\'") }}\"
+      when: bastion_pass.user_input is search("'")
+    - name: process Bastion password with no quotes
+      set_fact:
+        new_bpass: "{{ new_bpass }}"
+      when: bastion_pass.user_input is not regex("'|\"")
+
     - name: define Bastion credentials
       set_fact:
-        bastion: "{{bastion | default({}) | combine(new_item, recursive=true)}}"
+        bastion: "{{ bastion | default({}) | combine(new_item, recursive=true) }}"
       vars:
-        new_item: "{'{{item.key}}': '{{item.value}}'}"
+        new_item: "{'{{ item.key }}': '{{ item.value }}'}"
       with_items:
-        - { key: 'username', value: '{{bastion_user.user_input}}' }
-        - { key: 'password', value: '{{bastion_pass.user_input}}' }
+        - { key: 'username', value: '{{ new_buser }}' }
+        - { key: 'password', value: '{{ new_bpass }}' }
+
     - name: check if Bastion login credentials are defined
       assert:
         that:
@@ -48,7 +64,6 @@
           - bastion.password != ''
     when:
       - bastion_user.user_input is defined
-    no_log: true
 
 ### Vcenter ###
 ### prompts ###
@@ -64,12 +79,12 @@
   - block:
     - name: define Vcenter credentials
       set_fact:
-        vcenter: "{{vcenter | default({}) | combine(new_item, recursive=true)}}"
+        vcenter: "{{ vcenter | default({}) | combine(new_item, recursive=true) }}"
       vars:
-        new_item: "{'{{item.key}}': '{{item.value}}'}"
+        new_item: "{'{{ item.key }}': '{{ item.value }}'}"
       with_items:
-        - { key: 'username', value: '{{bastion.username}}' }
-        - { key: 'password', value: '{{bastion.password}}' }
+        - { key: 'username', value: '{{ bastion.username }}' }
+        - { key: 'password', value: '{{ bastion.password }}' }
       when:
         - bastion.username != ''
         - bastion.password != ''
@@ -84,7 +99,7 @@
     when:
       - answer.user_input is defined
       - answer.user_input == '' or answer.user_input | lower == 'yes' or answer.user_input | lower == 'y'
-    no_log: true
+  no_log: true
   when:
     - groups['bastion'] | length >= 1
     - bastion.address != [] and bastion.address != ['']
@@ -107,7 +122,6 @@
     register: vcenter_pass
     until: vcenter_pass.user_input != ''
     run_once: true
-    no_log: true
 
   - pause:
       prompt: "Confirm the Vcenter login password [ENTER]"
@@ -117,18 +131,34 @@
     register: vcenter_pass2
     until: vcenter_pass2.user_input == vcenter_pass.user_input
     run_once: true
-    no_log: true
 
 ### Set Facts ###
   - block:
+    - name: process vcenter credentials
+      set_fact:
+        new_user: '{{ vcenter_user.user_input | regex_replace("\\", "\\\\") }}'
+        new_pass: '{{ vcenter_pass.user_input | regex_replace("\\", "\\\\") }}'
+    - name: process vcenter password with "
+      set_fact:
+        new_pass: \'{{ new_pass }}\'
+      when: vcenter_pass.user_input is search('"')
+    - name: process vcenter password with '
+      set_fact:
+        new_pass: \"{{ new_pass | regex_replace("'", "\'") }}\"
+      when: vcenter_pass.user_input is search("'")
+    - name: process vcenter password with no quotes
+      set_fact:
+        new_pass: "{{ new_pass }}"
+      when: vcenter_pass.user_input is not regex("'|\"")
+
     - name: define Vcenter credentials
       set_fact:
-        vcenter: "{{vcenter | default({}) | combine(new_item, recursive=true)}}"
+        vcenter: "{{ vcenter | default({}) | combine(new_item, recursive=true) }}"
       vars:
-        new_item: "{'{{item.key}}': '{{item.value}}'}"
+        new_item: "{'{{ item.key }}': '{{ item.value }}'}"
       with_items:
-        - { key: 'username', value: '{{vcenter_user.user_input}}' }
-        - { key: 'password', value: '{{vcenter_pass.user_input}}' }
+        - { key: 'username', value: '{{ new_user }}' }
+        - { key: 'password', value: '{{ new_pass }}' }
     - name: check if Vcenter login credentials are defined
       assert:
         that:
@@ -138,7 +168,6 @@
           - vcenter.password != ''
     when:
       - vcenter_user.user_input is defined
-    no_log: true
   when:
     - (groups['bastion'] | length == 0 or bastion.address == [] or bastion.address == ['']) or (answer.user_input is defined and (answer.user_input | lower == 'no' or answer.user_input | lower == 'n'))
   no_log: true
@@ -149,16 +178,16 @@
   - name: create credentials file
     copy:
       content: '# Credentials'
-      dest: "{{VFILE}}"
+      dest: "{{ VFILE }}"
       force: true
 
   - name: Save Bastion credentials
     lineinfile:
-      path: "{{VFILE}}"
-      line: "{{task_item.name|upper}}_{{task_item.key|upper}}: {{task_item.value}}"
+      path: "{{ VFILE }}"
+      line: "{{ task_item.name|upper }}_{{ task_item.key|upper }}: {{ task_item.value }}"
     with_items:
-        - { name: 'bastion', key: 'user', value: '{{bastion.username}}' }
-        - { name: 'bastion', key: 'pass', value: '{{bastion.password}}' }
+        - { name: 'bastion', key: 'user', value: '{{ bastion.username }}' }
+        - { name: 'bastion', key: 'pass', value: '{{ bastion.password }}' }
     loop_control:
       loop_var: task_item
     when:
@@ -167,11 +196,11 @@
 
   - name: Save Vcenter credentials
     lineinfile:
-      path: "{{VFILE}}"
-      line: "{{task_item.name|upper}}_{{task_item.key|upper}}: {{task_item.value}}"
+      path: "{{ VFILE }}"
+      line: "{{ task_item.name|upper + '_' + task_item.key|upper + ': ' + task_item.value }}"
     with_items:
-        - { name: 'vcenter', key: 'user', value: '{{vcenter.username}}' }
-        - { name: 'vcenter', key: 'pass', value: '{{vcenter.password}}' }
+        - { name: 'vcenter', key: 'user', value: '{{ vcenter.username }}' }
+        - { name: 'vcenter', key: 'pass', value: '{{ vcenter.password }}' }
     loop_control:
       loop_var: task_item
   no_log: true

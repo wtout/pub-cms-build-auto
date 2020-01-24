@@ -1,0 +1,164 @@
+---
+# Variables for all hosts
+
+##################################################################################
+# Customer specific information
+##################################################################################
+customer:
+
+  # Official build name
+  name: '{{ environment_definition.customer.name }}'
+
+  # Primary name prefix
+  name_prefix: '{{ environment_definition.customer.primary.name_prefix }}'
+
+  # Primary first 3 octets
+  octets: '{{ environment_definition.customer.primary.octets }}'
+
+  # Disaster recovery (boolean yes/no)
+  disaster_recovery: {{ environment_definition.customer.disaster_recovery }}
+
+  # Secondary name prefix
+  secondary_name_prefix: '{{ environment_definition.customer.secondary.name_prefix if environment_definition.customer.disaster_recovery else "" }}'
+
+  # Secondary first 3 octets
+  secondary_octets: '{{ environment_definition.customer.secondary.octets if environment_definition.customer.disaster_recovery else "" }}'
+
+  # Release version
+  release: '{{ environment_definition.customer.release_version }}'
+
+
+##################################################################################
+# Datacenter where the stack is to be built in
+##################################################################################
+datacenter:
+
+  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC
+  name: '{{ environment_definition.datacenter.name }}'
+
+  # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use
+  # For hosted deployments DO NOT TOUCH
+  resources: [ '{{ resources|join(',')|replace(",", "', '") if environment_definition.customer.deployment_model is regex('a|u') else "" }}' ]
+
+
+##################################################################################
+# If a bastion server (a.k.a linux jump server) is to be used, the address must be provided
+##################################################################################
+bastion:
+  address: []
+#  address: [ '10.225.228.240' ]
+
+
+##################################################################################
+# System configuration variables
+##################################################################################
+sysconfig:
+
+  # DNS servers list
+  dns_servers: [ '172.19.251.21', '172.19.251.22' ]
+
+  # Domain name to use
+  domain_name: 'cisco-cms.com'
+
+  # NTP server
+  ntp_server: "{{ '{{ customer.octets }}' + '.62' }}"
+  secondary_ntp_server: "{{ '{{ customer.secondary_octets }}' + '.62' if environment_definition.customer.disaster_recovery else '' }}"
+
+
+##################################################################################
+# Puppet server information: ensure you are pointing to the correct puppet server
+##################################################################################
+puppet:
+
+  # VM name
+  vmname: '{{ environment_definition.puppet.server_name }}'
+
+  # FQDN
+  fqdn: '{{ environment_definition.puppet.server_name }}.cisco-cms.com'
+
+  # ip address
+  ipaddress: '{{ [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.server_name[-1:]|int-1] }}'
+
+
+##################################################################################
+# Yum server information
+##################################################################################
+repo:
+
+  # baseurl
+  baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'
+
+  # VM name
+  vmname: 'alln1qsyumrpp01'
+
+  # FQDN
+  fqdn: 'alln1qsyumrpp01.cisco-cms.com'
+
+  # ip address
+  ipaddress: '172.19.251.54'
+
+
+##################################################################################
+# Splunk information. Although the values in this section do not typically change from one customer to another, ensure they are correct 
+##################################################################################
+splunk:
+
+  # license master ip
+  license_master_ip: '172.19.252.22'
+
+  # head-end indexer ip (hostname)
+  he_indexer01_ip: 'alln1splidxp01'
+  he_indexer02_ip: ''
+
+  # head-end search-head ip (hostname)
+  he_searchhead01_ip: 'alln1splsrcp01'
+  he_searchhead02_ip: 'alln1splsrcp02'
+
+  # head-end deployment server ip
+  he_deployment_server_ip: '172.19.252.21'
+
+  # head-end deployment server hostname
+  he_deployment_server: 'alln1-spl-ds-p01'
+
+  # mom indexer ip
+  mom_indexer1_ip: '172.19.252.28'
+  mom_indexer2_ip: '172.19.252.29'
+
+  # mom cluster master ip
+  mom_clustermaster_ip: ''
+
+  # tile server hostname
+  tile: 'alln1spltlsp01'
+
+
+#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
+##################################################################################
+# Do NOT change anything below this line
+##################################################################################
+#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
+
+##################################################################################
+# Service VIPs
+##################################################################################
+vip:
+
+  # Message collectors VIP
+  mc: "{{ '{{' }} customer.octets {{ '}}' }}.42"
+
+  # EM7 portals (application servers) VIP
+  prt: "{{ '{{' }} customer.octets {{ '}}' }}.49"
+
+  # EM7 databases VIP
+  db: "{{ '{{' }} customer.octets {{ '}}' }}.40"
+
+  # Splunk search heads VIP
+  src: "{{ '{{' }} customer.octets {{ '}}' }}.41"
+
+  # Relay servers VIP
+  rly: "{{ '{{' }} customer.octets {{ '}}' }}.120"
+
+  # Relay servers database VIP
+  rly_db: "{{ '{{' }} customer.octets {{ '}}' }}.1"
+
+
+

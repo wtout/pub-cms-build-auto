@@ -40,22 +40,20 @@ Create your own system definition file under the _``Definitions``_ folder to con
 
 The system definition file name **must match the customer name** as defined in the system definition file. The system definition file consists of the following variables:
 
-  - **customer_name** (_String_): Required
-  - **deployment_model** (_String_): Required. Valid values are: **a** and **h**, where **a** represents “**a**ppliance” and **h** represents “**h**osted”
-  - **primary_number_of_prts** (_String_): Required. Number of EM7 portals in primary stack. Valid values are even numbers in [2-4]
-  - **primary_number_of_mcs** (_String_): Required. Number of EM7 message collectors in primary stack. Valid values are even numbers in [2-6]
-  - **primary_number_of_dcs** (_String_): Required. Number of EM7 data collectors in primary stack. Valid values are even numbers in [2-12]
-  - **disaster_recovery** (_Boolean_ **yes**/**no**): Required. Default value “**no**”
-  - **primary_name_prefix** (_String_): Required
-  - **primary_octets** (_String_): Required
-  - **secondary_name_prefix** (_String_): Required when disaster_recovery is “yes”
-  - **secondary_octets** (_String_): Required when disaster_recovery is “yes”
+  - **name** (_String_): Customer Name. Required
   - **release_version** (_String_): Required. Must start with **R** to match the naming convention in Maven
-  - **datacenter_name** (_String_): Required
-  - **datacenter_resources** (_String_): Required for on-prem deployments
-  - **esxi_host_username** (_String_): Required for on_prem deployments if different than standard creds
-  - **esxi_host_password** (_String_): Required for on_prem deployments if different than standard creds
-  - **puppet_server_name** (_String_): Required. Valid values are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
+  - **deployment_model** (_String_): Required. Valid values are: **a** and **h**, where **a** represents “**a**ppliance” and **h** represents “**h**osted”
+  - **disaster_recovery** (_Boolean_ **yes**/**no**): Required. Default value “**no**”
+  - **number_of_prts** (_String_): Required. Number of EM7 portals in primary stack. Valid values are even numbers in [2-4]
+  - **number_of_mcs** (_String_): Required. Number of EM7 message collectors in primary stack. Valid values are even numbers in [2-6]
+  - **number_of_dcs** (_String_): Required. Number of EM7 data collectors in primary stack. Valid values are even numbers in [2-12]
+  - **name_prefix** (_String_): Required. Name prefix for primary stack
+  - **octets** (_String_): Required. First three octets for primary stack
+  - **name_prefix** (_String_): Required when disaster_recovery is “yes”. Name prefix for secondary stack
+  - **octets** (_String_): Required when disaster_recovery is “yes”. First three octets for secondary stack
+  - **name** (_String_): Required. Datacenter name
+  - **resources** (_String_): Required for on-prem deployments. List of ESXI hosts
+  - **server_name** (_String_): Required. Valid values for puppet server name are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
 
 Non-standard host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file must match the name of the host as defined in the hosts.yml file. This can only be done after the system inventory has been created.
 
