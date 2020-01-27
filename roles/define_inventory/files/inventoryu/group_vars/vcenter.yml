@@ -9,6 +9,14 @@ credentials:
   username: "{{ VCENTER_USER | default('') }}"
   password: "{{ VCENTER_PASS | default('') }}"
 
+pcnpp: "{{ '%02d' | format(customer.name_prefix[-3:-1]|int + 1) }}"
+pcnpm: "{{ '%02d' | format(customer.name_prefix[-3:-1]|int - 1) }}"
+pcluster_name: "{{ customer.name_prefix + '-' + customer.name_prefix|regex_replace('[\\d]{2,}', ''~pcnpp~'') if customer.name_prefix[-3:-1]|int % 2 == 0 else customer.name_prefix|regex_replace('[\\d]{2,}', ''~pcnpm~'') + '-' + customer.name_prefix }}"
+
+scnpp: "{{ '%02d' | format(customer.secondary_name_prefix[-3:-1]|int + 1) }}"
+scnpm: "{{ '%02d' | format(customer.secondary_name_prefix[-3:-1]|int - 1) }}"
+scluster_name: "{{ customer.secondary_name_prefix + '-' + customer.secondary_name_prefix|regex_replace('[\\d]{2,}', ''~scnpp~'') if customer.secondary_name_prefix[-3:-1]|int % 2 == 0 else customer.secondary_name_prefix|regex_replace('[\\d]{2,}', ''~scnpm~'') + '-' + customer.secondary_name_prefix }}"
+
 information:
   address: "{{ datacenters[datacenter.name]['vsphere'] }}"
   datacenter: "{{ datacenter.name }}"
@@ -16,6 +24,6 @@ information:
   resources: "{{ datacenter.resources if (datacenter.resources != [] and datacenter.resources != ['']) else datacenters[datacenter.name]['resources'] if datacenters[datacenter.name]['resources'] is defined else [] }}"
   hostuser: "{{ datacenter.hostuser if (datacenter.hostuser is defined and datacenter.hostuser != '') else ESXI_HOST_USER if ESXI_HOST_USER is defined else '' }}"
   hostpass: "{{ datacenter.hostpass if (datacenter.hostpass is defined and datacenter.hostpass != '') else ESXI_HOST_PASS if ESXI_HOST_PASS is defined else '' }}"
-  cluster: "{{ datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ customer.name_prefix if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
-  drcluster: "{{ 'CMSP - '+ customer.secondary_name_prefix if customer.disaster_recovery else '' }}"
+  cluster: "{{ datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ pcluster_name if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
+  drcluster: "{{ 'CMSP - '+ scluster_name if customer.disaster_recovery else '' }}"
   folder: "{{ datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else '' }}"
