@@ -1,5 +1,5 @@
 {% include 'templates/all.yml.tmpl' %}
-{% if environment_definition.customer.name|lower is search('ucm') %}
+{% if SYS_NAME|basename|splitext|first|lower is search('ucm') %}
 {% include 'templates/allu.yml.tmpl' %}
 {% elif environment_definition.customer.deployment_model is search('a') %}
 {% include 'templates/alla.yml.tmpl' %}
