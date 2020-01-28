@@ -163,12 +163,12 @@
 
   - name: generate customer inventory
     copy:
-      src: "files/inventory{{ 'u' if SYS_NAME|basename|splitext|first|lower is search('ucm') else environment_definition.customer.deployment_model }}/"
+      src: "files/inventory{{ 'u' if environment_definition.customer.primary.name_prefix is regex('uc[\\d]{2,}') else environment_definition.customer.deployment_model }}/"
       dest: "{{ playbook_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower }}"
 
   - name: add disaster recovery to customer inventory
     copy:
-      src: "files/drinventory{{ 'u' if SYS_NAME|basename|splitext|first|lower is search('ucm') else environment_definition.customer.deployment_model }}/"
+      src: "files/drinventory{{ 'u' if environment_definition.customer.primary.name_prefix is regex('uc[\\d]{2,}') else environment_definition.customer.deployment_model }}/"
       dest: "{{ playbook_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower }}"
     when: environment_definition.customer.disaster_recovery
 
