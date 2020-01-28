@@ -149,7 +149,7 @@ function get_inventory() {
 				set -- ${@} ${arg}
 			done
 		fi
-		ansible-playbook getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS}
+		ansible-playbook getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS} -v
 		GET_INVENTORY_STATUS=${?}
 		[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
 	else
@@ -179,14 +179,15 @@ function check_updates() {
 	then
 		if [[ -f ${1} ]]
 		then
+			cp ${1} ${1}.${ENAME}
 			[[ $- =~ x ]] && debug=1 && set +x
 			[[ ! -f ${2} ]] && printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
 			[[ ${debug} == 1 ]] && set -x
-			decrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
+			decrypt_vault ${1}.${ENAME} ${2} $(git config user.email | cut -d'@' -f1)
 			[[ $- =~ x ]] && debug=1 && set +x
-			source ${1}
+			source ${1}.${ENAME}
 			[[ ${debug} == 1 ]] && set -x
-			encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
+			rm ${1}.${ENAME}
 		else
 			echo
 			read -sp "Enter your Bitbucket password [ENTER]: " BBPASS
@@ -331,7 +332,7 @@ function get_credentials() {
 				set -- ${@} ${arg}
 			done
 		fi
-		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@}
+		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@} -v
 		GET_CREDS_STATUS=${?}
 		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
 		if [[ ${BBPASS} != "" ]]
@@ -357,7 +358,7 @@ function run_playbook() {
 		[[ $- =~ x ]] && debug=1 && set +x
 		[[ ! -f ${VAULTP} ]] && echo ${BBPASS} > ${VAULTP}
 		[[ ${debug} == 1 ]] && set -x
-		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSVAULT} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS}
+		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSVAULT} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v
 		sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
 	fi
 }
@@ -378,7 +379,7 @@ function send_notification() {
 		SCRIPT_ARG=$(echo ${@} | sed -e 's/-/dash/g')
 		[ $(echo ${HOST_LIST} | wc -w) -gt 1 ] && HL=$(echo ${HOST_LIST} | sed 's/ /,/g') || HL=${HOST_LIST}
 		# Send playbook status notification
-		ansible-playbook notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}'}" --limit ${HL} --tags notify &>/dev/null &
+		ansible-playbook notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}'}" --limit ${HL} --tags notify -v &>/dev/null &
 	fi
 }
 
@@ -403,8 +404,8 @@ ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
 BBVAULT="${PWD}/.bbvault.yml"
 CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
-VAULTP="${PWD}/.vaultp"
-VAULTC="${PWD}/.vaultc"
+VAULTP="${PWD}/.vaultp.${ENAME}"
+VAULTC="${PWD}/.vaultc.${ENAME}"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
