@@ -358,7 +358,9 @@ function run_playbook() {
 		[[ $- =~ x ]] && debug=1 && set +x
 		[[ ! -f ${VAULTP} ]] && echo ${BBPASS} > ${VAULTP}
 		[[ ${debug} == 1 ]] && set -x
-		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSVAULT} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v
+		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
+		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
+		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v
 		sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
 	fi
 }
@@ -407,6 +409,7 @@ CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
 VAULTP="${PWD}/.vaultp.${ENAME}"
 VAULTC="${PWD}/.vaultc.${ENAME}"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
+PASSFILE="${PASSVAULT}.${ENAME}"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
