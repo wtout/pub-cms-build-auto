@@ -7,6 +7,7 @@
     loop: "{{ ds_list }}"
     loop_control:
       loop_var: ds_item
+      label: "{{ ds_item.name }}"
     when:
       - ds_item.freeSpace >= (hostvars[groups[vm_group]|first]['vm']['disk']|int + hostvars[groups[vm_group]|first]['vm']['memory']|int) * 1024|pow(3)
       - ds_item.name is not search('Do Not Use')

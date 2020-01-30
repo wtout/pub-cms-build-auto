@@ -21,6 +21,7 @@
     loop: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
     loop_control:
       loop_var: task_item
+      label: "{{ task_item.name }}"
     when: task_item.freeSpace >= ((vm.disk|float + vm.memory|float) * 1024|pow(3))
     #no_log: true
 

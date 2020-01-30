@@ -32,11 +32,17 @@
       - disk_info.guest_disk_info | dict2items | length >= 2
       - vm.disk1 is defined
       - vm.disk1|float > 0
+  - name: Define datastore to host Disk2 for Splunk Indexers
+    set_fact:
+      splind_datastore: "{{ hostvars[groups['vcenter']|first]['ssd_ds_names']|last if 'dr' in group_names else hostvars[groups['vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] }}"
+    when:
+      - inventory_hostname is search('splind')
+      - datacenters[datacenter.name]['deptype'] == 'a'
   - name: Define VM disk2
     set_fact:
       disk2_unit_number: "{{ (disk1_unit_number|int + 1) }}"
       disk2_size_kb: "{{ (vm.disk2|float * 1024|pow(2))|int }}"
-      disk2_datastore: "{{ disk0_datastore }}"
+      disk2_datastore: "{{ splind_datastore if (inventory_hostname is search('splind') and datacenters[datacenter.name]['deptype'] == 'a') else disk0_datastore }}"
     when:
       - vm.disk2 is defined
       - vm.disk2 != ''

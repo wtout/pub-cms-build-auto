@@ -20,6 +20,7 @@
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: loop_item
+      label: "{{ loop_item.ansible_facts.ansible_hostname }}"
 
   - debug:
       msg:
@@ -36,8 +37,9 @@
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
+      label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list }}"
     when:
-      - myvar[0] >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
+      - myvar[0] >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float + hostvars[groups['splind'][0]]['vm']['disk2']|float) / 1024
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex('(do not use)|donotuse')
 
   - assert:
@@ -57,6 +59,7 @@
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
+      label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list }}"
     when:
       - myvar[0] >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex('(do not use)|donotuse')
@@ -77,6 +80,7 @@
     loop: "{{ ssd_ds_names|zip(host_facts.results)|list }}"
     loop_control:
       loop_var: ds_item
+      label: "{{ ds_item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', ds_item.0)|map(attribute='free')|list }}"
 
   - name: define sas_ds_total_fs
     set_fact:
@@ -86,6 +90,7 @@
     loop: "{{ sas_ds_names|zip(host_facts.results)|list }}"
     loop_control:
       loop_var: ds_item
+      label: "{{ ds_item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', ds_item.0)|map(attribute='free')|list }}"
 
   - name: define lists of datastores to host the VMs
     set_fact:
