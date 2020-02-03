@@ -181,4 +181,5 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
   delegate_to: "{{groups['dr'] | first}}"
   run_once: true
-  tags: always
+  tags: ['always', 'vm_facts']
+

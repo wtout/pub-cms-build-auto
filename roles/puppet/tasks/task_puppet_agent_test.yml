@@ -105,8 +105,17 @@
       when:
         - not ansible_check_mode
         - start_puppet_push | default(true) | bool
-    when: not puppet_push_running.stat.exists
+    when:
+      - not puppet_push_running.stat.exists
 
+  - include_tasks:
+      file: task_puppet_push.yml
+      apply:
+        vars:
+          push_num: "{{ loop_item }}"
+    loop: "{{ range(1, 5 + 1)|list }}"
+    loop_control:
+      loop_var: loop_item
   when:
      - inventory_hostname is not search('em7')
   tags: puppet

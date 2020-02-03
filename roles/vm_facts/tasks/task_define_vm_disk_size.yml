@@ -24,4 +24,4 @@
       loop_var: vm_item
     run_once: true
     when:  customer.disaster_recovery
-  tags: always
+  tags: ['always', 'vm_facts']

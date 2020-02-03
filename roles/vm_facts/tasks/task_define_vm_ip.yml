@@ -23,4 +23,4 @@
     loop_control:
       loop_var: task_item
     no_log: true
-  tags: always
+  tags: ['always', 'vm_facts']
