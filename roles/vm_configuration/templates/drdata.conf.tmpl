@@ -14,7 +14,6 @@ netscaler_snip={{ customer.secondary_octets }}.55
 is4_ip_01={{ customer.secondary_octets }}.6
 isSNOWEnabled=No
 isATAEnabled=False
-isGeoServer=True
 {{ 'isCommonRelayServer=False' if inventory_hostname is search('rly') else '' }}
 customer_name={{ customer.name }}
 custNamePrefix={{ customer.secondary_name_prefix }}
