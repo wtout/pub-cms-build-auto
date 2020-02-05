@@ -113,7 +113,7 @@
       apply:
         vars:
           push_num: "{{ loop_item }}"
-    loop: "{{ range(1, 5 + 1)|list }}"
+    loop: "{{ range(1, 2 + 1)|list }}"
     loop_control:
       loop_var: loop_item
   when:
