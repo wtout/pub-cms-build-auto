@@ -11,11 +11,11 @@ credentials:
 
 pcnpp: "{{ '%02d' | format(customer.name_prefix[-3:-1]|int + 1) }}"
 pcnpm: "{{ '%02d' | format(customer.name_prefix[-3:-1]|int - 1) }}"
-pcluster_name: "{{ customer.name_prefix + '-' + customer.name_prefix|regex_replace('[\\d]{2,}', ''~pcnpp~'') if customer.name_prefix[-3:-1]|int % 2 == 0 else customer.name_prefix|regex_replace('[\\d]{2,}', ''~pcnpm~'') + '-' + customer.name_prefix }}"
+pcluster_name: "{{ customer.name_prefix + '-' + customer.name_prefix|regex_replace('[\\d]{2,}', ''~pcnpp~'') if customer.name_prefix[-3:-1]|int % 2 != 0 else customer.name_prefix|regex_replace('[\\d]{2,}', ''~pcnpm~'') + '-' + customer.name_prefix }}"
 
 scnpp: "{{ '%02d' | format(customer.secondary_name_prefix[-3:-1]|int + 1) }}"
 scnpm: "{{ '%02d' | format(customer.secondary_name_prefix[-3:-1]|int - 1) }}"
-scluster_name: "{{ customer.secondary_name_prefix + '-' + customer.secondary_name_prefix|regex_replace('[\\d]{2,}', ''~scnpp~'') if customer.secondary_name_prefix[-3:-1]|int % 2 == 0 else customer.secondary_name_prefix|regex_replace('[\\d]{2,}', ''~scnpm~'') + '-' + customer.secondary_name_prefix }}"
+scluster_name: "{{ customer.secondary_name_prefix + '-' + customer.secondary_name_prefix|regex_replace('[\\d]{2,}', ''~scnpp~'') if customer.secondary_name_prefix[-3:-1]|int % 2 != 0 else customer.secondary_name_prefix|regex_replace('[\\d]{2,}', ''~scnpm~'') + '-' + customer.secondary_name_prefix }}"
 
 information:
   address: "{{ datacenters[datacenter.name]['vsphere'] }}"

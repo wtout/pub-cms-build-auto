@@ -1,5 +1,5 @@
 {% include 'templates/all.yml.tmpl' %}
-{% if environment_definition.customer.primary.name_prefix is regex('uc[\\d]{2,}') %}
+{% if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') %}
 {% include 'templates/allu.yml.tmpl' %}
 {% elif environment_definition.customer.deployment_model is search('a') %}
 {% include 'templates/alla.yml.tmpl' %}
