@@ -183,7 +183,12 @@ function check_updates() {
 			[[ $- =~ x ]] && debug=1 && set +x
 			[[ ! -f ${2} ]] && printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
 			[[ ${debug} == 1 ]] && set -x
-			decrypt_vault ${1}.${ENAME} ${2} $(git config user.email | cut -d'@' -f1)
+			i=0
+			while [ ${i} -lt 3 ]
+			do
+				[[ $(grep "ANSIBLE_VAULT" ${1}.${ENAME}) != "" ]] && decrypt_vault ${1}.${ENAME} ${2} $(git config user.email | cut -d'@' -f1) || break
+				i=$((++i))
+			done
 			[[ $- =~ x ]] && debug=1 && set +x
 			source ${1}.${ENAME}
 			[[ ${debug} == 1 ]] && set -x
