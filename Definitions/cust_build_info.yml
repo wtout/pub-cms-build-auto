@@ -48,11 +48,11 @@ datacenter:
   # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC (string)
   name: cdra-Build-Development
 
-  # Mandatory for UCM type of on-premise deployments
+  # Required if a custom cluster name is to be used
   # The primary cluster to host the customer's primary stack
   pcluster: 
 
-  # Mandatory for UCM type of on-premise deployments
+  # Required if a custom cluster name is to be used
   # The secondary cluster to host the customer's secondary stack
   scluster: 
 
