@@ -3,10 +3,10 @@
 - block:
   - name: define total disk size per Stack VM
     set_fact:
-      vm: "{{hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true)}}"
+      vm: "{{ hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true) }}"
     vars:
-      new_var: "{'disk': '{{hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[vm_item]['vm']['disk3']|int}}'}"
-    delegate_to: "{{vm_item}}"
+      new_var: "{ 'disk': '{{hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[vm_item]['vm']['disk3']|int }}' }"
+    delegate_to: "{{ vm_item }}"
     delegate_facts: true
     loop: "{{ groups['stack'] }}"
     loop_control:
@@ -14,10 +14,10 @@
     run_once: true
   - name: define total disk size per DR VM
     set_fact:
-      vm: "{{hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true)}}"
+      vm: "{{ hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true) }}"
     vars:
-      new_var: "{'disk': '{{hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[ vm_item]['vm']['disk3']|int}}'}"
-    delegate_to: "{{vm_item}}"
+      new_var: "{ 'disk': '{{ hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[ vm_item]['vm']['disk3']|int }}' }"
+    delegate_to: "{{ vm_item }}"
     delegate_facts: true
     loop: "{{ groups['dr'] }}"
     loop_control:

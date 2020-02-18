@@ -5,16 +5,16 @@
       file: task_define_hosts_variables_lists.yml
       apply:
         vars:
-          vm_group: "{{group_item}}"
-    loop: "{{group_list}}"
+          vm_group: "{{ group_item }}"
+    loop: "{{ group_list }}"
     loop_control:
       loop_var: group_item
   - include_tasks:
       file: task_define_dr_hosts_variables_lists.yml
       apply:
         vars:
-          vm_group: "{{group_item}}"
-    loop: "{{drgroup_list}}"
+          vm_group: "{{ group_item }}"
+    loop: "{{ drgroup_list }}"
     loop_control:
       loop_var: group_item
     when:  customer.disaster_recovery

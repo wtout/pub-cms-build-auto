@@ -36,6 +36,13 @@ datacenter:
   # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC
   name: '{{ environment_definition.datacenter.name }}'
 
+  # Mandatory for UCM type of deployments
+  # The primary stack cluster name
+  pcluster: '{{ environment_definition.datacenter.pcluster if environment_definition.datacenter.pcluster != none else "" }}'
+
+  # The secondary stack cluster name
+  scluster: '{{ environment_definition.datacenter.scluster if (environment_definition.customer.disaster_recovery and environment_definition.datacenter.scluster != none) else "" }}'
+
   # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use
   # For hosted deployments DO NOT TOUCH
   resources: [ '{{ resources|join(',')|replace(",", "', '") if environment_definition.customer.deployment_model is regex('a|u') else "" }}' ]

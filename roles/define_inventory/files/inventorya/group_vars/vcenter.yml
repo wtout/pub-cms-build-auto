@@ -9,13 +9,16 @@ credentials:
   username: "{{ VCENTER_USER | default('') }}"
   password: "{{ VCENTER_PASS | default('') }}"
 
+pcluster_name: "{{ (datacenter.resources[0].split('.')|last + '-' + datacenter.resources[1].split('.')|last) if datacenter.resources[0].split('.')|last|int < datacenter.resources[1].split('.')|last|int else (datacenter.resources[1].split('.')|last + '-' + datacenter.resources[0].split('.')|last) }}"
+scluster_name: "{{ datacenter.resources[2].split('.')|last if customer.disaster_recovery else '' }}"
+
 information:
   address: "{{ datacenters[datacenter.name]['vsphere'] }}"
   datacenter: "{{ datacenter.name }}"
-  deptype: "{{ datacenters[datacenter.name]['deptype'] }}"
+  deptype: "{{ datacenters[datacenter.name]['deptype'].split(',')|last }}"
   resources: "{{ datacenter.resources if (datacenter.resources != [] and datacenter.resources != ['']) else datacenters[datacenter.name]['resources'] if datacenters[datacenter.name]['resources'] is defined else [] }}"
   hostuser: "{{ datacenter.hostuser if (datacenter.hostuser is defined and datacenter.hostuser != '') else ESXI_HOST_USER if ESXI_HOST_USER is defined else '' }}"
   hostpass: "{{ datacenter.hostpass if (datacenter.hostpass is defined and datacenter.hostpass != '') else ESXI_HOST_PASS if ESXI_HOST_PASS is defined else '' }}"
-  cluster: "{{ datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ customer.name_prefix if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
-  drcluster: "{{ 'CMSP - '+ customer.secondary_name_prefix if customer.disaster_recovery else '' }}"
+  cluster: "{{ datacenter.pcluster if datacenter.pcluster != '' else datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ pcluster_name if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
+  drcluster: "{{ datacenter.scluster if datacenter.scluster != '' else 'CMSP - '+ scluster_name if customer.disaster_recovery else '' }}"
   folder: "{{ datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else '' }}"

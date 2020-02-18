@@ -7,7 +7,7 @@
       register: pp_vm_reachable
       check_mode: no
       ignore_errors: true
-      delegate_to: localhost
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     - block:
       - name: check VM credentials
         wait_for_connection:
@@ -53,7 +53,7 @@
     register: pp_vm_reachable
     check_mode: no
     ignore_errors: true
-    delegate_to: localhost
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - include_tasks: task_remove_vm_from_class.yml
     when: pp_vm_reachable is succeeded
   when:

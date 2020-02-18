@@ -8,10 +8,6 @@
       when:
         - hostvars[groups['vcenter'][0]]['information']['cluster'] is not defined or hostvars[groups['vcenter'][0]]['information']['cluster'] == ''
 
-    - include_tasks: task_get_hosts_list.yml
-      when:
-        - hostvars[groups['vcenter'][0]]['information']['resources'] is not defined or hostvars[groups['vcenter'][0]]['information']['resources'] == []
-
     - include_tasks: task_get_datastore_facts.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'

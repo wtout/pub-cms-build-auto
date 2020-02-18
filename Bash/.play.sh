@@ -170,8 +170,9 @@ function decrypt_vault() {
 	[[ $- =~ x ]] && debug=1 && set +x
 	echo ${3} > ${2}
 	[[ ${debug} == 1 ]] && set -x
-	[[ -f ${1} ]] && ansible-vault decrypt --vault-password-file ${2} ${1} &>/dev/null
-	rm -f ${2}
+	[[ -f ${1} ]] && ansible-vault decrypt --vault-password-file ${2} ${1} 2> /tmp/decrypt_error.${PID}
+	[[ $(grep "was not found" /tmp/decrypt_error.${PID}) != "" ]] && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && ansible-vault decrypt --vault-password-file ${2} ${1} &>/dev/null
+	rm -f ${2} /tmp/decrypt_error.${PID}
 }
 
 function check_updates() {
@@ -184,10 +185,12 @@ function check_updates() {
 			[[ ! -f ${2} ]] && printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
 			[[ ${debug} == 1 ]] && set -x
 			i=0
-			while [ ${i} -lt 3 ]
+			retries=3
+			while [ ${i} -lt ${retries} ]
 			do
 				[[ $(grep "ANSIBLE_VAULT" ${1}.${ENAME}) != "" ]] && decrypt_vault ${1}.${ENAME} ${2} $(git config user.email | cut -d'@' -f1) || break
 				i=$((++i))
+				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Bitbucket password vault. Exiting!" && exit 1
 			done
 			[[ $- =~ x ]] && debug=1 && set +x
 			source ${1}.${ENAME}
@@ -365,8 +368,9 @@ function run_playbook() {
 		[[ ${debug} == 1 ]] && set -x
 		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
 		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
-		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v
-		sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
+		sleep 10 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} &
+		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
+		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr) != "" ]] && rm -f ${VAULTC} /tmp/${PID}.stderr || rm -f /tmp/${PID}.stderr
 	fi
 }
 

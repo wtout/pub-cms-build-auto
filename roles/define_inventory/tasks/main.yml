@@ -7,9 +7,6 @@
       name: 'environment_definition'
 
   - debug: var=environment_definition
-  - debug:
-      msg:
-        - "{{ environment_definition.customer.deployment_model }}"
 
   - name: check if required variables are defined
     set_fact:
@@ -26,6 +23,7 @@
       rv: "{{ 'release_version is not defined' if environment_definition.customer.release_version == none else '' }}"
       dn: "{{ 'datacenter name is not defined' if environment_definition.datacenter.name == none else '' }}"
       dh: "{{ 'datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.datacenter.resources == none) else '' }}"
+      dc: "{{ 'datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}')) else '' }}"
       ps: "{{ 'puppet server_name is not defined' if environment_definition.puppet.server_name == none else '' }}"
 
   - name: verify that all variables are defined

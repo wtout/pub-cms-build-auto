@@ -38,8 +38,7 @@
     ignore_errors: true
     when:
       - ova_nets.stdout_lines|length == 1
-      - "'rly' not in group_names"
-      - "'lnxjmp' not in group_names"
+      - inventory_hostname is not regex('rly|lnxjmp')
   - name: Update VM hardware settings with two NICs
     vmware_guest:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
@@ -71,7 +70,7 @@
     register: vmguest_2net
     ignore_errors: true
     when:
-      - ova_nets.stdout_lines|length == 2 or 'rly' in group_names or 'lnxjmp' in group_names
+      - ova_nets.stdout_lines|length == 2 or inventory_hostname is regex('rly|lnxjmp')
   - fail:
       msg: "{{ vmguest_1net.msg }}"
     when:

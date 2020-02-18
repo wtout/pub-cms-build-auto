@@ -3,7 +3,7 @@
 customer:
 
   # Official customer name (string)
-  name: build3
+  name: cust_name
 
   # Release version (string)
   release_version: R9.1.3
@@ -26,7 +26,7 @@ customer:
     number_of_dcs: 12
 
   # Primary site name prefix (string)
-    name_prefix: build3
+    name_prefix: test1
 
   # Primary site first 3 octets (string)
     octets: 172.19.112
@@ -34,7 +34,7 @@ customer:
   secondary:
 
   # Secondary site name prefix (string)
-    name_prefix: blddr
+    name_prefix: test2
 
   # Secondary site first 3 octets (string)
     octets: 172.19.115
@@ -48,6 +48,14 @@ datacenter:
   # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC (string)
   name: cdra-Build-Development
 
+  # Mandatory for UCM type of on-premise deployments
+  # The primary cluster to host the customer's primary stack
+  pcluster: 
+
+  # Mandatory for UCM type of on-premise deployments
+  # The secondary cluster to host the customer's secondary stack
+  scluster: 
+
   # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
   # For hosted deployments DO NOT TOUCH
   # Use ',', ';' or space as separator when you have more than one host
@@ -60,4 +68,4 @@ datacenter:
 puppet:
 
   # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03, alln1qspupp04 (string)
-  server_name: alln1qspupp03
+  server_name: alln1qspupp01
