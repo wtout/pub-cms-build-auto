@@ -183,7 +183,6 @@ function check_updates() {
 			cp ${1} ${1}.${ENAME}
 			[[ $- =~ x ]] && debug=1 && set +x
 			[[ ! -f ${2} ]] && printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
-			[[ ${debug} == 1 ]] && set -x
 			i=0
 			retries=3
 			while [ ${i} -lt ${retries} ]
@@ -192,7 +191,6 @@ function check_updates() {
 				i=$((++i))
 				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Bitbucket password vault. Exiting!" && exit 1
 			done
-			[[ $- =~ x ]] && debug=1 && set +x
 			source ${1}.${ENAME}
 			[[ ${debug} == 1 ]] && set -x
 			rm ${1}.${ENAME}
@@ -370,7 +368,7 @@ function run_playbook() {
 		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
 		sleep 10 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} &
 		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
-		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr) != "" ]] && rm -f ${VAULTC} /tmp/${PID}.stderr || rm -f /tmp/${PID}.stderr
+		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr) != "" ]] && rm -f ${VAULTC} ${CRVAULT} /tmp/${PID}.stderr || rm -f /tmp/${PID}.stderr
 	fi
 }
 
