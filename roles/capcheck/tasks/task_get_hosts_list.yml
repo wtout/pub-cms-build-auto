@@ -3,14 +3,14 @@
 - block:
   - name: Get hosts info
     vmware_host_service_info:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      cluster_name: "{{ cluster_name[0] if cluster_name is defined else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      cluster_name: "{{ cluster_name[0] if cluster_name is defined else information.cluster }}"
       validate_certs: no
     register: host_info
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    no_log: true
+#    no_log: true
 
   - name: define hosts_list
     set_fact:

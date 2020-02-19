@@ -3,25 +3,25 @@
 - block:
   - name: define total required space
     set_fact:
-      required_space: "{{required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int}}"
-    loop: "{{groups['stack']}}"
+      required_space: "{{ required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int }}"
+    loop: "{{ groups['stack'] }}"
     loop_control:
       loop_var: task_item
 
   - name: define total DR required space
     set_fact:
-      dr_required_space: "{{dr_required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int}}"
-    loop: "{{groups['dr']}}"
+      dr_required_space: "{{ dr_required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int }}"
+    loop: "{{ groups['dr'] }}"
     loop_control:
       loop_var: task_item
     when: customer.disaster_recovery
 
   - debug:
       msg:
-        - "Total system required storage space: {{(required_space|float / 1024)|string + ' TiB' if (required_space|int)|string|length > 3 else required_space|string + ' GiB'}}"
+        - "Total system required storage space: {{ (required_space|float / 1024)|string + ' TiB' if (required_space|int)|string|length > 3 else required_space|string + ' GiB' }}"
 
   - debug:
       msg:
-        - "Total DR system required storage space: {{(dr_required_space|float / 1024)|string + ' TiB' if (dr_required_space|int)|string|length > 3 else dr_required_space|string + ' GiB'}}"
+        - "Total DR system required storage space: {{ (dr_required_space|float / 1024)|string + ' TiB' if (dr_required_space|int)|string|length > 3 else dr_required_space|string + ' GiB' }}"
     when: customer.disaster_recovery
   tags: ['capcheck', 'vm_creation']

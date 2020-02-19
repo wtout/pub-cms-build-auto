@@ -1,34 +1,5 @@
 ---
 # tasks to delete drcluster
-- block:
-  - name: Get DR host facts
-    vmware_host_facts:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      esxi_hostname: "{{ host_item }}"
-      validate_certs: no
-    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
-    loop_control:
-      loop_var: host_item
-    register: drhost_facts
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-  - name: define DR host cluster
-    set_fact:
-      drhost_cluster: "{{ drhost_cluster|default({}) | combine( {loop_item.host_item: loop_item.ansible_facts.cluster} ) }}"
-    loop: "{{ drhost_facts.results }}"
-    loop_control:
-      loop_var: loop_item
-
-  - debug:
-      msg:
-       - "{{ drhost_cluster[host_item] }}"
-    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
-    loop_control:
-      loop_var: host_item
-  tags: vm_creation
-
 - name: Get DR VM facts
   vmware_vm_info:
     hostname: "{{ host_item }}"
@@ -88,7 +59,7 @@
     cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}"
     validate_certs: no
   register: drcluster_status
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost' }}"
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   run_once: true
   ignore_errors: true
   when: delete_drcluster|bool
@@ -109,7 +80,6 @@
     loop_control:
       loop_var: host_item
     register: drmaint_mode
-    when: drhost_cluster[host_item] == hostvars[groups['vcenter'][0]]['information']['drcluster']
 
   - name: Move DR hosts out of the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
     vmware_host:
@@ -127,7 +97,6 @@
     loop_control:
       loop_var: host_item
     register: move_drhosts
-    when: drhost_cluster[host_item] == hostvars[groups['vcenter'][0]]['information']['drcluster']
 
   - name: Put DR hosts in normal mode
     vmware_maintenancemode:
@@ -142,7 +111,6 @@
     loop_control:
       loop_var: host_item
     register: drnormal_mode
-    when: drhost_cluster[host_item] == hostvars[groups['vcenter'][0]]['information']['drcluster']
 
   - name: Delete the '{{hostvars[groups['vcenter'][0]]['information']['drcluster']}}' cluster
     vmware_cluster:
@@ -154,7 +122,7 @@
       state: absent
       validate_certs: no
     register: cust_drcluster
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost' }}"
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   run_once: true
   when:
     - drcluster_status is successful

@@ -3,14 +3,14 @@
 - block:
   - name: Get datastore info
     vmware_datastore_info:
-      hostname: "{{hostvars[groups['vcenter'][0]]['information']['address']}}"
-      username: "{{hostvars[groups['vcenter'][0]]['credentials']['username']}}"
-      password: "{{hostvars[groups['vcenter'][0]]['credentials']['password']}}"
-      datacenter: "{{hostvars[groups['vcenter'][0]]['information']['datacenter']}}"
-      cluster: "{{hostvars[groups['vcenter'][0]]['information']['cluster']}}"
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      datacenter: "{{ information.datacenter }}"
+      cluster: "{{ information.cluster }}"
       validate_certs: no
     register: datastore_info
-    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
   - name: define lists of datastores to host the VMs
     include_tasks:
@@ -19,7 +19,7 @@
       apply:
         vars:
           - vm_group: "{{ group_item }}"
-          - ds_list: "{{datastore_info.datastores | sort(attribute='freeSpace')}}"
+          - ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
     loop: "{{ group_list }}"
     loop_control:
       loop_var: group_item
@@ -33,17 +33,17 @@
 
   - name: define total free space on usable datastores
     set_fact:
-      total_fs: "{{total_fs|default(0)|int + myvar[0]}}"
+      total_fs: "{{ total_fs|default(0)|int + myvar[0] }}"
     vars:
-      myvar: "{{datastore_info.datastores|selectattr('name', 'equalto', loop_item)|map(attribute='freeSpace')|list}}"
-    loop: "{{usable_ds_list|default([])}}"
+      myvar: "{{ datastore_info.datastores|selectattr('name', 'equalto', loop_item)|map(attribute='freeSpace')|list }}"
+    loop: "{{ usable_ds_list|default([]) }}"
     loop_control:
       loop_var: loop_item
 
   - debug:
       msg:
         - "{{ usable_ds_list }}"
-        - "Total system available storage space: {{(total_fs|float / 1024|pow(4))|string + ' TiB' if (total_fs|int)|string|length > 12 else (total_fs|float / 1024|pow(3))|string + ' GiB'}}"
+        - "Total system available storage space: {{ (total_fs|float / 1024|pow(4))|string + ' TiB' if (total_fs|int)|string|length > 12 else (total_fs|float / 1024|pow(3))|string + ' GiB' }}"
 
   - assert:
       that:

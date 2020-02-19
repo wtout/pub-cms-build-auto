@@ -6,15 +6,15 @@
   - block:
     - include_tasks: task_get_cluster_name.yml
       when:
-        - hostvars[groups['vcenter'][0]]['information']['cluster'] is not defined or hostvars[groups['vcenter'][0]]['information']['cluster'] == ''
+        - information.cluster is not defined or information.cluster == ''
 
     - include_tasks: task_get_datastore_facts.yml
     when:
-      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
+      - information.deptype == 'h'
 
   - include_tasks: task_get_host_facts.yml
     when:
-      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
+      - information.deptype == 'a'
 
   when: capcheck | default(false) | bool
   tags: ['capcheck', 'vm_creation']

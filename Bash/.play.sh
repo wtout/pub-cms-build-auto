@@ -13,23 +13,20 @@ function check_repeat_job() {
 }
 
 function check_hosts_limit() {
-	if [[ "x$(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/')" == "xdeploy" ]]
+	if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]] && [[ "x$(echo ${@} | egrep -w 'vcenter')" == "x" ]]
 	then
-		if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]] && [[ "x$(echo ${@} | egrep -w 'vcenter')" == "x" ]]
+		local MYHOSTS=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}')
+		[[ "x$(echo ${@} | egrep -w '\-\-tags')" != "x" ]] && local MYTAGS=$(echo ${@} | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
+		[[ "x$(echo ${MYTAGS})" == "x" ]] && local update_args=1
+		[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation')" != "x" ]] && local update_args=1
+		if [[ ${update_args} -eq 1 ]]
 		then
-			local MYHOSTS=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}')
-			[[ "x$(echo ${@} | egrep -w '\-\-tags')" != "x" ]] && local MYTAGS=$(echo ${@} | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
-			[[ "x$(echo ${MYTAGS})" == "x" ]] && local update_args=1
-			[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation')" != "x" ]] && local update_args=1
-			if [[ ${update_args} -eq 1 ]]
-			then
-				local ARG_NAME="--limit"
-				for arg
-				do
-					shift
-					[[ "${arg}" == "${MYHOSTS}" ]] && set -- ${@} "${MYHOSTS},vcenter" || set -- ${@} ${arg}
-				done
-			fi
+			local ARG_NAME="--limit"
+			for arg
+			do
+				shift
+				[[ "${arg}" == "${MYHOSTS}" ]] && set -- ${@} "${MYHOSTS},vcenter" || set -- ${@} ${arg}
+			done
 		fi
 	fi
 	echo ${@}

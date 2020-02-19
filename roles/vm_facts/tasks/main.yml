@@ -1,6 +1,13 @@
 ---
 # Tasks for vm_facts
 - block:
+  - include_tasks: task_check_cluster_name.yml
+  when:
+    - inventory_hostname in groups['vcenter']
+    - information.deptype == 'a'
+  tags: ['always', 'vm_facts']
+
+- block:
   - include_tasks: task_define_vm_ip.yml
   - block:
     - include_tasks: task_define_vm_disk_size.yml
