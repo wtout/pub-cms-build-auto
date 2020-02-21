@@ -9,8 +9,8 @@ credentials:
   username: "{{ VCENTER_USER | default('') }}"
   password: "{{ VCENTER_PASS | default('') }}"
 
-pcluster_name: "{{ (datacenter.resources[0].split('.')|last + '-' + datacenter.resources[1].split('.')|last) if datacenter.resources[0].split('.')|last|int < datacenter.resources[1].split('.')|last|int else (datacenter.resources[1].split('.')|last + '-' + datacenter.resources[0].split('.')|last) }}"
-scluster_name: "{{ datacenter.resources[2].split('.')|last if customer.disaster_recovery else '' }}"
+pcluster_name: "{{ ((datacenter.resources[0].split('.')|last + '-' + datacenter.resources[1].split('.')|last) if datacenter.resources[0].split('.')|last|int < datacenter.resources[1].split('.')|last|int else (datacenter.resources[1].split('.')|last + '-' + datacenter.resources[0].split('.')|last)) if datacenter.resources != [] and datacenter.resources != [''] else '' }}"
+scluster_name: "{{ datacenter.resources[2].split('.')|last if (customer.disaster_recovery and datacenter.resources != [] and datacenter.resources != ['']) else '' }}"
 
 information:
   address: "{{ datacenters[datacenter.name]['vsphere'] }}"

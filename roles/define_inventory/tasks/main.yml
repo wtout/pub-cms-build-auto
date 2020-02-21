@@ -175,8 +175,8 @@
       src: "{{tmpl_item.name}}"
       dest: "{{ tmpl_item.dest }}"
     loop:
-      - { name: 'templates/hosts.j2', dest: "{{ playbook_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower + '/hosts.yml' }}" }
       - { name: 'templates/all.j2', dest: "{{ playbook_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower + '/group_vars/all.yml' }}" }
+      - { name: 'templates/hosts.j2', dest: "{{ playbook_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower + '/hosts.yml' }}" }
     loop_control:
       loop_var: tmpl_item
 

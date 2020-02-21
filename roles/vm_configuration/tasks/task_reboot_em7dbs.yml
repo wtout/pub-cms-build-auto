@@ -5,7 +5,7 @@
   - name: reboot the EM7 DBs
     reboot:
       post_reboot_delay: 30
-      reboot_timeout: 240
+      reboot_timeout: 300
     become: "{{ true if inventory_hostname is search('em7') else false }}"
     delegate_to: "{{ db_item }}"
     loop: "{{ groups['em7db'] }}"

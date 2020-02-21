@@ -10,18 +10,21 @@
       validate_certs: no
     register: host_info
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-#    no_log: true
+    no_log: true
 
   - name: define hosts_list
     set_fact:
-      hosts_list: "{{ hosts_list|default([]) + [item.key] }}"
+      hosts_list: "{{ hosts_list|default([]) + [host_item.key] }}"
     loop:  "{{ host_info.host_service_info|dict2items }}"
+    loop_control:
+      loop_var: host_item
+      label: "{{ host_item }}"
     no_log: true
 
   - name: define information.resources
     set_fact:
       information: "{{ information | combine(new_item, recursive=true) }}"
     vars:
-      new_item: "{'resources': \"{{ hosts_list }}\"}"
+      new_item: "{'resources': \"{{ hosts_list | sort }}\"}"
 
   tags: ['capcheck', 'vm_creation']

@@ -8,6 +8,11 @@
       when:
         - information.cluster is not defined or information.cluster == ''
 
+# Not to be used until https://github.com/ansible/ansible/pull/67641 is released
+#    - include_tasks: task_get_hosts_list.yml
+#      when:
+#        - information.resources is not defined or information.resources == []
+
     - include_tasks: task_get_datastore_facts.yml
     when:
       - information.deptype == 'h'
