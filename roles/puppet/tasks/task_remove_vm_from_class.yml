@@ -1,6 +1,13 @@
 ---
 # Tasks to add vm to puppet class
 - block:
+  - name: check if puppet server {{ puppet.vmname }} is reachable
+    wait_for_connection:
+      timeout: 6
+    check_mode: no
+    run_once: true
+    check_mode: no
+    delegate_to: "{{ groups['puppet']|first }}"
   - name: define VM's puppet class names list
     set_fact:
       vmtype_class_list: "{{ [class_list1] + [class_list2] + [class_list3] if class_list3 != '' else [class_list1] + [class_list2] }}"
