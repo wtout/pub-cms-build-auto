@@ -78,13 +78,13 @@
         - "{{ get_cert.json }}"
   - name: create the license folder on the EM7 VM
     file:
-      path: /home/em7admin/license
+      path: '/home/{{ ansible_user }}/license'
       state: directory
       mode: 0755
   - name: save the license on the EM7 VM under {{ansible_user}} home directory
     copy:
       content: "{{ get_cert.json.license }}"
-      dest: /home/em7admin/license/em7.lic
+      dest: '/home/{{ ansible_user }}/license/em7.lic'
   - block:
     - name: check if db vip is reachable
       shell: ping {{vip.db}} -c 1
@@ -96,7 +96,7 @@
       when: db_vip_reachable1 is failed
     when: inventory_hostname is search('prt')
   - name: load the EM7 license
-    shell: /usr/local/silo/proc/appliance_init.py -l < /home/em7admin/license/em7.lic
+    shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
     become: "{{ true if inventory_hostname is search('em7') else false }}"
   - block:
     - name: reboot the VM

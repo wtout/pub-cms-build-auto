@@ -1,5 +1,5 @@
 ---
 # Variables for em7 hosts
 credentials:
-  username: 'em7admin'
+  username: 'em7release'
   password: "{{ EM7_PASS|default('') }}"

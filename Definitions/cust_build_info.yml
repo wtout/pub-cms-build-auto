@@ -69,3 +69,11 @@ puppet:
 
   # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03, alln1qspupp04 (string)
   server_name: alln1qspupp01
+
+##################################################################################
+# Yum server to be used
+##################################################################################
+yum:
+
+  # Available yum servers: alln1qsyumrpp01, alln1qsyumrpp02 (string)
+  server_name: alln1qsyumrpp01

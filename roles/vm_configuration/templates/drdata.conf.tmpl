@@ -33,7 +33,7 @@ secondary_db_server2_ip={{ drdb_ip1_list[1] if drdb_ip1_list|length >= 2 else ''
 primary_em7_portal_server_ip={{ drprt_ip1_list[0] }}
 secondary_em7_portal_server_ip={{ drprt_ip1_list[1] if drprt_ip1_list|length >=2 else '' }}
 server_type={{ 'primary' if inventory_hostname is search('rly01') else 'secondary' }}
-em7_user_name=em7admin
+em7_user_name={{ ansible_user }}
 splunk_user_name=admin
 em7_access_portal_cpu_core_count={{ drprt_cpu_list[0] }}
 em7_access_portal_ram_gb={{ drprt_mem_list[0] }}

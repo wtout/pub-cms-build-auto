@@ -93,16 +93,16 @@ puppet:
 repo:
 
   # baseurl
-  baseurl: 'https://alln1qsyumrpp01.cisco-cms.com'
+  baseurl: 'https://{{ environment_definition.yum.server_name }}.cisco-cms.com'
 
   # VM name
-  vmname: 'alln1qsyumrpp01'
+  vmname: '{{ environment_definition.yum.server_name }}'
 
   # FQDN
-  fqdn: 'alln1qsyumrpp01.cisco-cms.com'
+  fqdn: '{{ environment_definition.yum.server_name }}.cisco-cms.com'
 
   # ip address
-  ipaddress: '172.19.251.54'
+  ipaddress: '{{ [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.server_name[-1:]|int-1] }}'
 
 
 ##################################################################################

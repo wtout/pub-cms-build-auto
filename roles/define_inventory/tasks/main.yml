@@ -10,21 +10,22 @@
 
   - name: check if required variables are defined
     set_fact:
-      cn: "{{ 'customer name is not defined' if environment_definition.customer.name == none else '' }}"
-      dm: "{{ 'deployment model is not defined' if environment_definition.customer.deployment_model == none else '' }}"
-      np: "{{ 'primary number of Portals is not defined' if environment_definition.customer.primary.number_of_prts == none else '' }}"
-      nm: "{{ 'primary number of Message Collectors is not defined' if environment_definition.customer.primary.number_of_mcs == none else '' }}"
-      nd: "{{ 'primary number of Data Collectors is not defined' if environment_definition.customer.primary.number_of_dcs == none else '' }}"
-      dr: "{{ 'disaster recovery is not defined' if environment_definition.customer.disaster_recovery == none else '' }}"
-      pn: "{{ 'primary name_prefix is not defined' if environment_definition.customer.primary.name_prefix == none else '' }}"
-      po: "{{ 'primary octets is not defined' if environment_definition.customer.primary.octets == none else '' }}"
-      sn: "{{ 'secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.name_prefix == none) else '' }}"
-      so: "{{ 'secondary octets is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.octets == none) else '' }}"
-      rv: "{{ 'release_version is not defined' if environment_definition.customer.release_version == none else '' }}"
-      dn: "{{ 'datacenter name is not defined' if environment_definition.datacenter.name == none else '' }}"
-      dh: "{{ 'datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.datacenter.resources == none) else '' }}"
-      dc: "{{ 'datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a')) else '' }}"
-      ps: "{{ 'puppet server_name is not defined' if environment_definition.puppet.server_name == none else '' }}"
+      cn: "{{ 'Customer name is not defined' if environment_definition.customer.name == none else '' }}"
+      dm: "{{ 'Deployment model is not defined' if environment_definition.customer.deployment_model == none else '' }}"
+      np: "{{ 'Primary number of Portals is not defined' if environment_definition.customer.primary.number_of_prts == none else '' }}"
+      nm: "{{ 'Primary number of Message Collectors is not defined' if environment_definition.customer.primary.number_of_mcs == none else '' }}"
+      nd: "{{ 'Primary number of Data Collectors is not defined' if environment_definition.customer.primary.number_of_dcs == none else '' }}"
+      dr: "{{ 'Disaster recovery is not defined' if environment_definition.customer.disaster_recovery == none else '' }}"
+      pn: "{{ 'Primary name_prefix is not defined' if environment_definition.customer.primary.name_prefix == none else '' }}"
+      po: "{{ 'Primary octets is not defined' if environment_definition.customer.primary.octets == none else '' }}"
+      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.name_prefix == none) else '' }}"
+      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.octets == none) else '' }}"
+      rv: "{{ 'Release version is not defined' if environment_definition.customer.release_version == none else '' }}"
+      dn: "{{ 'Datacenter name is not defined' if environment_definition.datacenter.name == none else '' }}"
+      dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.datacenter.resources == none) else '' }}"
+      dc: "{{ 'Datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a')) else '' }}"
+      ps: "{{ 'Puppet server_name is not defined' if environment_definition.puppet.server_name == none else '' }}"
+      ys: "{{ 'Yum server_name is not defined' if environment_definition.puppet.server_name == none else '' }}"
 
   - debug:
       msg: "{{ dc }}"
@@ -35,7 +36,7 @@
       that:
         - vars[item] == ''
       fail_msg: "{{ vars[item] }}"
-    loop: [ cn, dm, dr, np, nm, nd, pn, po, sn, so, rv, dn, dh, ps ]
+    loop: [ cn, dm, dr, np, nm, nd, pn, po, sn, so, rv, dn, dh, ps, ys ]
 
   - name: check if deployment model value is valid
     assert:
@@ -86,7 +87,13 @@
     assert:
       that:
         - not environment_definition.puppet.server_name | lower | regex_search('alln1qspupp01|alln1qspupp02|alln1qspupp03|alln1qspupp04') == none
-      fail_msg: "puppet server_name is not valid. Only alln1qspupp01, alln1qspupp02, alln1qspupp03 and alln1qspupp04 are valid"
+      fail_msg: "Puppet server_name is not valid. Only alln1qspupp01, alln1qspupp02, alln1qspupp03 and alln1qspupp04 are valid"
+
+  - name: check if yum server name value is valid
+    assert:
+      that:
+        - not environment_definition.yum.server_name | lower | regex_search('alln1qsyumrpp01|alln1qsyumrpp02') == none
+      fail_msg: "Yum server_name is not valid. Only alln1qsyumrpp01 and alln1qsyumrpp02 are valid"
 
   - name: verify if selected datacenter supports deployment model
     assert:
