@@ -15,7 +15,7 @@ netconfig:
   octetpool1: "{{ vm_vars.spl.splind.nic1.ip_octetpool | default([]) }}"
   gateway1: "{{ customer.octets + '.' + vm_vars.spl.splind.nic1.gtw_octet if vm_vars.spl.splind.nic1.gtw_octet != '' else '' }}"
   netmask1: "{{ vm_vars.spl.splind.nic1.netmask }}"
-  network1: "{{ vm_vars.spl.splind.nic1.network }}"
+  network1: "{{ customer.name_prefix + '-' + vm_vars.spl.splind.nic1.network }}"
 
   netname2: "{{ vm_vars.spl.splind.nic2.name }}"
   ippool2: "{{ vm_vars.spl.splind.nic2.ip_pool | default([]) }}"

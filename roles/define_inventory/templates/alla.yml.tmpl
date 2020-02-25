@@ -17,10 +17,10 @@ vm_vars:
       cpu: "{{ environment_definition.vm_size.em7.em7db.cpu if (environment_definition.vm_size.em7.em7db.cpu is defined and environment_definition.vm_size.em7.em7db.cpu != none) else '12' }}"
 
       # Memory size in GiB
-      memory: "{{ environment_definition.vm_size.em7.em7db.memory if (environment_definition.vm_size.em7.em7db.memory is defined and environment_definition.vm_size.em7.em7db.memory != none) else '256' }}"
+      memory: "{{ environment_definition.vm_size.em7.em7db.memory if (environment_definition.vm_size.em7.em7db.memory is defined and environment_definition.vm_size.em7.em7db.memory != none) else '48' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '256' }}"
 
       # Disks sizing in GiB
-      disk0: "{{ environment_definition.vm_size.em7.em7db.disk0 if (environment_definition.vm_size.em7.em7db.disk0 is defined and environment_definition.vm_size.em7.em7db.disk0 != none) else '1024' }}"
+      disk0: "{{ environment_definition.vm_size.em7.em7db.disk0 if (environment_definition.vm_size.em7.em7db.disk0 is defined and environment_definition.vm_size.em7.em7db.disk0 != none) else '250' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '1024' }}"
       disk1: "{{ environment_definition.vm_size.em7.em7db.disk1 if (environment_definition.vm_size.em7.em7db.disk1 is defined and environment_definition.vm_size.em7.em7db.disk1 != none) else '0' }}"
       disk2: "{{ environment_definition.vm_size.em7.em7db.disk2 if (environment_definition.vm_size.em7.em7db.disk2 is defined and environment_definition.vm_size.em7.em7db.disk2 != none) else '0' }}"
       disk3: "{{ environment_definition.vm_size.em7.em7db.disk3 if (environment_definition.vm_size.em7.em7db.disk3 is defined and environment_definition.vm_size.em7.em7db.disk3 != none) else '0' }}"
@@ -70,7 +70,7 @@ vm_vars:
     em7dc:
 
       # number of CPUs
-      cpu: "{{ environment_definition.vm_size.em7.em7dc.cpu if (environment_definition.vm_size.em7.em7dc.cpu is defined and environment_definition.vm_size.em7.em7dc.cpu != none) else '24' }}"
+      cpu: "{{ environment_definition.vm_size.em7.em7dc.cpu if (environment_definition.vm_size.em7.em7dc.cpu is defined and environment_definition.vm_size.em7.em7dc.cpu != none) else '4' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '24' }}"
 
       # Memory size in GiB
       memory: "{{ environment_definition.vm_size.em7.em7dc.memory if (environment_definition.vm_size.em7.em7dc.memory is defined and environment_definition.vm_size.em7.em7dc.memory != none) else '24' }}"
@@ -182,10 +182,10 @@ vm_vars:
     em7prt:
 
       # number of CPUs
-      cpu: "{{ environment_definition.vm_size.em7.em7prt.cpu if (environment_definition.vm_size.em7.em7prt.cpu is defined and environment_definition.vm_size.em7.em7prt.cpu != none) else '8' }}"
+      cpu: "{{ environment_definition.vm_size.em7.em7prt.cpu if (environment_definition.vm_size.em7.em7prt.cpu is defined and environment_definition.vm_size.em7.em7prt.cpu != none) else '2' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '8' }}"
 
       # Memory size in GiB
-      memory: "{{ environment_definition.vm_size.em7.em7prt.memory if (environment_definition.vm_size.em7.em7prt.memory is defined and environment_definition.vm_size.em7.em7prt.memory != none) else '28' }}"
+      memory: "{{ environment_definition.vm_size.em7.em7prt.memory if (environment_definition.vm_size.em7.em7prt.memory is defined and environment_definition.vm_size.em7.em7prt.memory != none) else '6' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '28' }}"
 
       # Disks sizing in GiB
       disk0: "{{ environment_definition.vm_size.em7.em7prt.disk0 if (environment_definition.vm_size.em7.em7prt.disk0 is defined and environment_definition.vm_size.em7.em7prt.disk0 != none) else '62' }}"
@@ -411,10 +411,10 @@ vm_vars:
     splsrc:
 
       # number of CPUs
-      cpu: "{{ environment_definition.vm_size.spl.splsrc.cpu if (environment_definition.vm_size.spl.splsrc.cpu is defined and environment_definition.vm_size.spl.splsrc.cpu != none) else '8' }}"
+      cpu: "{{ environment_definition.vm_size.spl.splsrc.cpu if (environment_definition.vm_size.spl.splsrc.cpu is defined and environment_definition.vm_size.spl.splsrc.cpu != none) else '4' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '8' }}"
 
       # Memory size in GiB
-      memory: "{{ environment_definition.vm_size.spl.splsrc.memory if (environment_definition.vm_size.spl.splsrc.memory is defined and environment_definition.vm_size.spl.splsrc.memory != none) else '16' }}"
+      memory: "{{ environment_definition.vm_size.spl.splsrc.memory if (environment_definition.vm_size.spl.splsrc.memory is defined and environment_definition.vm_size.spl.splsrc.memory != none) else '8' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '16' }}"
 
       # Disks sizing in GiB
       disk0: "{{ environment_definition.vm_size.spl.splsrc.disk0 if (environment_definition.vm_size.spl.splsrc.disk0 is defined and environment_definition.vm_size.spl.splsrc.disk0 != none) else '37' }}"
@@ -526,7 +526,7 @@ vm_vars:
     cpu: "{{ environment_definition.vm_size.rly.cpu if (environment_definition.vm_size.rly.cpu is defined and environment_definition.vm_size.rly.cpu != none) else '4' }}"
 
     # Memory size in GiB
-    memory: "{{ environment_definition.vm_size.rly.memory if (environment_definition.vm_size.rly.memory is defined and environment_definition.vm_size.rly.memory != none) else '8' }}"
+    memory: "{{ environment_definition.vm_size.rly.memory if (environment_definition.vm_size.rly.memory is defined and environment_definition.vm_size.rly.memory != none) else '12' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '8' }}"
 
     # Disks sizing in GiB
     disk0: "{{ environment_definition.vm_size.rly.disk0 if (environment_definition.vm_size.rly.disk0 is defined and environment_definition.vm_size.rly.disk0 != none) else '37' }}"
@@ -718,7 +718,7 @@ vm_vars:
       cpu: "{{ environment_definition.vm_size.infra.winjmp.cpu if (environment_definition.vm_size.infra.winjmp.cpu is defined and environment_definition.vm_size.infra.winjmp.cpu != none) else '2' }}"
 
       # Memory size in GiB
-      memory: "{{ environment_definition.vm_size.infra.winjmp.memory if (environment_definition.vm_size.infra.winjmp.memory is defined and environment_definition.vm_size.infra.winjmp.memory != none) else '8' }}"
+      memory: "{{ environment_definition.vm_size.infra.winjmp.memory if (environment_definition.vm_size.infra.winjmp.memory is defined and environment_definition.vm_size.infra.winjmp.memory != none) else '4' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '8' }}"
 
       # Disks sizing in GiB
       disk0: "{{ environment_definition.vm_size.infra.winjmp.disk0 if (environment_definition.vm_size.infra.winjmp.disk0 is defined and environment_definition.vm_size.infra.winjmp.disk0 != none) else '100' }}"
