@@ -2,28 +2,28 @@
 # Tasks for notify
 - block:
   - name: Get user's identity
-    shell: head -4 {{LFILE}}
+    shell: head -4 {{ LFILE }}
     register: userid
   - name: Check if user requested to abort
-    shell: grep "user requested abort!" {{LFILE}}
+    shell: grep "user requested abort!" {{ LFILE }}
     register: user_abort
     ignore_errors: true
-  - name: Get playbook status from {{LFILE}}
-    shell: "grep 'PLAY RECAP' {{LFILE}} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ansible_play_hosts|length}};i++){print $0;getline}}' {{LFILE}} | grep -v awk | egrep 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
+  - name: Get playbook status from {{ LFILE }}
+    shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ansible_play_hosts|length}};i++){print $0;getline}}' {{ LFILE }} | grep -v awk | egrep 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
     register: playbook_status
   - set_fact:
-      NOTIF_MSG: "{{NOTIF_MSG | default ([]) + [item] | list}}"
+      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [item] | list }}"
     vars:
-      fe: "{{playbook_status.stdout | regex_search('(unreachable=|failed=)[1-9]+')}}"
+      fe: "{{ playbook_status.stdout | regex_search('(unreachable=|failed=)[1-9]+') }}"
     with_items:
       - '========================================================='
       - ' '
-      - "{{userid.stdout.split('\n') | join('<br/>') | replace ('This script was run', 'Job started') | replace ('#', '') | regex_replace ('(Machine )([a-z]+.[a-z]+)( [0-9])', '\\1**`\\2`**\\3') | replace('<br/>An', 'An')}}"
-      - "**`{{playbook_dir | basename}}`** Script **`{{SNAME}} {{SARG | replace ('dash', '-') | replace ('*', '')}}`** completed {{'successfully' if (fe == '' and playbook_status.stdout != 'No Play Recap found') else 'with **`errors`**:'}}"
-      - "{{user_abort.stdout if user_abort is succeeded else ''}}"
-      - "{{playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else ''}}"
+      - "{{ userid.stdout.split('\n') | join('<br/>') | replace ('This script was run', 'Job started') | replace ('#', '') | regex_replace ('(Machine )([a-z]+.[a-z]+)( [0-9])', '\\1**`\\2`**\\3') | replace('<br/>An', 'An') }}"
+      - "**`{{ playbook_dir.split('/')[-2] }}`** Script **`{{ SNAME }} {{ SARG | replace ('dash', '-') | replace ('*', '') }}`** completed {{ 'successfully' if (fe == '' and playbook_status.stdout != 'No Play Recap found') else 'with **`errors`**:' }}"
+      - "{{ user_abort.stdout if user_abort is succeeded else '' }}"
+      - "{{ playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else '' }}"
       - ''
-      - "The log file is **`{{LFILE}}`**"
+      - "The log file is **`{{ LFILE }}`**"
       - ' '
       - '========================================================='
   - name: get proxy setting
@@ -51,10 +51,10 @@
       body_format: form-urlencoded
       body: 
         roomId: Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj
-        markdown: "{{NOTIF_MSG | join('\n')}}"
+        markdown: "{{ NOTIF_MSG | join('\n') }}"
     environment:
-      http_proxy: "{{proxy_string.stdout}}"
-      https_proxy: "{{proxy_string.stdout}}" # Ansible only supports http proxies currently
+      http_proxy: "{{ proxy_string.stdout }}"
+      https_proxy: "{{ proxy_string.stdout }}" # Ansible only supports http proxies currently
   delegate_to: localhost
   run_once: true
   tags: [ 'never', 'notify' ]

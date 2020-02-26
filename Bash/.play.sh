@@ -146,7 +146,7 @@ function get_inventory() {
 				set -- ${@} ${arg}
 			done
 		fi
-		ansible-playbook getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS} -v
+		ansible-playbook playbooks/getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS} -v
 		GET_INVENTORY_STATUS=${?}
 		[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
 	else
@@ -335,7 +335,7 @@ function get_credentials() {
 				set -- ${@} ${arg}
 			done
 		fi
-		ansible-playbook prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@} -v
+		ansible-playbook playbooks/prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@} -e @${ANSIBLE_VARS} -v
 		GET_CREDS_STATUS=${?}
 		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
 		if [[ ${BBPASS} != "" ]]
@@ -364,7 +364,7 @@ function run_playbook() {
 		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
 		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
 		sleep 10 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} &
-		ansible-playbook site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
+		ansible-playbook playbooks/site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr) != "" ]] && rm -f ${VAULTC} ${CRVAULT} /tmp/${PID}.stderr || rm -f /tmp/${PID}.stderr
 	fi
 }
@@ -385,7 +385,7 @@ function send_notification() {
 		SCRIPT_ARG=$(echo ${@} | sed -e 's/-/dash/g')
 		[ $(echo ${HOST_LIST} | wc -w) -gt 1 ] && HL=$(echo ${HOST_LIST} | sed 's/ /,/g') || HL=${HOST_LIST}
 		# Send playbook status notification
-		ansible-playbook notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}'}" --limit ${HL} --tags notify -v &>/dev/null &
+		ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}'}" --limit ${HL} --tags notify -e @${ANSIBLE_VARS} -v &>/dev/null &
 	fi
 }
 

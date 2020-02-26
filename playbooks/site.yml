@@ -1,0 +1,53 @@
+---
+# Validate credentials (always run)
+- name: Validate credentials
+  hosts: all
+  connection: local
+  any_errors_fatal: true
+  gather_facts: no
+
+  roles:
+    - role: "{{ auto_dir }}/roles/check_creds"
+
+# Play to determine what to do and to define vm facts(always run)
+- name: Define variables
+  hosts: all
+  any_errors_fatal: true
+  gather_facts: no
+
+  roles:
+    - role: "{{ auto_dir }}/roles/todo"
+    - role: "{{ auto_dir }}/roles/vm_facts"
+
+# Play to deploy the ssh_keys to bastion server(s), to perform the infrastructure capacity check and to download the release package
+- name: Pre-deploy preparation
+  hosts: all
+  any_errors_fatal: true
+  gather_facts: no
+
+  roles:
+    - {role: "{{ auto_dir }}/roles/ssh_keys", when: configure_ssh_keys | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/capcheck", when: capcheck | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/get_release", when: get_release | default(false) | bool}
+
+# Plays to create, configure the VMs and to run the puppet push
+- name: deploy VMs
+  hosts: all
+  gather_facts: no
+
+  roles:
+    - {role: "{{ auto_dir }}/roles/vm_creation", when: create_vms | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/vm_configuration", when: configure_vms | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/puppet", when: push_puppet | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/vm_ppp_configuration", when: configure_ppp_vms | default(false) | bool}
+
+# Plays to delete the VMs
+- name: Rollback
+  hosts: all
+  order: reverse_inventory
+  gather_facts: no
+
+  roles:
+    - {role: "{{ auto_dir }}/roles/puppet", when: rollback_puppet | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/vm_creation", when: rollback_vms | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/ssh_keys", when: rollback_ssh_keys | default(false) | bool}

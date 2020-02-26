@@ -1,4 +1,6 @@
 ---
+auto_dir: "{{ playbook_dir.split('/')[:-1] | join('/') }}"
+
 ##########################################
 # Do not modify anything below this line
 ##########################################
