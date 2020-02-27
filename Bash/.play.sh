@@ -156,17 +156,13 @@ function get_inventory() {
 }
 
 function encrypt_vault() {
-	[[ $- =~ x ]] && debug=1 && set +x
 	echo ${3} > ${2}
-	[[ ${debug} == 1 ]] && set -x
 	[[ -f ${1} ]] && ansible-vault encrypt --vault-password-file ${2} ${1} &>/dev/null
 	rm -f ${2}
 }
 
 function decrypt_vault() {
-	[[ $- =~ x ]] && debug=1 && set +x
 	echo ${3} > ${2}
-	[[ ${debug} == 1 ]] && set -x
 	[[ -f ${1} ]] && ansible-vault decrypt --vault-password-file ${2} ${1} 2> /tmp/decrypt_error.${PID}
 	[[ $(grep "was not found" /tmp/decrypt_error.${PID}) != "" ]] && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && ansible-vault decrypt --vault-password-file ${2} ${1} &>/dev/null
 	rm -f ${2} /tmp/decrypt_error.${PID}
@@ -186,21 +182,21 @@ function check_updates() {
 			do
 				[[ $(grep "ANSIBLE_VAULT" ${1}.${ENAME}) != "" ]] && decrypt_vault ${1}.${ENAME} ${2} $(git config user.email | cut -d'@' -f1) || break
 				i=$((++i))
-				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Bitbucket password vault. Exiting!" && exit 1
+				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
 			done
 			source ${1}.${ENAME}
 			[[ ${debug} == 1 ]] && set -x
 			rm ${1}.${ENAME}
 		else
 			echo
-			read -sp "Enter your Bitbucket password [ENTER]: " BBPASS
+			read -sp "Enter your Repository password [ENTER]: " REPOPASS
 			[[ $- =~ x ]] && debug=1 && set +x
 			[[ -f ${1} ]] && rm -f ${1}
 			[[ -f ${2} ]] && rm -f ${2}
-			printf "BBPASS='${BBPASS}'\n" > ${1}
+			printf "REPOPASS='${REPOPASS}'\n" > ${1}
 			printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
-			[[ ${debug} == 1 ]] && set -x
 			encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
+			[[ ${debug} == 1 ]] && set -x
 			echo
 		fi
 		git rev-parse --short HEAD &>/dev/null
@@ -211,12 +207,12 @@ function check_updates() {
 			for i in {1..3}
 			do
 				[[ $- =~ x ]] && debug=1 && set +x
-				local BBPWD=$(echo ${BBPASS} | sed -e 's/@/%40/g')
+				local BBPWD=$(echo ${REPOPASS} | sed -e 's/@/%40/g')
 				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPWD}@|") HEAD 2>/dev/null | cut -c1-7)
 				[[ ${debug} == 1 ]] && set -x
 				[[ ${REMOTEID} == "" ]] && sleep 3 || break
 			done
-			[[ "${REMOTEID}" == "" ]] && printf "\nYour Bitbucket credentials are invalid!\n\n" && rm -f ${1} && exit
+			[[ "${REMOTEID}" == "" ]] && printf "\nYour Repository credentials are invalid!\n\n" && rm -f ${1} && exit
 			if [[ "${LOCALID}" != "${REMOTEID}" ]]
 			then
 				echo
@@ -225,7 +221,7 @@ function check_updates() {
 				if [[ "$(echo ${ANSWER} | tr [A-Z] [a-z])" == "y" ]]
 				then
 					git reset -q --hard origin/master
-					git pull $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPASS}@|") &>${PWD}/.pullerr
+					git pull $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPASS}@|") &>${PWD}/.pullerr && sed -i "s|${REPOPASS}|xxxxx|" ${PWD}/.pullerr
 					[[ ${?} == 0 ]] && printf "\nThe installation package has been updated. ${BOLD}Please re-run the script for the updates to take effect${NORMAL}\n\n"
 					[[ ${?} != 0 ]] && printf "\nThe installation package update has failed with the following error:\n\n${BOLD}$(cat ${PWD}/.pullerr)${NORMAL}\n\n"
 					rm -f ${PWD}/.pullerr
@@ -338,11 +334,13 @@ function get_credentials() {
 		ansible-playbook playbooks/prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@} -e @${ANSIBLE_VARS} -v
 		GET_CREDS_STATUS=${?}
 		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
-		if [[ ${BBPASS} != "" ]]
+		if [[ ${REPOPASS} != "" ]]
 		then
-			encrypt_vault ${CRVAULT} ${VAULTP} ${BBPASS}
+			[[ $- =~ x ]] && debug=1 && set +x
+			encrypt_vault ${CRVAULT} ${VAULTP} ${REPOPASS}
+			[[ ${debug} == 1 ]] && set -x
 		else
-			echo "Bitbucket password is not defined. Aborting!"
+			echo "Repository password is not defined. Aborting!"
 			exit 1
 		fi
 	fi
@@ -359,13 +357,16 @@ function run_playbook() {
 			echo "vault_password_file = ${VAULTC}" >> ${ANSIBLE_CFG}
 		fi
 		[[ $- =~ x ]] && debug=1 && set +x
-		[[ ! -f ${VAULTP} ]] && echo ${BBPASS} > ${VAULTP}
+		[[ ! -f ${VAULTP} ]] && echo ${REPOPASS} > ${VAULTP}
 		[[ ${debug} == 1 ]] && set -x
 		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
 		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
-		sleep 10 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} &
+		sleep 1 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} &
 		ansible-playbook playbooks/site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
-		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr) != "" ]] && rm -f ${VAULTC} ${CRVAULT} /tmp/${PID}.stderr || rm -f /tmp/${PID}.stderr
+		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE//.${ENAME}}${NORMAL}" && EC=1
+		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${BOLD}" && EC=1
+		rm -f /tmp/${PID}.stderr ${VAULTC} ${VAULTP}
+		[[ ${EC} == 1 ]] && exit 1
 	fi
 }
 
@@ -408,7 +409,7 @@ set -- && set -- ${@} ${NEW_ARGS}
 CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
-BBVAULT="${PWD}/.bbvault.yml"
+REPOVAULT="${PWD}/.repovault.yml"
 CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
 VAULTP="${PWD}/.vaultp.${ENAME}"
 VAULTC="${PWD}/.vaultc.${ENAME}"
@@ -419,7 +420,7 @@ NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
-check_updates ${BBVAULT} ${VAULTP}
+check_updates ${REPOVAULT} ${VAULTP}
 get_inventory ${@}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 update_inventory
