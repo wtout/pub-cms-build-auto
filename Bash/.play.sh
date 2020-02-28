@@ -203,12 +203,12 @@ function check_updates() {
 		if [ ${?} -eq 0 ]
 		then
 			local LOCALID=$(git rev-parse --short HEAD)
-			[[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true"
+			[[ $(git config --get remote.origin.url | grep "www-github") == "" ]] && [[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true"
 			for i in {1..3}
 			do
 				[[ $- =~ x ]] && debug=1 && set +x
-				local BBPWD=$(echo ${REPOPASS} | sed -e 's/@/%40/g')
-				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${BBPWD}@|") HEAD 2>/dev/null | cut -c1-7)
+				local REPOPWD=$(echo ${REPOPASS} | sed -e 's/@/%40/g')
+				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/dev/null | cut -c1-7)
 				[[ ${debug} == 1 ]] && set -x
 				[[ ${REMOTEID} == "" ]] && sleep 3 || break
 			done
@@ -220,7 +220,7 @@ function check_updates() {
 				echo ""
 				if [[ "$(echo ${ANSWER} | tr [A-Z] [a-z])" == "y" ]]
 				then
-					git reset -q --hard origin/master
+					git reset -q --hard origin/$(git branch | awk '{print $NF}')
 					git pull $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPASS}@|") &>${PWD}/.pullerr && sed -i "s|${REPOPASS}|xxxxx|" ${PWD}/.pullerr
 					[[ ${?} == 0 ]] && printf "\nThe installation package has been updated. ${BOLD}Please re-run the script for the updates to take effect${NORMAL}\n\n"
 					[[ ${?} != 0 ]] && printf "\nThe installation package update has failed with the following error:\n\n${BOLD}$(cat ${PWD}/.pullerr)${NORMAL}\n\n"
@@ -364,7 +364,7 @@ function run_playbook() {
 		sleep 1 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} &
 		ansible-playbook playbooks/site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE//.${ENAME}}${NORMAL}" && EC=1
-		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${BOLD}" && EC=1
+		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
 		rm -f /tmp/${PID}.stderr ${VAULTC} ${VAULTP}
 		[[ ${EC} == 1 ]] && exit 1
 	fi
