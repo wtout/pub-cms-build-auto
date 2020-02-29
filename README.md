@@ -23,7 +23,7 @@ On a newly installed Linux **CentOS 7** VM that can access the internet, bitbuck
 
 2- Download the Ansible automation package
 
-    $> git clone https://<your-bitbucket-username>@bitbucket-eng-rtp1.cisco.com/bitbucket/scm/cc/cmsp-auto-deploy.git
+    $> git clone --single-branch master https://<your-bitbucket-username>@bitbucket-eng-rtp1.cisco.com/bitbucket/scm/cc/cmsp-auto-deploy.git
 
 3- Go to the newly cloned cmsp-auto-deploy directory
 
@@ -53,7 +53,8 @@ The system definition file name **must match the customer name** as defined in t
   - **octets** (_String_): Required when disaster_recovery is “yes”. First three octets for secondary stack
   - **name** (_String_): Required. Datacenter name
   - **resources** (_String_): Required for on-prem deployments. List of ESXI hosts
-  - **server_name** (_String_): Required. Valid values for puppet server name are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
+  - **server_name** (_String_): Required. Valid values for Puppet server name are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
+  - **server_name** (_String_): Required. Valid values for Yum server name are: **alln1qsyumrpp01** and **alln1qsyumrpp02**
 
 Non-standard host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file must match the name of the host as defined in the hosts.yml file. This can only be done after the system inventory has been created.
 
