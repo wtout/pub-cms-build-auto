@@ -361,10 +361,10 @@ function run_playbook() {
 			echo "vault_password_file = ${VAULTC}" >> ${ANSIBLE_CFG}
 		fi
 		[[ $- =~ x ]] && debug=1 && set +x
-		[[ ! -f ${VAULTP} ]] && echo ${REPOPASS} > ${VAULTP}
-		[[ ${debug} == 1 ]] && set -x
 		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
 		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
+		[[ ! -f ${VAULTP} ]] && echo ${REPOPASS} > ${VAULTP}
+		[[ ${debug} == 1 ]] && set -x
 		sleep 1 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} &
 		ansible-playbook playbooks/site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE//.${ENAME}}${NORMAL}" && EC=1

@@ -24,8 +24,8 @@
       dn: "{{ 'Datacenter name is not defined' if environment_definition.datacenter.name == none else '' }}"
       dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.datacenter.resources == none) else '' }}"
       dc: "{{ 'Datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a')) else '' }}"
-      ps: "{{ 'Puppet server_name is not defined' if environment_definition.puppet.server_name == none else '' }}"
-      ys: "{{ 'Yum server_name is not defined' if environment_definition.puppet.server_name == none else '' }}"
+      ps: "{{ 'Puppet server_name is not defined' if (environment_definition.puppet is not defined or environment_definition.puppet.server_name is not defined or environment_definition.puppet.server_name == none) else '' }}"
+      ys: "{{ 'Yum server_name is not defined' if (environment_definition.yum is not defined or environment_definition.yum.server_name is not defined or environment_definition.yum.server_name == none) else '' }}"
 
   - debug:
       msg: "{{ dc }}"
