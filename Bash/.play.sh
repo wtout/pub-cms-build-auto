@@ -397,7 +397,6 @@ function send_notification() {
 # Parameters definition
 ANSIBLE_CFG="./ansible.cfg"
 ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
-OFILE="${PWD}/Bash/override.sh"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST='epel-release sshpass python2-pip'
