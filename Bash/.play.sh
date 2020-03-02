@@ -349,6 +349,10 @@ function get_credentials() {
 function run_playbook() {
 	if [[ ${GET_INVENTORY_STATUS} == 0 && (${GET_CREDS_STATUS} == 0 || -f ${CRVAULT}) ]]
 	then
+		### Begin: Determine if ASK_PASS is required
+		[ $(echo ${HOST_LIST} | wc -w) -gt 1 ] && HL=$(echo ${HOST_LIST} | sed 's/ /,/g') || HL=${HOST_LIST}
+		ansible ${HL} -m debug -a 'msg={{ansible_ssh_pass}}' &>/dev/null && [[ ${?} == 0 ]] && ASK_PASS=''
+		### End
 		[[ ! -f ${VAULTC} ]] && git config remote.origin.url | awk -F '/' '{print $NF}' > ${VAULTC}
 		if [[ $(grep vault_password_file ${ANSIBLE_CFG}) != "" ]]
 		then
@@ -427,7 +431,6 @@ update_inventory
 get_hosts ${@}
 get_credentials ${@}
 enable_logging ${@}
-[[ -f ${OFILE} ]] && source ${OFILE}
 run_playbook ${@}
 disable_logging
 send_notification ${ORIG_ARGS}
