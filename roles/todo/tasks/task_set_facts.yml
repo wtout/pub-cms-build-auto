@@ -84,6 +84,14 @@
     - inventory_hostname in groups['stack'] or inventory_hostname in groups['dr']
   tags: vm_ppp_configuration
 
+- name: define splunk_mop_fix
+  set_fact:
+    splunk_mop_fix: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+  tags: splunk_mop
+
 #- name: define check_requiretty
 #  set_fact:
 #    check_requiretty: true

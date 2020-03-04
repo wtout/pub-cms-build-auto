@@ -1,0 +1,68 @@
+---
+# Tasks to apply datetime fix
+- block:
+  - stat:
+      path: "{{ splunk_dir }}"
+    register: dir
+  - assert:
+      that: dir.stat.exists
+      fail_msg: "{{ splunk_dir }} does not exist"
+  - name: distribute datetime.zip to hosts
+    unarchive:
+      src: "{{ datetime_zip }}/datetime.zip"
+      dest: /opt/install
+  - name: confirm datetime.zip was properly extracted
+    stat:
+      path: /opt/install/cfg
+    register: cfg
+  - assert:
+      that: cfg.stat.exists
+      fail_msg: "datetime.zip was not properly extracted"
+
+  - name: check if splunk is running
+    command: "{{ splunk_dir }}/bin/splunk status"
+    register: splunk_status1
+    ignore_errors: true
+  
+  - block:
+    - name: stop splunk
+      command: "{{ splunk_dir }}/bin/splunk stop"    
+
+    - name: verify splunk is stopped
+      command: "{{ splunk_dir }}/bin/splunk status"
+      register: splunk_status2
+      failed_when: splunk_status2.stdout is search ('is running')
+    when: splunk_status1.stdout is search('is running')
+
+  - block:
+    - find:
+        patterns: ['datetime.xml.[0-9]{4,}-.*']
+        paths: "{{ splunk_dir }}/etc/"
+        use_regex: yes
+      register: backup_file
+
+    - name: copy new datetime.xml to correct location
+      copy:
+        remote_src: yes
+        src: /opt/install/cfg/datetime.xml
+        dest: "{{ splunk_dir }}/etc/datetime.xml"
+        backup: "{{ 'no' if backup_file.matched != 0 else 'yes' }}"
+        owner: splunk
+        group: splunk
+        mode: '0444'
+    
+    - name: check new datetime file
+      lineinfile:
+        path: "{{ splunk_dir }}/etc/datetime.xml"
+        line: '2023'
+        state: present
+      check_mode: yes
+  
+    - name: start splunk
+      command: "{{ splunk_dir }}/bin/splunk start"
+      
+    - name: check if splunk was started successfully
+      command: "{{ splunk_dir }}/bin/splunk status"
+      register: splunk_status3
+      failed_when: splunk_status3.stdout is search('is not running')
+  tags: splunk_mop
