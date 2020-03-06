@@ -22,14 +22,15 @@
       register: vcenter_creds
       ignore_errors: true
     delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+    when: ansible_user != ''
+
   - set_fact:
       abort_play: yes
       err_msg: "{{vcenter_host}}: {{vcenter_creds.msg}}"
     when:
-      - vcenter_creds is failed
+      - ansible_user == '' or vcenter_creds is failed
   - set_fact:
       delete_creds: yes
     when:
-      - vcenter_creds is failed
-      - "'Cannot complete login due to an incorrect user name or password' in vcenter_creds.msg"
+      - ansible_user == '' or (vcenter_creds is failed and 'Cannot complete login due to an incorrect user name or password' in vcenter_creds.msg)
   tags: always

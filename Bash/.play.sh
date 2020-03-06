@@ -370,6 +370,7 @@ function run_playbook() {
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE//.${ENAME}}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
 		rm -f /tmp/${PID}.stderr ${VAULTC} ${VAULTP}
+		sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
 		[[ ${EC} == 1 ]] && exit 1
 	fi
 }
