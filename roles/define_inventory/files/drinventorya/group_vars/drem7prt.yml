@@ -15,11 +15,11 @@ netconfig:
   octetpool1: "{{ vm_vars.em7.em7prt.nic1.ip_octetpool | default([]) }}"
   gateway1: "{{ customer.secondary_octets + '.' + vm_vars.em7.em7prt.nic1.gtw_octet if vm_vars.em7.em7prt.nic1.gtw_octet != '' else '' }}"
   netmask1: "{{ vm_vars.em7.em7prt.nic1.netmask }}"
-  network1: "{{ customer.secondary_name_prefix + '-' + vm_vars.em7.em7prt.nic1.network }}"
+  network1: "{{ customer.secondary_name_prefix + '-' + vm_vars.em7.em7prt.nic1.network if vm_vars.em7.em7prt.nic1.network != '' else '' }}"
 
   netname2: "{{ vm_vars.em7.em7prt.nic2.name }}"
   ippool2: "{{ vm_vars.em7.em7prt.nic2.ip_pool | default([]) }}"
   octetpool2: "{{ vm_vars.em7.em7prt.nic2.ip_octetpool | default([]) }}"
   gateway2: "{{ customer.secondary_octets + '.' + vm_vars.em7.em7prt.nic2.gtw_octet if vm_vars.em7.em7prt.nic2.gtw_octet != '' else '' }}"
   netmask2: "{{ vm_vars.em7.em7prt.nic2.netmask }}"
-  network2: "{{ customer.secondary_name_prefix + '-' + vm_vars.em7.em7prt.nic2.network }}"
+  network2: "{{ customer.secondary_name_prefix + '-' + vm_vars.em7.em7prt.nic2.network if vm_vars.em7.em7prt.nic2.network != '' else '' }}"

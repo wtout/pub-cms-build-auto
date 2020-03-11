@@ -10,6 +10,7 @@
   loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
   loop_control:
     loop_var: host_item
+    label: "{{ host_item }}"
   check_mode: no
   register: drvm_info
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
@@ -21,6 +22,7 @@
   loop: "{{drvm_info.results}}"
   loop_control:
     loop_var: host_item
+    label: "{{ host_item }}"
   tags: vm_creation
 
 - name: Get the DR guest_info
@@ -34,6 +36,7 @@
   loop: "{{ drvm_names }}"
   loop_control:
     loop_var: vm_item
+    label: "{{ vm_item }}"
   check_mode: no
   register: drvmguest_info
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
@@ -49,6 +52,7 @@
   loop: "{{ drvmguest_info.results }}"
   loop_control:
     loop_var: vm_item
+    label: "{{ vm_item }}"
   tags: vm_creation
 
 - name: Check if '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster exists
@@ -79,6 +83,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: drmaint_mode
 
   - name: Move DR hosts out of the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
@@ -96,6 +101,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: move_drhosts
 
   - name: Put DR hosts in normal mode
@@ -110,6 +116,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: drnormal_mode
 
   - name: Delete the '{{hostvars[groups['vcenter'][0]]['information']['drcluster']}}' cluster

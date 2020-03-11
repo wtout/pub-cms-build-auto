@@ -13,15 +13,16 @@ function check_repeat_job() {
 }
 
 function check_hosts_limit() {
-	if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]] && [[ "x$(echo ${@} | egrep -w 'vcenter')" == "x" ]]
+	[[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]] && [[ "x$(echo ${@} | egrep -w 'vcenter')" == "x" ]] && local ARG_NAME="--limit" && local MYACTION="add"
+	[[ "x$(echo ${@} | egrep -w '\-l')" != "x" ]] && [[ "x$(echo ${@} | egrep -w 'vcenter')" == "x" ]] && local ARG_NAME="-l" && local MYACTION="add"
+	if [[ ${MYACTION} == "add" ]]
 	then
-		local MYHOSTS=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}')
+		local MYHOSTS=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
 		[[ "x$(echo ${@} | egrep -w '\-\-tags')" != "x" ]] && local MYTAGS=$(echo ${@} | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
 		[[ "x$(echo ${MYTAGS})" == "x" ]] && local update_args=1
 		[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation')" != "x" ]] && local update_args=1
 		if [[ ${update_args} -eq 1 ]]
 		then
-			local ARG_NAME="--limit"
 			for arg
 			do
 				shift
@@ -130,25 +131,36 @@ function install_packages() {
 	fi
 }
 
+function remove_hosts_arg() {
+	# Remove --limit or -l argument from script arguments
+	[[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]] && local ARG_NAME="--limit" && local MYACTION="clean"
+	[[ "x$(echo ${@} | egrep -w '\-l')" != "x" ]] && local ARG_NAME="-l" && local MYACTION="clean"
+	if [[ ${MYACTION} == "clean" ]]
+	then
+		local MYHOSTS=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
+		local NEW_ARGS=
+		for arg
+		do
+			shift
+			[[ ${arg} == ${ARG_NAME} || ${arg} == ${MYHOSTS} ]] && continue
+			set -- ${@} ${arg}
+		done
+	fi
+	echo ${@}
+}
+
 function get_inventory() {
 	sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
 	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
 	if [[ -f ${SYS_DEF} ]]
 	then
-		if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]]
-		then
-			local MYHOSTS=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}')
-			local ARG_NAME="--limit"
-			for arg
-			do
-				shift
-				[[ ${arg} == ${ARG_NAME} || ${arg} == ${MYHOSTS} ]] && continue
-				set -- ${@} ${arg}
-			done
-		fi
-		ansible-playbook playbooks/getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" ${@} -e @${ANSIBLE_VARS} -v
+		ansible-playbook playbooks/getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_hosts_arg ${@}) -e @${ANSIBLE_VARS} -v
 		GET_INVENTORY_STATUS=${?}
 		[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
+	elif [[ $(echo ${ENAME} | grep -i mdr) != '' ]]
+	then
+		[[ -d ${PWD}/inventories/${ENAME} ]] && GET_INVENTORY_STATUS=0 || GET_INVENTORY_STATUS=1
+		[[ ${GET_INVENTORY_STATUS} -ne 0 ]] && echo -e "\nInventory for ${BOLD}${ENAME}${NORMAL} system is not found. Aborting!" && exit 1
 	else
 		echo -e "\nStack definition file for ${ENAME} cannot be found. Aborting!"
 		exit 1
@@ -218,7 +230,7 @@ function check_updates() {
 				echo
 				read -p "Your installation package is not up to date. Updating it will overwrite any changes to tracked files. Do you want to update? ${BOLD}(y/n)${NORMAL}: " ANSWER
 				echo ""
-				if [[ "$(echo ${ANSWER} | tr [A-Z] [a-z])" == "y" ]]
+				if [[ "$(echo ${ANSWER} | tr '[A-Z]' '[a-z]')" == "y" ]]
 				then
 					git reset -q --hard origin/$(git branch | awk '{print $NF}')
 					git pull $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPASS}@|") &>${PWD}/.pullerr && sed -i "s|${REPOPASS}|xxxxx|" ${PWD}/.pullerr
@@ -268,9 +280,11 @@ function update_inventory() {
 }
 
 function get_hosts() {
-	if [ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]
+	[[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]] && local ARG_NAME="--limit" && local MYACTION="get"
+	[[ "x$(echo ${@} | egrep -w '\-l')" != "x" ]] && local ARG_NAME="-l" && local MYACTION="get"
+	if [[ ${MYACTION} == "get" ]]
 	then
-		HOST_LIST=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}' | sed -e 's/,/ /g')
+		HOST_LIST=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}' | sed -e 's/,/ /g')
 	else
 		HOST_LIST=$(ansible all -m debug -a var=ansible_play_hosts | grep '[0-9]\{2\}"' | sort -u | sed -e 's/^.*"\(.*[0-9]\{2\}\)".*$/\1/g')
 	fi
@@ -320,18 +334,7 @@ function enable_logging() {
 function get_credentials() {
 	if [[ ${GET_INVENTORY_STATUS} == 0 && ! -f ${CRVAULT} ]]
 	then
-		if [[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]]
-		then
-			local MYHOSTS=$(echo ${@} | awk -F '--limit ' '{print $NF}' | awk -F ' -' '{print $1}')
-			local ARG_NAME="--limit"
-			for arg
-			do
-				shift
-				[[ ${arg} == ${ARG_NAME} || ${arg} == ${MYHOSTS} ]] && continue
-				set -- ${@} ${arg}
-			done
-		fi
-		ansible-playbook playbooks/prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" ${@} -e @${ANSIBLE_VARS} -v
+		ansible-playbook playbooks/prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" $(remove_hosts_arg ${@}) -e @${ANSIBLE_VARS} -v
 		GET_CREDS_STATUS=${?}
 		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
 		if [[ ${REPOPASS} != "" ]]
@@ -361,15 +364,15 @@ function run_playbook() {
 			echo "vault_password_file = ${VAULTC}" >> ${ANSIBLE_CFG}
 		fi
 		[[ $- =~ x ]] && debug=1 && set +x
-		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
-		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
 		[[ ! -f ${VAULTP} ]] && echo ${REPOPASS} > ${VAULTP}
 		[[ ${debug} == 1 ]] && set -x
-		sleep 1 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} &
+		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
+		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
+		sleep 1 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && rm -f ${VAULTC} ${VAULTP} &
 		ansible-playbook playbooks/site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE//.${ENAME}}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
-		rm -f /tmp/${PID}.stderr ${VAULTC} ${VAULTP}
+		rm -f /tmp/${PID}.stderr
 		sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
 		[[ ${EC} == 1 ]] && exit 1
 	fi
