@@ -35,7 +35,8 @@
   gather_facts: no
 
   roles:
-    - {role: "{{ auto_dir }}/roles/vm_creation", when: create_vms | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/vm_creation", when: create_vms_ova | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/vm_fromiso", when: create_vms_iso | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_configuration", when: configure_vms | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/puppet", when: push_puppet | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_ppp_configuration", when: configure_ppp_vms | default(false) | bool}
@@ -49,5 +50,6 @@
 
   roles:
     - {role: "{{ auto_dir }}/roles/puppet", when: rollback_puppet | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/vm_creation", when: rollback_vms | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/vm_creation", when: rollback_vms_ova | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/vm_fromiso", when: rollback_vms_iso | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/ssh_keys", when: rollback_ssh_keys | default(false) | bool}

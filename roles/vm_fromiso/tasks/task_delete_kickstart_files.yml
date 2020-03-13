@@ -1,0 +1,34 @@
+---
+# Tasks to delete the kickstart files from vsphere and locally
+- block:
+  - include_tasks: task_poweroff_vm.yml
+  - include_tasks: task_disconnect_cdrom.yml
+  - include_tasks: task_poweron_vm.yml
+
+  - name: delete kickstart ISO file from vsphere
+    vsphere_file:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+      state: absent
+      validate_certs: false
+    environment:
+      http_proxy: ''
+      https_proxy: ''
+    async: 30
+    poll: 0
+    ignore_errors: true
+  - name: delete kickstart files locally
+    file:
+      path: "{{ role_path }}/files/{{ file_item }}"
+      state: absent
+    loop:
+      - "{{ vm.name }}-kickstart.iso"
+      - "{{ vm.name }}-kickstart.cfg"
+    loop_control:
+      loop_var: file_item
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vm_creation

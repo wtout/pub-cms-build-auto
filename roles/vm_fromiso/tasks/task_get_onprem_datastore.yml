@@ -1,0 +1,22 @@
+---
+# tasks to define the on-prem datastore for each host
+- name: define on-prem datastores list for each host group
+  set_fact:
+    vm_ds_names: "{{ hostvars[groups['vcenter']|first][inventory_hostname[:-2] + '_ds_names'] }}"
+  tags: vm_creation
+
+- block:
+  - name: define on-prem datastore for each host
+    set_fact:
+      vm_ds: "{{ vm_ds_names[inventory_hostname[-2:]|int - 1] if inventory_hostname[-2:]|int <= max_length|int else vm_ds_names[(inventory_hostname[-2:]|int - 1) % max_length|int] }}"
+    vars:
+      max_length: "{{ vm_ds_names|length - 1 if customer.disaster_recovery else vm_ds_names|length }}"
+  when: "'dr' not in group_names"
+  tags: vm_creation
+
+- block:
+  - name: define on-prem datastore for each DR host
+    set_fact:
+      vm_ds: "{{ vm_ds_names[2] }}"
+  when: "'dr' in group_names"
+  tags: vm_creation

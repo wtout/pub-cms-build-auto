@@ -23,14 +23,14 @@ function check_hosts_limit() {
 		[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation')" != "x" ]] && local update_args=1
 		if [[ ${update_args} -eq 1 ]]
 		then
-			for arg
-			do
-				shift
-				[[ "${arg}" == "${MYHOSTS}" ]] && set -- ${@} "${MYHOSTS},vcenter" || set -- ${@} ${arg}
-			done
+			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},vcenter/")
+		else
+			local NEWARGS=${@}
 		fi
+	else
+		local NEWARGS=${@}
 	fi
-	echo ${@}
+	echo ${NEWARGS}
 }
 
 function check_concurrency() {
@@ -46,13 +46,14 @@ function clean_arguments() {
 	# Remove --envname argument from script arguments
 	local OPTION_NAME="--envname"
 	local ENVNAME=${1}
-	for arg
-	do
+	if [[ "x$(echo ${@} | egrep -w '\-\-envname')" != "x" ]]
+	then
 		shift
-		[[ ${arg} == ${OPTION_NAME} || ${ENVNAME} == ${arg} ]] && continue
-		set -- ${@} ${arg}
-	done
-	echo ${@}
+		local NEWARGS=$(echo ${@} | sed "s/${OPTION_NAME} ${ENVNAME}//")
+	else
+		local NEWARGS=${@}
+	fi
+	echo ${NEWARGS}
 }
 
 function git_config() {
@@ -137,29 +138,38 @@ function remove_hosts_arg() {
 	[[ "x$(echo ${@} | egrep -w '\-l')" != "x" ]] && local ARG_NAME="-l" && local MYACTION="clean"
 	if [[ ${MYACTION} == "clean" ]]
 	then
-		local MYHOSTS=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
-		local NEW_ARGS=
-		for arg
-		do
-			shift
-			[[ ${arg} == ${ARG_NAME} || ${arg} == ${MYHOSTS} ]] && continue
-			set -- ${@} ${arg}
-		done
+		local MYARGS=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
+		local NEWARGS=$(echo ${@} | sed "s/${ARG_NAME} ${MYARGS}//")
+	else
+		local NEWARGS=${@}
 	fi
-	echo ${@}
+	echo ${NEWARGS}
+}
+
+function remove_extra_vars_arg() {
+	# Remove --extra-vars or -e argument from script arguments
+	[[ "x$(echo ${@} | egrep -w '\-\-extra\-vars')" != "x" ]] && local ARG_NAME="--extra-vars" && local MYACTION="clean"
+	[[ "x$(echo ${@} | egrep -w '\-e')" != "x" ]] && local ARG_NAME="-e" && local MYACTION="clean"
+	if [[ ${MYACTION} == "clean" ]]
+	then
+		local MYARGS=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
+		local NEWARGS=$(echo ${@} | sed "s/${ARG_NAME} ${MYARGS}//")
+	else
+		local NEWARGS=${@}
+	fi
+	echo ${NEWARGS}
 }
 
 function get_inventory() {
 	sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
-	sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
 	if [[ -f ${SYS_DEF} ]]
 	then
-		ansible-playbook playbooks/getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_hosts_arg ${@}) -e @${ANSIBLE_VARS} -v
+		ansible-playbook playbooks/getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v
 		GET_INVENTORY_STATUS=${?}
 		[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
 	elif [[ $(echo ${ENAME} | grep -i mdr) != '' ]]
 	then
-		[[ -d ${PWD}/inventories/${ENAME} ]] && GET_INVENTORY_STATUS=0 || GET_INVENTORY_STATUS=1
+		[[ -d ${INVENTORY_PATH} ]] && GET_INVENTORY_STATUS=0 || GET_INVENTORY_STATUS=1
 		[[ ${GET_INVENTORY_STATUS} -ne 0 ]] && echo -e "\nInventory for ${BOLD}${ENAME}${NORMAL} system is not found. Aborting!" && exit 1
 	else
 		echo -e "\nStack definition file for ${ENAME} cannot be found. Aborting!"
@@ -253,7 +263,7 @@ function get_hostsinplay() {
 	local HN=""
 	for env in ${ENVS}
 	do
-		HN="${HN}$(cat inventories/${env}/hosts | awk '{print $1}' | egrep -v '\[|=' | sed '/^$/d')"
+		HN="${HN}$(cat ${INVENTORY_PATH}}/hosts | awk '{print $1}' | egrep -v '\[|=' | sed '/^$/d')"
 	done
 	echo ${HN}
 }
@@ -265,20 +275,6 @@ function get_sleeptime() {
 	echo $((${HOSTNUM} + ${HOSTNUM} / 4))
 }
 
-function update_inventory() {
-	if [[ "${ENAME}" != "" ]]
-	then
-		if [[ "$(echo ${ENAME} | awk -F ' ' '{print $2}')" == "" ]]
-		then
-			sed -i "s|\(^inventory =\).*$|\1 inventories/${ENAME}|" ${ANSIBLE_CFG}
-		else
-			printf "\nYou can install only one Environment at a time!\nRe-run the script with --envname <environment name as defined under Inventories>\n\n" && exit 1
-		fi
-	else
-		printf "\nEnvironment name is required!\nRe-run the script with --envname <environment name as defined under Inventories>\n\n" && exit 1
-	fi
-}
-
 function get_hosts() {
 	[[ "x$(echo ${@} | egrep -w '\-\-limit')" != "x" ]] && local ARG_NAME="--limit" && local MYACTION="get"
 	[[ "x$(echo ${@} | egrep -w '\-l')" != "x" ]] && local ARG_NAME="-l" && local MYACTION="get"
@@ -286,7 +282,7 @@ function get_hosts() {
 	then
 		HOST_LIST=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}' | sed -e 's/,/ /g')
 	else
-		HOST_LIST=$(ansible all -m debug -a var=ansible_play_hosts | grep '[0-9]\{2\}"' | sort -u | sed -e 's/^.*"\(.*[0-9]\{2\}\)".*$/\1/g')
+		HOST_LIST=$(ansible all -i ${INVENTORY_PATH} --list-hosts | grep -v host | sed -e 's/^\s*\(\w.*\)$/\1/g' | sort)
 	fi
 }
 
@@ -334,7 +330,7 @@ function enable_logging() {
 function get_credentials() {
 	if [[ ${GET_INVENTORY_STATUS} == 0 && ! -f ${CRVAULT} ]]
 	then
-		ansible-playbook playbooks/prompts.yml --extra-vars "{VFILE: '${CRVAULT}'}" $(remove_hosts_arg ${@}) -e @${ANSIBLE_VARS} -v
+		ansible-playbook playbooks/prompts.yml -i ${INVENTORY_PATH} --extra-vars "{VFILE: '${CRVAULT}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v
 		GET_CREDS_STATUS=${?}
 		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
 		if [[ ${REPOPASS} != "" ]]
@@ -369,11 +365,10 @@ function run_playbook() {
 		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
 		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
 		sleep 1 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && rm -f ${VAULTC} ${VAULTP} &
-		ansible-playbook playbooks/site.yml --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
-		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE//.${ENAME}}${NORMAL}" && EC=1
+		ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
+		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE}.${ENAME}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
 		rm -f /tmp/${PID}.stderr
-		sed -i "s|\(^inventory =\).*$|\1 inventories|" ${ANSIBLE_CFG}
 		[[ ${EC} == 1 ]] && exit 1
 	fi
 }
@@ -416,8 +411,9 @@ set -- && set -- ${@} ${NEW_ARGS}
 CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
+INVENTORY_PATH="${PWD}/inventories/${ENAME}"
 REPOVAULT="${PWD}/.repovault.yml"
-CRVAULT="${PWD}/inventories/${ENAME}/group_vars/vault.yml"
+CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 VAULTP="${PWD}/.vaultp.${ENAME}"
 VAULTC="${PWD}/.vaultc.${ENAME}"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
@@ -430,7 +426,6 @@ install_packages
 check_updates ${REPOVAULT} ${VAULTP}
 get_inventory ${@}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
-update_inventory
 get_hosts ${@}
 get_credentials ${@}
 enable_logging ${@}

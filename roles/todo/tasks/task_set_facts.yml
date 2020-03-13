@@ -33,22 +33,46 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is not search('mdr')
+    - not bfiso | default(false) | bool
   tags: get_release
 
-- name: define create_vms
+- name: define create_vms_iso
   set_fact:
-    create_vms: true
+    create_vms_iso: true
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is search('mdr') or bfiso | default(false) | bool
   tags: vm_creation
 
-- name: define rollback_vms
+- name: define rollback_vms_iso
   set_fact:
-    rollback_vms: true
+    rollback_vms_iso: true
   when:
     - rollback | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is search('mdr') or bfiso | default(false) | bool
+  tags: vm_creation
+
+- name: define create_vms_ova
+  set_fact:
+    create_vms_ova: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is not search('mdr')
+    - not bfiso | default(false) | bool
+  tags: vm_creation
+
+- name: define rollback_vms_ova
+  set_fact:
+    rollback_vms_ova: true
+  when:
+    - rollback | default(false) | bool
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is not search('mdr')
+    - not bfiso | default(false) | bool
   tags: vm_creation
 
 - name: define configure_vms
@@ -57,6 +81,8 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is not search('mdr')
+    - not bfiso | default(false) | bool
   tags: vm_configuration
 
 - name: define push_puppet
@@ -65,6 +91,8 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is not search('mdr')
+    - not bfiso | default(false) | bool
   tags: puppet
 
 - name: define rollback_puppet
@@ -73,6 +101,8 @@
   when:
     - rollback | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is not search('mdr')
+    - not bfiso | default(false) | bool
   tags: puppet
 
 - name: define configure_ppp_vms
@@ -82,6 +112,8 @@
     - deploy | default(false) | bool
     - customer.disaster_recovery
     - inventory_hostname in groups['stack'] or inventory_hostname in groups['dr']
+    - customer.name | lower is not search('mdr')
+    - not bfiso | default(false) | bool
   tags: vm_ppp_configuration
 
 - name: define splunk_mop_fix
@@ -90,6 +122,8 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+    - customer.name | lower is not search('mdr')
+    - not bfiso | default(false) | bool
   tags: splunk_mop
 
 #- name: define check_requiretty

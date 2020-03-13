@@ -1,0 +1,74 @@
+---
+# Tasks to copy the ISO file to datastore
+- block:
+  - name: create a directory on the datastore
+    vsphere_file:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}"
+      state: directory
+      validate_certs: false
+    register: ds_folder
+
+  - include_tasks: task_poweroff_vm.yml
+    when: ds_folder is succeeded
+
+  - name: copy kickstart ISO file to vsphere
+    vsphere_copy:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+      src: "{{ role_path }}/files/{{ vm.name }}-kickstart.iso"
+      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+      validate_certs: false
+    when: ds_folder is succeeded
+
+  - name: check if the installer ISO is on the datastore
+    vsphere_file:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+      state: file
+      validate_certs: false
+    register: iso_present
+    ignore_errors: true
+    when: ds_folder is succeeded
+    run_once: true
+
+  - block:
+    - name: copy installer ISO file to vsphere
+      vsphere_copy:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ datacenter.name }}"
+        datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+        src: "{{ auto_dir }}/Packages/ISO/CentOS-7-x86_64-DVD-1908.iso"
+        dest: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+        validate_certs: false
+      async: 7200
+      poll: 30
+      register: iso_upld
+    - name: wait on iso upload
+      async_status:
+        jid: "{{iso_upld.ansible_job_id}}"
+      register: upld_result
+      until: upld_result.finished
+    run_once: true
+    when:
+      - iso_present is failed
+      - not ansible_check_mode
+      - ds_folder is succeeded
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  environment:
+    http_proxy: ''
+    https_proxy: ''
+  tags: vm_creation

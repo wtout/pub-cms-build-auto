@@ -1,0 +1,130 @@
+---
+# tasks to deploy VM from ISO
+- block:
+  - name: Define folder name
+    set_fact:
+      fldr_name: "{{ hostvars[groups['vcenter'][0]]['information']['folder'] + '/' + customer.name if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups['vcenter'][0]]['information']['folder'] }}"
+  - name: Get VM info
+    vmware_guest_info:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      name: "{{ vm.name }}"
+      validate_certs: no
+    check_mode: no
+    ignore_errors: true
+    register: vmguest_info
+
+  - block:
+    - name: Deploy VM from ISO with 1 NIC
+      vmware_guest:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ datacenter.name }}"
+        cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+        folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+        guest_id: centos64Guest
+        name: "{{ vm.name }}"
+        state: poweredon
+        validate_certs: no
+        disk:
+          - size_gb: "{{ vm.disk0 }}"
+            type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+            datastore: "{{ 'HX-Datastore-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+            state: present
+            scsi_controller: 0
+            unit_number: 0
+        hardware:
+          memory_mb: "{{ vm.memory|int * 1024 }}"
+          num_cpus: "{{ vm.cpu|int }}"
+          scsi: lsilogic
+          boot_firmware: "bios"
+          version: 11
+        networks:
+          - name: "{{ netconfig.network1 }}"
+            ip: "{{ netconfig.ipaddress1 }}"
+            netmask: "{{ netconfig.netmask1 }}"
+            gateway: "{{ netconfig.gateway1 }}"
+            device_type: vmxnet3
+        cdrom:
+          - type: iso
+            iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+            controller_number: 0
+            unit_number: 0
+          - type: iso
+            iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+            controller_number: 1
+            unit_number: 0
+      register: deploy_iso1net
+      environment:
+        http_proxy: ''
+        https_proxy: ''
+      when:
+        - netconfig.network2 == ''
+    - name: Deploy VM from ISO with 2 NICs
+      vmware_guest:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ datacenter.name }}"
+        cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+        folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+        guest_id: centos64Guest
+        name: "{{ vm.name }}"
+        state: poweredon
+        validate_certs: no
+        disk:
+          - size_gb: "{{ vm.disk0 }}"
+            type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+            datastore: "{{ 'HX-Datastore-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+            state: present
+            scsi_controller: 0
+            unit_number: 0
+        hardware:
+          memory_mb: "{{ vm.memory|int * 1024 }}"
+          num_cpus: "{{ vm.cpu|int }}"
+          scsi: lsilogic
+          boot_firmware: "bios"
+          version: 11
+        networks:
+          - name: "{{ netconfig.network1 }}"
+            ip: "{{ netconfig.ipaddress1 }}"
+            netmask: "{{ netconfig.netmask1 }}"
+            gateway: "{{ netconfig.gateway1 }}"
+            device_type: vmxnet3
+          - name: "{{ netconfig.network2 }}"
+            ip: "{{ netconfig.ipaddress2 }}"
+            netmask: "{{ netconfig.netmask2 }}"
+            gateway: "{{ netconfig.gateway2 }}"
+            device_type: vmxnet3
+        cdrom:
+          - type: iso
+            iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+            controller_number: 0
+            unit_number: 0
+          - type: iso
+            iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+            controller_number: 1
+            unit_number: 0
+      register: deploy_iso2net
+      environment:
+        http_proxy: ''
+        https_proxy: ''
+      when:
+        - netconfig.network2 != ''
+    - name: Wait for port 22 to become open and contain "OpenSSH"
+      wait_for:
+        port: 22
+        host: "{{ netconfig.ipaddress1 if netconfig.gateway1 != '' else netconfig.ipaddress2 }}"
+        search_regex: OpenSSH
+        delay: 10
+        timeout: 900
+        sleep: 10
+      when:
+      - deploy_iso2net is succeeded or deploy_iso1net is succeeded
+      - vmguest_info is failed
+
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vm_creation

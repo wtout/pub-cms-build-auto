@@ -1,0 +1,6 @@
+---
+# vars file for vm_fromiso
+iso_dir: "Packages/ISO"
+vm_svc_user: 'cmsbuild'
+vm_svc_pass: "{{ credentials.password }}"
+chrony_file: '/etc/chrony.conf'

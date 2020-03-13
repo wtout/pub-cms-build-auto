@@ -1,0 +1,136 @@
+# System authorization information
+auth --useshadow --passalgo=sha512
+# Use CDROM installation media
+cdrom
+# Use command line install
+cmdline
+# Install OS instead of upgrade
+install
+# Run the Setup Agent on first boot
+firstboot --disable
+# Keyboard layouts
+keyboard --vckeymap=us --xlayouts='us'
+
+# System language
+lang en_US.UTF-8
+
+# Network information
+network --bootproto=static --device={{ netconfig.netname1 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway1 }} --ip={{ netconfig.ipaddress1 }} --nameserver={{ sysconfig.dns_servers|join(',') }} --netmask={{ netconfig.netmask1 }} --noipv6 --activate
+network --bootproto=static --device={{ netconfig.netname2 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway2 }} --ip={{ netconfig.ipaddress2 }} --nameserver={{ sysconfig.dns_servers|join(',') }} --netmask={{ netconfig.netmask2 }} --noipv6 --activate
+network --hostname={{ vm.name }}
+
+# Root password
+rootpw --iscrypted {{ ansible_ssh_pass | password_hash('sha512') }}
+# SELinux configuration
+selinux --disabled
+# System services
+services --enabled="chronyd"
+# Firewall configuration
+firewall --disabled
+# Do not configure the X Window System
+skipx
+# Reboot after installation
+reboot --eject
+
+# System timezone
+timezone UTC
+# System bootloader configuration
+bootloader --boot-drive=sda --location=mbr --append="rhgb quiet crashkernel=auto" --iscrypted --password=grub.pbkdf2.sha512.10000.5F7BC3CE2A23B3D88C82BC7900BD9DDCCE3357F5DC60F8C755B9BBAE5E0934D711735A99FE3F0477EDD5812FE53269AD4BD66AEEA6E2A40322BB791B4F0C6D05.B07C8E4CEAD6D59F404822B6750A3B40062E45D54B9B435E9D525E577764BEA7D12CAD1314008600E9A1274A15DDD6AF7D01CE494650C0AAF777E6DE5DDD24A6
+# Clear the Master Boot Record
+zerombr
+# Partition clearing information
+clearpart --all
+
+# Disk partitioning information
+part /boot --fstype="ext4" --size=512
+part pv.561 --fstype="lvmpv" --ondisk=sda --size=37375
+volgroup vgroup1 --pesize=4096 pv.561
+logvol swap  --fstype="swap" --size=8096 --name=swap --vgname=vgroup1
+logvol /  --fstype="ext4" --size=10844 --name=root --vgname=vgroup1
+logvol /home  --fstype="ext4" --size=5120 --name=home --vgname=vgroup1 --fsoptions=rw,nodev,nosuid
+logvol /var  --fstype="ext4" --size=5120 --name=var --vgname=vgroup1
+logvol /var/log  --fstype="ext4" --size=5120 --name=varlog --vgname=vgroup1
+logvol /tmp  --fstype="ext4" --size=2048 --name=temp --vgname=vgroup1 --fsoptions=nodev,nosuid,noexec
+logvol /var/log/audit  --fstype="ext4" --size=1024 --name=audit --vgname=vgroup1
+
+%packages --excludedocs
+@base
+@core
+kexec-tools
+open-vm-tools
+chrony
+iptables-services
+aide
+tcp_wrappers
+net-snmp
+net-snmp-utils
+rsyslog
+sssd
+realmd
+oddjob
+oddjob-mkhomedir
+adcli
+samba-common
+samba-common-tools
+krb5-workstation
+openldap-clients
+policycoreutils-python
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+%end
+
+%post
+# Add search domain
+echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.netname1 }}
+{{ "echo 'DOMAIN=\"" + sysconfig.domain_name + "\"' >> /etc/sysconfig/network-scripts/ifcfg-" + netconfig.netname2 if netconfig.netname2 != '' else '' }}
+
+# Yum repos
+rm -f /etc/yum.repos.d/*
+cat <<EOF > /etc/yum.repos.d/QS.repo
+[QS-PROD]
+Name=QS-PROD
+baseurl={{ repo.baseurl + '/QS' }}
+enabled=1
+gpgcheck=0
+sslverify=False
+
+[centos76]
+Name=centos76
+baseurl={{ repo.baseurl + '/centos76' }}
+enabled=0
+gpgcheck=0
+sslverify=False
+EOF
+
+# Configure Chrony
+sed -i '/^server.*iburst$/d' /etc/chrony.conf
+sed -i 's/^\(# Please consider.*\)$/\1\nserver {{ netconfig.ipaddress1.split('.')[:-1] | join('.') + '.254' if customer.name|lower is search('mdr') else sysconfig.ntp_server }} iburst/' /etc/chrony.conf
+
+# Configure SNMP
+/usr/bin/net-snmp-create-v3-user -a MD5 -A "C1s20A798hPwec" -x DES -X "m91K0sl1ux9bsp" cmsmomuser
+sed -i "$(sed -n '/^view.*systemview/ =' /etc/snmp/snmpd.conf | tail -n 1)s/^\(view.*systemview.*\)$/\1\nview    systemview    included   .1/" /etc/snmp/snmpd.conf
+sed -i 's/usmUser/# usmUser/g' /var/lib/net-snmp/snmpd.conf
+
+# Configure hosts.allow
+sed -i 's/^\(\w.*\)$/#\1/' /etc/hosts.allow
+echo 'SSHD: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
+echo 'snmpd: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
+
+# Add user
+useradd {{ vm_svc_user}}
+echo '{{ vm_svc_user }}:{{ vm_svc_pass }}' |chpasswd
+cat  << xxEOFxx >> /etc/sudoers.d/{{ vm_svc_user }}
+Host_Alias  BUILDUSER_SUDO_HOSTS = ALL
+Runas_Alias BUILDUSER_SUDO_RUNAS = ALL
+Cmnd_Alias  BUILDUSER_SUDO_CMNDS = ALL
+Cmnd_Alias      BUILDUSER_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
+%{{ vm_svc_user }} BUILDUSER_SUDO_HOSTS = (BUILDUSER_SUDO_RUNAS) NOPASSWD: BUILDUSER_SUDO_CMNDS, !BUILDUSER_SHELLS
+xxEOFxx
+%end
+
+%anaconda
+pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+%end

@@ -1,0 +1,47 @@
+---
+# Tasks to enable hardening on VM
+- name: check if hardening is enabled
+  wait_for_connection:
+    timeout: 10
+  register: harden1
+  ignore_errors: true
+  tags: vm_creation
+
+- block:
+  - debug:
+      msg: 'Procedure to enable hardening is starting'
+  - name: copy hardening package files to VM
+    copy:
+      src: '{{ role_path }}/files/{{ file_item }}'
+      dest: '/home/{{ vm_svc_user }}/hardening/'
+      owner: root
+      group: root
+    loop:
+      - hardening.sh
+      - login.defs
+      - password-auth-ac
+      - system-auth-ac
+    loop_control:
+      loop_var: file_item
+  - name: switch user
+    set_fact:
+      ansible_user: "{{ vm_svc_user }}"
+  - name: run hardening script
+    command: sh /home/{{ vm_svc_user }}/hardening/hardening.sh
+    register: hard_script
+    become: true
+  - name: switch back to root user
+    set_fact:
+      ansible_user: '{{ credentials.username }}'
+  - name: check if hardening is enabled
+    wait_for_connection:
+      timeout: 10
+    register: harden2
+    ignore_errors: true
+  - assert:
+      that:
+        - harden2 is failed
+      fail_msg: 'Hardening is not enabled'
+      success_msg: 'Hardening is enabled'
+  when: harden1 is succeeded
+  tags: vm_creation

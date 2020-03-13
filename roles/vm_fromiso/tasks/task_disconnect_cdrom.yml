@@ -1,0 +1,28 @@
+---
+# Tasks to disconnect the CDROM
+- name: Disconnect CDROM
+  vmware_guest:
+    hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+    username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+    password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+    name: "{{ vm.name }}"
+    datacenter: "{{ datacenter.name }}"
+    cluster: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+    validate_certs: no
+    cdrom:
+      - type: iso
+        iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+        controller_number: 0
+        unit_number: 0
+        state: absent
+      - type: iso
+        iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+        controller_number: 1
+        unit_number: 0
+        state: absent
+  ignore_errors: true
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  environment:
+    http_proxy: ''
+    https_proxy: ''
+  tags: vm_creation

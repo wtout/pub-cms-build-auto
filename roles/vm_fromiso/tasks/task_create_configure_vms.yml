@@ -1,0 +1,16 @@
+---
+# Tasks to create and configure VM pairs
+- block:
+  - include_tasks: task_get_vm_datastore.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
+  - include_tasks: task_create_kickstart_iso.yml
+  - include_tasks: task_copy_kickstart_iso_to_vsphere.yml
+  - include_tasks: task_deploy_iso.yml
+  - include_tasks: task_update_disks.yml
+  - include_tasks: task_delete_kickstart_files.yml
+  - include_tasks: task_update_default_route.yml
+  - name: flush handlers
+    meta: flush_handlers
+  - include_tasks: task_enable_hardening.yml
+  tags: vm_creation

@@ -1,0 +1,61 @@
+---
+# Tasks to configure the default route on the VM
+- block:
+  - block:
+    - name: update ansible_host to point to ipaddress2
+      set_fact:
+        ansible_host: "{{ netconfig.ipaddress2 }}"
+    - name: Wait for port 22 to become open and contain "OpenSSH"
+      wait_for:
+        port: 22
+        host: "{{ ansible_host }}"
+        search_regex: OpenSSH
+        delay: 10
+        timeout: 900
+        sleep: 10
+    - include_tasks:
+        file: task_copy_route_file.yml
+        apply:
+          vars:
+            try_num: "{{ loop_item }}"
+      loop: "{{ range(1, 2 + 1)|list }}"
+      loop_control:
+        loop_var: loop_item
+    - assert:
+        that: copy_file_status is succeeded
+        fail_msg: "Route file couldn't be copied to host successfully"
+    - name: ping gateway1
+      shell: |
+        sleep 10
+        ping {{ (customer.secondary_octets if 'dr' in group_names else customer.octets) + '.62' }} -c 1
+      register: gtw_ping
+      async: 120
+      poll: 10
+      when: copy_file_status is succeeded
+    - name: restart the network on the VM
+      service:
+        name: network
+        state: restarted
+      async: 30
+      poll: 0
+      when: copy_file_status is succeeded
+      register: restart_net
+    - name: revert ansible_host to ipaddress1
+      set_fact:
+        ansible_host: "{{ netconfig.ipaddress1 }}"
+      when:
+        - restart_net is succeeded
+    - name: wait on gateway ping
+      async_status:
+        jid: "{{gtw_ping.ansible_job_id}}"
+      register: ping_result
+      until: ping_result.finished
+      when:
+        - copy_file_status is succeeded
+        - not ansible_check_mode
+    - name: wait 120 seconds for VM to become reachable
+      wait_for_connection:
+        timeout: 120
+    when: vcr_vm_reachable is failed
+  when: netconfig.gateway1 == ''
+  tags: vm_creation

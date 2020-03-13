@@ -1,0 +1,144 @@
+---
+# tasks to update VM disk settings
+- block:
+  - name: Get VM info
+    vmware_guest_disk_info:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      name: "{{ vm.name }}"
+      validate_certs: no
+    register: disk_info
+  - name: Define VM disk0
+    set_fact:
+      disk0_unit_number: "{{ disk_info.guest_disk_info | dict2items | selectattr('key','equalto', '0') | map(attribute='value.unit_number') | list| to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '') }}"
+      disk0_size_kb: "{{ (vm.disk0|float * 1024|pow(2))|int if (vm.disk0 != '' and vm.disk0|float * 1024|pow(2)|int > disk0_readsize|int) else disk0_readsize }}"
+      disk0_datastore: "{{ disk_info.guest_disk_info | dict2items | selectattr('key','equalto', '0') | map(attribute='value.backing_datastore') | list| to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '') }}"
+    vars:
+      disk0_readsize: "{{ disk_info.guest_disk_info | dict2items | selectattr('key','equalto', '0') | map(attribute='value.capacity_in_kb') | list | to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '') }}"
+    when:
+      - disk_info.guest_disk_info | dict2items | length >= 1
+      - vm.disk0 is defined
+      - vm.disk0|float > 0
+  - name: Define VM disk1
+    set_fact:
+      disk1_unit_number: "{{ (disk0_unit_number|int + 1) }}"
+      disk1_size_kb: "{{ (vm.disk1|float * 1024|pow(2))|int }}"
+      disk1_datastore: "{{ disk0_datastore }}"
+    when:
+      - vm.disk1 is defined
+      - vm.disk1 != ''
+      - vm.disk1|float > 0
+  - name: Define datastore to host Disk2 for Splunk Indexers
+    set_fact:
+      splind_datastore: "{{ hostvars[groups['vcenter']|first]['ssd_ds_names']|last if 'dr' in group_names else hostvars[groups['vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] }}"
+    when:
+      - inventory_hostname is search('splind')
+      - datacenters[datacenter.name]['deptype'] == 'a'
+  - name: Define VM disk2
+    set_fact:
+      disk2_unit_number: "{{ (disk1_unit_number|int + 1) }}"
+      disk2_size_kb: "{{ (vm.disk2|float * 1024|pow(2))|int }}"
+      disk2_datastore: "{{ splind_datastore if (inventory_hostname is search('splind') and datacenters[datacenter.name]['deptype'] == 'a') else disk0_datastore }}"
+    when:
+      - vm.disk2 is defined
+      - vm.disk2 != ''
+      - vm.disk2|float > 0
+  - name: Define VM disk3
+    set_fact:
+      disk3_unit_number: "{{ (disk2_unit_number|int + 1) }}"
+      disk3_size_kb: "{{ (vm.disk3|float * 1024|pow(2))|int }}"
+      disk3_datastore: "{{ disk1_datastore }}"
+    when:
+      - vm.disk3 is defined
+      - vm.disk3 != ''
+      - vm.disk3|float > 0
+
+  - name: Update VM Disk0 settings
+    vmware_guest_disk:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name}}"
+      datacenter: "{{ datacenter.name }}"
+      disk:
+        - size_kb: "{{ disk0_size_kb }}"
+          type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          datastore: "{{ disk0_datastore }}"
+          state: present
+          scsi_controller: 0
+          unit_number: "{{ disk0_unit_number }}"
+      validate_certs: no
+    register: vmguest_disk
+    notify: expand disk0
+    when:
+      - vm.disk0 is defined
+      - vm.disk0|float > 0
+  - name: Update VM Disk1 settings
+    vmware_guest_disk:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name}}"
+      datacenter: "{{ datacenter.name }}"
+      disk:
+        - size_kb: "{{ disk1_size_kb }}"
+          type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          datastore: "{{ disk1_datastore }}"
+          state: present
+          scsi_controller: 0
+          unit_number: "{{ disk1_unit_number }}"
+      validate_certs: no
+    register: vmguest_disk
+    notify: expand disk1
+    when:
+      - vm.disk1 is defined
+      - vm.disk1|float > 0
+  - name: Update VM Disk2 settings
+    vmware_guest_disk:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      datacenter: "{{ datacenter.name }}"
+      disk:
+        - size_kb: "{{ disk2_size_kb }}"
+          type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          datastore: "{{ disk2_datastore }}"
+          state: present
+          scsi_controller: 0
+          unit_number: "{{ disk2_unit_number }}"
+      validate_certs: no
+    register: vmguest_disk
+    notify: expand disk2
+    when:
+      - vm.disk2 is defined
+      - vm.disk2 != ''
+      - vm.disk2|float > 0
+  - name: Update VM Disk3 settings
+    vmware_guest_disk:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      datacenter: "{{ datacenter.name }}"
+      disk:
+        - size_kb: "{{ disk3_size_kb }}"
+          type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          datastore: "{{ disk3_datastore }}"
+          state: present
+          scsi_controller: 0
+          unit_number: "{{ disk3_unit_number }}"
+      validate_certs: no
+    register: vmguest_disk
+    notify: expand disk3
+    when:
+      - vm.disk3 is defined
+      - vm.disk3 != ''
+      - vm.disk3|float > 0
+  when:
+    - not ansible_check_mode
+    - vm.disk1|float > 0 or vm.disk2|float > 0 or vm.disk3|float > 0
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vm_creation
