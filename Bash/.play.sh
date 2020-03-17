@@ -353,19 +353,13 @@ function run_playbook() {
 		ansible ${HL} -m debug -a 'msg={{ansible_ssh_pass}}' &>/dev/null && [[ ${?} == 0 ]] && ASK_PASS=''
 		### End
 		[[ ! -f ${VAULTC} ]] && git config remote.origin.url | awk -F '/' '{print $NF}' > ${VAULTC}
-		if [[ $(grep vault_password_file ${ANSIBLE_CFG}) != "" ]]
-		then
-			sed -i "s|\(^vault_password_file =\).*$|\1 ${VAULTC}|" ${ANSIBLE_CFG}
-		else
-			echo "vault_password_file = ${VAULTC}" >> ${ANSIBLE_CFG}
-		fi
 		[[ $- =~ x ]] && debug=1 && set +x
 		[[ ! -f ${VAULTP} ]] && echo ${REPOPASS} > ${VAULTP}
 		[[ ${debug} == 1 ]] && set -x
 		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
 		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
-		sleep 1 && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && rm -f ${VAULTC} ${VAULTP} &
-		ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
+		sleep 1 && rm -f ${VAULTC} ${VAULTP} &
+		ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTC} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE}.${ENAME}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
 		rm -f /tmp/${PID}.stderr
@@ -402,6 +396,7 @@ PKG_LIST='epel-release sshpass python2-pip'
 ANSIBLE_VERSION='2.9.5'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
+REPOVAULT="${PWD}/.repovault.yml"
 
 # Main
 PID=${$}
@@ -412,7 +407,6 @@ CC=$(check_concurrency)
 ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
 INVENTORY_PATH="${PWD}/inventories/${ENAME}"
-REPOVAULT="${PWD}/.repovault.yml"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 VAULTP="${PWD}/.vaultp.${ENAME}"
 VAULTC="${PWD}/.vaultc.${ENAME}"

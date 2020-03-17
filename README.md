@@ -105,10 +105,12 @@ The list of roles used in the playbooks:
   - **capcheck**: performs a capacity check of the infrastructure
   - **get_release**: downloads the release package from the repository
   - **vm_facts**: defines the individual VM facts required in the playbook
-  - **vm_creation**: deploys the stack's VMs
+  - **vm_creation**: deploys the stack's VMs from OVA
+  - **vm_fromiso**: deploys the stack's VMs from ISO
   - **vm_configuration**: configures the stack's VMs
   - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
   - **vm_ppp_configuration**: configures the stack's VMs post initial puppet push
+  - **splunk_mop**: implements the datetime fix for splunk VMs
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
 To execute specific role(s), add "_--tags 'role1,role2,...'_" as argument to the script.
