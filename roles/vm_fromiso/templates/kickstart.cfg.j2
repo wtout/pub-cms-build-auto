@@ -108,7 +108,7 @@ sed -i '/^server.*iburst$/d' /etc/chrony.conf
 sed -i 's/^\(# Please consider.*\)$/\1\nserver {{ netconfig.ipaddress1.split('.')[:-1] | join('.') + '.254' if customer.name|lower is search('mdr') else sysconfig.ntp_server }} iburst/' /etc/chrony.conf
 
 # Configure SNMP
-/usr/bin/net-snmp-create-v3-user -a MD5 -A "C1s20A798hPwec" -x DES -X "m91K0sl1ux9bsp" cmsmomuser
+/usr/bin/net-snmp-create-v3-user -ro -A "C1s20A798hPwec" -X "m91K0sl1ux9bsp" -a MD5 -x DES cmsmomuser
 sed -i "$(sed -n '/^view.*systemview/ =' /etc/snmp/snmpd.conf | tail -n 1)s/^\(view.*systemview.*\)$/\1\nview    systemview    included   .1/" /etc/snmp/snmpd.conf
 sed -i 's/usmUser/# usmUser/g' /var/lib/net-snmp/snmpd.conf
 
