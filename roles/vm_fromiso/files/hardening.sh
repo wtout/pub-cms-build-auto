@@ -248,7 +248,7 @@ systemctl disable smb > /dev/null 2>&1
 systemctl disable squid > /dev/null 2>&1 
 
 # 2.2.14 - Ensure SNMP Server is not enabled (Scored)
-systemctl disable snmpd > /dev/null 2>&1 
+#systemctl disable snmpd > /dev/null 2>&1 
 
 # 2.2.16 - Ensure NIS Server is not enabled (Scored)
 systemctl disable ypserv > /dev/null 2>&1 

@@ -4,5 +4,6 @@
   service:
     name: "{{ svc_name }}"
     state: restarted
+    use: systemctl
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_ppp_configuration

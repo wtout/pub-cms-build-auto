@@ -11,6 +11,7 @@
     unarchive:
       src: "{{ datetime_zip }}/datetime.zip"
       dest: /opt/install
+      mode: 0444
   - name: confirm datetime.zip was properly extracted
     stat:
       path: /opt/install/cfg
@@ -26,7 +27,7 @@
   
   - block:
     - name: stop splunk
-      command: "{{ splunk_dir }}/bin/splunk stop"    
+      command: "{{ splunk_dir }}/bin/splunk stop"
 
     - name: verify splunk is stopped
       command: "{{ splunk_dir }}/bin/splunk status"
@@ -49,7 +50,7 @@
         backup: "{{ 'no' if backup_file.matched != 0 else 'yes' }}"
         owner: splunk
         group: splunk
-        mode: '0444'
+        mode: 0444
     
     - name: check new datetime file
       lineinfile:

@@ -4,6 +4,7 @@
   service:
     name: chronyd
     state: restarted
+    use: systemctl
   become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation
 
@@ -183,5 +184,6 @@
   service:
     name: iptables
     state: restarted
+    use: systemctl
   become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation

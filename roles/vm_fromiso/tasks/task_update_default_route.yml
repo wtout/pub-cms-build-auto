@@ -36,6 +36,7 @@
       service:
         name: network
         state: restarted
+        use: systemctl
       async: 30
       poll: 0
       when: copy_file_status is succeeded

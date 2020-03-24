@@ -111,6 +111,8 @@ sed -i 's/^\(# Please consider.*\)$/\1\nserver {{ netconfig.ipaddress1.split('.'
 /usr/bin/net-snmp-create-v3-user -ro -A "C1s20A798hPwec" -X "m91K0sl1ux9bsp" -a MD5 -x DES cmsmomuser
 sed -i "$(sed -n '/^view.*systemview/ =' /etc/snmp/snmpd.conf | tail -n 1)s/^\(view.*systemview.*\)$/\1\nview    systemview    included   .1/" /etc/snmp/snmpd.conf
 sed -i 's/usmUser/# usmUser/g' /var/lib/net-snmp/snmpd.conf
+systemctl enable snmpd
+systemctl restart snmpd
 
 # Configure hosts.allow
 sed -i 's/^\(\w.*\)$/#\1/' /etc/hosts.allow
