@@ -1,10 +1,8 @@
 ---
 # Tasks to stop {{ svc_name }} on the relay
 - name: stop {{ svc_name }}
-  service:
+  systemd:
     name: "{{ svc_name }}"
     state: stopped
-    enabled: "{{ 'yes' if svc_name == 'garb' else 'no' }}"
-    use: systemctl
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_ppp_configuration

@@ -33,10 +33,9 @@
       poll: 10
       when: copy_file_status is succeeded
     - name: restart the network on the VM
-      service:
+      systemd:
         name: network
         state: restarted
-        use: systemctl
       async: 30
       poll: 0
       when: copy_file_status is succeeded

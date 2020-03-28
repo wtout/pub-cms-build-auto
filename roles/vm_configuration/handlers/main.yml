@@ -1,10 +1,10 @@
 ---
 # handlers file for vm_configuration
 - name: restart chrony
-  service:
+  systemd:
     name: chronyd
     state: restarted
-    use: systemctl
+    daemon_reload: yes
   become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
@@ -16,18 +16,18 @@
   tags: vm_configuration
 
 - name: restart snmpd service
-  service:
-    name: 'snmpd'
+  systemd:
+    name: snmpd
     state: restarted
-    use: systemctl
+    daemon_reload: yes
   become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
 - name: restart drbd
-  service:
-    name: 'drbd'
+  systemd:
+    name: drbd
     state: restarted
-    use: systemctl
+    daemon_reload: yes
   become: "{{true if inventory_hostname is search('em7') else false}}"
   notify:
     - mount drbd1
@@ -44,48 +44,48 @@
     mount /dev/drbd1 /data.local/db
     df | grep /drbd1
   become: "{{true if inventory_hostname is search('em7') else false}}"
+  register: drbd1_status
+  until: drbd1_status.stdout is search('drbd1')
+  retries: 3
   when: inventory_hostname is search('01')
   tags: vm_configuration
 
 - name: start mysql
-  service:
+  systemd:
     name: mysql
     state: started
-    use: systemctl
   become: "{{true if inventory_hostname is search('em7') else false}}"
   when: inventory_hostname is search('01')
   tags: vm_configuration
 
 - name: start em7
-  service:
+  systemd:
     name: em7
     state: started
-    use: systemctl
   become: "{{true if inventory_hostname is search('em7') else false}}"
   when: inventory_hostname is search('01')
   tags: vm_configuration
 
 - name: restart pacemaker
-  service:
+  systemd:
     name: pacemaker
     state: restarted
-    use: systemctl
+    daemon_reload: yes
   become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
 - name: restart corosync
-  service:
+  systemd:
     name: corosync
     state: restarted
-    use: systemctl
+    daemon_reload: yes
   become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 
 - name: start nfs
-  service:
+  systemd:
     name: nfs
     state: started
-    use: systemctl
   become: "{{true if inventory_hostname is search('em7') else false}}"
   tags: vm_configuration
 

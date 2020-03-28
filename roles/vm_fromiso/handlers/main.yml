@@ -1,10 +1,10 @@
 ---
 # handlers file for vm_fromiso
 - name: restart chrony
-  service:
+  systemd:
     name: chronyd
     state: restarted
-    use: systemctl
+    daemon_reload: yes
   become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation
 
@@ -181,9 +181,9 @@
   tags: vm_creation
 
 - name: restart iptables
-  service:
+  systemd:
     name: iptables
     state: restarted
-    use: systemctl
+    daemon_reload: yes
   become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation
