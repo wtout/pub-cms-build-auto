@@ -1,11 +1,18 @@
 # Functions declaration
 
+function get_envname() {
+	[[ "$(echo ${@} | egrep -w '\-\-envname')" != "" ]] && envname=$(echo ${@} | awk -F 'envname ' '{print $NF}' | cut -d'-' -f1)
+	echo ${envname}
+}
+
 function check_arguments() {
 	if [[ "x$(echo ${@} | egrep -w '\-\-envname')" == "x" ]]
-		then
-			printf "\nEnvironment name is required!\nRe-run the script with ${BOLD}--envname${NORMAL} <environment name as defined under Inventories>\n\n"
-			exit 1
-		fi
+	then
+		printf "\nEnvironment name is required!\nRe-run the script with ${BOLD}--envname${NORMAL} <environment name as defined under Inventories>\n\n"
+		exit 1
+	else
+		[[ $(wc -w <<< $(get_envname ${@})) -ge 2 ]] && printf "\nYou can deploy only one environment at a time. Aborting!\n\n" && exit 1
+	fi
 }
 
 function check_repeat_job() {
@@ -35,11 +42,6 @@ function check_hosts_limit() {
 
 function check_concurrency() {
 	ps -ef | grep $(basename ${0}) | grep -v grep | grep -v ${PID}
-}
-
-function get_envname() {
-	[[ "$(echo ${@} | egrep -w '\-\-envname')" != "" ]] && envname=$(echo ${@} | awk -F 'envname ' '{print $NF}' | cut -d'-' -f1)
-	echo ${envname}
 }
 
 function clean_arguments() {
