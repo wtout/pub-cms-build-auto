@@ -10,7 +10,7 @@
   - block:
     - name: check VM credentials
       wait_for_connection:
-        timeout: 6
+        timeout: 3
       register: mop_creds
       ignore_errors: true
       check_mode: no
@@ -27,15 +27,21 @@
 
   - block:
     - include_tasks: task_check_datetime.yml
-    - name: apply datetime fix to splunk machines
-      include_tasks: task_apply_fix.yml
+    - block:
+      - name: Copy splunk fix to host
+        include_tasks: task_copy_splunk_fix.yml
+      - name: Stop splunk
+        include_tasks: task_stop_splunk.yml
+      - name: apply datetime fix to splunk host
+        include_tasks: task_apply_fix.yml
       when: datetime is failed
     when: inventory_hostname is search('spl')
 
-  - name: apply datetime fix to relay machines
-    include_tasks: task_relay_check.yml
-    loop: "{{ ufwd }}"  
-    loop_control:
-      loop_var: fwd
+  - block:
+    - name: apply datetime fix to relay host
+      include_tasks: task_relay_check.yml
+      loop: "{{ ufwd }}"  
+      loop_control:
+        loop_var: fwd
     when: inventory_hostname is search('rly')
   tags: splunk_mop

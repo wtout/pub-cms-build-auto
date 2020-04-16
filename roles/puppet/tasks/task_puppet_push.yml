@@ -1,11 +1,11 @@
 ---
 # tasks to do a puppet push
 - block:
-  - name: check if puppet agent test is already running {{ push_num|int + 1 }}
+  - name: check if puppet push {{ push_num|int }} is already running
     stat:
       path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
     register: ppr1
-  - name: Wait for puppet push to finish {{ push_num|int + 1 }}
+  - name: Wait for puppet push {{ push_num|int }} to finish
     wait_for:
       path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
       state: absent
@@ -15,7 +15,7 @@
     shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
     register: puppet_push
     failed_when: "'Applied catalog in' not in puppet_push.stdout"
-  - name: Wait for puppet push to finish {{ push_num|int + 1 }}
+  - name: Wait for puppet push {{ push_num|int + 1 }} to finish
     wait_for:
       path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
       state: absent

@@ -15,6 +15,8 @@
         url_password: "{{ hostvars[groups['puppet']|first]['ansible_ssh_pass'] }}"
         validate_certs: no
       register: download_action
+      until: download_action is succeeded
+      retries: 3
     - name: Install Puppet on non-EM7 VM
       command: bash /tmp/install.bash
       register: puppet_install

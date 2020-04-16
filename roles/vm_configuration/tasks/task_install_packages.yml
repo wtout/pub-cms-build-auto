@@ -11,6 +11,9 @@
       - { name: 'perl-Config-IniFiles', state: 'installed' }
     loop_control:
       loop_var: pkg_item
+    register: pkg_install
+    until: pkg_install is succeeded
+    retries: 3
 
   - block:
     - name: create /root/bin directory
@@ -22,6 +25,9 @@
         name: nfs-utils
         state: installed
       notify: start nfs
+      register: nfs_install
+      until: nfs_install is succeeded
+      retries: 3
     when:
       - inventory_hostname is search('rly')
   become: "{{ true if inventory_hostname is search('em7') else false}}"

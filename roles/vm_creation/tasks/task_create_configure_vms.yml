@@ -2,8 +2,13 @@
 # Tasks to create and configure VM pairs
 - block:
   - include_tasks: task_get_vm_datastore.yml
+    when:
+      - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] == ''
   - include_tasks: task_deploy_ova.yml
   - include_tasks: task_update_disks.yml
   - include_tasks: task_update_hardware.yml
   - include_tasks: task_update_default_route.yml
+  - include_tasks: task_update_vmwaretools.yml
+  - include_tasks: task_create_drs_rule.yml
+    when: hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
   tags: vm_creation

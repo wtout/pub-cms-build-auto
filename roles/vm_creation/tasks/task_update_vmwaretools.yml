@@ -20,9 +20,9 @@
 
 - block:
   # Intentionally gathering facts from the Ansible control machine or the bastion server in order to trick the vmware module with the correct platform information
-  - name: Get remote host's facts
-    setup:
-      gather_subset: min
+#  - name: Get remote host's facts
+#    setup:
+#      gather_subset: min
   - name: Upgrade VMWare Tools
     vmware_guest_tools_upgrade:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"

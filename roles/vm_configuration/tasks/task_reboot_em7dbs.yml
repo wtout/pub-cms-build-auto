@@ -5,7 +5,7 @@
   - name: reboot the EM7 DBs
     reboot:
       post_reboot_delay: 30
-      reboot_timeout: 300
+      reboot_timeout: 600
     when: not hostvars[db_item]['vco_vm_reachable']['failed']
     become: "{{ true if inventory_hostname is search('em7') else false }}"
     delegate_to: "{{ db_item }}"
@@ -13,6 +13,21 @@
     loop_control:
       loop_var: db_item
     run_once: true
+#  - name: reboot the EM7 DBs
+#    vmware_guest_powerstate:
+#      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+#      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+#      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+#      validate_certs: false
+#      name: "{{ hostvars[db_item]['vm']['name'] }}"
+#      state: restarted
+#      state_change_timeout: 60
+#    when: not hostvars[db_item]['vco_vm_reachable']['failed']
+#    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+#    loop: "{{ groups['em7db'] }}"
+#    loop_control:
+#      loop_var: db_item
+#    run_once: true
   - name: wait until db vip is reachable
     shell: ping {{vip.db}} -c 1
     retries: 30

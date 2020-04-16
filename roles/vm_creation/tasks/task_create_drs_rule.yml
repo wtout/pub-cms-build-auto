@@ -1,0 +1,52 @@
+---
+# Tasks to create DRS anti-affinity rules for hosted VMs
+- block:
+  - name: define host and peer numbers
+    set_fact:
+      host_num: "{{ inventory_hostname[-2:] }}"
+      peer_num: "{{ inventory_hostname[-2:]|int - 1 if inventory_hostname[-2:]|int % 2 == 0 else inventory_hostname[-2:]|int + 1 }}"
+  - name: define peer name
+    set_fact:
+      peer_name: "{{ inventory_hostname[:-2] + '%02d' | format(peer_num|int) }}"
+  - name: define VM pair name
+    set_fact:
+      pair_name: "{{ (hostvars[inventory_hostname]['vm']['name'] + '-' + hostvars[peer_name]['vm']['name']) if host_num|int < peer_num|int else (hostvars[peer_name]['vm']['name'] + '-' + hostvars[inventory_hostname]['vm']['name']) }}"
+
+  - name: Get the guest info
+    vmware_guest_info:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      name: "{{ hostvars[vm_item]['vm']['name'] }}"
+      schema: "vsphere"
+      properties: ["overallStatus"]
+      validate_certs: no
+    loop:
+      - "{{ inventory_hostname }}"
+      - "{{ peer_name }}"
+    loop_control:
+      loop_var: vm_item
+    check_mode: no
+    register: vmguest_info
+    ignore_errors: true
+
+  - name: Create DRS anti-affinity rule
+    vmware_vm_vm_drs_rule:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      validate_certs: no
+      vms:
+        - "{{ hostvars[inventory_hostname]['vm']['name'] if host_num|int < peer_num|int else hostvars[peer_name]['vm']['name'] }}"
+        - "{{ hostvars[peer_name]['vm']['name'] if host_num|int < peer_num|int else hostvars[inventory_hostname]['vm']['name'] }}"
+      affinity_rule: false
+      enabled: yes
+      state: present
+      drs_rule_name: "{{ pair_name }}-anti-affinity-rule"
+      mandatory: true
+  throttle: 1
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  when: groups[inventory_hostname[:-2]] | length > 1
+  tags: vm_creation

@@ -11,6 +11,7 @@
       cluster: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       state: poweredoff
       validate_certs: no
+    when: vcr_vm_reachable is succeeded
   - name: Update VM hardware settings with one NIC
     vmware_guest:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
@@ -28,6 +29,8 @@
           netmask: "{{ netconfig.netmask1 }}"
           gateway: "{{ netconfig.gateway1 }}"
           device_type: vmxnet3
+          start_connected: true
+          allow_guest_control: true
       customization:
         existing_vm: true
         dns_servers: "{{ sysconfig.dns_servers }}"
@@ -36,6 +39,7 @@
       wait_for_customization: true
     register: vmguest_1net
     ignore_errors: true
+    throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 0 }}"
     when:
       - ova_nets.stdout_lines|length == 1
       - inventory_hostname is not regex('rly|lnxjmp')
@@ -56,11 +60,15 @@
           netmask: "{{ netconfig.netmask1 }}"
           gateway: "{{ netconfig.gateway1 }}"
           device_type: vmxnet3
+          start_connected: true
+          allow_guest_control: true
         - name: "{{ netconfig.network2 }}"
           ip: "{{ netconfig.ipaddress2 }}"
           netmask: "{{ netconfig.netmask2 }}"
           gateway: "{{ netconfig.gateway2 }}"
           device_type: vmxnet3
+          start_connected: true
+          allow_guest_control: true
       customization:
         existing_vm: true
         dns_servers: "{{ sysconfig.dns_servers }}"
@@ -69,6 +77,7 @@
       wait_for_customization: true
     register: vmguest_2net
     ignore_errors: true
+    throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 0 }}"
     when:
       - ova_nets.stdout_lines|length == 2 or inventory_hostname is regex('rly|lnxjmp')
   - fail:

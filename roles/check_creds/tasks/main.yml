@@ -18,15 +18,11 @@
     path: "{{ file_item }}"
     state: absent
   loop:
-    - "{{ VPFILE }}"
-    - "{{ VCFILE }}"
-    - "{{ PASSFILE }}"
+    - "{{ PASSFILE | default('') }}"
   loop_control:
     loop_var: file_item
+  when: file_item != ''
   check_mode: no
-  delegate_to: localhost
-  run_once: true
-  no_log: true
   tags: always
 
 - include_tasks:

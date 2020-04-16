@@ -180,16 +180,13 @@ function get_inventory() {
 }
 
 function encrypt_vault() {
-	echo ${3} > ${2}
-	[[ -f ${1} ]] && ansible-vault encrypt --vault-password-file ${2} ${1} &>/dev/null
-	rm -f ${2}
+	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && ansible-vault encrypt --vault-password-file ${2} ${1} &>/dev/null
 }
 
 function decrypt_vault() {
-	echo ${3} > ${2}
-	[[ -f ${1} ]] && ansible-vault decrypt --vault-password-file ${2} ${1} 2> /tmp/decrypt_error.${PID}
+	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && ansible-vault decrypt --vault-password-file ${2} ${1} 2> /tmp/decrypt_error.${PID}
 	[[ $(grep "was not found" /tmp/decrypt_error.${PID}) != "" ]] && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && ansible-vault decrypt --vault-password-file ${2} ${1} &>/dev/null
-	rm -f ${2} /tmp/decrypt_error.${PID}
+	rm -f /tmp/decrypt_error.${PID}
 }
 
 function check_updates() {
@@ -198,13 +195,11 @@ function check_updates() {
 		if [[ -f ${1} ]]
 		then
 			cp ${1} ${1}.${ENAME}
-			[[ $- =~ x ]] && debug=1 && set +x
-			[[ ! -f ${2} ]] && printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
 			i=0
 			retries=3
 			while [ ${i} -lt ${retries} ]
 			do
-				[[ $(grep "ANSIBLE_VAULT" ${1}.${ENAME}) != "" ]] && decrypt_vault ${1}.${ENAME} ${2} $(git config user.email | cut -d'@' -f1) || break
+				[[ $(grep "ANSIBLE_VAULT" ${1}.${ENAME}) != "" ]] && decrypt_vault ${1}.${ENAME} ${2} || break
 				i=$((++i))
 				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
 			done
@@ -216,10 +211,8 @@ function check_updates() {
 			read -sp "Enter your Repository password [ENTER]: " REPOPASS
 			[[ $- =~ x ]] && debug=1 && set +x
 			[[ -f ${1} ]] && rm -f ${1}
-			[[ -f ${2} ]] && rm -f ${2}
 			printf "REPOPASS='${REPOPASS}'\n" > ${1}
-			printf "$(git config remote.origin.url | cut -d '/' -f3 | cut -d '@' -f1)" > ${2}
-			encrypt_vault ${1} ${2} $(git config user.email | cut -d'@' -f1)
+			encrypt_vault ${1} ${2}
 			[[ ${debug} == 1 ]] && set -x
 			echo
 		fi
@@ -329,8 +322,12 @@ function enable_logging() {
 	fi
 }
 
+function get_bastion_address() {
+	ansible localhost -i ${INVENTORY_PATH} -m debug -a var=bastion.address | grep address | awk -F ': ' '{print $NF}'
+}
+
 function get_credentials() {
-	if [[ ${GET_INVENTORY_STATUS} == 0 && ! -f ${CRVAULT} ]]
+	if [[ ${GET_INVENTORY_STATUS} == 0 && $(get_bastion_address) != '[]' && ! -f ${CRVAULT} ]]
 	then
 		ansible-playbook playbooks/prompts.yml -i ${INVENTORY_PATH} --extra-vars "{VFILE: '${CRVAULT}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v
 		GET_CREDS_STATUS=${?}
@@ -338,7 +335,7 @@ function get_credentials() {
 		if [[ ${REPOPASS} != "" ]]
 		then
 			[[ $- =~ x ]] && debug=1 && set +x
-			encrypt_vault ${CRVAULT} ${VAULTP} ${REPOPASS}
+			encrypt_vault ${CRVAULT} Bash/get_creds_vault_pass.sh
 			[[ ${debug} == 1 ]] && set -x
 		else
 			echo "Repository password is not defined. Aborting!"
@@ -348,20 +345,25 @@ function get_credentials() {
 }
 
 function run_playbook() {
-	if [[ ${GET_INVENTORY_STATUS} == 0 && (${GET_CREDS_STATUS} == 0 || -f ${CRVAULT}) ]]
+	if [[ ${GET_INVENTORY_STATUS} == 0 && (($(get_bastion_address) != '[]' && (${GET_CREDS_STATUS} == 0 || -f ${CRVAULT})) || $(get_bastion_address) == '[]') ]]
 	then
 		### Begin: Determine if ASK_PASS is required
 		[ $(echo ${HOST_LIST} | wc -w) -gt 1 ] && HL=$(echo ${HOST_LIST} | sed 's/ /,/g') || HL=${HOST_LIST}
 		ansible ${HL} -m debug -a 'msg={{ansible_ssh_pass}}' &>/dev/null && [[ ${?} == 0 ]] && ASK_PASS=''
 		### End
-		[[ ! -f ${VAULTC} ]] && git config remote.origin.url | awk -F '/' '{print $NF}' > ${VAULTC}
-		[[ $- =~ x ]] && debug=1 && set +x
-		[[ ! -f ${VAULTP} ]] && echo ${REPOPASS} > ${VAULTP}
-		[[ ${debug} == 1 ]] && set -x
+		### Begin: Define the extra-vars argument list and bastion credentials vault name and password file
+		if [[ $(get_bastion_address) == '[]' ]]
+		then
+			local EVARGS="{PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
+			local BCV=""
+		else
+			local EVARGS="{VFILE: '${CRVAULT}', SCRTFILE: 'Bash/get_creds_vault_pass.sh', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
+			local BCV="-e @${CRVAULT} --vault-password-file Bash/get_creds_vault_pass.sh"
+		fi
+		### End
 		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
 		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
-		sleep 1 && rm -f ${VAULTC} ${VAULTP} &
-		ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "{VFILE: '${CRVAULT}', VPFILE: '${VAULTP}', VCFILE: '${VAULTC}', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}" ${ASK_PASS} ${@} -e @${PASSFILE} -e @${CRVAULT} --vault-password-file ${VAULTC} --vault-password-file ${VAULTP} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
+		ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE}.${ENAME}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
 		rm -f /tmp/${PID}.stderr
@@ -419,7 +421,7 @@ NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
-check_updates ${REPOVAULT} ${VAULTP}
+check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
 get_inventory ${@}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 get_hosts ${@}

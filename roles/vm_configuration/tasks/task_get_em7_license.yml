@@ -81,7 +81,7 @@
       path: '/home/{{ ansible_user }}/license'
       state: directory
       mode: 0755
-  - name: save the license on the EM7 VM under {{ansible_user}} home directory
+  - name: save the license on the EM7 VM under {{ hostvars[groups['em7']|first]['ansible_user'] }} home directory
     copy:
       content: "{{ get_cert.json.license }}"
       dest: '/home/{{ ansible_user }}/license/em7.lic'

@@ -22,3 +22,4 @@ information:
   cluster: "{{ datacenter.pcluster if datacenter.pcluster != '' else datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ pcluster_name if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
   drcluster: "{{ datacenter.scluster if datacenter.scluster != '' else 'CMSP - '+ scluster_name if customer.disaster_recovery else '' }}"
   folder: "{{ datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else '' }}"
+  datastore_cluster: "{{ datacenters[datacenter.name]['datastore_cluster'] if datacenters[datacenter.name]['datastore_cluster'] is defined else '' }}"

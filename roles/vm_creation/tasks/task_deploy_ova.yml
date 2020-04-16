@@ -17,7 +17,7 @@
       datacenter: "{{ datacenter.name }}"
       disk_provisioning: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
       cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if inventory_hostname is search('dr') else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-      datastore: "{{ 'HX-Datastore-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else vm_ds }}"
+      datastore: "{{ hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
       folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
       name: "{{ vm.name }}"
       networks: {}
@@ -28,6 +28,6 @@
     environment:
       http_proxy: ''
       https_proxy: ''
-#  - debug: var=deploy_ovf.instance.instance_uuid
+    throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 0 }}"
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_creation

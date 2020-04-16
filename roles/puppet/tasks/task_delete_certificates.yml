@@ -13,7 +13,6 @@
     - name: check if puppet server {{ puppet.vmname }} is reachable
       wait_for_connection:
         timeout: 6
-      check_mode: no
       run_once: true
     - name: check if there is a cert on {{ puppet.vmname }}
       shell: >

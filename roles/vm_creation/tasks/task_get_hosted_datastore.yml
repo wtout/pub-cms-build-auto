@@ -1,5 +1,11 @@
 ---
 # tasks to define the hosted datastore for each host
+- name: get host index
+  set_fact:
+    host_index: "{{ inventory_hostname[-2:] }}"
+    vm_group: "{{ inventory_hostname[:-2] }}"
+  tags: vm_creation
+
 - name: Get datastore info
   vmware_datastore_info:
     hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
@@ -10,8 +16,7 @@
     validate_certs: no
   register: datastore_info
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  #no_log: true
-  when: inventory_hostname == groups[vm_group][pair_num] or (inventory_hostname == groups[vm_group][pair_num + 1] and groups[vm_group][pair_num] not in ansible_play_hosts)
+  when: host_index|int % 2 != 0 or (host_index|int % 2 == 0 and groups[vm_group][host_index|int - 2] not in ansible_play_hosts)
   tags: vm_creation
 
 - block:
@@ -23,7 +28,6 @@
       loop_var: task_item
       label: "{{ task_item.name }}"
     when: task_item.freeSpace >= ((vm.disk|float + vm.memory|float) * 1024|pow(3))
-    #no_log: true
 
   - name: define hosted datastores list for each host group
     set_fact:
@@ -34,34 +38,21 @@
         - vm_ds_names|length >= 2
       fail_msg: "Not enough storage space to deploy the pair of {{ vm_group }} VMs"
     when:
-      - groups[vm_group][pair_num] is defined
-      - groups[vm_group][pair_num + 1] is defined
-  when: inventory_hostname == groups[vm_group][pair_num] or (inventory_hostname == groups[vm_group][pair_num + 1] and groups[vm_group][pair_num] not in ansible_play_hosts)
+      - groups[vm_group][host_index] is defined
+      - groups[vm_group][host_index|int + 1] is defined
+  when: host_index|int % 2 != 0 or (host_index|int % 2 == 0 and groups[vm_group][host_index|int - 2] not in ansible_play_hosts)
   tags: vm_creation
 
-- name: assert 2
-  assert:
-    that:
-      - hostvars[groups[vm_group][pair_num]]['vm_ds_names']|length >= 2
-    fail_msg: "Not enough storage space to deploy the pair of {{ vm_group }} VMs"
-  when:
-    - groups[vm_group][pair_num] is defined
-    - groups[vm_group][pair_num + 1] is defined
-    - inventory_hostname == groups[vm_group][pair_num + 1]
-  tags: vm_creation
-
-- name: define hosted datastore for each each even seq host
+- name: define hosted datastore for each odd index host
   set_fact:
     vm_ds: "{{vm_ds_names[0]}}"
   when:
-    - (inventory_hostname[-2:]|int - 1) % 2 == 0
-    - inventory_hostname == groups[vm_group][pair_num]
+    - host_index|int % 2 != 0
   tags: vm_creation
 
-- name: define hosted datastore for each odd seq host
+- name: define hosted datastore for each even index host
   set_fact:
-    vm_ds: "{{ hostvars[groups[vm_group][pair_num]]['vm_ds_names'][1] if groups[vm_group][pair_num] in ansible_play_hosts else vm_ds_names[1] }}"
+    vm_ds: "{{ hostvars[groups[vm_group][host_index|int - 2]]['vm_ds_names'][1] if groups[vm_group][host_index|int - 2] in ansible_play_hosts else vm_ds_names[1] }}"
   when:
-    - (inventory_hostname[-2:]|int - 1) % 2 != 0
-    - inventory_hostname == groups[vm_group][pair_num + 1]
+    - host_index|int % 2 == 0
   tags: vm_creation

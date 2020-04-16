@@ -30,5 +30,8 @@
       - { name: 'QS-PROD', baseurl: "{{ repo.baseurl }}/QS", description: 'Production repo', enabled: yes, file: 'QS', gpgcheck: no, sslverify: no, state: 'present' }
     loop_control:
       loop_var: repo_item
+    register: yum_repo
+    until: yum_repo is succeeded
+    retries: 3
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

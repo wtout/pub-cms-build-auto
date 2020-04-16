@@ -2,7 +2,9 @@
 # tasks to validate bastion credentials
 - block:
   - name: Validate bastion credentials
-    shell: ansible {{ bastion_host }} -i {{ auto_dir }}/$(grep "inventory =" {{ auto_dir }}/ansible.cfg | awk '{print $NF}') -m ping -e @{{ VFILE }} --vault-password-file {{ VPFILE }}
+    shell: ansible {{ bastion_host }} -i {{ VFILE.split('/')[:-2]|join('/') }} -m ping -e @{{ VFILE }} --vault-password-file {{ SCRTFILE }}
+    args:
+      chdir: "{{ auto_dir }}"
     register: bastion_creds
     failed_when: "'SUCCESS' not in bastion_creds.stdout"
     check_mode: no

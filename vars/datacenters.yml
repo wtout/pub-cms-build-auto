@@ -7,23 +7,30 @@ auto_dir: "{{ playbook_dir.split('/')[:-1] | join('/') }}"
 ##########################################
 datacenters:
   PAE-HX-DC:
-    vsphere: '172.30.251.20'
+    vsphere: 'paevcenter01.cisco-pae.com'
     deptype: 'h'
     folder: 'HX Hosted'
+#    folder: 'HX MDR Testing'
     cluster: 'PAE-RTP-HX'
+    datastore_cluster: 'HX-Datastore-Cluster'
 
   cdra-Build-Development:
-    vsphere: '172.30.240.248'
+    vsphere: 'paevcenter03.cisco-pae.com'
     deptype: 'a'
     folder: ''
+    cluster: ''
+    datastore_cluster: ''
 
   PAE-Customer-Build:
-    vsphere: '172.30.240.248'
+    vsphere: 'paevcenter03.cisco-pae.com'
     deptype: 'a'
     folder: ''
+    cluster: ''
+    datastore_cluster: ''
 
   RTP5:
     vsphere: 'rtp5vcsap01.cisco-cms.com'
     deptype: 'h'
     folder: 'Hosted Solution'
     cluster: 'RTP5 HX Cluster'
+    datastore_cluster: 'RTP5-HX-DS-Cluster'
