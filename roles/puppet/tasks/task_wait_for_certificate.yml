@@ -1,0 +1,16 @@
+---
+# Tasks to wait for the certificate to be created
+- block:
+  - name: wait for certificate to be created
+    shell: >
+      puppet cert list {{ (ansible_user + '.') if inventory_hostname is search('em7') else '' }}{{ vm.name }}.{{ sysconfig.domain_name }} || echo 'Found no certificate'
+    become: true
+    register: cert_exists
+    until: cert_exists.stdout is not search('Found no certificate')
+    retries: 3
+    delay: 5
+    delegate_to: "{{ groups['puppet']|first }}"
+    notify:
+      - puppet sign certs
+  when: "'No puppet-agent installed' in puppet_installed.stdout"
+  tags: puppet

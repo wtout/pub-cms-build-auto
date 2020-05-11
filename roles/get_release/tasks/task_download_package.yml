@@ -63,7 +63,7 @@
         loop_var: file_item
       when: files_list.matched >= 1
     when:
-      - not (package_exists.stat.exists and package_exists.stat.isdir is defined and package_exists.stat.isdir)
+      - not (package_exists.stat.exists and package_exists.stat.isdir is defined and (package_exists.stat.isdir or package_exists.stat.islnk))
   delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
   run_once: true
   tags: [ 'get_release', 'vm_creation' ]

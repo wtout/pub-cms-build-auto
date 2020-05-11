@@ -14,10 +14,10 @@
     when: deploy_ovf is not changed
   - name: copy default route file locally
     template:
-      src: "templates/{{ 'dr_' if 'dr' in group_names else '' }}route-ens160.tmpl"
+      src: "templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}route-ens160.tmpl"
       dest: "/var/tmp/{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}-{{ inventory_hostname }}-route-ens160"
   - block:
-    - name: copy default route file to VM
+    - name: copy default route file to EM7 VM
       vmware_guest_file_operation:
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
@@ -32,10 +32,12 @@
             dest: "/tmp/route-ens160"
             overwrite: false
       register: copy_em7file
+      until: copy_em7file is succeeded
+      retries: 3
       environment:
         http_proxy: ''
         https_proxy: ''
-    - name: restart the network on the VM
+    - name: restart the network on the EM7 VM
       vmware_vm_shell:
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
@@ -51,7 +53,7 @@
       when: copy_em7file is changed
     when: inventory_hostname is search('em7')
   - block:
-    - name: copy default route file to VM
+    - name: copy default route file to non-EM7 VM
       vmware_guest_file_operation:
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
@@ -66,10 +68,12 @@
             dest: "/etc/sysconfig/network-scripts/route-ens160"
             overwrite: false
       register: copy_file
+      until: copy_file is succeeded
+      retries: 3
       environment:
         http_proxy: ''
         https_proxy: ''
-    - name: restart the network on the VM
+    - name: restart the network on the non-EM7 VM
       vmware_vm_shell:
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"

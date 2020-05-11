@@ -2,7 +2,7 @@
 # tasks to validate bastion credentials
 - block:
   - name: Validate bastion credentials
-    shell: ansible {{ bastion_host }} -i {{ VFILE.split('/')[:-2]|join('/') }} -m ping -e @{{ VFILE }} --vault-password-file {{ SCRTFILE }}
+    shell: ansible {{ bastion_host }} -i {{ VFILE.split('/')[:-2]|join('/') }} -m ping -e @{{ VFILE }} --vault-password-file {{ SCRTFILE }} -T 5
     args:
       chdir: "{{ auto_dir }}"
     register: bastion_creds
@@ -21,5 +21,5 @@
     when: "hostvars[groups['bastion']|first]['ansible_user'] == '' or hostvars[groups['bastion']|first]['ansible_ssh_pass'] == '' or bastion_creds is failed"
   - set_fact:
       delete_creds: yes
-    when: "hostvars[groups['bastion']|first]['ansible_user'] == '' or hostvars[groups['bastion']|first]['ansible_ssh_pass'] == '' or bastion_creds is failed and bastion_creds.stdout is search('Invalid/incorrect password: Permission denied')"
+    when: "hostvars[groups['bastion']|first]['ansible_user'] == '' or hostvars[groups['bastion']|first]['ansible_ssh_pass'] == '' or bastion_creds is failed and bastion_creds.stdout is regex('Invalid/incorrect [username|password].*: Permission denied')"
   tags: always

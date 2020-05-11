@@ -2,7 +2,7 @@
 CurrentVersion={{ customer.release|replace('R', '') }}
 TargetVersion={{ customer.release|replace('R', '') }}
 primary_relay_server_IP={{ drrly_ip1_list[0] }}
-secondary_relay_server_IP={{  drrly_ip1_list[1] if drrly_ip1_list|length >= 2 else '' }}
+secondary_relay_server_IP={{ drrly_ip1_list[1] if drrly_ip1_list|length >= 2 else '' }}
 mcIP={{ netconfig.ipaddress1 }}
 ipaddress1={{ netconfig.ipaddress1 }}
 ipaddress2={{ netconfig.ipaddress2 }}
@@ -13,8 +13,9 @@ netscaler_ip2={{ customer.secondary_octets }}.54
 netscaler_snip={{ customer.secondary_octets }}.55
 is4_ip_01={{ customer.secondary_octets }}.6
 isSNOWEnabled=No
+isTelemetryEnabled=No
 isATAEnabled=False
-{{ 'isCommonRelayServer=False' if inventory_hostname is search('rly') else '' }}
+isRMSMigrationCustomer=False
 customer_name={{ customer.name }}
 custNamePrefix={{ customer.secondary_name_prefix }}
 em7_db_vip={{ customer.secondary_octets + '.40' }}
@@ -23,7 +24,8 @@ em7_AdminPortalVIPHostName={{ drprt_hst_list[0] | regex_replace('[a-z]01', 'v01'
 em7_AdminPortalVIPFQDN={{ drprt_hst_list[0] | regex_replace('[a-z]01', 'v01') }}.{{ sysconfig.domain_name }}
 living_objects_ip=
 splunk_search_head_vip={{ customer.secondary_octets + '.41' }}
-relay_server_vip={{ customer.secondary_octets + '.120' }}
+splunk_search_head_vip_FQDN={{ drsplsrc_hst_list[0] | regex_replace('[a-z]01', 'hv01') + '.' + sysconfig.domain_name }}
+relay_server_vip={{ customer.secondary_octets + '.52' }}
 relayServerDBVIP={{ customer.secondary_octets + '.1' }}
 relay_ip_list={{ drrly_ip1_list|join(',') }}
 relay1_hostname={{ drrly_hst_list[0] }}
@@ -33,31 +35,46 @@ secondary_db_server2_ip={{ drdb_ip1_list[1] if drdb_ip1_list|length >= 2 else ''
 primary_em7_portal_server_ip={{ drprt_ip1_list[0] }}
 secondary_em7_portal_server_ip={{ drprt_ip1_list[1] if drprt_ip1_list|length >=2 else '' }}
 server_type={{ 'primary' if inventory_hostname is search('rly01') else 'secondary' }}
-em7_user_name={{ ansible_user }}
+clm_server_type=
+dpl_server_type=
+active_clm_hostname={{ drsplmas_hst_list[0] }}
+active_dpl_hostname={{ drspldpl_hst_list[0] }}
+em7_user_name=em7admin
 splunk_user_name=admin
 em7_access_portal_cpu_core_count={{ drprt_cpu_list[0] }}
 em7_access_portal_ram_gb={{ drprt_mem_list[0] }}
-ntp_source_ip={{ customer.secondary_octets }}.62
+ntp_source_ip={{ sysconfig.ntp_server }}
 domain_name={{ sysconfig.domain_name }}
+installed_on_appliance={{ 'ESXiResource1' if (inventory_hostname[:-2]|int % 2 != 0 or hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h') else 'ESXiResource2' }}
 [headend]
 indexer01_ip={{ splunk.he_indexer01_ip }}
 indexer02_ip=None
 searchhead01_ip={{ splunk.he_searchhead01_ip }}
 searchhead02_ip={{ splunk.he_searchhead02_ip }}
 deployment_server_ip={{ splunk.he_deployment_server_ip }}
-tile_server_ip={{ splunk.tile }}
+tile_server_ip={{ splunk.tile_server }}
+mom_relay_vip={{ splunk.mom_rly_vip }}
+netflow_collector_ip=None
 [em7]
 appliances={{ drappliances_list|join(',') }}
 admin_portal_ip_list={{ drprt_ip1_list|join(',') }}
 primary_db_ip={{ drdb_ip1_list[0] }}
-secondary_db_ip={{ drdb_ip1_list[1] if drdb_ip1_list|length >=2 else ''  }}
+secondary_db_ip={{ drdb_ip1_list[1] if drdb_ip1_list|length >=2 else '' }}
 dc_ip_list={{ drdc_ip1_list|join(',') }}
 mc_ip_list={{ drmc_ip1_list|join(',') }}
 all_dc_ip_list={{ drdc_ip1_list|join(',') }}
 all_mc_ip_list={{ drmc_ip1_list|join(',') }}
-splunk_proxy={{ customer.secondary_name_prefix }}em7splproxy.{{ sysconfig.domain_name }}
-beta_proxy={{ customer.secondary_name_prefix }}em7splbetaproxy.{{ sysconfig.domain_name }}
-ondemand_proxy={{ customer.secondary_name_prefix }}em7splodproxy.{{ sysconfig.domain_name }}
-lo_proxy={{ customer.secondary_name_prefix }}em7loproxy.{{ sysconfig.domain_name }}
+splunk_proxy={{ customer.secondary_name_prefix }}mapprtv01.{{ sysconfig.domain_name }}
+beta_proxy={{ customer.secondary_name_prefix }}betaprtv01.{{ sysconfig.domain_name }}
+ondemand_proxy={{ customer.secondary_name_prefix }}odprtv01.{{ sysconfig.domain_name }}
+lo_proxy={{ customer.secondary_name_prefix }}prtv01.{{ sysconfig.domain_name }}
+pure_proxy={{ customer.secondary_name_prefix }}dashprtv01.{{ sysconfig.domain_name }}
 [is4]
 is4_region=IS4_build
+[telemetry]
+kafka_vip=None
+relayng_vip=None
+splunk_fwder_vip=None
+kafka_ip_list=
+relayng_ip_list=
+telemetry_spl_fwd_ip_list=

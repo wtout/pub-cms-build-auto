@@ -1,31 +1,73 @@
 ---
 # Tasks to generate certificate for em7 vm
 - block:
+  - block:
+    - name: check if generate-cert.sh exists
+      stat:
+        path: '/opt/em7/share/ssl/generate-cert.sh'
+      register: script1_stat
+    - assert:
+        that: script1_stat.stat.exists
+        fail_msg: 'Script to generate certificates for em7 does not exist. Aborting!'
+    - name: generate certificate for EM7 VM
+      shell: ./generate-cert.sh /etc/ssl/certs/collector_db.key /etc/ssl/certs/collector_db.crt
+      args:
+        chdir: '/opt/em7/share/ssl'
+      when: script1_stat.stat.exists
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
+    when:
+      - customer.release is search('9.2')
+      - inventory_hostname is regex('mc|dc')
+
   - name: check if generate-ngx-cert.sh exists
     stat:
       path: '/opt/em7/share/ssl/generate-ngx-cert.sh'
-    register: script_stat
+    register: script2_stat
   - assert:
-      that: script_stat.stat.exists
-      fail_msg: 'Script to generate certificates for em7 does not exist. Aborting!'
+      that: script2_stat.stat.exists
+      fail_msg: 'Script to generate nginx certificates for em7 does not exist. Aborting!'
   - block:
-    - name: generate ngx certificate for EM7 VM
+    - name: check if script has CRLF line terminators
+      command: file /opt/em7/share/ssl/generate-ngx-cert.sh
+      register: file_status
+      check_mode: no
+    - block:
+      - name: remove CR from script
+        shell: tr -d '\r' <generate-ngx-cert.sh> cleanfile.sh
+        args:
+          chdir: /opt/em7/share/ssl
+      - name: replace the faulty script with the corrected one
+        copy:
+          src: /opt/em7/share/ssl/cleanfile.sh
+          dest: /opt/em7/share/ssl/generate-ngx-cert.sh
+          remote_src: yes
+          force: yes
+          owner: root
+          group: root
+          mode: 0755
+        become: "{{ true if inventory_hostname is search('em7') else false }}"
+      when: file_status.stdout is search('CRLF line terminators')
+    - name: generate nginx certificate for EM7 VM
       shell: ./generate-ngx-cert.sh
       args:
         chdir: '/opt/em7/share/ssl'
     - name: update puppet.conf
       lineinfile:
         path: '/home/em7release/.puppetlabs/etc/puppet/puppet.conf'
-        line: "{{line_item}}"
+        line: "{{ line_item }}"
         group: em7release
         owner: em7release
       loop:
         - '[agent]'
         - 'certname = em7release.{{ vm.name }}.{{ sysconfig.domain_name }}'
-        - 'server = {{puppet.fqdn}}'
+        - 'server = {{ puppet.fqdn }}'
       loop_control:
         loop_var: line_item
-    when: script_stat.stat.exists
+    when: script2_stat.stat.exists
     become: "{{ true if inventory_hostname is search('em7') else false }}"
+  - name: create em7 certificate
+    shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+    register: puppet_agent_cmd
+    failed_when: puppet_agent_cmd.stdout is not search('Creating a new SSL key for')
   when: inventory_hostname is search('em7')
   tags: puppet

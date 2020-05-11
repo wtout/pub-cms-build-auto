@@ -26,8 +26,8 @@
       sslverify: "{{ repo_item.sslverify }}"
       state: "{{ repo_item.state }}"
     loop:
-      - { name: 'QuickSilver_Packages', baseurl: "{{ repo.baseurl }}/{{ customer.release }}", description: 'QuickSilver Packages repo', enabled: yes, file: 'qs_repo', gpgcheck: no, sslverify: no, state: 'present' }
-      - { name: 'QS-PROD', baseurl: "{{ repo.baseurl }}/QS", description: 'Production repo', enabled: yes, file: 'QS', gpgcheck: no, sslverify: no, state: 'present' }
+      - { name: 'QuickSilver_Packages', baseurl: "{{ yum.baseurl }}/{{ customer.release }}", description: 'QuickSilver Packages repo', enabled: yes, file: 'qs_repo', gpgcheck: no, sslverify: no, state: 'present' }
+      - { name: 'QS-PROD', baseurl: "{{ yum.baseurl }}/QS{{ \"V2\" if customer.release is search(\"9.2\") else \"\" }}", description: 'Production repo', enabled: yes, file: 'QS', gpgcheck: no, sslverify: no, state: 'present' }
     loop_control:
       loop_var: repo_item
     register: yum_repo

@@ -45,7 +45,7 @@
       - block:
         - name: check VM credentials
           wait_for_connection:
-            timeout: 6
+            timeout: 3
           register: vcr_vm_creds
           ignore_errors: true
           check_mode: no

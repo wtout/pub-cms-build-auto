@@ -20,21 +20,31 @@
       - block:
         - name: check VM credentials
           wait_for_connection:
-            timeout: 6
+            timeout: 3
           register: vcr_vm_creds
           ignore_errors: true
           check_mode: no
         - name: Update SSH password
           set_fact:
             ansible_ssh_pass: "{{ postppp }}"
+            ansible_become_pass: "{{ postppp }}"
           no_log: true
           when:
             - vcr_vm_creds is failed
             - vcr_vm_creds.msg is search('Invalid/incorrect username/password')
+        - name: check updated VM credentials
+          wait_for_connection:
+            timeout: 3
+          register: vcr_connection_status
+          ignore_errors: true
+          check_mode: no
+        - name: reset SSH password
+          set_fact:
+            ansible_ssh_pass: "{{ preppp }}"
+            ansible_become_pass: "{{ preppp }}"
+          no_log: true
+          when: vcr_connection_status is failed
         when: vcr_vm_reachable is succeeded
-      when:
-        - ansible_ssh_pass != postppp
-        - inventory_hostname is not search('em7')
 
     - include_tasks: task_create_vms.yml
     when: create_vms_ova | default(false) | bool

@@ -124,6 +124,7 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
+    - customer.release is not search('9.2')
   tags: splunk_mop
 
 #- name: define check_requiretty

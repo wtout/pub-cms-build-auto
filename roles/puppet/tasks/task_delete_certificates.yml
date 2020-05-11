@@ -3,7 +3,7 @@
 - block:
   - name: check if there is a cert on the VM
     stat:
-      path: "/etc/puppetlabs/puppet/ssl/certs/{{ vm.name }}.{{ sysconfig.domain_name }}.pem"
+      path: "{{ '~/.puppetlabs/etc/puppet/ssl/certs/ca' if inventory_hostname is search('em7') else '/etc/puppetlabs/puppet/ssl/certs/' + vm.name + '.' + sysconfig.domain_name }}.pem"
     register: client_cert_status
   - debug:
       msg: "Found no client certificate on {{ inventory_hostname }}"
@@ -12,11 +12,11 @@
   - block:
     - name: check if puppet server {{ puppet.vmname }} is reachable
       wait_for_connection:
-        timeout: 6
+        timeout: 3
       run_once: true
     - name: check if there is a cert on {{ puppet.vmname }}
       shell: >
-        puppet cert list {{ 'em7release.' if 'em7' in group_names else '' }}{{ vm.name }}.{{ sysconfig.domain_name }} | cut -d '(' -f2
+        puppet cert list {{ 'em7release.' if inventory_hostname is search('em7') else '' }}{{ vm.name }}.{{ sysconfig.domain_name }} | cut -d '(' -f2
       args:
         chdir: '/usr/local/bin'
       become: true
@@ -32,9 +32,9 @@
       - "'Could not find a certificate for' in client_cert_on_server.stderr"
 
   - name: check if client cert fingerprint matches cert on server
-    shell: openssl x509 -text -noout -{{ client_cert_on_server.stdout.split(' ')[0] | replace(')', '') }} -fingerprint -in certs/{{ vm.name }}.{{ sysconfig.domain_name }}.pem | tail -1 | cut -d '=' -f2 | grep {{ client_cert_on_server.stdout.split(' ')[1] }}
+    shell: openssl x509 -text -noout -{{ client_cert_on_server.stdout.split(' ')[0] | replace(')', '') }} -fingerprint -in {{ 'ca' if inventory_hostname is search('em7') else vm.name + '.' + sysconfig.domain_name }}.pem | tail -1 | cut -d '=' -f2 | grep {{ client_cert_on_server.stdout.split(' ')[1] }}
     args:
-      chdir: '/etc/puppetlabs/puppet/ssl'
+      chdir: "{{ '~/.puppetlabs/etc/puppet/ssl/certs' if inventory_hostname is search('em7') else '/etc/puppetlabs/puppet/ssl/certs' }}"
     register: client_cert_match
     check_mode: no
     ignore_errors: true
@@ -47,8 +47,8 @@
     set_fact:
       delete_client_cert_on_vm: true
     when:
-      - client_cert_status.stat.exists
-      - client_cert_on_server.stderr != '' or client_cert_match is failed
+      - client_cert_status.stat.exists or inventory_hostname is search('em7')
+      - client_cert_on_server.stderr != '' or client_cert_match is failed or inventory_hostname is search('em7')
 
   - name: define delete client cert on puppet server
     set_fact:
@@ -58,7 +58,23 @@
       - client_cert_on_server.stderr == ''
       - not client_cert_status.stat.exists or delete_client_cert_on_vm|default(false)
 
-  - block:
+  - name: delete the certificate on the EM7 VM
+    block:
+    - name: delete ssl directory on VM
+      file:
+        path: '~/.puppetlabs/etc/puppet/ssl'
+        state: absent
+    - name: uninstall puppet agent on VM
+      yum:
+        name: puppet-agent
+        state: absent
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
+    when:
+      - inventory_hostname is search('em7')
+      - delete_client_cert_on_vm | default(false) | bool
+
+  - name: delete the certificate on the non-EM7 VM
+    block:
     - name: delete puppetlabs directory on VM
       file:
         path: '/etc/puppetlabs'
@@ -67,14 +83,16 @@
       yum:
         name: puppet-agent
         state: absent
-    become: "{{ true if inventory_hostname is search('em7') else false }}"
-    when: delete_client_cert_on_vm | default(false) | bool
+    when:
+      - inventory_hostname is not search('em7')
+      - delete_client_cert_on_vm | default(false) | bool
 
   - name: delete the VM certificate
     shell: >
-      puppet cert clean {{ 'em7release.' if 'em7' in group_names else '' }}{{ vm.name }}.{{ sysconfig.domain_name }}
+      puppet cert clean {{ 'em7release.' if inventory_hostname is search('em7') else '' }}{{ vm.name }}.{{ sysconfig.domain_name }}
     args:
       chdir: '/usr/local/bin'
+    ignore_errors: true
     become: true
     when: delete_client_cert_on_server | default(false) | bool
     delegate_to: "{{groups['puppet']|first}}"

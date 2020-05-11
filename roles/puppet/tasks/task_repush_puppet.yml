@@ -1,0 +1,47 @@
+---
+# Tasks to relaunch puppet push 1
+- block:
+  - name: reset SSH password
+    set_fact:
+      ansible_ssh_pass: "{{ preppp }}"
+      ansible_become_pass: "{{ preppp }}"
+    no_log: true
+  - name: relaunch puppet push \#1
+    shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+    async: 30
+    poll: 0
+  - name: Update SSH password
+    set_fact:
+      ansible_ssh_pass: "{{ postppp }}"
+      ansible_become_pass: "{{ postppp }}"
+    no_log: true
+  - name: check updated VM credentials
+    wait_for_connection:
+      sleep: 10
+      timeout: "{{ 600 if inventory_hostname is search('em7') else 2700 }}"
+    register: repush_status
+    ignore_errors: true
+  - block:
+    - name: reset SSH password
+      set_fact:
+        ansible_ssh_pass: "{{ preppp }}"
+        ansible_become_pass: "{{ preppp }}"
+      no_log: true
+    - include_tasks: task_delete_certificates.yml
+    - include_tasks: task_add_vm_to_class.yml
+    - include_tasks: task_generate_cert.yml
+    - include_tasks: task_generate_cert_for_em7.yml
+    - include_tasks: task_wait_for_certificate.yml
+    - name: flush handlers
+      meta: flush_handlers
+    - name: relaunch puppet push \#2
+      shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+      async: 30
+      poll: 0
+    - name: Update SSH password
+      set_fact:
+        ansible_ssh_pass: "{{ postppp }}"
+        ansible_become_pass: "{{ postppp }}"
+      no_log: true
+    when: repush_status is failed
+  tags: puppet

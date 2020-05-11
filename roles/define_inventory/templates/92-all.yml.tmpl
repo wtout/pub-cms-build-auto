@@ -90,7 +90,7 @@ puppet:
 ##################################################################################
 # Yum server information
 ##################################################################################
-repo:
+yum:
 
   # baseurl
   baseurl: 'https://{{ environment_definition.yum.server_name }}.cisco-cms.com'
@@ -110,32 +110,38 @@ repo:
 ##################################################################################
 splunk:
 
-  # license master ip
-  license_master_ip: '172.19.252.22'
-
-  # head-end indexer ip (hostname)
-  he_indexer01_ip: 'alln1splidxp01'
-  he_indexer02_ip: ''
-
-  # head-end search-head ip (hostname)
-  he_searchhead01_ip: 'alln1splsrcp01'
-  he_searchhead02_ip: 'alln1splsrcp02'
-
-  # head-end deployment server ip
+  # head-end deployment
   he_deployment_server_ip: '172.19.252.21'
+  he_deployment_server: 'splds.gslb.cisco-cms.com'
 
-  # head-end deployment server hostname
-  he_deployment_server: 'alln1-spl-ds-p01'
+  # license master
+  license_master_ip: '172.19.252.22'
+  license_master_server: 'spllic.gslb.cisco-cms.com'
 
-  # mom indexer ip
+  # head-end search-head
+  he_searchhead01_ip: '172.19.252.23'
+  he_searchhead01_server: 'alln1splsrcp01'
+  he_searchhead02_ip: '172.19.252.25'
+  he_searchhead02_server: 'alln1splsrcp02'
+
+  # head-end indexer
+  he_indexer01_ip: '172.19.252.24'
+  he_indexer01_server: 'alln1splidxp01'
+  he_indexer02_ip: ''
+  he_indexer02_server: ''
+
+  # mom indexer
   mom_indexer1_ip: '172.19.252.28'
   mom_indexer2_ip: '172.19.252.29'
 
-  # mom cluster master ip
-  mom_clustermaster_ip: ''
+  # mom cluster master
+  mom_clustermaster_ip: '172.19.252.30'
+
+  # mom relay vip
+  mom_rly_vip: '172.19.254.23'
 
   # tile server hostname
-  tile: 'alln1spltlsp01'
+  tile_server: 'alln1spltlsp01'
 
 
 #@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
@@ -162,10 +168,13 @@ vip:
   src: "{{ '{{' }} customer.octets {{ '}}' }}.41"
 
   # Relay servers VIP
-  rly: "{{ '{{' }} customer.octets {{ '}}' }}.120"
+  rly: "{{ '{{' }} customer.octets {{ '}}' }}.52"
 
   # Relay servers database VIP
   rly_db: "{{ '{{' }} customer.octets {{ '}}' }}.1"
+
+  # NFS mount VIP
+  nfs_mnt: "{{ '{{' }} customer.octets {{ '}}' }}.1"
 
 
 

@@ -4,8 +4,8 @@
     file: task_validate_bastion_creds.yml
     apply:
       vars:
-        bastion_host: "{{task_item}}"
-  loop: "{{groups['bastion']}}"
+        bastion_host: "{{ task_item }}"
+  loop: "{{ groups['bastion'] }}"
   loop_control:
     loop_var: task_item
   when:

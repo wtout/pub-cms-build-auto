@@ -11,20 +11,20 @@
     - block:
       - name: check VM credentials
         wait_for_connection:
-          timeout: 6
+          timeout: 3
         register: vpco_vm_creds
         ignore_errors: true
         check_mode: no
       - name: Update SSH password
         set_fact:
           ansible_ssh_pass: "{{ postppp }}"
+          ansible_become_pass: "{{ postppp }}"
         no_log: true
         when:
           - vpco_vm_creds is failed
           - vpco_vm_creds.msg is search('Invalid/incorrect username/password')
       when:
         - ansible_ssh_pass != postppp
-        - inventory_hostname is not search('em7')
 
     - include_tasks: task_configure_ppp_vms.yml
       when: ansible_ssh_pass == postppp

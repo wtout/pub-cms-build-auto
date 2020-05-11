@@ -2,51 +2,61 @@
 # Tasks to perform puppet agent test
 - block:
   - name: check if puppet agent test is already running
-    stat:
-      path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
+    shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
     register: puppet_push_running
+    check_mode: no
 
   - block:
-    - block:
-      - name: Update SSH password
-        set_fact:
-          ansible_ssh_pass: "{{ postppp }}"
-        no_log: true
-        when: ansible_ssh_pass != postppp
-      - name: check updated VM credentials
-        wait_for_connection:
-          sleep: 10
-          timeout: "{{ 2700 if customer.disaster_recovery else 1800 }}"
-        register: connection_status1
-      - name: reset SSH password
-        set_fact:
-          ansible_ssh_pass: "{{ postppp }}"
-        no_log: true
-        when: connection_status1 is failed
+    - name: Update SSH password
+      set_fact:
+        ansible_ssh_pass: "{{ postppp }}"
+        ansible_become_pass: "{{ postppp }}"
+      no_log: true
+      when: ansible_ssh_pass != postppp
+    - name: check updated VM credentials
+      wait_for_connection:
+        sleep: 10
+        timeout: "{{ 2700 if customer.disaster_recovery else 1800 }}"
+      register: connection_status1
+      check_mode: no
+    - name: reset SSH password
+      set_fact:
+        ansible_ssh_pass: "{{ preppp }}"
+        ansible_become_pass: "{{ preppp }}"
+      no_log: true
+      when: connection_status1 is failed
     - name: wait for puppet push to finish
-      wait_for:
-        path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
-        state: absent
-        timeout: 1800
+      shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
+      register: puppet_push_running1
+      until: puppet_push_running1.stdout is search('finished')
+      retries: 180
+      delay: 10
+      check_mode: no
     - name: get puppet push status
       shell: "egrep ': Applied catalog in [1-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'"
       register: puppet_push_status1
+      until: puppet_push_status1.stdout is not search('push failed')
+      retries: 10
+      delay: 60
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
+      check_mode: no
     - name: check if puppet push completed successfully
       assert:
         that: puppet_push_status1.stdout is not search('Puppet push failed')
         fail_msg: 'Puppet push did not complete successfully'
-    when: puppet_push_running.stat.exists
+    when: puppet_push_running.stdout is not search('not running')
 
   - block:
     - name: check VM credentials
       wait_for_connection:
-        timeout: 6
+        timeout: 3
       register: vm_creds
       ignore_errors: true
       check_mode: no
     - name: Update SSH password
       set_fact:
         ansible_ssh_pass: "{{ postppp }}"
+        ansible_become_pass: "{{ postppp }}"
       no_log: true
       when:
         - vm_creds is failed
@@ -56,6 +66,7 @@
         egrep "Applying configuration version '[0-9]+'" /var/log/messages || echo 'Puppet push not started'
       register: puppet_push_started
       check_mode: no
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
     - debug:
         msg: 'Puppet push was never started. Will start it'
       when: puppet_push_started.stdout is search('Puppet push not started')
@@ -64,7 +75,11 @@
         shell: >
           egrep ': Applied catalog in [1-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'
         register: puppet_push_status2
+        until: puppet_push_status2.stdout is not search('push failed')
+        retries: 10
+        delay: 60
         check_mode: no
+        become: "{{ true if inventory_hostname is search('em7') else false }}"
       - name: display previous puppet push status
         debug:
           msg: "{{ 'Previous Puppet push did not complete successfully. Re-running puppet push' if puppet_push_status2.stdout is search('Puppet push failed') else 'Previous Puppet push completed successfully' }}"
@@ -75,51 +90,63 @@
       when: puppet_push_started.stdout is not search('Puppet push not started')
 
     - block:
-      - name: puppet agent test
+      - name: puppet push 1
         shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
         register: puppet_agent
         async: 30
         poll: 0
-        when: not ansible_check_mode
       - name: Wait for puppet agent test to start
-        wait_for:
-          delay: "{{1 if ansible_ssh_pass == postppp else 20}}"
-          path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
-          state: present
-          timeout: 1800
-        when:
-          - not ansible_check_mode
+        shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not started"
+        register: puppet_push_start
+        until: puppet_push_start.stdout is not search('not started')
+        retries: 18
+        delay: 10
       - name: Update SSH password
         set_fact:
           ansible_ssh_pass: "{{ postppp }}"
+          ansible_become_pass: "{{ postppp }}"
         no_log: true
       - name: check updated VM credentials
         wait_for_connection:
           sleep: 10
-          timeout: 2700
+          timeout: "{{ 600 if inventory_hostname is search('em7') else 2700 }}"
         register: connection_status2
-      - name: reset SSH password
-        set_fact:
-          ansible_ssh_pass: "{{ preppp }}"
-        no_log: true
+        ignore_errors: true
+      - include_tasks: task_repush_puppet.yml
         when: connection_status2 is failed
-      - name: Wait for puppet push to finish
-        wait_for:
-          path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
-          state: absent
-          timeout: 1800
-      - name: get puppet push status
+      - include_tasks:
+          file: task_puppet_push.yml
+          apply:
+            vars:
+              push_num: "{{ loop_item }}"
+        loop: "{{ range(1, 2 + 1)|list }}"
+        loop_control:
+          loop_var: loop_item
+        when:
+           - inventory_hostname is search('em7')
+           - customer.release is search('9.2')
+      - name: wait for puppet push 1 to finish
+        shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
+        register: puppet_push_running2
+        until: puppet_push_running2.stdout is search('finished')
+        retries: 180
+        delay: 10
+      - name: get puppet push 1 status
         shell: "egrep ': Applied catalog in [1-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'"
-        register: puppet_push_status2
+        register: puppet_push_status3
+        until: puppet_push_status3.stdout is not search('push failed')
+        retries: 10
+        delay: 60
+        become: "{{ true if inventory_hostname is search('em7') else false }}"
       - name: check if puppet push completed successfully
         assert:
-          that: puppet_push_status2.stdout is not search('Puppet push failed')
+          that: puppet_push_status3.stdout is not search('Puppet push failed')
           fail_msg: 'Puppet push did not complete successfully'
       when:
         - not ansible_check_mode
         - start_puppet_push | default(true) | bool
     when:
-      - not puppet_push_running.stat.exists
+      - puppet_push_running.stdout is search('not running')
 
   - include_tasks:
       file: task_puppet_push.yml
@@ -129,6 +156,6 @@
     loop: "{{ range(1, 2 + 1)|list }}"
     loop_control:
       loop_var: loop_item
-  when:
-     - inventory_hostname is not search('em7')
+    when:
+       - inventory_hostname is not search('em7')
   tags: puppet

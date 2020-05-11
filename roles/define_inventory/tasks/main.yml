@@ -86,14 +86,14 @@
   - name: check if puppet server name value is valid
     assert:
       that:
-        - not environment_definition.puppet.server_name | lower | regex_search('alln1qspupp01|alln1qspupp02|alln1qspupp03|alln1qspupp04') == none
-      fail_msg: "Puppet server_name is not valid. Only alln1qspupp01, alln1qspupp02, alln1qspupp03 and alln1qspupp04 are valid"
+        - not environment_definition.puppet.server_name | lower | regex_search('alln1qspupp0[1-4]') == none
+      fail_msg: "Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
 
   - name: check if yum server name value is valid
     assert:
       that:
-        - not environment_definition.yum.server_name | lower | regex_search('alln1qsyumrpp01|alln1qsyumrpp02') == none
-      fail_msg: "Yum server_name is not valid. Only alln1qsyumrpp01 and alln1qsyumrpp02 are valid"
+        - not environment_definition.yum.server_name | lower | regex_search('alln1qsyumrpp0[1-2]') == none
+      fail_msg: "Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
 
   - name: verify if selected datacenter supports deployment model
     assert:
@@ -126,6 +126,7 @@
     - name: ensure Python's netaddr package is installed
       pip:
         name: netaddr
+        state: latest
         extra_args: --user
       check_mode: no
       environment:

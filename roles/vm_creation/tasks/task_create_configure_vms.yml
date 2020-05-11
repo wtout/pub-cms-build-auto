@@ -7,6 +7,7 @@
   - include_tasks: task_deploy_ova.yml
   - include_tasks: task_update_disks.yml
   - include_tasks: task_update_hardware.yml
+  - include_tasks: task_enable_root_login.yml
   - include_tasks: task_update_default_route.yml
   - include_tasks: task_update_vmwaretools.yml
   - include_tasks: task_create_drs_rule.yml

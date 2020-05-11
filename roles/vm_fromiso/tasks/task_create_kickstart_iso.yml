@@ -12,6 +12,7 @@
   - name: install Python's pycdlib if it is not installed
     pip:
       name: pycdlib
+      state: latest
       extra_args: --user
     environment:
       http_proxy: "{{proxy_string.stdout}}"

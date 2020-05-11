@@ -7,7 +7,7 @@
     register: puppet_installed
     ignore_errors: true
   - block:
-    - name: Download Puppet to non-EM7 VM
+    - name: Download Puppet to VM
       get_url:
         url: "https://{{ puppet.fqdn }}:8140/packages/current/install.bash"
         dest: /tmp
@@ -17,28 +17,13 @@
       register: download_action
       until: download_action is succeeded
       retries: 3
-    - name: Install Puppet on non-EM7 VM
+    - name: Install Puppet on VM
       command: bash /tmp/install.bash
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
       register: puppet_install
       until: puppet_install is succeeded
       retries: 3
       delay: 5
       when: download_action is succeeded
-      notify:
-        - puppet sign certs
-    - name: wait for certificate to be created
-      shell: >
-        puppet cert list {{ vm.name }}.{{ sysconfig.domain_name }} || echo 'Found no certificate'
-      become: true
-      register: cert_exists
-      until: cert_exists.stdout is not search('Found no certificate')
-      retries: 3
-      delay: 5
-      delegate_to: "{{ groups['puppet']|first }}"
     when: "'No puppet-agent installed' in puppet_installed.stdout"
-  when: inventory_hostname is not search('em7')
-  tags: puppet
-
-- name: flush handlers
-  meta: flush_handlers
   tags: puppet

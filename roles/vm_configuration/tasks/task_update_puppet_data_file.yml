@@ -7,7 +7,7 @@
       state: directory
   - name: Copy data.conf file to VM
     template:
-      src: "{{ role_path }}/templates/{{ 'dr' if 'dr' in group_names else '' }}data.conf.tmpl"
+      src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}data.conf.tmpl"
       dest: '/opt/puppet/var/data.conf'
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

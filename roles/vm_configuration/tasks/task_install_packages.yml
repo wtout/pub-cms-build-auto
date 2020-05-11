@@ -14,6 +14,7 @@
     register: pkg_install
     until: pkg_install is succeeded
     retries: 3
+    when: not ansible_check_mode
 
   - block:
     - name: create /root/bin directory
@@ -28,6 +29,7 @@
       register: nfs_install
       until: nfs_install is succeeded
       retries: 3
+      when: not ansible_check_mode
     when:
       - inventory_hostname is search('rly')
   become: "{{ true if inventory_hostname is search('em7') else false}}"

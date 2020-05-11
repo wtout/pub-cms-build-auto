@@ -37,6 +37,7 @@
 #      license_reason_for_request: "{{'Trial' if 'dev' in customer.name|lower else 'Production'}}"
   when:
     - inventory_hostname is search('em7')
+    - inventory_hostname is not regex('mc|dc') or customer.release is not search('9.2')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration
 
@@ -69,6 +70,7 @@
       https_proxy: "{{ proxy_string.stdout }}"
   when:
     - inventory_hostname is search('em7')
+    - inventory_hostname is not regex('mc|dc') or customer.release is not search('9.2')
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_configuration
 
@@ -86,14 +88,37 @@
       content: "{{ get_cert.json.license }}"
       dest: '/home/{{ ansible_user }}/license/em7.lic'
   - block:
+    - name: save the license on the EM7 VM under /tmp
+      copy:
+        content: "{{ get_cert.json.license }}"
+        dest: '/tmp/em7.lic'
+        group: em7admin
+        owner: em7admin
+    - name: create the runLicense script under /home/em7admin
+      copy:
+        content: '/usr/local/silo/proc/appliance_init.py -l < /tmp/em7.lic'
+        dest: '/home/em7admin/runLicense'
+        group: em7admin
+        owner: em7admin
+        mode: 0755
+    become: "{{ true if inventory_hostname is search('em7') else false }}"
+    when: customer.release is search('9.2')
+  - block:
+    - name: check if mysql is running on db01
+      command: systemctl status mysql
+      register: service_check
+      check_mode: no
+      ignore_errors: true
+      delegate_to: "{{ groups['em7db']|first }}"
+      when: "'dr' not in group_names"
     - name: check if db vip is reachable
-      shell: ping {{vip.db}} -c 1
+      command: ping {{vip.db}} -c 1
       retries: 3
       delay: 5
       register: db_vip_reachable1
       ignore_errors: true
     - include_tasks: task_reboot_em7dbs.yml
-      when: db_vip_reachable1 is failed
+      when: db_vip_reachable1 is failed or ('dr' not in group_names and service_check.stdout is regex('dead|failed'))
     when: inventory_hostname is search('prt')
   - name: load the EM7 license
     shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
@@ -106,6 +131,7 @@
       become: "{{ true if inventory_hostname is search('em7') else false }}"
     when:
       - inventory_hostname is search('em7mc') or inventory_hostname is search('em7dc')
+      - customer.release is not search('9.2')
   when:
     - get_cert.json is defined
     - inventory_hostname is search('em7')

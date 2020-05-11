@@ -76,11 +76,12 @@
     vars:
       new_item: "{'{{ task_item.key }}': '{{ task_item.value }}'}"
     loop:
-      - { key: 'cluster', value: '{{ cluster_host1 }}'}
-      - { key: 'drcluster', value: '{{ cluster_host3 }}'}
+      - { key: 'cluster', value: '{{ cluster_host1 }}' }
+      - { key: 'drcluster', value: '{{ cluster_host3|default("") }}' }
     loop_control:
       loop_var: task_item
       label: "{{ task_item }}"
-    when: task_item.value != ''
+    when:
+      - task_item.value != ''
     no_log: true
   tags: ['always', 'vm_facts']

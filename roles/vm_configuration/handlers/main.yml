@@ -40,14 +40,16 @@
 
 - name: mount drbd1
   shell: |
-    drbd-overview | grep -i secondary/secondary && /sbin/drbdadm primary r0
+    {{ 'drbd-overview | grep -i secondary/secondary' if customer.release is not search('9.2') else '/sbin/drbdadm status | grep -i r0 | cut -d ":" -f2 | grep -i secondary && /sbin/drbdadm status | grep -i "peer " | cut -d ":" -f2 | grep -i secondary' }} && /sbin/drbdadm primary r0
     mount /dev/drbd1 /data.local/db
     df | grep /drbd1
   become: "{{true if inventory_hostname is search('em7') else false}}"
   register: drbd1_status
   until: drbd1_status.stdout is search('drbd1')
   retries: 3
-  when: inventory_hostname is search('01')
+  when:
+    - not ansible_check_mode
+    - inventory_hostname is search('01')
   tags: vm_configuration
 
 - name: start mysql

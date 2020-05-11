@@ -7,7 +7,7 @@ ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bas
 
 ansible_user: "{{ credentials.username }}"
 ansible_ssh_pass: "{{ credentials.password }}"
-ansible_become_pass: "{{ ansible_ssh_pass }}"
+ansible_become_pass: "{{ credentials.password }}"
 
-preppp: "{{ ansible_ssh_pass }}"
-postppp: "{{ POSTPP_PASS|default('') }}"
+preppp: "{{ credentials.password }}"
+postppp: "{{ vars[customer.release[1:4].split('.')|join + 'EM7PPP_PASS'] if inventory_hostname is search('em7') else POSTPP_PASS }}"
