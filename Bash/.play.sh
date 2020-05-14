@@ -412,8 +412,6 @@ ORIG_ARGS=${@}
 ENAME=$(get_envname ${ORIG_ARGS})
 INVENTORY_PATH="${PWD}/inventories/${ENAME}"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
-VAULTP="${PWD}/.vaultp.${ENAME}"
-VAULTC="${PWD}/.vaultc.${ENAME}"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
 PASSFILE="${PASSVAULT}.${ENAME}"
 check_repeat_job

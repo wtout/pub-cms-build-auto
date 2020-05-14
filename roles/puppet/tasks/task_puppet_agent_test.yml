@@ -7,6 +7,8 @@
     check_mode: no
 
   - block:
+    - debug:
+        msg: 'Puppet push is running'
     - name: Update SSH password
       set_fact:
         ansible_ssh_pass: "{{ postppp }}"
@@ -19,12 +21,6 @@
         timeout: "{{ 2700 if customer.disaster_recovery else 1800 }}"
       register: connection_status1
       check_mode: no
-    - name: reset SSH password
-      set_fact:
-        ansible_ssh_pass: "{{ preppp }}"
-        ansible_become_pass: "{{ preppp }}"
-      no_log: true
-      when: connection_status1 is failed
     - name: wait for puppet push to finish
       shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
       register: puppet_push_running1
@@ -33,7 +29,7 @@
       delay: 10
       check_mode: no
     - name: get puppet push status
-      shell: "egrep ': Applied catalog in [1-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'"
+      shell: "egrep ': Applied catalog in [0-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'"
       register: puppet_push_status1
       until: puppet_push_status1.stdout is not search('push failed')
       retries: 10
@@ -73,10 +69,10 @@
     - block:
       - name: get previous puppet push status if any
         shell: >
-          egrep ': Applied catalog in [1-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'
+          egrep ': Applied catalog in [0-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'
         register: puppet_push_status2
         until: puppet_push_status2.stdout is not search('push failed')
-        retries: 10
+        retries: 20
         delay: 60
         check_mode: no
         become: "{{ true if inventory_hostname is search('em7') else false }}"
@@ -132,10 +128,10 @@
         retries: 180
         delay: 10
       - name: get puppet push 1 status
-        shell: "egrep ': Applied catalog in [1-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'"
+        shell: "egrep ': Applied catalog in [0-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'"
         register: puppet_push_status3
         until: puppet_push_status3.stdout is not search('push failed')
-        retries: 10
+        retries: 20
         delay: 60
         become: "{{ true if inventory_hostname is search('em7') else false }}"
       - name: check if puppet push completed successfully

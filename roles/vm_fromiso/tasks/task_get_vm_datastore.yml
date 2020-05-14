@@ -5,6 +5,7 @@
       file: task_get_hosted_datastore.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
+      - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] == ''
 
   - include_tasks:
       file: task_get_onprem_datastore.yml

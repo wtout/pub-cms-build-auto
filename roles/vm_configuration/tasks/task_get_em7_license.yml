@@ -110,7 +110,8 @@
       check_mode: no
       ignore_errors: true
       delegate_to: "{{ groups['em7db']|first }}"
-      when: "'dr' not in group_names"
+      when:
+        - "'dr' not in group_names"
     - name: check if db vip is reachable
       command: ping {{vip.db}} -c 1
       retries: 3

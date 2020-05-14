@@ -4,7 +4,7 @@
   - name: Define folder name
     set_fact:
       fldr_name: "{{ hostvars[groups['vcenter'][0]]['information']['folder'] + '/' + customer.name if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups['vcenter'][0]]['information']['folder'] }}"
-  - name: Get networks names from ova
+  - name: Get names of networks from ova
     shell: "$(which tar) xfO {{ ova_dir }}/{{ ova_name }} *.ovf | grep -i connection | awk -F 'on>' '{print $2}' | cut -d '<' -f1"
     check_mode: no
     register: ova_nets

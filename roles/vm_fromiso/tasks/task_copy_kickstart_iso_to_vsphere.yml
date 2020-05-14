@@ -35,34 +35,27 @@
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ datacenter.name }}"
       datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
-      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ iso_installer }}"
       state: file
       validate_certs: false
     register: iso_present
     ignore_errors: true
     when: ds_folder is succeeded
-    run_once: true
+    run_once: "{{ true if hostvars[groups['vcenter'][0]]['information']['datacenter'] is regex('PAE-HX-DC|RTP5') else false }}"
 
-  - block:
-    - name: copy installer ISO file to vsphere
-      vsphere_copy:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ datacenter.name }}"
-        datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
-        src: "{{ auto_dir }}/Packages/ISO/CentOS-7-x86_64-DVD-1908.iso"
-        dest: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
-        validate_certs: false
-      async: 7200
-      poll: 30
-      register: iso_upld
-    - name: wait on iso upload
-      async_status:
-        jid: "{{iso_upld.ansible_job_id}}"
-      register: upld_result
-      until: upld_result.finished
-    run_once: true
+  - name: copy installer ISO file to vsphere
+    vsphere_copy:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+      src: "{{ auto_dir }}/Packages/ISO/{{ iso_installer }}"
+      dest: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ iso_installer }}"
+      validate_certs: false
+    async: 7200
+    poll: 30
+    run_once: "{{ true if hostvars[groups['vcenter'][0]]['information']['datacenter'] is regex('PAE-HX-DC|RTP5') else false }}"
     when:
       - iso_present is failed
       - not ansible_check_mode

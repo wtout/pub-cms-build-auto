@@ -32,7 +32,7 @@
         disk:
           - size_gb: "{{ vm.disk0 }}"
             type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
-            datastore: "{{ 'HX-Datastore-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+            datastore: "{{ hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
             state: present
             scsi_controller: 0
             unit_number: 0
@@ -78,7 +78,7 @@
         disk:
           - size_gb: "{{ vm.disk0 }}"
             type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
-            datastore: "{{ 'HX-Datastore-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+            datastore: "{{ hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
             state: present
             scsi_controller: 0
             unit_number: 0

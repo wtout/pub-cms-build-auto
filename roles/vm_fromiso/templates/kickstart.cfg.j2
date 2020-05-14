@@ -90,14 +90,14 @@ rm -f /etc/yum.repos.d/*
 cat <<EOF > /etc/yum.repos.d/QS.repo
 [QS-PROD]
 Name=QS-PROD
-baseurl={{ repo.baseurl + '/QS' }}
+baseurl={{ yum.baseurl + '/QS' }}
 enabled=1
 gpgcheck=0
 sslverify=False
 
 [centos76]
 Name=centos76
-baseurl={{ repo.baseurl + '/centos76' }}
+baseurl={{ yum.baseurl + '/centos76' }}
 enabled=0
 gpgcheck=0
 sslverify=False
