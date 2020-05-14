@@ -1,5 +1,5 @@
 ---
-# Tasks to generate certificate for non-em7 vm
+# Tasks to generate certificate for vm
 - block:
   - name: check if puppet agent is installed
     shell: $(which yum) list installed puppet-agent || echo "No puppet-agent installed"
