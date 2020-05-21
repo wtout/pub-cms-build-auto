@@ -18,7 +18,7 @@
       namevar: "{{ hostvars[member_item]['vm']['name'] }}"
       cpuvar: "{{ hostvars[member_item]['vm']['cpu'] }}"
       memvar: "{{ hostvars[member_item]['vm']['memory'] }}"
-      typevar: "{{ 'db/\"Database:' if 'em7db' in hostvars[member_item]['group_names'] else 'ap/\"Admin Portal:' if 'em7prt' in hostvars[member_item]['group_names'] else 'mc/\"Message Collector:' if 'em7mc' in hostvars[member_item]['group_names'] else 'dc/\"Data Collector:' }}"
+      typevar: "{{ 'db/\"Database:' if 'em7db' in hostvars[member_item]['group_names'] else 'ap/\"Admin Portal:' if 'em7prt' in hostvars[member_item]['group_names'] else 'mc/\"Message Collector:' if 'em7mc' in hostvars[member_item]['group_names'] else 'cu/\"Data Collector:' if customer.release is search('9.2') else 'dc/\"Data Collector:' }}"
     loop: "{{ groups[vm_group] }}"
     loop_control:
       loop_var: member_item
