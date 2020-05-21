@@ -165,8 +165,13 @@
     when:
       - environment_definition.customer.deployment_model is search('h')
 
+  - name: check if localhost's IP address is private
+    shell: ip a show $(ip link | grep '2:' | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}' | grep '192\.168\.' || echo 'Not local'
+    register: localhost_ip
+  
   - name: define template variables
     set_fact:
+      use_bastion: "{{ true if localhost_ip is search('192.168.') else false }}"
       number_of_prts: "{{ environment_definition.customer.primary.number_of_prts }}"
       number_of_mcs: "{{ environment_definition.customer.primary.number_of_mcs }}"
       number_of_dcs: "{{ environment_definition.customer.primary.number_of_dcs }}"

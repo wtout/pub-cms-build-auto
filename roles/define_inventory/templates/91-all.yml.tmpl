@@ -52,8 +52,7 @@ datacenter:
 # If a bastion server (a.k.a linux jump server) is to be used, the address must be provided
 ##################################################################################
 bastion:
-  address: []
-#  address: [ '10.225.228.240' ]
+  address: {{ "[ '10.225.228.240' ]" if use_bastion else [] }}
 
 
 ##################################################################################
