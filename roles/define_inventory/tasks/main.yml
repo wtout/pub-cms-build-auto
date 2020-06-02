@@ -119,19 +119,6 @@
     - name: define the resources list separator
       set_fact:
         separator: "{{ ', ' if environment_definition.datacenter.resources is search(', ') else ',' if environment_definition.datacenter.resources is search(',') else '; ' if environment_definition.datacenter.resources is search('; ') else ';' if environment_definition.datacenter.resources is search(';') else ' ' }}"
-    - name: get proxy setting
-      shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-      register: proxy_string
-      check_mode: no
-    - name: ensure Python's netaddr package is installed
-      pip:
-        name: netaddr
-        state: latest
-        extra_args: --user
-      check_mode: no
-      environment:
-        http_proxy: "{{proxy_string.stdout}}"
-        https_proxy: "{{proxy_string.stdout}}"
     - name: verify that resources are valid
       assert:
         that:

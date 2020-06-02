@@ -5,18 +5,6 @@
     template:
       src: templates/kickstart.cfg.j2
       dest: "{{ role_path }}/files/{{ vm.name }}-kickstart.cfg"
-  - name: get proxy setting
-    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-    register: proxy_string
-    check_mode: no
-  - name: install Python's pycdlib if it is not installed
-    pip:
-      name: pycdlib
-      state: latest
-      extra_args: --user
-    environment:
-      http_proxy: "{{proxy_string.stdout}}"
-      https_proxy: "{{proxy_string.stdout}}"
   - name: Build kickstart iso
     command: python '{{ role_path }}/files/kickstart-iso.py' '{{ role_path }}/files/{{ vm.name }}-kickstart.cfg' '{{ role_path }}/files/{{ vm.name }}-kickstart.iso'
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

@@ -123,9 +123,9 @@ function install_packages() {
 			[[ ${?} == 0 ]] && printf " Installed version $(yum list ${pkg} | tail -1 | awk '{print $2}')\n" || exit 1
 		fi
 	done
+	[[ $(get_centos_release) -eq 8 ]] && PIPCMD='pip3' || PIPCMD='pip'
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
-		[[ $(get_centos_release) -eq 8 ]] && PIPCMD='pip3' || PIPCMD='pip'
 		printf "\nInstalling ansible on localhost ..."
 		${PIPCMD} install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION}
 		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
@@ -167,20 +167,29 @@ function remove_extra_vars_arg() {
 	echo ${NEWARGS}
 }
 
+function install_pypkgs() {
+	ansible-playbook playbooks/installpypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" -e @${ANSIBLE_VARS} -v
+	INSTALL_PYPKGS_STATUS=${?}
+	[[ ${INSTALL_PYPKGS_STATUS} != 0 ]] && echo -e "\n${BOLD}Unable to install Python packages successfully. Aborting!${NORMAL}" && exit 1
+}
+
 function get_inventory() {
 	sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
-	if [[ -f ${SYS_DEF} ]]
+	if [[ ${INSTALL_PYPKGS_STATUS} == 0 ]]
 	then
-		ansible-playbook playbooks/getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v
-		GET_INVENTORY_STATUS=${?}
-		[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
-	elif [[ $(echo ${ENAME} | grep -i mdr) != '' ]]
-	then
-		[[ -d ${INVENTORY_PATH} ]] && GET_INVENTORY_STATUS=0 || GET_INVENTORY_STATUS=1
-		[[ ${GET_INVENTORY_STATUS} -ne 0 ]] && echo -e "\nInventory for ${BOLD}${ENAME}${NORMAL} system is not found. Aborting!" && exit 1
-	else
-		echo -e "\nStack definition file for ${ENAME} cannot be found. Aborting!"
-		exit 1
+		if [[ -f ${SYS_DEF} ]]
+		then
+			ansible-playbook playbooks/getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v
+			GET_INVENTORY_STATUS=${?}
+			[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
+		elif [[ $(echo ${ENAME} | grep -i mdr) != '' ]]
+		then
+			[[ -d ${INVENTORY_PATH} ]] && GET_INVENTORY_STATUS=0 || GET_INVENTORY_STATUS=1
+			[[ ${GET_INVENTORY_STATUS} -ne 0 ]] && echo -e "\nInventory for ${BOLD}${ENAME}${NORMAL} system is not found. Aborting!" && exit 1
+		else
+			echo -e "\n${BOLD}Stack definition file for ${ENAME} cannot be found. Aborting!${NORMAL}"
+			exit 1
+		fi
 	fi
 }
 
@@ -343,7 +352,7 @@ function get_credentials() {
 			encrypt_vault ${CRVAULT} Bash/get_creds_vault_pass.sh
 			[[ ${debug} == 1 ]] && set -x
 		else
-			echo "Repository password is not defined. Aborting!"
+			echo -e "\n${BOLD}Repository password is not defined. Aborting!${NORMAL}"
 			exit 1
 		fi
 	fi
@@ -426,6 +435,7 @@ set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
 check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
+install_pypkgs
 get_inventory ${@}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 get_hosts ${@}

@@ -1,0 +1,21 @@
+---
+# tasks file for install_pypkgs
+- block:
+  - name: get proxy setting
+    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
+    register: proxy_string
+    check_mode: no
+  - include_tasks:
+      file:
+        task_install_pypkg.yml
+      apply:
+        vars:
+          pypkg: "{{ pkg_item }}"
+          proxy_address: "{{ proxy_string.stdout }}"
+    loop: "{{ pypkg_list }}"
+    loop_control:
+      loop_var: pkg_item
+      label: "{{ pkg_item }}"
+    when: pkg_item != ''
+  check_mode: no
+  tags: [ 'always', 'install_pypkgs' ]

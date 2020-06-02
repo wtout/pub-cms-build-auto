@@ -1,0 +1,6 @@
+---
+# vars file for install_pypkgs
+pypkg_list:
+  - netaddr
+  - pyvmomi
+  - "{{ 'pycdlib' if (SYS_NAME|lower is search('mdr') or bfiso | default(false) | bool) else '' }}"

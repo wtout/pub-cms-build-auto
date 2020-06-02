@@ -1,27 +1,14 @@
 ---
 # tasks to validate vcenter credentials
 - block:
-  - block:
-    - name: get proxy setting
-      shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-      register: proxy_string
-      check_mode: no
-    - name: install Python's PyVmomi if it is not installed
-      pip:
-        name: PyVmomi
-        state: latest
-        extra_args: --user
-      environment:
-        http_proxy: "{{ proxy_string.stdout }}"
-        https_proxy: "{{ proxy_string.stdout }}"
-    - name: Validate vcenter credentials
-      vmware_about_info:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        validate_certs: no
-      register: vcenter_creds
-      ignore_errors: true
+  - name: Validate vcenter credentials
+    vmware_about_info:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      validate_certs: no
+    register: vcenter_creds
+    ignore_errors: true
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     when: ansible_user != ''
 

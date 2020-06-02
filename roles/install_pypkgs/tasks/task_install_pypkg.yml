@@ -1,0 +1,10 @@
+---
+# Tasks to install Python Package
+- name: Install Package {{ pypkg }}
+  pip:
+    name: "{{ pypkg }}"
+    state: latest
+    extra_args: --user
+  environment:
+    http_proxy: "{{ proxy_address }}"
+  tags: [ 'always', 'install_pypkgs' ]
