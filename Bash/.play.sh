@@ -101,6 +101,10 @@ function get_sudopass() {
 	fi
 }
 
+function get_centos_release() {
+	cat /etc/centos-release | sed 's/^.*\([0-9]\{1,\}\)\.[0-9]\{1,\}\.[0-9]\{1,\}.*$/\1/'
+}
+
 function install_packages() {
 	for pkg in ${PKG_LIST}
 	do
@@ -121,14 +125,15 @@ function install_packages() {
 	done
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
+		[[ $(get_centos_release) -eq 8 ]] && PIPCMD='pip3' || PIPCMD='pip'
 		printf "\nInstalling ansible on localhost ..."
-		pip install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION}
+		${PIPCMD} install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION}
 		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 	else
 		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
 		then
 			printf "\nUpgrading Ansible from version $(ansible --version | grep '^ansible' | cut -d ' ' -f2)"
-			pip install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION}
+			${PIPCMD} install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION}
 			[[ ${?} == 0 ]] && printf " to version ${ANSIBLE_VERSION}\n" || exit 1
 		fi
 	fi
@@ -397,7 +402,7 @@ ANSIBLE_CFG="./ansible.cfg"
 ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
-PKG_LIST='epel-release sshpass python2-pip'
+PKG_LIST="epel-release sshpass python$(($(get_centos_release) - 5))-pip"
 ANSIBLE_VERSION='2.9.9'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"

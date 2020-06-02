@@ -24,7 +24,7 @@
       loop_var: ds_item
       label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list }}"
     when:
-      - myvar[0] >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float + hostvars[groups['splind'][0]]['vm']['disk2']|float) / 1024
+      - myvar[0]|float >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float + hostvars[groups['splind'][0]]['vm']['disk2']|float) / 1024
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex('(do not use)|donotuse')
 
   - assert:
@@ -46,7 +46,7 @@
       loop_var: ds_item
       label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list }}"
     when:
-      - myvar[0] >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
+      - myvar[0]|float >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex('(do not use)|donotuse')
 
   - assert:
