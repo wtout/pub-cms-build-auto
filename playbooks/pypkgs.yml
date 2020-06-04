@@ -1,9 +1,9 @@
 ---
 # Ensure python required packages are installed on localhost (always run)
-- name: Install required Python packages
+- name: Install Python packages
   hosts: localhost
   any_errors_fatal: true
   gather_facts: no
 
   roles:
-    - role: "{{ auto_dir }}/roles/install_pypkgs"
+    - role: "{{ auto_dir }}/roles/pypkgs"

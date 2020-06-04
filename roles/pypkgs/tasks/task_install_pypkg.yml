@@ -8,4 +8,4 @@
   environment:
     http_proxy: "{{ proxy_address }}"
     https_proxy: "{{ proxy_address }}"
-  tags: [ 'always', 'install_pypkgs' ]
+  tags: [ 'always', 'pypkgs' ]

@@ -1,5 +1,5 @@
 ---
-# vars file for install_pypkgs
+# vars file for pypkgs
 pypkg_list:
   - netaddr
   - pyvmomi

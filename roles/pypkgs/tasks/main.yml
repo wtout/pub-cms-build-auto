@@ -1,5 +1,5 @@
 ---
-# tasks file for install_pypkgs
+# tasks file for pypkgs
 - block:
   - name: get proxy setting
     shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
@@ -18,4 +18,4 @@
       label: "{{ pkg_item }}"
     when: pkg_item != ''
   check_mode: no
-  tags: [ 'always', 'install_pypkgs' ]
+  tags: [ 'always', 'pypkgs' ]
