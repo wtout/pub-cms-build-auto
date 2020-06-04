@@ -97,6 +97,7 @@ with the system-name being the name of the system definition file from "Configur
 
 The list of roles used in the playbooks:
 
+  - **install_pypkgs**: installs the required Python3 packages
   - **define_inventory**: generates the system inventory from the system definition file
   - **collect_info**: prompts the user for required information
   - **check_creds**: validates the user's credentials
