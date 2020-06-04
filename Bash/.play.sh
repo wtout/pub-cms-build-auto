@@ -105,6 +105,10 @@ function get_centos_release() {
 	cat /etc/centos-release | sed 's/^.*\([0-9]\{1,\}\)\.[0-9]\{1,\}\.[0-9]\{1,\}.*$/\1/'
 }
 
+function get_proxy() {
+	grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
+}
+
 function install_packages() {
 	for pkg in ${PKG_LIST}
 	do
@@ -120,20 +124,37 @@ function install_packages() {
 			[[ ${pkg} == ${PKG_ARR[0]} ]] && printf "\n\nInstalling ${pkg} on localhost ..." || \
 			printf "\nInstalling ${pkg} on localhost ..."
 			sudo -S yum install -y ${pkg} --quiet <<< ${SUDO_PASS} 2>/dev/null
-			[[ ${?} == 0 ]] && printf " Installed version $(yum list ${pkg} | tail -1 | awk '{print $2}')\n" || exit 1
+			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed ${pkg} | tail -1 | awk '{print $2}')\n" || exit 1
 		fi
 	done
-	[[ $(get_centos_release) -eq 8 ]] && PIPCMD='pip3' || PIPCMD='pip'
+	if [[ $(get_centos_release) -ne 8 ]]
+	then
+		if [[ "x$(which pip3 2>/dev/null)" == "x" ]]
+		then
+			if [[ "x${SUDO_PASS}" == "x" ]]
+			then
+				echo
+				SUDO_PASS=$(get_sudopass) || FS=${?}
+				[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
+			fi
+			printf "\nInstalling python3 on localhost ..."
+			sudo -S yum install -y python3 --quiet <<< ${SUDO_PASS} 2>/dev/null
+			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed python3 | tail -1 | awk '{print $2}')\n" || exit 1
+			printf "\nInstalling libselinux-python3 on localhost ..."
+			sudo -S yum install -y libselinux-python3 --quiet <<< ${SUDO_PASS} 2>/dev/null
+			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed libselinux-python3 | tail -1 | awk '{print $2}')\n" || exit 1
+		fi
+	fi
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
 		printf "\nInstalling ansible on localhost ..."
-		${PIPCMD} install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION}
+		pip3 install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="$(get_proxy)"
 		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 	else
 		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
 		then
 			printf "\nUpgrading Ansible from version $(ansible --version | grep '^ansible' | cut -d ' ' -f2)"
-			${PIPCMD} install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION}
+			pip3 install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION} --proxy="$(get_proxy)"
 			[[ ${?} == 0 ]] && printf " to version ${ANSIBLE_VERSION}\n" || exit 1
 		fi
 	fi
@@ -168,7 +189,7 @@ function remove_extra_vars_arg() {
 }
 
 function install_pypkgs() {
-	ansible-playbook playbooks/installpypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" -e @${ANSIBLE_VARS} -v
+	ansible-playbook playbooks/installpypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v
 	INSTALL_PYPKGS_STATUS=${?}
 	[[ ${INSTALL_PYPKGS_STATUS} != 0 ]] && echo -e "\n${BOLD}Unable to install Python packages successfully. Aborting!${NORMAL}" && exit 1
 }
@@ -411,7 +432,8 @@ ANSIBLE_CFG="./ansible.cfg"
 ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
-PKG_LIST="epel-release sshpass python$(($(get_centos_release) - 5))-pip"
+#PKG_LIST="epel-release sshpass python$(($(get_centos_release) - 5))-pip"
+PKG_LIST="epel-release sshpass"
 ANSIBLE_VERSION='2.9.9'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
@@ -435,7 +457,7 @@ set -- && set -- ${@} ${NEW_ARGS}
 git_config
 install_packages
 check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
-install_pypkgs
+install_pypkgs ${@}
 get_inventory ${@}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
 get_hosts ${@}
