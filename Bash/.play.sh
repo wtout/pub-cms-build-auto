@@ -432,7 +432,6 @@ ANSIBLE_CFG="./ansible.cfg"
 ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
-#PKG_LIST="epel-release sshpass python$(($(get_centos_release) - 5))-pip"
 PKG_LIST="epel-release sshpass"
 ANSIBLE_VERSION='2.9.9'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
