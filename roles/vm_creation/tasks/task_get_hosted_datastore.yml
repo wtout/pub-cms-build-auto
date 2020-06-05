@@ -45,7 +45,7 @@
 
 - name: define hosted datastore for each odd index host
   set_fact:
-    vm_ds: "{{vm_ds_names[0]}}"
+    vm_ds: "{{ vm_ds_names[0] }}"
   when:
     - host_index|int % 2 != 0
   tags: vm_creation

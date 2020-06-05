@@ -6,7 +6,7 @@
     register: mop_vm_reachable
     ignore_errors: true
     check_mode: no
-    delegate_to: "{{groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost'}}"
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
     - name: check VM credentials
       wait_for_connection:

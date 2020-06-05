@@ -45,10 +45,10 @@
 - name: define delete_cluster
   set_fact:
     delete_cluster: "{{ delete_cluster|default(true) and not vm_in_cluster }}"
-#    delete_cluster: "{{delete_cluster|default(true) and not (vm_in_cluster and vm_on)}}"
+#    delete_cluster: "{{ delete_cluster|default(true) and not (vm_in_cluster and vm_on) }}"
   vars:
     vm_in_cluster: "{{ true if vm_item.instance.hw_cluster == hostvars[groups['vcenter'][0]]['information']['cluster'] else false }}"
-#    vm_on: "{{true if vm_item.instance.hw_power_status|lower is search('poweredon') else false}}"
+#    vm_on: "{{ true if vm_item.instance.hw_power_status|lower is search('poweredon') else false }}"
   loop: "{{ vmguest_info.results }}"
   loop_control:
     loop_var: vm_item

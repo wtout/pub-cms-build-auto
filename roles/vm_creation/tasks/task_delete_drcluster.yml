@@ -19,7 +19,7 @@
 - name: define DR vm names list
   set_fact:
     drvm_names: "{{ drvm_names|default([]) + [host_item.virtual_machines | map(attribute='guest_name') | list] | flatten }}"
-  loop: "{{drvm_info.results}}"
+  loop: "{{ drvm_info.results }}"
   loop_control:
     loop_var: host_item
     label: "{{ host_item }}"
@@ -45,10 +45,10 @@
 - name: define delete_drcluster
   set_fact:
     delete_drcluster: "{{ delete_drcluster|default(true) and not vm_in_cluster }}"
-#    delete_cluster: "{{delete_cluster|default(true) and not (vm_in_cluster and vm_on)}}"
+#    delete_cluster: "{{ delete_cluster|default(true) and not (vm_in_cluster and vm_on) }}"
   vars:
     vm_in_cluster: "{{ true if vm_item.instance.hw_cluster == hostvars[groups['vcenter'][0]]['information']['drcluster'] else false }}"
-#    vm_on: "{{true if vm_item.instance.hw_power_status|lower is search('poweredon') else false}}"
+#    vm_on: "{{ true if vm_item.instance.hw_power_status|lower is search('poweredon') else false }}"
   loop: "{{ drvmguest_info.results }}"
   loop_control:
     loop_var: vm_item
@@ -119,7 +119,7 @@
       label: "{{ host_item }}"
     register: drnormal_mode
 
-  - name: Delete the '{{hostvars[groups['vcenter'][0]]['information']['drcluster']}}' cluster
+  - name: Delete the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
     vmware_cluster:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"

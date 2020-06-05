@@ -13,8 +13,8 @@
       file:
         path: "{{ pkg_dir }}/Packages"
         state: directory
-    - name: download the package for release version {{customer.release}}
-      shell: "wget --no-proxy -np -nH --cut-dirs=2 -r -R index.html http://engci-maven-master.cisco.com/artifactory/cms-quicksilver-release/{{customer.release}}/Puppet/"
+    - name: download the package for release version {{ customer.release }}
+      shell: "wget --no-proxy -np -nH --cut-dirs=2 -r -R index.html http://engci-maven-master.cisco.com/artifactory/cms-quicksilver-release/{{ customer.release }}/Puppet/"
       args:
         chdir: "{{ pkg_dir }}/Packages"
       async: 7200

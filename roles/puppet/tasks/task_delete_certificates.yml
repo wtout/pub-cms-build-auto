@@ -95,5 +95,5 @@
     ignore_errors: true
     become: true
     when: delete_client_cert_on_server | default(false) | bool
-    delegate_to: "{{groups['puppet']|first}}"
+    delegate_to: "{{ groups['puppet']|first }}"
   tags: puppet

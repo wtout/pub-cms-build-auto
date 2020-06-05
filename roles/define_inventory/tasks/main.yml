@@ -176,7 +176,7 @@
 
   - name: customize inventory
     template:
-      src: "{{tmpl_item.name}}"
+      src: "{{ tmpl_item.name }}"
       dest: "{{ tmpl_item.dest }}"
     loop:
       - { name: 'templates/all.j2', dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower + '/group_vars/all.yml' }}" }

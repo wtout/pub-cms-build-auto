@@ -45,12 +45,12 @@
 #      recipient_type: roomId
 #      recipient_id: 'Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj'
 #      message_type: markdown
-#      message: "{{NOTIF_MSG | join('\n')}}"
+#      message: "{{ NOTIF_MSG | join('\n') }}"
 #      personal_token: MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f
 # The below task implements the following curl command
 #  - name: Send notification via Webex Teams
 #    shell: >
-#      export https_proxy="{{https_proxy_string.stdout_lines[0]}}";
+#      export https_proxy="{{ https_proxy_string.stdout_lines[0] }}";
 #      curl -v --request POST --header "Authorization: Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f" --header "Content-Type: application/json" --data '{"roomId":"Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj","markdown":"howdybot2"}' https://api.ciscospark.com/v1/messages
   - name: Send notification via Webex Teams
     uri:

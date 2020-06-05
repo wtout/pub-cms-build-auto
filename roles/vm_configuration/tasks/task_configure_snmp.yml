@@ -7,10 +7,10 @@
   - name: update snmpd.conf with ens160 MAC address
     lineinfile:
       path: '/etc/snmp/snmpd.conf'
-      line: "engineid {{ens160_mac.stdout | replace(':', '')}}"
+      line: "engineid {{ ens160_mac.stdout | replace(':', '') }}"
     notify: restart snmpd service 
   when:
     - not ansible_check_mode
     - inventory_hostname is search('em7')
-  become: "{{true if inventory_hostname is search('em7') else false}}"
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

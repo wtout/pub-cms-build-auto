@@ -52,7 +52,7 @@
 
 - name: define hosted datastore for each each even seq host
   set_fact:
-    vm_ds: "{{vm_ds_names[0]}}"
+    vm_ds: "{{ vm_ds_names[0] }}"
   when:
     - (inventory_hostname[-2:]|int - 1) % 2 == 0
     - inventory_hostname == groups[vm_group][pair_num]
