@@ -47,7 +47,7 @@
         - restart_net is succeeded
     - name: wait on gateway ping
       async_status:
-        jid: "{{gtw_ping.ansible_job_id}}"
+        jid: "{{ gtw_ping.ansible_job_id }}"
       register: ping_result
       until: ping_result.finished
       when:
