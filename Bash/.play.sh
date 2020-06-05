@@ -238,6 +238,7 @@ function check_updates() {
 				i=$((++i))
 				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
 			done
+			[[ $- =~ x ]] && debug=1 && set +x
 			source ${1}.${ENAME}
 			[[ ${debug} == 1 ]] && set -x
 			rm ${1}.${ENAME}
