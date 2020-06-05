@@ -23,7 +23,7 @@ On a newly installed Linux **CentOS 7** VM that can access the internet, bitbuck
 
 2- Download the Ansible automation package
 
-    $> git clone --single-branch master https://<your-bitbucket-username>@bitbucket-eng-rtp1.cisco.com/bitbucket/scm/cc/cmsp-auto-deploy.git
+    $> git clone --single-branch master https://<your-repo-username>@www-github3.cisco.com/cms-build-team/cmsp-auto-deploy.git
 
 3- Go to the newly cloned cmsp-auto-deploy directory
 
