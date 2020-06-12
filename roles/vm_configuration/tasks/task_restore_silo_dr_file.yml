@@ -3,7 +3,7 @@
 - block:
   - name: check primary DB credentials
     wait_for_connection:
-      timeout: 3
+      timeout: 15
     delegate_to: "{{ groups['em7db']|first }}"
     register: primarydb_connection_status1
     check_mode: no
@@ -27,7 +27,7 @@
       regexp: '^({{ task_item.param }}) {{ task_item.regexp }}$'
       replace: '\g<1> {{ task_item.value }}'
     loop:
-      - { param: 'dbpasswd =', regexp: '{{ vars[("92" if customer.release is search("9.2") else "91") + "EM7PPP_PASS"] }}', value: 'em7admin' }
+      - { param: 'dbpasswd =', regexp: '{{ vars[customer.release[1:4].split(".")|join + "EM7PPP_PASS"] }}', value: 'em7admin' }
     loop_control:
       loop_var: task_item
     no_log: true

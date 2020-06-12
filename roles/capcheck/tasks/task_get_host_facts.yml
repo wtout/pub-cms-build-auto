@@ -19,12 +19,13 @@
       ssd_ds_names: "{{ ssd_ds_names|default([]) | union(ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list) }}"
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|map(attribute='free')|list|replace(' TB', '') }}"
+      vmvar: "{{ hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float + hostvars[groups['splind'][0]]['vm']['disk2']|float if (groups['em7db'] is defined or groups['drem7db'] is defined) and (groups['splind'] is defined or groups['drsplind'] is defined) else 0 }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
       label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list }}"
     when:
-      - myvar[0]|float >= (hostvars[groups['em7db'][0]]['vm']['disk']|float + hostvars[groups['em7db'][0]]['vm']['memory']|float + hostvars[groups['splind'][0]]['vm']['disk2']|float) / 1024
+      - myvar[0]|float >= (vmvar|float) / 1024
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex('(do not use)|donotuse')
 
   - assert:
@@ -41,21 +42,22 @@
       sas_ds_names: "{{ sas_ds_names|default([]) | union(ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list) }}"
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|map(attribute='free')|list|replace(' TB', '') }}"
+      vmvar: "{{ (hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) if (groups['em7db'] is defined or groups['drem7db'] is defined) else 0 }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
       label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list }}"
     when:
-      - myvar[0]|float >= ((required_space|float / 2) - hostvars[groups['em7db'][0]]['vm']['disk']|float - hostvars[groups['em7db'][0]]['vm']['memory']|float) / 1024
+      - myvar[0]|float >= ((required_space|float / 2) - vmvar|float) / 1024
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex('(do not use)|donotuse')
 
   - assert:
       that:
-        - "sas_ds_names|length >= 2"
+        - "sas_ds_names|length >= {{ 1 if hostvars[groups['vcenter'][0]]['information']['resources']|length == 1 else 2 }}"
       fail_msg: "Not enough SAS storage space to deploy the non-DB VMs"
       success_msg: "Found {{ sas_ds_names|length }} SAS datastores to deploy the non-DB VMs"
     when:
-      - (groups['stack'] | difference(groups['em7db']) | length >= 1) or (groups['dr'] | difference(groups['drem7db']) | length >= 1)
+      - (groups['stack'] | difference(groups['em7db']|default('')) | length >= 1) or (groups['dr'] | difference(groups['drem7db']|default('')) | length >= 1)
 
   - name: define ssd_ds_total_fs
     set_fact:

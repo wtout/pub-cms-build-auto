@@ -6,7 +6,7 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter_name: "{{ datacenter.name }}"
+      datacenter_name: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       folder_name: "{{ customer.name }}"
       folder_type: vm
       parent_folder: "{{ hostvars[groups['vcenter'][0]]['information']['folder'] }}"

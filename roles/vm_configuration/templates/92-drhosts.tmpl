@@ -2,75 +2,75 @@
 ::1 localhost localhost.localdomain localhost6 localhost6.localdomain6
 
 #### Host Alias Names ####
-{{ vip.mc }}	em7-message-collector-vip
-{{ vip.db }}	em7-db-vip
-{{ vip.prt }}   em7-admin-portal-vip
-{{ vip.src }}	splunk-search-head-vip
-{{ drspldpl_ip1_list[0] }}	splunk-deployer-server
-{{ vip.rly }}	relay-vip
-{{ vip.rly_db}}	relay-db-vip
-{{ drrly_ip1_list[0] }}	relay-site1-server01
-{{ drrly_ip1_list[1] +'	relay-site2-server01' if drrly_ip1_list|length >= 2 else '' }}
-{{ splunk.he_deployment_server_ip }}	splunk-head-deployment-server
-{{ splunk.he_indexer01_ip }}	splunk-head-indexer01
-{{ splunk.he_indexer01_ip }}	splunk-head-indexer02
-{{ drsplind_ip1_list[0] }}	splunk-site1-indexer01
-{{ drsplind_ip1_list[1] + '	splunk-site2-indexer01' if drsplind_ip1_list|length >= 2 else '' }}
-{{ drsplsrc_ip1_list[0] }}	splunk-site1-search-head01
-{{ drsplsrc_ip1_list[1] + '	splunk-site2-search-head01' if drsplsrc_ip1_list|length >= 2 else '' }}
-{{ splunk.license_master_ip }}	splunk-license-master
-{{ drsplmas_ip1_list[0] }}	splunk-cluster-master
-{{ splunk.mom_clustermaster_ip }}	mom-splunk-cluster-master
-{{ splunk.mom_indexer1_ip }}	splunk-momidx-01
-{{ splunk.mom_indexer2_ip }}	splunk-momidx-02
-{{ splunk.mom_rly_vip }}	mom-relay-vip
-{{ splunk.mom_clustermaster_ip }}	splunk-mom-cluster-master
+{{ vip.mc + "\tem7-message-collector-vip" }}
+{{ vip.db + "\tem7-db-vip" }}
+{{ vip.prt + "\tem7-admin-portal-vip" }}
+{{ vip.src + "\tsplunk-search-head-vip" }}
+{{ drspldpl_ip1_list[0] + "\tsplunk-deployer-server" }}
+{{ vip.rly + "\trelay-vip" }}
+{{ vip.rly_db +	"\trelay-db-vip" }}
+{{ drrly_ip1_list|first + "\trelay-site1-server01" }}
+{{ drrly_ip1_list|last + "\trelay-site2-server01" }}
+{{ splunk.he_deployment_server_ip + "\tsplunk-head-deployment-server" }}
+{{ splunk.he_indexer01_ip + "\tsplunk-head-indexer01" }}
+{{ splunk.he_indexer01_ip + "\tsplunk-head-indexer02" }}
+{{ drsplind_ip1_list|first + "\tsplunk-site1-indexer01" }}
+{{ drsplind_ip1_list|last + "\tsplunk-site2-indexer01" }}
+{{ drsplsrc_ip1_list|first + "\tsplunk-site1-search-head01" }}
+{{ drsplsrc_ip1_list|last + "\tsplunk-site2-search-head01" }}
+{{ splunk.license_master_ip + "\tsplunk-license-master" }}
+{{ drsplmas_ip1_list[0] + "\tsplunk-cluster-master" }}
+{{ splunk.mom_clustermaster_ip + "\tmom-splunk-cluster-master" }}
+{{ splunk.mom_indexer1_ip + "\tsplunk-momidx-01" }}
+{{ splunk.mom_indexer2_ip + "\tsplunk-momidx-02" }}
+{{ splunk.mom_rly_vip + "\tmom-relay-vip" }}
+{{ splunk.mom_clustermaster_ip + "\tsplunk-mom-cluster-master" }}
 
 #### Host Names ####
-{{ puppet.ipaddress }}	{{ puppet.vmname }}	{{ puppet.fqdn }}
-{{ yum.ipaddress }}	{{ yum.vmname }}	{{ yum.fqdn }}
+{{ puppet.ipaddress + "\t" + puppet.vmname + "\t" + puppet.fqdn }}
+{{ yum.ipaddress + "\t" + yum.vmname + "\t" + yum.fqdn }}
 
-{{ drlnxjmp_ip1_list[0] + '	' + drlnxjmp_hst_list[0] + '	' + drlnxjmp_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drlnxjmp_ip1_list[1] + '	' + drlnxjmp_hst_list[1] + '	' + drlnxjmp_hst_list[1] + '.' + sysconfig.domain_name if drlnxjmp_ip1_list|length >= 2 else '' }}
+{{ drlnxjmp_ip1_list[0] + "\t" + drlnxjmp_hst_list[0] + "\t" + drlnxjmp_hst_list[0] + '.' + sysconfig.domain_name }}
+{{ drlnxjmp_ip1_list[1] + "\t" + drlnxjmp_hst_list[1] + "\t" + drlnxjmp_hst_list[1] + '.' + sysconfig.domain_name if drlnxjmp_ip1_list|length >= 2 else '' }}
 
-{{ drrly_ip1_list[0] + '	' + drrly_hst_list[0] + '	' + drrly_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drrly_ip1_list[1] + '	' + drrly_hst_list[1] + '	' + drrly_hst_list[1] + '.' + sysconfig.domain_name if drrly_ip1_list|length >= 2 else '' }}
+{{ drrly_ip1_list[0] + "\t" + drrly_hst_list[0] + "\t" + drrly_hst_list[0] + '.' + sysconfig.domain_name }}
+{{ drrly_ip1_list[1] + "\t" + drrly_hst_list[1] + "\t" + drrly_hst_list[1] + '.' + sysconfig.domain_name if drrly_ip1_list|length >= 2 else '' }}
 
-{{ drsplsrc_ip1_list[0] + '	' + drsplsrc_hst_list[0] + '	' + drsplsrc_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drsplsrc_ip1_list[1] + '	' + drsplsrc_hst_list[1] + '	' + drsplsrc_hst_list[1] + '.' + sysconfig.domain_name if drsplsrc_ip1_list|length >= 2 else '' }}
-{{ drsplind_ip1_list[0] + '	' + drsplind_hst_list[0] + '	' + drsplind_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drsplind_ip1_list[1] + '	' + drsplind_hst_list[1] + '	' + drsplind_hst_list[1] + '.' + sysconfig.domain_name if drsplind_ip1_list|length >= 2 else '' }}
-{{ drsplmas_ip1_list[0] + '	' + drsplmas_hst_list[0] + '	' + drsplmas_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drsplmas_ip1_list[1] + '	' + drsplmas_hst_list[1] + '	' + drsplmas_hst_list[1] + '.' + sysconfig.domain_name if drsplmas_ip1_list|length >= 2 else '' }}
-{{ drspldpl_ip1_list[0] + '	' + drspldpl_hst_list[0] + '	' + drspldpl_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drspldpl_ip1_list[1] + '	' + drspldpl_hst_list[1] + '	' + drspldpl_hst_list[1] + '.' + sysconfig.domain_name if drspldpl_ip1_list|length >= 2 else '' }}
+{{ drsplsrc_ip1_list[0] + "\t" + drsplsrc_hst_list[0] + "\t" + drsplsrc_hst_list[0] + '.' + sysconfig.domain_name if drsplsrc_ip1_list is defined else '' }}
+{{ drsplsrc_ip1_list[1] + "\t" + drsplsrc_hst_list[1] + "\t" + drsplsrc_hst_list[1] + '.' + sysconfig.domain_name if drsplsrc_ip1_list|default([])|length >= 2 else '' }}
+{{ drsplind_ip1_list[0] + "\t" + drsplind_hst_list[0] + "\t" + drsplind_hst_list[0] + '.' + sysconfig.domain_name if drsplind_ip1_list is defined else '' }}
+{{ drsplind_ip1_list[1] + "\t" + drsplind_hst_list[1] + "\t" + drsplind_hst_list[1] + '.' + sysconfig.domain_name if drsplind_ip1_list|default([])|length >= 2 else '' }}
+{{ drsplmas_ip1_list[0] + "\t" + drsplmas_hst_list[0] + "\t" + drsplmas_hst_list[0] + '.' + sysconfig.domain_name if drsplmas_ip1_list is defined else '' }}
+{{ drsplmas_ip1_list[1] + "\t" + drsplmas_hst_list[1] + "\t" + drsplmas_hst_list[1] + '.' + sysconfig.domain_name if drsplmas_ip1_list|default([])|length >= 2 else '' }}
+{{ drspldpl_ip1_list[0] + "\t" + drspldpl_hst_list[0] + "\t" + drspldpl_hst_list[0] + '.' + sysconfig.domain_name if drspldpl_ip1_list is defined else '' }}
+{{ drspldpl_ip1_list[1] + "\t" + drspldpl_hst_list[1] + "\t" + drspldpl_hst_list[1] + '.' + sysconfig.domain_name if drspldpl_ip1_list|default([])|length >= 2 else '' }}
 
-{{ db_ip1_list[0] + '	' + db_hst_list[0] + '	' + db_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ db_ip1_list[1] + '	' + db_hst_list[1] + '	' + db_hst_list[1] + '.' + sysconfig.domain_name if db_ip1_list|length >= 2 else '' }}
-{{ drdb_ip1_list[0] + '	' + drdb_hst_list[0] + '	' + drdb_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drdb_ip1_list[0] + '	' + drdb_hst_list[0] + '	' + drdb_hst_list[0] + '.' + sysconfig.domain_name if drdb_ip1_list|length >= 2 else '' }}
+{{ db_ip1_list[0] + "\t" + db_hst_list[0] + "\t" + db_hst_list[0] + '.' + sysconfig.domain_name }}
+{{ db_ip1_list[1] + "\t" + db_hst_list[1] + "\t" + db_hst_list[1] + '.' + sysconfig.domain_name if db_ip1_list|length >= 2 else '' }}
+{{ drdb_ip1_list[0] + "\t" + drdb_hst_list[0] + "\t" + drdb_hst_list[0] + '.' + sysconfig.domain_name }}
+{{ drdb_ip1_list[0] + "\t" + drdb_hst_list[0] + "\t" + drdb_hst_list[0] + '.' + sysconfig.domain_name if drdb_ip1_list|length >= 2 else '' }}
 
-{{ drprt_ip1_list[0] + '	' + drprt_hst_list[0] + '	' + drprt_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drprt_ip1_list[1] + '	' + drprt_hst_list[1] + '	' + drprt_hst_list[1] + '.' + sysconfig.domain_name if drprt_ip1_list|length >= 2 else '' }}
-{{ drprt_ip1_list[2] + '	' + drprt_hst_list[2] + '	' + drprt_hst_list[2] + '.' + sysconfig.domain_name if drprt_ip1_list|length >= 3 else '' }}
-{{ drprt_ip1_list[3] + '	' + drprt_hst_list[3] + '	' + drprt_hst_list[3] + '.' + sysconfig.domain_name if drprt_ip1_list|length >= 4 else '' }}
+{{ drprt_ip1_list[0] + "\t" + drprt_hst_list[0] + "\t" + drprt_hst_list[0] + '.' + sysconfig.domain_name if drprt_ip1_list is defined else '' }}
+{{ drprt_ip1_list[1] + "\t" + drprt_hst_list[1] + "\t" + drprt_hst_list[1] + '.' + sysconfig.domain_name if drprt_ip1_list|default([])|length >= 2 else '' }}
+{{ drprt_ip1_list[2] + "\t" + drprt_hst_list[2] + "\t" + drprt_hst_list[2] + '.' + sysconfig.domain_name if drprt_ip1_list|default([])|length >= 3 else '' }}
+{{ drprt_ip1_list[3] + "\t" + drprt_hst_list[3] + "\t" + drprt_hst_list[3] + '.' + sysconfig.domain_name if drprt_ip1_list|default([])|length >= 4 else '' }}
 
-{{ drmc_ip1_list[0] + '	' + drmc_hst_list[0] + '	' + drmc_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drmc_ip1_list[1] + '	' + drmc_hst_list[1] + '	' + drmc_hst_list[1] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 2 else '' }}
-{{ drmc_ip1_list[2] + '	' + drmc_hst_list[2] + '	' + drmc_hst_list[2] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 3 else '' }}
-{{ drmc_ip1_list[3] + '	' + drmc_hst_list[3] + '	' + drmc_hst_list[3] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 4 else '' }}
-{{ drmc_ip1_list[4] + '	' + drmc_hst_list[4] + '	' + drmc_hst_list[4] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 5 else '' }}
-{{ drmc_ip1_list[5] + '	' + drmc_hst_list[5] + '	' + drmc_hst_list[5] + '.' + sysconfig.domain_name if drmc_ip1_list|length >= 6 else '' }}
+{{ drmc_ip1_list[0] + "\t" + drmc_hst_list[0] + "\t" + drmc_hst_list[0] + '.' + sysconfig.domain_name if drmc_ip1_list is defined else '' }}
+{{ drmc_ip1_list[1] + "\t" + drmc_hst_list[1] + "\t" + drmc_hst_list[1] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 2 else '' }}
+{{ drmc_ip1_list[2] + "\t" + drmc_hst_list[2] + "\t" + drmc_hst_list[2] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 3 else '' }}
+{{ drmc_ip1_list[3] + "\t" + drmc_hst_list[3] + "\t" + drmc_hst_list[3] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 4 else '' }}
+{{ drmc_ip1_list[4] + "\t" + drmc_hst_list[4] + "\t" + drmc_hst_list[4] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 5 else '' }}
+{{ drmc_ip1_list[5] + "\t" + drmc_hst_list[5] + "\t" + drmc_hst_list[5] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 6 else '' }}
 
-{{ drdc_ip1_list[0] + '	' + drdc_hst_list[0] + '	' + drdc_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drdc_ip1_list[1] + '	' + drdc_hst_list[1] + '	' + drdc_hst_list[1] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 2 else '' }}
-{{ drdc_ip1_list[2] + '	' + drdc_hst_list[2] + '	' + drdc_hst_list[2] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 3 else '' }}
-{{ drdc_ip1_list[3] + '	' + drdc_hst_list[3] + '	' + drdc_hst_list[3] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 4 else '' }}
-{{ drdc_ip1_list[4] + '	' + drdc_hst_list[4] + '	' + drdc_hst_list[4] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 5 else '' }}
-{{ drdc_ip1_list[5] + '	' + drdc_hst_list[5] + '	' + drdc_hst_list[5] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 6 else '' }}
-{{ drdc_ip1_list[6] + '	' + drdc_hst_list[6] + '	' + drdc_hst_list[6] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 7 else '' }}
-{{ drdc_ip1_list[7] + '	' + drdc_hst_list[7] + '	' + drdc_hst_list[7] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 8 else '' }}
-{{ drdc_ip1_list[8] + '	' + drdc_hst_list[8] + '	' + drdc_hst_list[8] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 9 else '' }}
-{{ drdc_ip1_list[9] + '	' + drdc_hst_list[9] + '	' + drdc_hst_list[9] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 10 else '' }}
-{{ drdc_ip1_list[10] + '	' + drdc_hst_list[10] + '	' + drdc_hst_list[10] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 11 else '' }}
-{{ drdc_ip1_list[11] + '	' + drdc_hst_list[11] + '	' + drdc_hst_list[11] + '.' + sysconfig.domain_name if drdc_ip1_list|length >= 12 else '' }}
+{{ drdc_ip1_list[0] + "\t" + drdc_hst_list[0] + "\t" + drdc_hst_list[0] + '.' + sysconfig.domain_name if drdc_ip1_list is defined else '' }}
+{{ drdc_ip1_list[1] + "\t" + drdc_hst_list[1] + "\t" + drdc_hst_list[1] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 2 else '' }}
+{{ drdc_ip1_list[2] + "\t" + drdc_hst_list[2] + "\t" + drdc_hst_list[2] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 3 else '' }}
+{{ drdc_ip1_list[3] + "\t" + drdc_hst_list[3] + "\t" + drdc_hst_list[3] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 4 else '' }}
+{{ drdc_ip1_list[4] + "\t" + drdc_hst_list[4] + "\t" + drdc_hst_list[4] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 5 else '' }}
+{{ drdc_ip1_list[5] + "\t" + drdc_hst_list[5] + "\t" + drdc_hst_list[5] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 6 else '' }}
+{{ drdc_ip1_list[6] + "\t" + drdc_hst_list[6] + "\t" + drdc_hst_list[6] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 7 else '' }}
+{{ drdc_ip1_list[7] + "\t" + drdc_hst_list[7] + "\t" + drdc_hst_list[7] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 8 else '' }}
+{{ drdc_ip1_list[8] + "\t" + drdc_hst_list[8] + "\t" + drdc_hst_list[8] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 9 else '' }}
+{{ drdc_ip1_list[9] + "\t" + drdc_hst_list[9] + "\t" + drdc_hst_list[9] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 10 else '' }}
+{{ drdc_ip1_list[10] + "\t" + drdc_hst_list[10] + "\t" + drdc_hst_list[10] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 11 else '' }}
+{{ drdc_ip1_list[11] + "\t" + drdc_hst_list[11] + "\t" + drdc_hst_list[11] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 12 else '' }}

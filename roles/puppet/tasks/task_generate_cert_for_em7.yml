@@ -45,7 +45,10 @@
           owner: root
           group: root
           mode: 0755
-        become: "{{ true if inventory_hostname is search('em7') else false }}"
+      - name: delete the temporary file
+        file:
+          path: /opt/em7/share/ssl/cleanfile.sh
+          state: absent
       when: file_status.stdout is search('CRLF line terminators')
     - name: generate nginx certificate for EM7 VM
       shell: ./generate-ngx-cert.sh

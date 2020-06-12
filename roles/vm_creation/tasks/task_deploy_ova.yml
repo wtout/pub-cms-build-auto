@@ -14,11 +14,11 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       disk_provisioning: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
       cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if inventory_hostname is search('dr') else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       datastore: "{{ hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
-      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+      folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
       name: "{{ vm.name }}"
       networks: {}
       ova: "{{ ova_dir }}/{{ ova_name }}"

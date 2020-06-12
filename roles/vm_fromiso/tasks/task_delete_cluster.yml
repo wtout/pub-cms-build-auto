@@ -30,7 +30,7 @@
     hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
     username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
     password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-    datacenter: "{{ datacenter.name }}"
+    datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
     name: "{{ vm_item }}"
     validate_certs: no
   loop: "{{ vm_names }}"
@@ -90,8 +90,8 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
-      folder: "{{ datacenter.name }}/host"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/host"
       esxi_hostname: "{{ host_item }}"
       esxi_username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
       esxi_password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
@@ -121,7 +121,7 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       state: absent
       validate_certs: no

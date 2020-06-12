@@ -29,10 +29,16 @@
     loop_control:
       loop_var: host_item
 
+  - name: define host cluster
+    set_fact:
+      cluster_host1: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first }}"
+    when: information.resources|length == 1
+
   - name: define HA hosts clusters
     set_fact:
       cluster_host1: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first }}"
       cluster_host2: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[1])|map(attribute='value')|list|first }}"
+    when: information.resources|length > 1
 
   - name: define DR host cluster
     set_fact:
@@ -47,6 +53,7 @@
     when:
       - cluster_host1 != ''
       - cluster_host2 != ''
+    when: information.resources|length > 1
 
   - name: verify that DR host is not in the same cluster as HA hosts
     assert:
@@ -58,10 +65,11 @@
       - cluster_host3 != ''
 
   - debug:
-      msg: "HA hosts are already in the '{{ cluster_host1 }}' cluster. Primary cluster name spcified in definition file will be ignored"
+      msg: "{{ 'HA hosts are' if information.resources|length > 1 else 'Host is' }} already in the '{{ cluster_host1 }}' cluster. Primary cluster name spcified in definition file will be ignored"
     when:
       - cluster_host1 != ''
       - cluster_host1 != information.cluster
+    when: information.resources|length > 1
 
   - debug:
       msg: "DR host is already in the '{{ cluster_host3 }}' cluster. Secondary cluster name spcified in definition file will be ignored"

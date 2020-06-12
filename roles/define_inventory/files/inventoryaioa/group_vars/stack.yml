@@ -1,0 +1,13 @@
+---
+# Variables for stack hosts
+ssh_username: "{{ hostvars[groups['bastion'][0]]['ansible_user'] if (groups['bastion'][0] is defined and bastion.address != []) else '' }}"
+ssh_address: "{{ hostvars[groups['bastion'][0]]['ansible_host'] if (groups['bastion'][0] is defined and bastion.address != []) else '' }}"
+ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ ssh_username }}@{{ ssh_address }}"'
+ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else '' }}"
+
+ansible_user: "{{ credentials.username }}"
+ansible_ssh_pass: "{{ credentials.password }}"
+ansible_become_pass: "{{ credentials.password }}"
+
+preppp: "{{ credentials.password }}"
+postppp: "{{ vars[customer.release[1:4].split('.')|join + 'EM7PPP_PASS'] if inventory_hostname is search('em7') else POSTPP_PASS }}"

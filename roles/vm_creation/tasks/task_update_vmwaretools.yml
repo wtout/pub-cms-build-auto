@@ -29,8 +29,8 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
-      datacenter: "{{ datacenter.name }}"
-      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
       validate_certs: no
     register: vmt_upgrade
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

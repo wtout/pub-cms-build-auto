@@ -18,7 +18,7 @@
       namevar: "{{ hostvars[member_item]['vm']['name'] }}"
       cpuvar: "{{ hostvars[member_item]['vm']['cpu'] }}"
       memvar: "{{ hostvars[member_item]['vm']['memory'] }}"
-      typevar: "{{ 'db/\"Database:' if 'em7db' in hostvars[member_item]['group_names'] else 'ap/\"Admin Portal:' if 'em7prt' in hostvars[member_item]['group_names'] else 'mc/\"Message Collector:' if 'em7mc' in hostvars[member_item]['group_names'] else 'cu/\"Data Collector:' if customer.release is search('9.2') else 'dc/\"Data Collector:' }}"
+      typevar: "{{ 'db/\"Database:' if ('em7db' in hostvars[member_item]['group_names'] or hostvars[member_item]['vm']['name'] is search('em7aio')) else 'ap/\"Admin Portal:' if 'em7prt' in hostvars[member_item]['group_names'] else 'mc/\"Message Collector:' if 'em7mc' in hostvars[member_item]['group_names'] else 'cu/\"Data Collector:' if customer.release is search('9.2') else 'dc/\"Data Collector:' }}"
     loop: "{{ groups[vm_group] }}"
     loop_control:
       loop_var: member_item
@@ -29,7 +29,7 @@
       appliances_list: "{{ appliances_list | default([]) + myvar if (appliances_list is defined and appliances_list != '') else myvar }}"
     vars:
       myvar: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.appliance') | list }}"
-    loop: "{{ (groups['em7db'] if groups['em7db'] is defined else []) + (groups['em7prt'] if groups['em7prt'] is defined else []) + (groups['em7mc'] if groups['em7mc'] is defined else []) + (groups['em7dc'] if groups['em7dc'] is defined else []) }}"
+    loop: "{{ (groups['em7'] if hostvars[groups['vcenter'][0]]['information']['resources']|length == 1 else []) + (groups['em7db'] if groups['em7db'] is defined else []) + (groups['em7prt'] if groups['em7prt'] is defined else []) + (groups['em7mc'] if groups['em7mc'] is defined else []) + (groups['em7dc'] if groups['em7dc'] is defined else []) }}"
     loop_control:
       loop_var: info_item
     when: info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
@@ -60,6 +60,21 @@
       loop_var: info_item
     when:
       - groups['rly'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
+  - name: define spl lists
+    set_fact:
+      spl_ip1_list: "{{ spl_ip1_list | default([]) + ipvar1 if (spl_ip1_list is defined and spl_ip1_list != '') else ipvar1 }}"
+      spl_hst_list: "{{ spl_hst_list | default([]) + hstvar if (spl_hst_list is defined and spl_hst_list != '') else hstvar }}"
+    vars:
+      ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
+      hstvar: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list }}"
+    loop: "{{ groups['spl'] }}"
+    loop_control:
+      loop_var: info_item
+    when:
+      - vm.name is search('aio')
+      - groups['spl'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define spldpl lists
@@ -116,6 +131,27 @@
       loop_var: info_item
     when:
       - groups['splsrc'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
+  - name: define em7 lists
+    set_fact:
+      em7_ip1_list: "{{ em7_ip1_list | default([]) + ipvar1 if (em7_ip1_list is defined and em7_ip1_list != '') else ipvar1 }}"
+      em7_ip2_list: "{{ em7_ip2_list | default([]) + ipvar2 if (em7_ip2_list is defined and em7_ip2_list != '') else ipvar2 }}"
+      em7_hst_list: "{{ prt_hst_list | default([]) + hstvar if (em7_hst_list is defined and em7_hst_list != '') else hstvar }}"
+      em7_cpu_list: "{{ em7_cpu_list | default([]) + cpuvar if (em7_cpu_list is defined and em7_cpu_list != '') else cpuvar }}"
+      em7_mem_list: "{{ em7_mem_list | default([]) + cpuvar if (em7_mem_list is defined and em7_mem_list != '') else memvar }}"
+    vars:
+      ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
+      ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"
+      hstvar: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list }}"
+      cpuvar: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmcpu') | list }}"
+      memvar: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmmem') | list }}"
+    loop: "{{ groups['em7'] }}"
+    loop_control:
+      loop_var: info_item
+    when:
+      - vm.name is search('aio')
+      - groups['em7'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define em7prt lists

@@ -6,7 +6,7 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       state: present
       validate_certs: no
@@ -17,7 +17,7 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name}}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter']}}"
       cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}"
       state: present
       validate_certs: no
@@ -37,7 +37,7 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       esxi_hostname: "{{ host_item }}"
       esxi_username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
@@ -54,7 +54,7 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}"
       esxi_hostname: "{{ host_item }}"
       esxi_username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"

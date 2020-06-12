@@ -8,31 +8,13 @@
       replace: '\g<1> {{ task_item.value }}'
     loop:
       - { param: 'ipaddress =', value: "{{ ansible_host }}" }
-      - { param: 'dbipaddrs =', value: "{{ (db_ip1_list|join(',') + ',' + vip.db + ',' + drdb_ip1_list|join(',')) if ('drem7dc' in group_names or 'drem7mc' in group_names) else (drdb_ip1_list|join(',') + ',' + vip.db) if 'dr' in group_names else (db_ip1_list|join(',') + ',' + vip.db) }}" }
-    loop_control:
-      loop_var: task_item
-  - name: Update ipaddr in silo.conf on VM
-    replace:
-      path: /etc/silo.conf
-      regexp: '^({{ task_item.param }}) (.*)$'
-      replace: '\g<1> {{ task_item.value }}'
-    loop:
-      - { param: 'ipaddr =', value: "{{ vip.db if 'drem7db' in group_names else db_ip2_list[0] if inventory_hostname == groups['em7db'][1] else db_ip2_list[1] }}" }
+      - { param: 'dbipaddrs =', value: "{{ em7_ip1_list|join(',') if vm.name is search('em7aio') else (db_ip1_list|join(',') + ',' + vip.db + ',' + drdb_ip1_list|join(',')) if ('drem7dc' in group_names or 'drem7mc' in group_names) else (drdb_ip1_list|join(',') + ',' + vip.db) if 'dr' in group_names else (db_ip1_list|join(',') + ',' + vip.db) }}" }
+      - { param: 'ipaddr =', value: "{{ em7_ip2_list|last if vm.name is search('em7aio') else vip.db if 'drem7db' in group_names else db_ip2_list[0] if inventory_hostname == groups['em7db'][1] else db_ip2_list[1] }}" }
+      - { param: 'dbserver =', value: "{{ vip.db if inventory_hostname is search('em7prt') else '' }}" }
     loop_control:
       loop_var: task_item
     when:
-      - inventory_hostname is search('em7db')
-  - name: Update dbserver in silo.conf on portals
-    replace:
-      path: /etc/silo.conf
-      regexp: '^({{ task_item.param }}) (.*)$'
-      replace: '\g<1> {{ task_item.value }}'
-    loop:
-      - { param: 'dbserver =', value: "{{ vip.db }}" }
-    loop_control:
-      loop_var: task_item
-    when:
-      - inventory_hostname is search('em7prt')
+      - task_item.value != ''
   when: inventory_hostname is search('em7')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

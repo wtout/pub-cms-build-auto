@@ -1,0 +1,36 @@
+all:
+  children:
+    bastion:
+      hosts:
+        bastion[01:01]:
+    vcenter:
+      hosts:
+        vcenter[01:01]:
+    puppet:
+      hosts:
+        puppet[{{ environment_definition.puppet.server_name[-2:] }}:{{ environment_definition.puppet.server_name[-2:] }}]:
+    stack:
+      children:
+        infra:
+          children:
+            csr:
+              hosts:
+#                csr[01:01]:
+            nsvpx:
+              hosts:
+#                nsvpx[01:01]:
+            winjmp:
+              hosts:
+#                winjmp[01:01]:
+        em7:
+          hosts:
+            em7[01:01]:
+        spl:
+          hosts:
+            spl[01:01]:
+        lnxjmp:
+          hosts:
+            lnxjmp[01:01]:
+        rly:
+          hosts:
+            rly[01:01]:

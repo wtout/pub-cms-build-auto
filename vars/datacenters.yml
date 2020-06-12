@@ -5,10 +5,17 @@ auto_dir: "{{ playbook_dir.split('/')[:-1] | join('/') }}"
 # Do not modify anything below this line
 ##########################################
 datacenters:
-  PAE-HX-DC:
+  PAE-HX-DC-1:
     vsphere: 'paevcenter01.cisco-pae.com'
     deptype: 'h'
     folder: 'HX Hosted'
+    cluster: 'PAE-RTP-HX'
+    datastore_cluster: 'HX-Datastore-Cluster'
+
+  PAE-HX-DC-2:
+    vsphere: 'paevcenter01.cisco-pae.com'
+    deptype: 'h'
+    folder: 'HX MDR Testing'
     cluster: 'PAE-RTP-HX'
     datastore_cluster: 'HX-Datastore-Cluster'
 
@@ -32,3 +39,17 @@ datacenters:
     folder: 'Hosted Solution'
     cluster: 'RTP5 HX Cluster'
     datastore_cluster: 'RTP5-HX-DS-Cluster'
+
+  ALLN1-1:
+    vsphere: 'alln1qskmsp01.cisco-cms.com'
+    deptype: 'h'
+    folder: 'Hosted Solution'
+    cluster: 'HostedSolution01'
+    datastore_cluster: ''
+
+  ALLN1-2:
+    vsphere: 'alln1qskmsp01.cisco-cms.com'
+    deptype: 'h'
+    folder: 'Hosted Solution'
+    cluster: 'QuicksilverHeadEnd'
+    datastore_cluster: ''

@@ -1,1 +1,0 @@
-ansible_host: "{{ netconfig.ippool1[0] if netconfig.ippool1 is defined else customer.octets + '.' + netconfig.octetpool1[0]|string }}"

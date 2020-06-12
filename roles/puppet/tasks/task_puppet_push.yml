@@ -1,11 +1,11 @@
 ---
 # tasks to do a puppet push
 - block:
-  - name: check if puppet push {{ push_num|int }} is already running
+  - name: check if {{ push_type }} puppet push {{ push_num|int }} is already running
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
     register: ppr1
     check_mode: no
-  - name: Wait for puppet push {{ push_num|int }} to finish
+  - name: Wait for {{ push_type }} puppet push {{ push_num|int }} to finish
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
     register: ppr2
     until: ppr2.stdout is search('finished')
@@ -14,13 +14,13 @@
     when:
       - not ansible_check_mode
       - ppr1.stdout is not search('not running')
-  - name: puppet push {{ push_num|int + 1 }}
+  - name: Start {{ push_type }} puppet push {{ push_num|int + 1 }}
     shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
     register: puppet_push
     failed_when:
       - puppet_push.stdout is not search('Run of Puppet configuration client already in progress')
       - puppet_push.stdout is not search('Applied catalog in')
-  - name: Wait for puppet push {{ push_num|int + 1 }} to finish
+  - name: Wait for {{ push_type }} puppet push {{ push_num|int + 1 }} to finish
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
     register: ppr3
     until: ppr3.stdout is search('finished')

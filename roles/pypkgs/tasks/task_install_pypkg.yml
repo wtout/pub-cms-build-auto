@@ -7,5 +7,4 @@
     extra_args: --user
   environment:
     http_proxy: "{{ proxy_address }}"
-    https_proxy: "{{ proxy_address }}"
   tags: [ 'always', 'pypkgs' ]

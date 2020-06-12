@@ -1,0 +1,29 @@
+---
+# Variables for relay hosts
+credentials:
+  username: 'root'
+  password: "{{ NONEM7_PASS|default('') }}"
+
+vm:
+  cpu: "{{ vm_vars.rly.cpu }}"
+  memory: "{{ vm_vars.rly.memory }}"
+  disk0: "{{ vm_vars.rly.disk0 }}"
+  disk1: "{{ vm_vars.rly.disk1 | default(0) }}"
+  disk2: "{{ vm_vars.rly.disk2 | default(0) }}"
+  disk3: "{{ vm_vars.rly.disk3 | default(0) }}"
+  name: "{{ customer.name_prefix + inventory_hostname[:-2] + 'aio' +  datacenters[datacenter.name]['deptype'] + inventory_hostname[-2:] }}"
+
+netconfig:
+  netname1: "{{ vm_vars.rly.nic1.name }}"
+  ippool1: "{{ vm_vars.rly.nic1.ip_pool | default([]) }}"
+  octetpool1: "{{ vm_vars.rly.nic1.ip_octetpool | default([]) }}"
+  gateway1: "{{ customer.octets + '.' + vm_vars.rly.nic1.gtw_octet if vm_vars.rly.nic1.gtw_octet != '' else '' }}"
+  netmask1: "{{ vm_vars.rly.nic1.netmask }}"
+  network1: "{{ vm_vars.rly.nic1.network }}"
+
+  netname2: "{{ vm_vars.rly.nic2.name }}"
+  ippool2: "{{ vm_vars.rly.nic2.ip_pool | default([]) }}"
+  octetpool2: "{{ vm_vars.rly.nic2.ip_octetpool | default([]) }}"
+  gateway2: "{{ customer.octets + '.' + vm_vars.rly.nic2.gtw_octet if vm_vars.rly.nic2.gtw_octet != '' else '' }}"
+  netmask2: "{{ vm_vars.rly.nic2.netmask }}"
+  network2: "{{ vm_vars.rly.nic2.network }}"

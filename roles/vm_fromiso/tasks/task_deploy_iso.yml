@@ -9,7 +9,7 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       name: "{{ vm.name }}"
       validate_certs: no
     check_mode: no
@@ -22,9 +22,9 @@
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ datacenter.name }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
         guest_id: centos64Guest
         name: "{{ vm.name }}"
         state: poweredon
@@ -68,9 +68,9 @@
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ datacenter.name }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
         guest_id: centos64Guest
         name: "{{ vm.name }}"
         state: poweredon

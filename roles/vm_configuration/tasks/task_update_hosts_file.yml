@@ -1,8 +1,15 @@
 ---
 # tasks to update /etc/hosts on VM
-- name: Copy hosts file to VM
-  template:
-    src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}hosts.tmpl"
-    dest: '/etc/hosts'
+- block:
+  - name: Copy hosts file to VM
+    template:
+      src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}hosts.tmpl"
+      dest: '/etc/hosts'
+  - name: remove empty lines
+    replace:
+      path: /etc/hosts
+      after: '#### Host Names ####'
+      regexp: '^\s*$'
+      replace: ''
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

@@ -10,9 +10,9 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       cluster: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-      folder: "{{ datacenter.name}}/vm/{{fldr_name }}"
+      folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
       state: absent
       force: yes
       validate_certs: no

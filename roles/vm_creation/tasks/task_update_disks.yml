@@ -6,7 +6,7 @@
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       name: "{{ vm.name }}"
       validate_certs: no
     register: disk_info
@@ -37,12 +37,12 @@
       splind_datastore: "{{ hostvars[groups['vcenter']|first]['ssd_ds_names']|last if 'dr' in group_names else hostvars[groups['vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] }}"
     when:
       - inventory_hostname is search('splind')
-      - datacenters[datacenter.name]['deptype'] == 'a'
+      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
   - name: Define VM disk2
     set_fact:
       disk2_unit_number: "{{ (disk1_unit_number|int + 1) }}"
       disk2_size_kb: "{{ (vm.disk2|float * 1024|pow(2))|int }}"
-      disk2_datastore: "{{ splind_datastore if (inventory_hostname is search('splind') and datacenters[datacenter.name]['deptype'] == 'a') else disk0_datastore }}"
+      disk2_datastore: "{{ splind_datastore if (inventory_hostname is search('splind') and hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a') else disk0_datastore }}"
     when:
       - vm.disk2 is defined
       - vm.disk2 != ''
@@ -63,7 +63,7 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name}}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       disk:
         - size_kb: "{{ disk0_size_kb }}"
           type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
@@ -83,7 +83,7 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name}}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       disk:
         - size_kb: "{{ disk1_size_kb }}"
           type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
@@ -103,7 +103,7 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       disk:
         - size_kb: "{{ disk2_size_kb }}"
           type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
@@ -124,7 +124,7 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
-      datacenter: "{{ datacenter.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       disk:
         - size_kb: "{{ disk3_size_kb }}"
           type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"

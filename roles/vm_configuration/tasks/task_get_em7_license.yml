@@ -19,7 +19,7 @@
       license_registration_key_file_contents: "{{ registration_key.stdout }}\n"
   - name: define license appliance type
     set_fact:
-      license_appliance_type: "{{ 'db' if inventory_hostname is search('em7db') else 'cu' if inventory_hostname is search('em7dc') else 'mc' if inventory_hostname is search('em7mc') else 'ap' if inventory_hostname is search('em7prt') else 'is' if inventory_hostname is search('is4') else 'ao' if inventory_hostname is search('aio') else '' }}"
+      license_appliance_type: "{{ 'db' if inventory_hostname is search('em7db') else 'cu' if inventory_hostname is search('em7dc') else 'mc' if inventory_hostname is search('em7mc') else 'ap' if inventory_hostname is search('em7prt') else 'is' if inventory_hostname is search('is4') else 'ao' }}"
   - name: define license appliance environment
     set_fact:
       license_appliance_environment: "{{ 'trial' if 'dev' in customer.name|lower else 'production' }}"

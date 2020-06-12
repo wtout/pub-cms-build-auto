@@ -1,0 +1,418 @@
+##################################################################################
+# VM specific information
+##################################################################################
+vm_vars:
+
+  ################
+  # EM7 VMs
+  ################
+  em7:
+
+    # number of CPUs
+    cpu: "{{ environment_definition.vm_size.em7.cpu if (environment_definition.vm_size.em7.cpu is defined and environment_definition.vm_size.em7.cpu != none) else '4' }}"
+
+    # Memory size in GiB
+    memory: "{{ environment_definition.vm_size.em7.memory if (environment_definition.vm_size.em7.memory is defined and environment_definition.vm_size.em7.memory != none) else '8' }}"
+
+    # Disks sizing in GiB
+    disk0: "{{ environment_definition.vm_size.em7.disk0 if (environment_definition.vm_size.em7.disk0 is defined and environment_definition.vm_size.em7.disk0 != none) else '160' }}"
+    disk1: "{{ environment_definition.vm_size.em7.disk1 if (environment_definition.vm_size.em7.disk1 is defined and environment_definition.vm_size.em7.disk1 != none) else '0' }}"
+    disk2: "{{ environment_definition.vm_size.em7.disk2 if (environment_definition.vm_size.em7.disk2 is defined and environment_definition.vm_size.em7.disk2 != none) else '0' }}"
+    disk3: "{{ environment_definition.vm_size.em7.disk3 if (environment_definition.vm_size.em7.disk3 is defined and environment_definition.vm_size.em7.disk3 != none) else '0' }}"
+
+    # Network interface 1
+    ################
+    nic1:
+
+      # Interface name
+      name: 'ens160'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '13' ]
+
+      # Gateway fourth octet
+      gtw_octet: ''
+
+      # Netmask
+      netmask: '255.255.255.192'
+
+      # Network name
+      network: 'Internal-Net'
+
+    # Network interface 2
+    ################
+    nic2:
+
+      # Interface name
+      name: 'ens192'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '65' ]
+
+      # Gateway fourth octet
+      gtw_octet: '94'
+
+      # Netmask
+      netmask: '255.255.255.224'
+
+      # Network name
+      network: 'Customer-Net-Inside'
+
+
+  ################
+  # Splunk VMs
+  ################
+  spl:
+
+    # number of CPUs
+    cpu: "{{ environment_definition.vm_size.spl.cpu if (environment_definition.vm_size.spl.cpu is defined and environment_definition.vm_size.spl.cpu != none) else '8' }}"
+
+    # Memory size in GiB
+    memory: "{{ environment_definition.vm_size.spl.memory if (environment_definition.vm_size.spl.memory is defined and environment_definition.vm_size.spl.memory != none) else '16' }}"
+
+    # Disks sizing in GiB
+    disk0: "{{ environment_definition.vm_size.spl.disk0 if (environment_definition.vm_size.spl.disk0 is defined and environment_definition.vm_size.spl.disk0 != none) else '37' }}"
+    disk1: "{{ environment_definition.vm_size.spl.disk1 if (environment_definition.vm_size.spl.disk1 is defined and environment_definition.vm_size.spl.disk1 != none) else '50' }}"
+    disk2: "{{ environment_definition.vm_size.spl.disk2 if (environment_definition.vm_size.spl.disk2 is defined and environment_definition.vm_size.spl.disk2 != none) else '100' }}"
+    disk3: "{{ environment_definition.vm_size.spl.disk3 if (environment_definition.vm_size.spl.disk3 is defined and environment_definition.vm_size.spl.disk3 != none) else '200' }}"
+
+    # Network interface 1
+    ################
+    nic1:
+
+      # Interface name
+      name: 'ens160'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '20' ]
+
+      # Gateway fourth octet
+      gtw_octet: '62'
+
+      # Netmask
+      netmask: '255.255.255.192'
+
+      # Network name
+      network: 'Internal-Net'
+
+    # Network interface 2
+    ################
+    nic2:
+
+      # Interface name
+      name: ''
+
+      # IP fourth octet pool
+      ip_octetpool: []
+
+      # Gateway fourth octet
+      gtw_octet: ''
+
+      # Netmask
+      netmask: ''
+
+      # Network name
+      network: ''
+
+
+  ################
+  # Linux jump servers
+  ################
+  lnxjmp:
+
+    # number of CPUs
+    cpu: "{{ environment_definition.vm_size.lnxjmp.cpu if (environment_definition.vm_size.lnxjmp.cpu is defined and environment_definition.vm_size.lnxjmp.cpu != none) else '2' }}"
+
+    # Memory size in GiB
+    memory: "{{ environment_definition.vm_size.lnxjmp.memory if (environment_definition.vm_size.lnxjmp.memory is defined and environment_definition.vm_size.lnxjmp.memory != none) else '8' }}"
+
+    # Disks sizing in GiB
+    disk0: "{{ environment_definition.vm_size.lnxjmp.disk0 if (environment_definition.vm_size.lnxjmp.disk0 is defined and environment_definition.vm_size.lnxjmp.disk0 != none) else '37' }}"
+    disk1: "{{ environment_definition.vm_size.lnxjmp.disk1 if (environment_definition.vm_size.lnxjmp.disk1 is defined and environment_definition.vm_size.lnxjmp.disk1 != none) else '25' }}"
+    disk2: "{{ environment_definition.vm_size.lnxjmp.disk2 if (environment_definition.vm_size.lnxjmp.disk2 is defined and environment_definition.vm_size.lnxjmp.disk2 != none) else '0' }}"
+    disk3: "{{ environment_definition.vm_size.lnxjmp.disk3 if (environment_definition.vm_size.lnxjmp.disk3 is defined and environment_definition.vm_size.lnxjmp.disk3 != none) else '0' }}"
+
+    # Network interface 1
+    ################
+    nic1:
+
+      # Interface name
+      name: 'ens160'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '58' ]
+
+      # Gateway fourth octet
+      gtw_octet: ''
+
+      # Netmask
+      netmask: '255.255.255.192'
+
+      # Network name
+      network: 'Internal-Net'
+
+    # Network interface 2
+    ################
+    nic2:
+
+      # Interface name
+      name: 'ens192'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '76' ]
+
+      # Gateway fourth octet
+      gtw_octet: '94'
+
+      # Netmask
+      netmask: '255.255.255.224'
+
+      # Network name
+      network: 'Customer-Net-Inside'
+
+
+  ################
+  # Relay servers
+  ################
+  rly:
+
+    # number of CPUs
+    cpu: "{{ environment_definition.vm_size.rly.cpu if (environment_definition.vm_size.rly.cpu is defined and environment_definition.vm_size.rly.cpu != none) else '4' }}"
+
+    # Memory size in GiB
+    memory: "{{ environment_definition.vm_size.rly.memory if (environment_definition.vm_size.rly.memory is defined and environment_definition.vm_size.rly.memory != none) else '8' }}"
+
+    # Disks sizing in GiB
+    disk0: "{{ environment_definition.vm_size.rly.disk0 if (environment_definition.vm_size.rly.disk0 is defined and environment_definition.vm_size.rly.disk0 != none) else '37' }}"
+    disk1: "{{ environment_definition.vm_size.rly.disk1 if (environment_definition.vm_size.rly.disk1 is defined and environment_definition.vm_size.rly.disk1 != none) else '25' }}"
+    disk2: "{{ environment_definition.vm_size.rly.disk2 if (environment_definition.vm_size.rly.disk2 is defined and environment_definition.vm_size.rly.disk2 != none) else '100' }}"
+    disk3: "{{ environment_definition.vm_size.rly.disk3 if (environment_definition.vm_size.rly.disk3 is defined and environment_definition.vm_size.rly.disk3 != none) else '450' }}"
+
+    # Network interface 1
+    ################
+    nic1:
+
+      # Interface name
+      name: 'ens160'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '1' ]
+
+      # Gateway fourth octet
+      gtw_octet: ''
+
+      # Netmask
+      netmask: '255.255.255.192'
+
+      # Network name
+      network: 'Internal-Net'
+
+    # Network interface 2
+    ################
+    nic2:
+
+      # Interface name
+      name: 'ens192'
+
+      # IP fourth octet pool
+      ip_octetpool: [ '97' ]
+
+      # Gateway fourth octet
+      gtw_octet: '123'
+
+      # Netmask
+      netmask: '255.255.255.224'
+
+      # Network name
+      network: 'Loadbalancer-Net'
+
+
+  ################
+  # Infrastructure VMs
+  ################
+  infra:
+
+    ################
+    # Switches
+    ################
+    csr:
+
+      # number of CPUs
+      cpu: "{{ environment_definition.vm_size.infra.csr.cpu if (environment_definition.vm_size.infra.csr.cpu is defined and environment_definition.vm_size.infra.csr.cpu != none) else '2' }}"
+
+      # Memory size in GiB
+      memory: "{{ environment_definition.vm_size.infra.csr.memory if (environment_definition.vm_size.infra.csr.memory is defined and environment_definition.vm_size.infra.csr.memory != none) else '4' }}"
+
+      # Disks sizing in GiB
+      disk0: "{{ environment_definition.vm_size.infra.csr.disk0 if (environment_definition.vm_size.infra.csr.disk0 is defined and environment_definition.vm_size.infra.csr.disk0 != none) else '8' }}"
+      disk1: "{{ environment_definition.vm_size.infra.csr.disk1 if (environment_definition.vm_size.infra.csr.disk1 is defined and environment_definition.vm_size.infra.csr.disk1 != none) else '0' }}"
+      disk2: "{{ environment_definition.vm_size.infra.csr.disk2 if (environment_definition.vm_size.infra.csr.disk2 is defined and environment_definition.vm_size.infra.csr.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.infra.csr.disk3 if (environment_definition.vm_size.infra.csr.disk3 is defined and environment_definition.vm_size.infra.csr.disk3 != none) else '0' }}"
+
+    # Network interface 1
+    ################
+      nic1:
+
+      # Interface name
+        name: 'ens160'
+
+      # IP fourth octet pool
+        ip_octetpool: "{{ range(60, 61 + 1)|list }}"
+
+      # Gateway fourth octet
+        gtw_octet: '62'
+
+      # Netmask
+        netmask: '255.255.255.192'
+
+      # Network name
+        network: 'Internal-Net'
+
+    # Network interface 2
+    ################
+      nic2:
+
+      # Interface name
+        name: 'ens192'
+
+      # IP fourth octet pool
+        ip_octetpool: "{{ range(92, 93 + 1)|list }}"
+
+      # Gateway fourth octet
+        gtw_octet: '94'
+
+      # Netmask
+        netmask: '255.255.255.224'
+
+      # Network name
+        network: 'Customer-Net-Inside'
+
+    # Network interface 3
+    ################
+      nic3:
+
+      # Interface name
+        name: 'ens224'
+
+      # IP fourth octet pool
+        ip_octetpool: "{{ range(124, 125 + 1)|list }}"
+
+      # Gateway fourth octet
+        gtw_octet: '123'
+
+      # Netmask
+        netmask: '255.255.255.224'
+
+      # Network name
+        network: 'Loadbalancer-Net'
+
+
+    ################
+    # Netscalers
+    ################
+    nsvpx:
+
+      # number of CPUs
+      cpu: "{{ environment_definition.vm_size.infra.nsvpx.cpu if (environment_definition.vm_size.infra.nsvpx.cpu is defined and environment_definition.vm_size.infra.nsvpx.cpu != none) else '2' }}"
+
+      # Memory size in GiB
+      memory: "{{ environment_definition.vm_size.infra.nsvpx.memory if (environment_definition.vm_size.infra.nsvpx.memory is defined and environment_definition.vm_size.infra.nsvpx.memory != none) else '2' }}"
+
+      # Disks sizing in GiB
+      disk0: "{{ environment_definition.vm_size.infra.nsvpx.disk0 if (environment_definition.vm_size.infra.nsvpx.disk0 is defined and environment_definition.vm_size.infra.nsvpx.disk0 != none) else '20' }}"
+      disk1: "{{ environment_definition.vm_size.infra.nsvpx.disk1 if (environment_definition.vm_size.infra.nsvpx.disk1 is defined and environment_definition.vm_size.infra.nsvpx.disk1 != none) else '0' }}"
+      disk2: "{{ environment_definition.vm_size.infra.nsvpx.disk2 if (environment_definition.vm_size.infra.nsvpx.disk2 is defined and environment_definition.vm_size.infra.nsvpx.disk2 != none) else '0' }}"
+      disk3: "{{ environment_definition.vm_size.infra.nsvpx.disk3 if (environment_definition.vm_size.infra.nsvpx.disk3 is defined and environment_definition.vm_size.infra.nsvpx.disk3 != none) else '0' }}"
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: "{{ range(53, 54 + 1)|list }}"
+
+        # Gateway fourth octet
+        gtw_octet: '62'
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: ''
+
+        # IP fourth octet pool
+        ip_octetpool: []
+
+        # Gateway fourth octet
+        gtw_octet: ''
+
+        # Netmask
+        netmask: ''
+
+        # Network name
+        network: ''
+
+
+    ################
+    # Windows jump servers
+    ################
+    winjmp:
+
+      # number of CPUs
+      cpu: "{{ environment_definition.vm_size.infra.winjmp.cpu if (environment_definition.vm_size.infra.winjmp.cpu is defined and environment_definition.vm_size.infra.winjmp.cpu != none) else '2' }}"
+
+      # Memory size in GiB
+      memory: "{{ environment_definition.vm_size.infra.winjmp.memory if (environment_definition.vm_size.infra.winjmp.memory is defined and environment_definition.vm_size.infra.winjmp.memory != none) else '4' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '8' }}"
+
+      # Disks sizing in GiB
+      disk0: "{{ environment_definition.vm_size.infra.winjmp.disk0 if (environment_definition.vm_size.infra.winjmp.disk0 is defined and environment_definition.vm_size.infra.winjmp.disk0 != none) else '100' }}"
+      disk1: "{{ environment_definition.vm_size.infra.winjmp.disk1 if (environment_definition.vm_size.infra.winjmp.disk1 is defined and environment_definition.vm_size.infra.winjmp.disk1 != none) else '100' }}"
+      disk2: "{{ environment_definition.vm_size.infra.winjmp.disk2 if (environment_definition.vm_size.infra.winjmp.disk2 is defined and environment_definition.vm_size.infra.winjmp.disk2 != none) else '0' }}"
+
+      # Network interface 1
+      ################
+      nic1:
+
+        # Interface name
+        name: 'ens160'
+
+        # IP fourth octet pool
+        ip_octetpool: [ '59', '57' ]
+
+        # Gateway fourth octet
+        gtw_octet: '62'
+
+        # Netmask
+        netmask: '255.255.255.192'
+
+        # Network name
+        network: 'Internal-Net'
+
+      # Network interface 2
+      ################
+      nic2:
+
+        # Interface name
+        name: 'ens192'
+
+        # IP fourth octet pool
+        ip_octetpool: [ '75', '73' ]
+
+        # Gateway fourth octet
+        gtw_octet: '94'
+
+        # Netmask
+        netmask: '255.255.255.224'
+
+        # Network name
+        network: 'Customer-Net-Inside'

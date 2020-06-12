@@ -41,8 +41,8 @@
   - name: check if deployment model value is valid
     assert:
       that:
-        - not environment_definition.customer.deployment_model | lower | regex_search('a|h') == none
-      fail_msg: "deployment_model is not valid. Only a and h are valid"
+        - not environment_definition.customer.deployment_model | lower | regex_search('a|aioa|aioh|h') == none
+      fail_msg: "deployment_model is not valid. Only a, h, aioa and aioh are valid"
 
   - name: check if number of EM7 Portals, MCs and DCs value is valid
     assert:
@@ -57,6 +57,20 @@
       - { 'name': 'dcs', 'max_value': 12 }
     loop_control:
       loop_var: loop_item
+    when: environment_definition.customer.deployment_model | lower is not search('aio')
+
+  - name: check if number of EM7 Portals, MCs and DCs value is valid
+    assert:
+      that:
+        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int == 0"
+      fail_msg: "environment_definition.customer.primary.number_of_{{ loop_item.name }} is not valid. Only 0 is valid"
+    loop:
+      - { 'name': 'prts' }
+      - { 'name': 'mcs' }
+      - { 'name': 'dcs' }
+    loop_control:
+      loop_var: loop_item
+    when: environment_definition.customer.deployment_model | lower is search('aio')
 
   - name: check if disaster recovery value is valid
     assert:
@@ -98,7 +112,7 @@
   - name: verify if selected datacenter supports deployment model
     assert:
       that:
-        - "datacenters[environment_definition.datacenter.name]['deptype'] is search(environment_definition.customer.deployment_model)"
+        - "datacenters[environment_definition.datacenter.name]['deptype'] is search(environment_definition.customer.deployment_model[-1:])"
       fail_msg: "The datacenter selected, {{ environment_definition.datacenter.name }}, only supports the {{ 'on-prem' if datacenters[environment_definition.datacenter.name]['deptype'] is search('a') else 'hosted' }} deployment model. Aborting!"
 
   - name: verify if selected deployment model supports disaster recovery
@@ -130,10 +144,10 @@
     - name: verify that there are enough resources
       assert:
         that:
-          - environment_definition.datacenter.resources.split(separator) | length >= required_number_resources|int
-        fail_msg: "The resources list contains only {{ environment_definition.datacenter.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
+          - environment_definition.datacenter.resources.split(separator) | length == required_number_resources|int
+        fail_msg: "The resources list contains {{ environment_definition.datacenter.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
       vars:
-        required_number_resources: "{{ 3 if environment_definition.customer.disaster_recovery else 2 }}"
+        required_number_resources: "{{ 1 if environment_definition.customer.deployment_model | lower is search('aio') else 3 if environment_definition.customer.disaster_recovery else 2 }}"
     - name: reformat resources list
       set_fact:
         resources: "{{ resources|default([]) + [ip_item] }}"

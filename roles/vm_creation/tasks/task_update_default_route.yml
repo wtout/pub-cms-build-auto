@@ -22,7 +22,7 @@
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ datacenter.name }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         validate_certs: false
         vm_id: "{{ vm.name }}"
         vm_username: "{{ ansible_user }}"
@@ -42,7 +42,7 @@
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ datacenter.name }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         validate_certs: false
         vm_id: "{{ vm.name }}"
         vm_username: "{{ ansible_user }}"
@@ -58,7 +58,7 @@
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ datacenter.name}}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter']}}"
         validate_certs: false
         vm_id: "{{ vm.name}}"
         vm_username: "{{ ansible_user }}"
@@ -78,7 +78,7 @@
         hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ datacenter.name }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         validate_certs: false
         vm_id: "{{ vm.name }}"
         vm_username: "{{ ansible_user }}"
