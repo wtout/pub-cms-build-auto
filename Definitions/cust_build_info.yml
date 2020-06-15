@@ -8,7 +8,7 @@ customer:
   # Release version (string)
   release_version: R9.1.3
 
-  # Deployment model (string a/h)
+  # Deployment model (string a/h/aioa/aioh)
   deployment_model: a
 
   # Disaster recovery (boolean yes/no)
@@ -16,13 +16,13 @@ customer:
 
   primary:
 
-  # Number of primary EM7 Portals (integer, even) [2 - 4]
+  # Number of primary EM7 Portals (integer, even) [0 - 4]
     number_of_prts: 4
 
-  # Number of primary EM7 Message Collectors (integer, even) [2 - 6]
+  # Number of primary EM7 Message Collectors (integer, even) [0 - 6]
     number_of_mcs: 6
 
-  # Number of primary EM7 Data Collectors (integer, even) [2 - 12]
+  # Number of primary EM7 Data Collectors (integer, even) [0 - 12]
     number_of_dcs: 12
 
   # Primary site name prefix (string)
@@ -45,7 +45,7 @@ customer:
 ##################################################################################
 datacenter:
 
-  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC (string)
+  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC-1, PAE-HX-DC-2, ALLN1-1, ALLN1-2 (string)
   name: cdra-Build-Development
 
   # Required if a custom cluster name is to be used
