@@ -45,7 +45,7 @@ datacenter:
 
   # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use
   # For hosted deployments DO NOT TOUCH
-  resources: [ '{{ resources|join(',')|replace(",", "', '") if environment_definition.customer.deployment_model is regex('a|u') else "" }}' ]
+  resources: [ '{{ resources|join(',')|replace(",", "', '") if (environment_definition.customer.deployment_model is regex('a|u') and environment_definition.customer.deployment_model is not search('h')) else "" }}' ]
 
 
 ##################################################################################

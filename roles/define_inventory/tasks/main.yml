@@ -22,8 +22,8 @@
       so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.octets == none) else '' }}"
       rv: "{{ 'Release version is not defined' if environment_definition.customer.release_version == none else '' }}"
       dn: "{{ 'Datacenter name is not defined' if environment_definition.datacenter.name == none else '' }}"
-      dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.datacenter.resources == none) else '' }}"
-      dc: "{{ 'Datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a')) else '' }}"
+      dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and environment_definition.datacenter.resources == none) else '' }}"
+      dc: "{{ 'Datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
       ps: "{{ 'Puppet server_name is not defined' if (environment_definition.puppet is not defined or environment_definition.puppet.server_name is not defined or environment_definition.puppet.server_name == none) else '' }}"
       ys: "{{ 'Yum server_name is not defined' if (environment_definition.yum is not defined or environment_definition.yum.server_name is not defined or environment_definition.yum.server_name == none) else '' }}"
 
@@ -155,7 +155,7 @@
       loop_control:
         loop_var: ip_item
     when:
-      - environment_definition.customer.deployment_model is search('a')
+      - environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')
 
   - block:
     - name: verify if resources are provided
