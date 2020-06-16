@@ -118,8 +118,8 @@
   - name: verify if selected deployment model supports disaster recovery
     assert:
       that:
-        - "environment_definition.customer.deployment_model is search('a')"
-      fail_msg: "The disaster recovery is only supported with the on-prem or ucm deployment model. Aborting!"
+        - "environment_definition.customer.deployment_model == 'a'"
+      fail_msg: "The disaster recovery is only supported with the non-AIO on-prem or ucm deployment model. Aborting!"
     when: environment_definition.customer.disaster_recovery
 
   - block:

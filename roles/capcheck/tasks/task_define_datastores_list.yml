@@ -18,6 +18,7 @@
       that:
         - "mylist|length >= 2"
       fail_msg: "Not enough storage space to deploy {{ vm_group }} VMs"
+    when: hostvars[groups[vm_group]|first]['vm']['name'] is not search('aio')
 
   - name: define {{ vm_group }} required space
     set_fact:

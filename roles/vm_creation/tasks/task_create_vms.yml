@@ -9,7 +9,7 @@
     - block:
       - name: get list of groups in play
         set_fact:
-          play_group_list: "{{ play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['bastion', 'puppet', 'stack', 'em7', 'spl', 'infra', 'vcenter', 'dr', 'drem7', 'drspl', 'drinfra']) }}"
+          play_group_list: "{{ play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['bastion', 'puppet', 'stack', 'em7', 'spl', 'infra', 'vcenter', 'dr', 'drem7', 'drspl', 'drinfra']) if hostvars[groups['vcenter'][0]]['information']['resources']|length > 1 else play_group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['bastion', 'puppet', 'stack', 'infra', 'vcenter']) }}"
         loop: "{{ ansible_play_hosts }}"
         run_once: true
       - include_tasks:
