@@ -70,7 +70,7 @@ vm_vars:
     em7dc:
 
       # number of CPUs
-      cpu: "{{ environment_definition.vm_size.em7.em7dc.cpu if (environment_definition.vm_size.em7.em7dc.cpu is defined and environment_definition.vm_size.em7.em7dc.cpu != none) else '24' }}"
+      cpu: "{{ environment_definition.vm_size.em7.em7dc.cpu if (environment_definition.vm_size.em7.em7dc.cpu is defined and environment_definition.vm_size.em7.em7dc.cpu != none) else '4' }}"
 
       # Memory size in GiB
       memory: "{{ environment_definition.vm_size.em7.em7dc.memory if (environment_definition.vm_size.em7.em7dc.memory is defined and environment_definition.vm_size.em7.em7dc.memory != none) else '24' }}"
