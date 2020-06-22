@@ -131,9 +131,19 @@
         reboot_timeout: 90
       become: "{{ true if inventory_hostname is search('em7') else false }}"
     when:
-      - inventory_hostname is search('em7mc') or inventory_hostname is search('em7dc')
+      - inventory_hostname is regex('em7dc|em7mc')
       - customer.release is not search('9.2')
   when:
     - get_cert.json is defined
     - inventory_hostname is search('em7')
+  tags: vm_configuration
+
+- name: reboot the VM
+  reboot:
+    post_reboot_delay: 10
+    reboot_timeout: 90
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  when:
+    - inventory_hostname is regex('em7dc|em7mc')
+    - customer.release is search('9.2')
   tags: vm_configuration
