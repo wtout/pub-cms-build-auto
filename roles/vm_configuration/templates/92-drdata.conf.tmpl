@@ -34,9 +34,9 @@ primary_db_server_ip={{ drdb_ip1_list[0] }}
 secondary_db_server2_ip={{ drdb_ip1_list[1] if drdb_ip1_list|length >= 2 else '' }}
 primary_em7_portal_server_ip={{ drprt_ip1_list[0] }}
 secondary_em7_portal_server_ip={{ drprt_ip1_list[1] if drprt_ip1_list|length >=2 else '' }}
-server_type={{ 'primary' if inventory_hostname is search('rly01') else 'secondary' }}
-clm_server_type=
-dpl_server_type=
+server_type={{ 'primary' if inventory_hostname is search('rly01') else '' if inventory_hostname is search('splsrc') else 'secondary' }}
+clm_server_type={{ 'active' if inventory_hostname is regex('spl[dpl|mas].*01') else 'standby' if inventory_hostname is regex('spl[dpl|mas].*02') else '' }}
+dpl_server_type={{ 'active' if inventory_hostname is regex('spl[dpl|mas].*01') else 'standby' if inventory_hostname is regex('spl[dpl|mas].*02') else '' }}
 active_clm_hostname={{ drsplmas_hst_list[0] }}
 active_dpl_hostname={{ drspldpl_hst_list[0] }}
 em7_user_name=em7admin
