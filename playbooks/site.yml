@@ -1,7 +1,7 @@
 ---
 # Validate credentials (always run)
 - name: Validate credentials
-  hosts: localhost
+  hosts: all
   any_errors_fatal: true
   gather_facts: no
 

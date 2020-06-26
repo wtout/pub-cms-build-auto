@@ -308,7 +308,7 @@ vm_vars:
       disk0: "{{ environment_definition.vm_size.spl.splind.disk0 if (environment_definition.vm_size.spl.splind.disk0 is defined and environment_definition.vm_size.spl.splind.disk0 != none) else '37' }}"
       disk1: "{{ environment_definition.vm_size.spl.splind.disk1 if (environment_definition.vm_size.spl.splind.disk1 is defined and environment_definition.vm_size.spl.splind.disk1 != none) else '25' }}"
       disk2: "{{ environment_definition.vm_size.spl.splind.disk2 if (environment_definition.vm_size.spl.splind.disk2 is defined and environment_definition.vm_size.spl.splind.disk2 != none) else '100' }}"
-      disk3: "{{ environment_definition.vm_size.spl.splind.disk3 if (environment_definition.vm_size.spl.splind.disk3 is defined and environment_definition.vm_size.spl.splind.disk3 != none) else '200' }}"
+      disk3: "{{ environment_definition.vm_size.spl.splind.disk3 if (environment_definition.vm_size.spl.splind.disk3 is defined and environment_definition.vm_size.spl.splind.disk3 != none) else '100' }}"
 
       # Network interface 1
       ################
@@ -418,7 +418,7 @@ vm_vars:
 
       # Disks sizing in GiB
       disk0: "{{ environment_definition.vm_size.spl.splsrc.disk0 if (environment_definition.vm_size.spl.splsrc.disk0 is defined and environment_definition.vm_size.spl.splsrc.disk0 != none) else '37' }}"
-      disk1: "{{ environment_definition.vm_size.spl.splsrc.disk1 if (environment_definition.vm_size.spl.splsrc.disk1 is defined and environment_definition.vm_size.spl.splsrc.disk1 != none) else '25' }}"
+      disk1: "{{ environment_definition.vm_size.spl.splsrc.disk1 if (environment_definition.vm_size.spl.splsrc.disk1 is defined and environment_definition.vm_size.spl.splsrc.disk1 != none) else '50' }}"
       disk2: "{{ environment_definition.vm_size.spl.splsrc.disk2 if (environment_definition.vm_size.spl.splsrc.disk2 is defined and environment_definition.vm_size.spl.splsrc.disk2 != none) else '0' }}"
       disk3: "{{ environment_definition.vm_size.spl.splsrc.disk3 if (environment_definition.vm_size.spl.splsrc.disk3 is defined and environment_definition.vm_size.spl.splsrc.disk3 != none) else '0' }}"
 

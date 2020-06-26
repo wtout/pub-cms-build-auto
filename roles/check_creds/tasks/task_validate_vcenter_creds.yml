@@ -10,11 +10,10 @@
     register: vcenter_creds
     ignore_errors: true
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    when: ansible_user != ''
 
   - set_fact:
       abort_play: yes
       err_msg: "{{ vcenter_host }}: {{ vcenter_creds.msg }}"
     when:
-      - ansible_user == '' or vcenter_creds is failed
+      - vcenter_creds is failed
   tags: always

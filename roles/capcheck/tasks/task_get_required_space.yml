@@ -1,27 +1,76 @@
 ---
 # tasks to get the total storage space required
 - block:
-  - name: define total required space
+  - name: define stack01 SSD required space
     set_fact:
-      required_space: "{{ required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int }}"
-    loop: "{{ groups['stack'] }}"
+      stack01_ssd_required_space: "{{ stack01_ssd_required_space|default(0)|int + hostvars[task_item]['vm']['disk2']|int if task_item is search('ind') else (hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int) }}"
+    loop: "{{ ansible_play_hosts | select('search', 'em7db|splind') | reject('search', 'dr') | reject('match', '^.+[02468]$') | list }}"
     loop_control:
       loop_var: task_item
 
-  - name: define total DR required space
+  - name: define stack02 SSD required space
     set_fact:
-      dr_required_space: "{{ dr_required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int }}"
-    loop: "{{ groups['dr'] }}"
+      stack02_ssd_required_space: "{{ stack02_ssd_required_space|default(0)|int + hostvars[task_item]['vm']['disk2']|int if task_item is search('ind') else (hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int) }}"
+    loop: "{{ ansible_play_hosts | select('search', 'em7db|splind') | reject('search', 'dr') | select('match', '^.+[02468]$') | list }}"
+    loop_control:
+      loop_var: task_item
+
+  - name: define stack SSD required space
+    set_fact:
+      stack_ssd_required_space: "{{ stack01_ssd_required_space|default(0)|int + stack02_ssd_required_space|default(0)|int }}"
+
+  - name: define DR SSD required space
+    set_fact:
+      dr_ssd_required_space: "{{ dr_ssd_required_space|default(0)|int + hostvars[task_item]['vm']['disk2']|int if task_item is search('ind') else (hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int) }}"
+    loop: "{{ ansible_play_hosts | select('search', 'drem7db|drsplind') | list }}"
     loop_control:
       loop_var: task_item
     when: customer.disaster_recovery
 
-  - debug:
-      msg:
-        - "Total system required storage space: {{ (required_space|float / 1024)|string + ' TiB' if (required_space|int)|string|length > 3 else required_space|string + ' GiB' }}"
+  - name: define stack01 SAS required space
+    set_fact:
+      stack01_sas_required_space: "{{ stack01_sas_required_space|default(0)|int + ((hostvars[task_item]['vm']['disk']|int - hostvars[task_item]['vm']['disk2']|int) if task_item is search('ind') else (hostvars[task_item]['vm']['disk']|int) + hostvars[task_item]['vm']['memory']|int) }}"
+    loop: "{{ ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | reject('match', '^.+[02468]$') | list }}"
+    loop_control:
+      loop_var: task_item
+
+  - name: define stack02 SAS required space
+    set_fact:
+      stack02_sas_required_space: "{{ stack02_sas_required_space|default(0)|int + ((hostvars[task_item]['vm']['disk']|int - hostvars[task_item]['vm']['disk2']|int) if task_item is search('ind') else (hostvars[task_item]['vm']['disk']|int) + hostvars[task_item]['vm']['memory']|int) }}"
+    loop: "{{ ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | select('match', '^.+[02468]$') | list }}"
+    loop_control:
+      loop_var: task_item
+
+  - name: define stack SAS required space
+    set_fact:
+      stack_sas_required_space: "{{ stack01_sas_required_space|default(0)|int + stack02_sas_required_space|default(0)|int }}"
+    loop_control:
+      loop_var: task_item
+
+  - name: define DR SAS required space
+    set_fact:
+      dr_sas_required_space: "{{ dr_sas_required_space|default(0)|int + ((hostvars[task_item]['vm']['disk']|int - hostvars[task_item]['vm']['disk2']|int) if task_item is search('ind') else (hostvars[task_item]['vm']['disk']|int) + hostvars[task_item]['vm']['memory']|int) }}"
+    loop: "{{ ansible_play_hosts | select('search', 'dr') | reject('search', 'em7db') | list }}"
+    loop_control:
+      loop_var: task_item
+    when: customer.disaster_recovery
+
+  - name: define stack total required space
+    set_fact:
+      stack_required_space: "{{ stack_sas_required_space|default(0)|float + stack_ssd_required_space|default(0)|float }}"
+
+  - name: define DR total required space
+    set_fact:
+      dr_required_space: "{{ dr_sas_required_space|default(0)|float + dr_ssd_required_space|default(0)|float }}"
+    when: customer.disaster_recovery
 
   - debug:
       msg:
-        - "Total DR system required storage space: {{ (dr_required_space|float / 1024)|string + ' TiB' if (dr_required_space|int)|string|length > 3 else dr_required_space|string + ' GiB' }}"
-    when: customer.disaster_recovery
+        - "Total stack required storage space: {{ (stack_required_space|default(0)|float / 1024)|string + ' TiB' if (stack_required_space|default(0)|int)|string|length > 3 else stack_required_space|default(0)|string + ' GiB' }}"
+
+  - debug:
+      msg:
+        - "Total DR required storage space: {{ (dr_required_space|default(0)|float / 1024)|string + ' TiB' if (dr_required_space|default(0)|int)|string|length > 3 else dr_required_space|default(0)|string + ' GiB' }}"
+    when:
+      - customer.disaster_recovery
   tags: ['capcheck', 'vm_creation']

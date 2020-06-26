@@ -34,7 +34,7 @@
       - vm.disk1|float > 0
   - name: Define datastore to host Disk2 for Splunk Indexers
     set_fact:
-      splind_datastore: "{{ hostvars[groups['vcenter']|first]['ssd_ds_names']|last if 'dr' in group_names else hostvars[groups['vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] }}"
+      splind_datastore: "{{ (hostvars[groups['vcenter']|first]['ssd_ds_names']|last if 'dr' in group_names else hostvars[groups['vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1]) if hostvars[groups['vcenter']|first]['ssd_ds_names']|length > 1 else hostvars[groups['vcenter']|first]['ssd_ds_names']|first }}"
     when:
       - inventory_hostname is search('splind')
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
@@ -72,7 +72,7 @@
           scsi_controller: 0
           unit_number: "{{ disk0_unit_number }}"
       validate_certs: no
-    register: vmguest_disk
+    register: vmguest_disk0
 #    notify: expand disk0
     when:
       - vm.disk0 is defined
@@ -92,7 +92,8 @@
           scsi_controller: 0
           unit_number: "{{ disk1_unit_number }}"
       validate_certs: no
-    register: vmguest_disk
+    register: vmguest_disk1
+    until: vmguest_disk1 is succeeded
 #    notify: expand disk1
     when:
       - vm.disk1 is defined
@@ -112,7 +113,8 @@
           scsi_controller: 0
           unit_number: "{{ disk2_unit_number }}"
       validate_certs: no
-    register: vmguest_disk
+    register: vmguest_disk2
+    until: vmguest_disk2 is succeeded
 #    notify: expand disk2
     when:
       - vm.disk2 is defined
@@ -133,7 +135,8 @@
           scsi_controller: 0
           unit_number: "{{ disk3_unit_number }}"
       validate_certs: no
-    register: vmguest_disk
+    register: vmguest_disk3
+    until: vmguest_disk3 is succeeded
 #    notify: expand disk3
     when:
       - vm.disk3 is defined

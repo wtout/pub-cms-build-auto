@@ -20,14 +20,14 @@
         vars:
           - vm_group: "{{ group_item }}"
           - ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
-    loop: "{{ group_list }}"
+    loop: "{{ play_stack_group_list }}"
     loop_control:
       loop_var: group_item
 
   - name: define list of usable datastores
     set_fact:
       usable_ds_list: "{{ usable_ds_list|default([]) | union(vars[group_item + '_ds_names']) }}" 
-    loop: "{{ group_list }}"
+    loop: "{{ play_stack_group_list }}"
     loop_control:
       loop_var: group_item
 
@@ -47,6 +47,6 @@
 
   - assert:
       that:
-        - "(total_fs|float / 1024|pow(3)) >= required_space|float"
+        - "(total_fs|float / 1024|pow(3)) >= stack_required_space|float"
       fail_msg: "Not enough storage space to deploy all the VMs"
   tags: ['capcheck', 'vm_creation']

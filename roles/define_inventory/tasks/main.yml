@@ -18,11 +18,11 @@
       dr: "{{ 'Disaster recovery is not defined' if environment_definition.customer.disaster_recovery == none else '' }}"
       pn: "{{ 'Primary name_prefix is not defined' if environment_definition.customer.primary.name_prefix == none else '' }}"
       po: "{{ 'Primary octets is not defined' if environment_definition.customer.primary.octets == none else '' }}"
-      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.name_prefix == none) else '' }}"
-      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.octets == none) else '' }}"
+      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.name_prefix == none and datacenters[environment_definition.datacenter.name]['deptype'] is search('a')) else '' }}"
+      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.octets == none and datacenters[environment_definition.datacenter.name]['deptype'] is search('a')) else '' }}"
       rv: "{{ 'Release version is not defined' if environment_definition.customer.release_version == none else '' }}"
       dn: "{{ 'Datacenter name is not defined' if environment_definition.datacenter.name == none else '' }}"
-      dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and environment_definition.datacenter.resources == none) else '' }}"
+      dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and datacenters[environment_definition.datacenter.name]['deptype'] is search('a') and environment_definition.datacenter.resources == none) else '' }}"
       dc: "{{ 'Datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
       ps: "{{ 'Puppet server_name is not defined' if (environment_definition.puppet is not defined or environment_definition.puppet.server_name is not defined or environment_definition.puppet.server_name == none) else '' }}"
       ys: "{{ 'Yum server_name is not defined' if (environment_definition.yum is not defined or environment_definition.yum.server_name is not defined or environment_definition.yum.server_name == none) else '' }}"
@@ -44,33 +44,31 @@
         - not environment_definition.customer.deployment_model | lower | regex_search('a|aioa|aioh|h') == none
       fail_msg: "deployment_model is not valid. Only a, h, aioa and aioh are valid"
 
-  - name: check if number of EM7 Portals, MCs and DCs value is valid
-    assert:
-      that:
-        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int >= 2"
-        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int <= loop_item.max_value"
-        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int % 2 == 0"
-      fail_msg: "environment_definition.customer.primary.number_of_{{ loop_item.name }} is not valid. Only even numbers in [2-{{ loop_item.max_value }}] are valid"
+  - debug:
+      msg:
+        - "environment_definition.customer.primary.number_of_{{ loop_item.name }}"
+        - "{{ environment_definition['customer']['primary']['number_of_' + loop_item.name] }}"
     loop:
       - { 'name': 'prts', 'max_value': 4 }
       - { 'name': 'mcs', 'max_value': 6 }
       - { 'name': 'dcs', 'max_value': 12 }
     loop_control:
       loop_var: loop_item
-    when: environment_definition.customer.deployment_model | lower is not search('aio')
 
   - name: check if number of EM7 Portals, MCs and DCs value is valid
     assert:
       that:
-        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int == 0"
-      fail_msg: "environment_definition.customer.primary.number_of_{{ loop_item.name }} is not valid. Only 0 is valid"
+        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int >= {{ 2 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}"
+        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int <= loop_item.max_value|int"
+        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int % 2 == 0"
+      fail_msg: "The value {{ environment_definition['customer']['primary']['number_of_' + loop_item.name] }} for environment_definition.customer.primary.number_of_{{ loop_item.name }} is not valid. Only {{ 'even numbers in [2-' + loop_item.max_value|string + '] are valid' if environment_definition.customer.deployment_model | lower is not search('aio') else '0 is valid' }}"
     loop:
-      - { 'name': 'prts' }
-      - { 'name': 'mcs' }
-      - { 'name': 'dcs' }
+      - { 'name': 'prts', 'max_value': "{{ 4 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}" }
+      - { 'name': 'mcs', 'max_value': "{{ 6 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}" }
+      - { 'name': 'dcs', 'max_value': "{{ 12 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}" }
     loop_control:
       loop_var: loop_item
-    when: environment_definition.customer.deployment_model | lower is search('aio')
+      label: "{{ 'number_of_' + loop_item.name }}"
 
   - name: check if disaster recovery value is valid
     assert:
@@ -89,7 +87,9 @@
       that:
         - not environment_definition.customer.secondary.octets | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}$') == none
       fail_msg: "secondary octets is not valid. Only three octets (xxx.xxx.xxx) format is valid"
-    when: environment_definition.customer.disaster_recovery
+    when:
+      - environment_definition.customer.disaster_recovery
+      - environment_definition.customer.secondary.octets != none
 
   - name: check if release version value is valid
     assert:
