@@ -8,15 +8,13 @@
 - block:
   - name: define on-prem datastore for each host
     set_fact:
-      vm_ds: "{{ vm_ds_names[inventory_hostname[-2:]|int - 1] if inventory_hostname[-2:]|int <= max_length|int else vm_ds_names[(inventory_hostname[-2:]|int - 1) % max_length|int] }}"
-    vars:
-      max_length: "{{ vm_ds_names|length - 1 if customer.disaster_recovery else vm_ds_names|length }}"
+      vm_ds: "{{ vm_ds_names|select('search', '02')|list|join if inventory_hostname[-2:]|int % 2 == 0 else vm_ds_names|select('search', '01')|list|join }}"
   when: "'dr' not in group_names"
   tags: vm_creation
 
 - block:
   - name: define on-prem datastore for each DR host
     set_fact:
-      vm_ds: "{{ vm_ds_names[2] }}"
+      vm_ds: "{{ vm_ds_names|last }}"
   when: "'dr' in group_names"
   tags: vm_creation

@@ -45,7 +45,7 @@
 - name: define delete_drcluster
   set_fact:
     delete_drcluster: "{{ delete_drcluster|default(true) and not vm_in_cluster }}"
-#    delete_cluster: "{{ delete_cluster|default(true) and not (vm_in_cluster and vm_on )}}"
+#    delete_cluster: "{{ delete_cluster|default(true) and not (vm_in_cluster and vm_on) }}"
   vars:
     vm_in_cluster: "{{ true if vm_item.instance.hw_cluster == hostvars[groups['vcenter'][0]]['information']['drcluster'] else false }}"
 #    vm_on: "{{ true if vm_item.instance.hw_power_status|lower is search('poweredon') else false }}"
@@ -83,6 +83,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: drmaint_mode
 
   - name: Move DR hosts out of the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
@@ -100,6 +101,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: move_drhosts
 
   - name: Put DR hosts in normal mode
@@ -114,6 +116,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: drnormal_mode
 
   - name: Delete the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster

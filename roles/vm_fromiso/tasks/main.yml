@@ -1,5 +1,5 @@
 ---
-# tasks file for vm_creation
+# tasks file for vm_fromiso
 - block:
   - name: purge known hosts file
     copy:

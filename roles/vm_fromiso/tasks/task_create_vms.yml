@@ -5,16 +5,40 @@
     - block:
       - include_tasks: task_create_folder.yml
         run_once: true
+      - block:
+        - name: get list of groups in play
+          set_fact:
+            play_group_list: "{{ play_group_list|default([]) | union([host_item[:-2]]) }}"
+          loop: "{{ ansible_play_hosts | reject('search', 'bastion|puppet|vcenter') | list }}"
+          loop_control:
+            loop_var: host_item
+            label: "{{ host_item }}"
+          run_once: true
+        - include_tasks:
+            file: task_create_vm_pair.yml
+            apply:
+              vars:
+                vm_group: "{{ group_item }}"
+          loop: "{{ play_group_list }}"
+          loop_control:
+            loop_var: group_item
+            label: "{{ group_item }}"
+          when: inventory_hostname in groups[group_item]
+        when:
+          - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] == ''
+      - include_tasks: task_create_configure_vms.yml
+        when:
+          - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != ''
       when:
-        - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
+          - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
 
     - block:
       - include_tasks: task_create_cluster.yml
         run_once: true
+      - include_tasks: task_create_configure_vms.yml
       when:
         - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
 
-    - include_tasks: task_create_configure_vms.yml
     when: crecon | default(true) | bool
 
   - name: switch to cmsbuild user

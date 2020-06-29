@@ -19,9 +19,12 @@
           file: task_create_vm_pair.yml
           apply:
             vars:
-              vm_group: "{{ item }}"
+              vm_group: "{{ group_item }}"
         loop: "{{ play_group_list }}"
-        when: inventory_hostname in groups[item]
+        loop_control:
+          loop_var: group_item
+          label: "{{ group_item }}"
+        when: inventory_hostname in groups[group_item]
       when:
         - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] == ''
     - include_tasks: task_create_configure_vms.yml

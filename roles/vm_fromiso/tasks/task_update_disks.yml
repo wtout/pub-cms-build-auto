@@ -70,7 +70,8 @@
           scsi_controller: 0
           unit_number: "{{ disk0_unit_number }}"
       validate_certs: no
-    register: vmguest_disk
+    register: vmguest_disk0
+    until: vmguest_disk0 is succeeded
     notify: expand disk0
     when:
       - vm.disk0 is defined
@@ -90,7 +91,8 @@
           scsi_controller: 0
           unit_number: "{{ disk1_unit_number }}"
       validate_certs: no
-    register: vmguest_disk
+    register: vmguest_disk1
+    until: vmguest_disk1 is succeeded
     notify: expand disk1
     when:
       - vm.disk1 is defined
@@ -110,7 +112,8 @@
           scsi_controller: 0
           unit_number: "{{ disk2_unit_number }}"
       validate_certs: no
-    register: vmguest_disk
+    register: vmguest_disk2
+    until: vmguest_disk2 is succeeded
     notify: expand disk2
     when:
       - vm.disk2 is defined
@@ -131,7 +134,8 @@
           scsi_controller: 0
           unit_number: "{{ disk3_unit_number }}"
       validate_certs: no
-    register: vmguest_disk
+    register: vmguest_disk3
+    until: vmguest_disk3 is succeeded
     notify: expand disk3
     when:
       - vm.disk3 is defined

@@ -83,6 +83,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: maint_mode
 
   - name: Move hosts out of the '{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}' cluster
@@ -100,6 +101,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: move_hosts
 
   - name: Put hosts in normal mode
@@ -114,6 +116,7 @@
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
     loop_control:
       loop_var: host_item
+      label: "{{ host_item }}"
     register: normal_mode
 
   - name: Delete the '{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}' cluster
