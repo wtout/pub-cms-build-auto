@@ -27,4 +27,4 @@
     vars:
       new_item: "{'resources': \"{{ hosts_list | sort }}\"}"
 
-  tags: ['capcheck', 'vm_creation']
+  tags: ['capcheck', 'vm_creation', 'puppet']

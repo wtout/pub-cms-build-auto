@@ -14,8 +14,11 @@
 
   - name: define cluster_name
     set_fact:
-      cluster_name: "{{ cluster_name|default([]) + [item.key] | unique }}"
+      cluster_name: "{{ cluster_name|default([]) | union([cluster_item.key]) }}"
     loop:  "{{ cluster_info.clusters|dict2items }}"
+    loop_control:
+      loop_var: cluster_item
+      label: "{{ cluster_item }}"
 
   - name: define information.cluster
     set_fact:
@@ -24,5 +27,5 @@
       new_item: "{'cluster': '{{ cluster_name|first }}'}"
 
   no_log: true
-  tags: ['capcheck', 'vm_creation']
+  tags: ['capcheck', 'vm_creation', 'puppet']
 

@@ -26,6 +26,15 @@
       loop_var: ds_item
       label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd|sas')|map(attribute='name')|list }}"
 
+  - name: Initialize lists
+    set_fact:
+      stack01_ssd_ds_names: []
+      stack01_ssd_ds_names: []
+      dr_ssd_ds_names: []
+      stack01_sas_ds_names: []
+      stack02_sas_ds_names: []
+      dr_sas_ds_names: []
+
   - name: define list of stack01 ssd datastores with enough free space
     set_fact:
       stack01_ssd_ds_names: "{{ stack01_ssd_ds_names|default([]) | union(ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list) }}"
@@ -41,7 +50,8 @@
       - myvar|join|float >= (vmvar|float / 1024)
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex("02|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}")
 
-  - assert:
+  - name: check length of stack01_ssd_ds_names
+    assert:
       that:
         - stack01_ssd_ds_names | select('match', '^.*-01-ssd') | list | length >= 1
       fail_msg: "No SSD storage space available for the odd VMs of the stack"
@@ -64,7 +74,8 @@
       - myvar|join|float >= (vmvar|float / 1024)
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex("01|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}")
 
-  - assert:
+  - name: check length of stack02_ssd_ds_names
+    assert:
       that:
         - stack02_ssd_ds_names | select('match', '^.*-02-ssd') | list | length >= 1
       fail_msg: "No SSD storage space available for the even VMs of the stack"
@@ -280,4 +291,4 @@
         - "{{ (ssd_ds_total_fs|default(0)|int / 1024|pow(4))|string + ' TiB' if ssd_ds_total_fs|default('0')|length > 12 else (ssd_ds_total_fs|default(0)|int / 1024|pow(3))|string + ' GiB' }}"
         - "{{ sas_ds_names|default([]) }}"
         - "{{ (sas_ds_total_fs|default(0)|int / 1024|pow(4))|string + ' TiB' if sas_ds_total_fs|default('0')|length > 12 else (sas_ds_total_fs|default(0)|int / 1024|pow(3))|string + ' GiB' }}"
-  tags: ['capcheck', 'vm_creation']
+  tags: ['capcheck', 'vm_creation', 'puppet']

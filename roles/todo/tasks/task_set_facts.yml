@@ -25,7 +25,7 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['vcenter']
-  tags: [ 'capcheck', 'vm_creation' ]
+  tags: [ 'capcheck', 'vm_creation', 'puppet' ]
 
 - name: define get_release
   set_fact:
@@ -83,7 +83,7 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
-  tags: vm_configuration
+  tags: ['vm_configuration', 'puppet']
 
 - name: define push_puppet
   set_fact:

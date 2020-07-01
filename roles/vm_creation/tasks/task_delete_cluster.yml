@@ -133,5 +133,6 @@
   run_once: true
   when:
     - cluster_status is successful
+    - hostvars[groups['vcenter'][0]]['information']['cluster'] != ''
     - delete_cluster|bool
   tags: vm_creation

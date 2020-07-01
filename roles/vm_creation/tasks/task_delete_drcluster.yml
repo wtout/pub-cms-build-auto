@@ -133,5 +133,6 @@
   run_once: true
   when:
     - drcluster_status is successful
+    - hostvars[groups['vcenter'][0]]['information']['drcluster'] != ''
     - delete_drcluster|bool
   tags: vm_creation
