@@ -9,5 +9,10 @@
     template:
       src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}data.conf.tmpl"
       dest: '/opt/puppet/var/data.conf'
+  - name: remove empty lines
+    lineinfile:
+      path: '/opt/puppet/var/data.conf'
+      state: absent
+      line: ''
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

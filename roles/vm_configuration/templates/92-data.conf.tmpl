@@ -16,6 +16,7 @@ isSNOWEnabled=No
 isTelemetryEnabled=No
 isATAEnabled=False
 isRMSMigrationCustomer=False
+{{ 'isCommonRelayServer=False' if (inventory_hostname is search('rly') and inventory_hostname is not search('aio')) else '' }}
 customer_name={{ customer.name }}
 custNamePrefix={{ customer.name_prefix }}
 em7_db_vip={{ vip.db }}
