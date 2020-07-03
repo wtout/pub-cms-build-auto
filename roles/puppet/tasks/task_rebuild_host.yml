@@ -40,4 +40,13 @@
       ansible_ssh_pass: "{{ postppp }}"
       ansible_become_pass: "{{ postppp }}"
     no_log: true
+  - name: check updated VM credentials
+    wait_for_connection:
+      sleep: 10
+      timeout: "{{ 600 if inventory_hostname is search('em7') else 2700 }}"
+    register: repush3_status
+    ignore_errors: true
+  - assert:
+      that:
+        - repush3_status is succeeded
   tags: puppet
