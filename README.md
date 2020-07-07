@@ -65,7 +65,7 @@ To create the system inventory without deploying the system, issue the following
 
 ### Artifacts ###
 
-The tool automatically downloads and checks the CMS software package(s) to the _``Packages``_ folder on the Ansible machine or on the bastion server, if applicable. To minimize deployment run time, consider downloading the artifacts prior to starting the deployment process. However, because the artifacts repository is currently disorganized, it is highly recommended to ensure they are manually transferred to the Ansible control machine.
+The tool automatically downloads and checks the CMSP software package(s) to the _``Packages``_ folder on the Ansible machine or on the bastion server, if applicable. The _``Packages``_ folder will be created under /data if it exists and a symbolic link to it will be created in the automation directory. If it does not exist, the _``Packages``_ folder will be created under the automation directory. To minimize deployment run time, consider downloading the artifacts prior to starting the deployment process. However, because the artifacts repository is currently disorganized, it is highly recommended to ensure they are manually transferred to the Ansible control machine under _``Packages/<release_version>``_.
 
 If the automated procedure is preferred, the user must ensure that the correct and complete package is available at the location the Ansible code expects it to be, _``http://engci-maven-master.cisco.com/artifactory/cms-quicksilver-release/<release_version>/Puppet/``_
 
@@ -135,11 +135,9 @@ To limit the processing to specific host(s) or group(s) or a combination of both
 ***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 
 
-### Contribution guidelines ###
+### User Guide ###
 
-* Writing tests
-* Code review
-* Other guidelines
+For more details about the usage of this automation package, consult the user guide at https://confluence-eng-rtp1.cisco.com/conf/display/CMSPAE/Automation?preview=/96831609/109969695/CMSPAutomationUserGuide.pdf
 
 
 ### Who do I talk to? ###

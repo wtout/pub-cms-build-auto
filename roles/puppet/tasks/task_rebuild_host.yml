@@ -49,4 +49,5 @@
   - assert:
       that:
         - repush3_status is succeeded
+      fail_msg: "Puppet could not be pushed succesfully on {{ inventory_hostname }}"
   tags: puppet
