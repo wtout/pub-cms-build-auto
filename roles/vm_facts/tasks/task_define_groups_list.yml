@@ -3,14 +3,19 @@
 - block:
   - name: get list of groups in stack
     set_fact:
-      group_list: "{{ group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'em7', 'spl', 'infra']) if hostvars[groups['vcenter'][0]]['information']['resources']|length > 1 else group_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['stack', 'infra']) }}"
-    loop: "{{ groups['stack'] }}"
+      group_list: "{{ group_list|default([]) | union([host_item[:-2]]) }}"
+   loop: "{{ groups['stack'] }}"
+    loop_control:
+      loop_var: host_item
     run_once: true
 
   - name: get list of groups in dr
     set_fact:
-      drgroup_list: "{{ drgroup_list|default([]) | union([hostvars[item]['group_names']]) | flatten | difference(['dr', 'drem7', 'drspl', 'drinfra']) }}"
+      drgroup_list: "{{ drgroup_list|default([]) | union([host_item[:-2]]) }}"
     loop: "{{ groups['dr'] }}"
+    loop_control:
+      loop_var: host_item
     run_once: true
     when:  customer.disaster_recovery
   tags: ['always', 'vm_facts']
+
