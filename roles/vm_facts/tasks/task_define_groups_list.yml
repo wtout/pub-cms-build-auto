@@ -4,7 +4,7 @@
   - name: get list of groups in stack
     set_fact:
       group_list: "{{ group_list|default([]) | union([host_item[:-2]]) }}"
-   loop: "{{ groups['stack'] }}"
+    loop: "{{ groups['stack'] }}"
     loop_control:
       loop_var: host_item
     run_once: true
