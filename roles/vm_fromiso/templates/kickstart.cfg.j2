@@ -85,6 +85,8 @@ policycoreutils-python
 echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.netname1 }}
 {{ "echo 'DOMAIN=\"" + sysconfig.domain_name + "\"' >> /etc/sysconfig/network-scripts/ifcfg-" + netconfig.netname2 if netconfig.netname2 != '' else '' }}
 
+{% if inventory_hostname is not search('splphn') %}
+{% block yum_repos %}
 # Yum repos
 rm -f /etc/yum.repos.d/*
 cat <<EOF > /etc/yum.repos.d/QS.repo
@@ -102,6 +104,15 @@ enabled=0
 gpgcheck=0
 sslverify=False
 EOF
+{% endblock yum_repos %}
+{% endif %}
+
+{% if inventory_hostname is search('splphn') %}
+{% block yum_proxy %}
+# Add proxy to yum.conf on Phantom
+grep proxy /etc/yum.conf || sed -i 's|^\(\[main\]\)$|\1\nproxy={{ proxy_address }}|' /etc/yum.conf
+{% endblock yum_proxy %}
+{% endif %}
 
 # Configure Chrony
 sed -i '/^server.*iburst$/d' /etc/chrony.conf
