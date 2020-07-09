@@ -98,7 +98,8 @@
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex("02|(do not use)|donotuse{{ '|' + ds_ssd_prefix|first if customer.disaster_recovery else '' }}")
 
-  - assert:
+  - name: check length of dr_ssd_ds_names
+    assert:
       that:
         - dr_ssd_ds_names | select('match', '^.*-01-ssd') | list | length >= 1
       fail_msg: "No SSD storage space available for the DR VMs"
@@ -143,7 +144,8 @@
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex("02|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}")
 
-  - assert:
+  - name: check length of stack01_sas_ds_names
+    assert:
       that:
         - stack01_sas_ds_names | select('match', '^.*-01-sas') | list | length >= 1
       fail_msg: "No SAS storage space available for the odd VMs of the stack"
@@ -166,7 +168,8 @@
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex("01|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}")
 
-  - assert:
+  - name: check length of stack02-sas_ds_names
+    assert:
       that:
         - stack02_sas_ds_names | select('match', '^.*-02-sas') | list | length >= 1
       fail_msg: "No SAS storage space available for the even VMs of the stack"
@@ -189,7 +192,8 @@
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex("02|(do not use)|donotuse{{ '|' + ds_sas_prefix|first if customer.disaster_recovery else '' }}")
 
-  - assert:
+  - name: check length of dr_sas_ds_names
+    assert:
       that:
         - dr_sas_ds_names | select('match', '^.*-01-sas') | list | length >= 1
       fail_msg: "No SAS storage space available for the DR VMs"

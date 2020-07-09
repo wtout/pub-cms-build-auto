@@ -44,8 +44,6 @@
   - name: define stack SAS required space
     set_fact:
       stack_sas_required_space: "{{ stack01_sas_required_space|default(0)|int + stack02_sas_required_space|default(0)|int }}"
-    loop_control:
-      loop_var: task_item
 
   - name: define DR SAS required space
     set_fact:
