@@ -29,7 +29,7 @@
   - name: Initialize lists
     set_fact:
       stack01_ssd_ds_names: []
-      stack01_ssd_ds_names: []
+      stack02_ssd_ds_names: []
       dr_ssd_ds_names: []
       stack01_sas_ds_names: []
       stack02_sas_ds_names: []
