@@ -15,7 +15,7 @@ The deployment procedure has to be the same for all deployments. Ansible code co
 
 ### Installation ###
 
-On a newly installed Linux **CentOS 7** VM that can access the internet, cand the VM infrastructure, run the following commands to install the required packages:
+On a newly installed Linux **CentOS 7** VM that can access the internet, automation repo and the VM infrastructure, run the following commands to install the required packages:
 
 1- Install the git package
 
