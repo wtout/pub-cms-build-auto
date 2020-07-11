@@ -69,7 +69,7 @@
     when:
       - cluster_host1 != ''
       - cluster_host1 != information.cluster
-    when: information.resources|length > 1
+      - information.resources|length > 1
 
   - debug:
       msg: "DR host is already in the '{{ cluster_host3 }}' cluster. Secondary cluster name spcified in definition file will be ignored"
