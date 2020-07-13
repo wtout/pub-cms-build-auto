@@ -53,7 +53,7 @@
     when:
       - cluster_host1 != ''
       - cluster_host2 != ''
-    when: information.resources|length > 1
+      - information.resources|length > 1
 
   - name: verify that DR host is not in the same cluster as HA hosts
     assert:
