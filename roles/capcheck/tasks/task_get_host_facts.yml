@@ -41,7 +41,8 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='free')|list|join }}"
       vmvar: "{{ stack01_ssd_required_space|default(0)|float }}"
-      myreg: "02|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
+      exreg: "02|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
+      mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
@@ -49,7 +50,7 @@
     when:
       - ansible_play_hosts | select('search', 'em7db|splind') | reject('search', 'dr') | reject('match', '^.+[02468]$') | list | length >= 1
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
-      - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex(myreg)
+      - mydst is not regex(exreg)
 
   - name: check length of stack01_ssd_ds_names
     assert:
@@ -66,7 +67,8 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='free')|list|join }}"
       vmvar: "{{ stack02_ssd_required_space|default(0)|float }}"
-      myreg: "01|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
+      exreg: "01|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
+      mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
@@ -74,7 +76,7 @@
     when:
       - ansible_play_hosts | select('search', 'em7db|splind') | reject('search', 'dr') | select('match', '^.+[02468]$') | list | length >= 1
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
-      - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex(myreg)
+      - mydst is not regex(exreg)
 
   - name: check length of stack02_ssd_ds_names
     assert:
@@ -91,7 +93,9 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='free')|list|join }}"
       vmvar: "{{ dr_ssd_required_space|default(0)|float }}"
-      myreg: "02|(do not use)|donotuse{{ '|' + ds_ssd_prefix|first if customer.disaster_recovery else '' }}"
+      exreg: '02|(do not use)|donotuse'
+      inreg: "{{ ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
+      mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|selectattr('name', 'search', inreg)|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
@@ -99,7 +103,7 @@
     when:
       - ansible_play_hosts | select('search', 'em7db|splind') | select('search', 'dr') | list | length >= 1
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
-      - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|first is not regex(myreg)
+      - mydst != '' and mydst is not search(exreg)
 
   - name: check length of dr_ssd_ds_names
     assert:
@@ -119,8 +123,8 @@
   - assert:
       that:
         - "stack_ssd_ds_names|length >= 2"
-      fail_msg: "Not enough SSD storage space to deploy EM7 databases"
-      success_msg: "Found {{ stack_ssd_ds_names|length }} SSD datastores to deploy stack EM7 databases"
+      fail_msg: "Not enough SSD storage space to deploy EM7 databases and/or splunk indices third disk"
+      success_msg: "Found {{ stack_ssd_ds_names|length }} SSD datastores to deploy stack EM7 databases and/or splunk indices third disk"
     when:
       - ansible_play_hosts | select('search', 'em7db|splind') | reject('search', 'dr') | list | length >= 1
       - stack01_ssd_ds_names|default([]) | length >= 1
@@ -138,7 +142,8 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='free')|list|join }}"
       vmvar: "{{ stack01_sas_required_space|default(0)|float }}"
-      myreg: "02|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}"
+      exreg: "02|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}"
+      mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
@@ -146,7 +151,7 @@
     when:
       - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | reject('match', '^.+[02468]$') | list | length >= 1
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
-      - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex(myreg)
+      - mydst is not regex(exreg)
 
   - name: check length of stack01_sas_ds_names
     assert:
@@ -163,7 +168,8 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='free')|list|join }}"
       vmvar: "{{ stack02_sas_required_space|default(0)|float }}"
-      myreg: "01|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}"
+      exreg: "01|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}"
+      mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
@@ -171,7 +177,7 @@
     when:
       - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | select('match', '^.+[02468]$') | list | length >= 1
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
-      - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex(myreg)
+      - mydst is not regex(exreg)
 
   - name: check length of stack02_sas_ds_names
     assert:
@@ -188,7 +194,9 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='free')|list|join }}"
       vmvar: "{{ dr_sas_required_space|default(0)|float }}"
-      myreg: "02|(do not use)|donotuse{{ '|' + ds_sas_prefix|first if customer.disaster_recovery else '' }}"
+      exreg: '02|(do not use)|donotuse'
+      inreg: "{{ ds_sas_prefix|last if customer.disaster_recovery else '' }}"
+      mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|selectattr('name', 'search', inreg)|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: ds_item
@@ -196,7 +204,7 @@
     when:
       - ansible_play_hosts | select('search', 'dr') | reject('search', 'em7db') | list | length >= 1
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
-      - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex(myreg)
+      - mydst != '' and mydst is not search(exreg)
 
   - name: check length of dr_sas_ds_names
     assert:
@@ -262,7 +270,7 @@
     when:
       - ansible_play_hosts | reject('search', 'em7db|vcenter|bastion|puppet') | list | length >= 1
 
-  - name: define lists of datastores to host the VMs
+  - name: define lists of datastores to host the Stack VMs
     set_fact:
       "{{ group_item + '_ds_names' }}": "{{ stack_ssd_ds_names if group_item is search('em7db') else stack_sas_ds_names }}"
     loop: "{{ play_stack_group_list }}"
