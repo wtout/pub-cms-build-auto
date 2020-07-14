@@ -31,9 +31,7 @@
       - include_tasks: task_add_vm_to_class.yml
       - include_tasks: task_generate_cert.yml
       - include_tasks: task_generate_cert_for_em7.yml
-      - include_tasks: task_wait_for_certificate.yml
-      - name: flush handlers
-        meta: flush_handlers
+      - include_tasks: task_check_certificate.yml
       - include_tasks: task_puppet_agent_test.yml
         when:
           - inventory_hostname is not search('em7') or customer.release is search('9.2')
@@ -43,9 +41,7 @@
       - include_tasks: task_add_vm_to_class.yml
       - include_tasks: task_generate_cert.yml
       - include_tasks: task_generate_cert_for_em7.yml
-      - include_tasks: task_wait_for_certificate.yml
-      - name: flush handlers
-        meta: flush_handlers
+      - include_tasks: task_check_certificate.yml
       - include_tasks: task_puppet_agent_test.yml
         when:
           - inventory_hostname is not search('em7') or customer.release is search('9.2')

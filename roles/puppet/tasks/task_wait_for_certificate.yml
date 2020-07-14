@@ -10,7 +10,14 @@
     retries: 5
     delay: 5
     delegate_to: "{{ groups['puppet']|first }}"
-    notify:
-      - puppet sign certs
-  when: "'No puppet-agent installed' in puppet_installed.stdout"
+  - name: puppet sign certs
+    shell: >
+      /usr/local/bin/puppet cert sign {{ (ansible_user + '.') if inventory_hostname is search('em7') else '' }}{{ vm.name }}.{{ sysconfig.domain_name }}
+    register: psc
+    until: psc is succeeded
+    retries: 5
+    become: true
+    ignore_errors: true
+    delegate_to: "{{ groups['puppet']|first }}"
+    when: cert_exists|default({}) is succeeded
   tags: puppet

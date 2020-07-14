@@ -31,9 +31,7 @@
     - include_tasks: task_add_vm_to_class.yml
     - include_tasks: task_generate_cert.yml
     - include_tasks: task_generate_cert_for_em7.yml
-    - include_tasks: task_wait_for_certificate.yml
-    - name: flush handlers
-      meta: flush_handlers
+    - include_tasks: task_check_certificate.yml
     - name: "relaunch puppet push #2"
       shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
       async: 30

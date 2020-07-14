@@ -11,6 +11,8 @@ datacenters:
     folder: 'HX Hosted'
     cluster: 'PAE-RTP-HX'
     datastore_cluster: 'HX-Datastore-Cluster'
+    storage_datastore: 'HX-DS-02'
+    storage_path: ''
 
   PAE-HX-DC-2:
     vsphere: 'paevcenter01.cisco-pae.com'
@@ -18,6 +20,8 @@ datacenters:
     folder: 'HX MDR Testing'
     cluster: 'PAE-RTP-HX'
     datastore_cluster: 'HX-Datastore-Cluster'
+    storage_datastore: 'HX-DS-02'
+    storage_path: ''
 
   cdra-Build-Development:
     vsphere: 'paevcenter03.cisco-pae.com'
@@ -25,6 +29,8 @@ datacenters:
     folder: ''
     cluster: ''
     datastore_cluster: ''
+    storage_datastore: ''
+    storage_path: ''
 
   PAE-Customer-Build:
     vsphere: 'paevcenter03.cisco-pae.com'
@@ -32,6 +38,8 @@ datacenters:
     folder: ''
     cluster: ''
     datastore_cluster: ''
+    storage_datastore: ''
+    storage_path: ''
 
   RTP5:
     vsphere: 'rtp5vcsap01.cisco-cms.com'
@@ -39,17 +47,14 @@ datacenters:
     folder: 'Hosted Solution'
     cluster: 'RTP5 HX Cluster'
     datastore_cluster: 'RTP5-HX-DS-Cluster'
+    storage_datastore: 'RTP5-HX-DS-01'
+    storage_path: 'Linux'
 
-  ALLN1-1:
-    vsphere: 'alln1qskmsp01.cisco-cms.com'
+  ALLN1:
+    vsphere: 'alln1vcsap01.cisco-cms.com'
     deptype: 'h'
     folder: 'Hosted Solution'
-    cluster: 'HostedSolution01'
+    cluster: 'HX Cluster'
     datastore_cluster: ''
-
-  ALLN1-2:
-    vsphere: 'alln1qskmsp01.cisco-cms.com'
-    deptype: 'h'
-    folder: 'Hosted Solution'
-    cluster: 'QuicksilverHeadEnd'
-    datastore_cluster: ''
+    storage_datastore: 'ALLN1-HX-DS-01'
+    storage_path: 'Linux'

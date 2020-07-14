@@ -11,6 +11,7 @@
     when:
       - ds_item.freeSpace >= (hostvars[groups[vm_group]|first]['vm']['disk']|int + hostvars[groups[vm_group]|first]['vm']['memory']|int) * 1024|pow(3)
       - ds_item.name|lower is not regex('do not use|donotuse|backup')
+      - ds_item.name is regex('^.*-DS-[0-9]+$')
       - ds_item.maintenanceMode is search('normal')
 
   - name: check if there is at least 2 datastores to host {{ vm_group }}

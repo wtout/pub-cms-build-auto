@@ -23,3 +23,5 @@ information:
   drcluster: "{{ datacenter.scluster if datacenter.scluster != '' else 'CMSP - '+ scluster_name if customer.disaster_recovery else '' }}"
   folder: "{{ datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else '' }}"
   datastore_cluster: "{{ datacenters[datacenter.name]['datastore_cluster'] if datacenters[datacenter.name]['datastore_cluster'] is defined else '' }}"
+  storage_datastore: "{{ datacenters[datacenter.name]['storage_datastore'] if datacenters[datacenter.name]['storage_datastore'] is defined else '' }}"
+  storage_path: "{{ datacenters[datacenter.name]['storage_path'] if datacenters[datacenter.name]['storage_path'] is defined else '' }}"
