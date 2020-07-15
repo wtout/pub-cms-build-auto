@@ -27,9 +27,11 @@
     set_fact:
       ansible_user: "{{ vm_svc_user }}"
   - name: run hardening script
-    command: sh /home/{{ vm_svc_user }}/hardening/hardening.sh
+    command: sh hardening.sh
     register: hard_script
     become: true
+    args:
+      chdir: "/home/{{ vm_svc_user }}/hardening"
   - name: switch back to root user
     set_fact:
       ansible_user: '{{ credentials.username }}'
