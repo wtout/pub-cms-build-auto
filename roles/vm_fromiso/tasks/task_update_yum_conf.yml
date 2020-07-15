@@ -1,0 +1,10 @@
+---
+# tasks to update yum.conf on VM
+- block:
+  - name: update /etc/yum.conf
+    lineinfile:
+      path: /etc/yum.conf
+      regexp: '^proxy=.*'
+      state: absent
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_creation

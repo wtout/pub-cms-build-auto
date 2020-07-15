@@ -85,8 +85,6 @@ policycoreutils-python
 echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.netname1 }}
 {{ "echo 'DOMAIN=\"" + sysconfig.domain_name + "\"' >> /etc/sysconfig/network-scripts/ifcfg-" + netconfig.netname2 if netconfig.netname2 != '' else '' }}
 
-{% if inventory_hostname is not search('splphn') %}
-{% block yum_repos %}
 # Yum repos
 rm -f /etc/yum.repos.d/*
 cat <<EOF > /etc/yum.repos.d/QS.repo
@@ -96,23 +94,40 @@ baseurl={{ yum.baseurl + '/QS' }}
 enabled=1
 gpgcheck=0
 sslverify=False
-
-[centos76]
-Name=centos76
-baseurl={{ yum.baseurl + '/centos76' }}
-enabled=0
-gpgcheck=0
-sslverify=False
+{{ 'proxy=_none_' if datacenter.name == 'PAE-HX-DC-2' else '' }}
 EOF
-{% endblock yum_repos %}
-{% endif %}
+cat <<EOF > /etc/yum.repos.d/artifactory.repo
+[EpelArtifactory]
+name=Epel Artifactory
+baseurl=https://devhub.cisco.com/artifactory/cms-epel/7Server/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://devhub.cisco.com/artifactory/cms-epel/RPM-GPG-KEY-EPEL-7Server
 
-{% if inventory_hostname is search('splphn') %}
-{% block yum_proxy %}
-# Add proxy to yum.conf on Phantom
+[CentosBaseArtifactory]
+name=Centos Base Artifactory
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
+
+[CentosExtrasArtifactory]
+name=Centos Extras Artifactory
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/extras/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
+
+[CentosUpdatesArtifactory]
+name=Centos Updates Artifactory
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/updates/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
+EOF
+
+# Add proxy to yum.conf on VM
 grep proxy /etc/yum.conf || sed -i 's|^\(\[main\]\)$|\1\nproxy={{ proxy_address }}|' /etc/yum.conf
-{% endblock yum_proxy %}
-{% endif %}
 
 # Configure Chrony
 sed -i '/^server.*iburst$/d' /etc/chrony.conf

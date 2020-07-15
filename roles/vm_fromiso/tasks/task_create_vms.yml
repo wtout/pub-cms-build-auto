@@ -46,4 +46,5 @@
       ansible_user: "{{ vm_svc_user }}"
 
   - include_tasks: task_update_iptables.yml
+  - include_tasks: task_update_yum_conf.yml
   tags: vm_creation
