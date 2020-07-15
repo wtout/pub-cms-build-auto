@@ -5,11 +5,32 @@
     shell: >
       puppet cert list {{ (ansible_user + '.') if inventory_hostname is search('em7') else '' }}{{ vm.name }}.{{ sysconfig.domain_name }} || echo 'Found no certificate'
     become: true
-    register: cert_exists
-    until: cert_exists.stdout is not search('Found no certificate')
+    register: cert_exists1
+    until: cert_exists1.stdout is not search('Found no certificate')
     retries: 5
     delay: 5
     delegate_to: "{{ groups['puppet']|first }}"
+  - block:
+    - name: reset SSH password
+      set_fact:
+        ansible_ssh_pass: "{{ preppp }}"
+        ansible_become_pass: "{{ preppp }}"
+      no_log: true
+    - include_tasks: task_rebuild_host.yml
+    - include_tasks: task_delete_certificates.yml
+    - include_tasks: task_add_vm_to_class.yml
+    - include_tasks: task_generate_cert.yml
+    - include_tasks: task_generate_cert_for_em7.yml
+    - name: wait for certificate to be created
+      shell: >
+        puppet cert list {{ (ansible_user + '.') if inventory_hostname is search('em7') else '' }}{{ vm.name }}.{{ sysconfig.domain_name }} || echo 'Found no certificate'
+      become: true
+      register: cert_exists2
+      until: cert_exists2.stdout is not search('Found no certificate')
+      retries: 5
+      delay: 5
+      delegate_to: "{{ groups['puppet']|first }}"
+    when: cert_exists1|default({}) is failed
   - name: puppet sign certs
     shell: >
       /usr/local/bin/puppet cert sign {{ (ansible_user + '.') if inventory_hostname is search('em7') else '' }}{{ vm.name }}.{{ sysconfig.domain_name }}
@@ -19,5 +40,5 @@
     become: true
     ignore_errors: true
     delegate_to: "{{ groups['puppet']|first }}"
-    when: cert_exists|default({}) is succeeded
+    when: cert_exists1|default({}) is succeeded or cert_exists2|default({}) is succeeded
   tags: puppet
