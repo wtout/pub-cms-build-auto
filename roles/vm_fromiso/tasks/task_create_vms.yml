@@ -47,4 +47,5 @@
 
   - include_tasks: task_update_iptables.yml
   - include_tasks: task_update_yum_conf.yml
+    when: delete_proxy|default(false)|bool
   tags: vm_creation
