@@ -3,25 +3,18 @@
 - block:
   - name: define total disk size per Stack VM
     set_fact:
-      vm: "{{ hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true) }}"
+      vm: "{{ vm|default({}) | combine(new_var, recursive=true) }}"
     vars:
-      new_var: "{ 'disk': '{{ hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[vm_item]['vm']['disk3']|int }}' }"
-    delegate_to: "{{ vm_item }}"
-    delegate_facts: true
-    loop: "{{ groups['stack'] }}"
-    loop_control:
-      loop_var: vm_item
-    run_once: true
+      new_var: "{ 'disk': '{{ vm.disk0|int + vm.disk1|int + vm.disk2|int + vm.disk3|int }}' }"
+    when: inventory_hostname is not search('dr')
+
   - name: define total disk size per DR VM
     set_fact:
-      vm: "{{ hostvars[vm_item]['vm']|default({}) | combine(new_var, recursive=true) }}"
+      vm: "{{ vm|default({}) | combine(new_var, recursive=true) }}"
     vars:
-      new_var: "{ 'disk': '{{ hostvars[vm_item]['vm']['disk0']|int + hostvars[vm_item]['vm']['disk1']|int + hostvars[vm_item]['vm']['disk2']|int + hostvars[ vm_item]['vm']['disk3']|int }}' }"
-    delegate_to: "{{ vm_item }}"
-    delegate_facts: true
-    loop: "{{ groups['dr'] }}"
-    loop_control:
-      loop_var: vm_item
-    run_once: true
-    when:  customer.disaster_recovery
+      new_var: "{ 'disk': '{{ vm.disk0|int + vm.disk1|int + vm.disk2|int + vm.disk3|int }}' }"
+    when:
+      - inventory_hostname is search('dr')
+      - customer.disaster_recovery
+
   tags: ['always', 'vm_facts']

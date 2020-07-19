@@ -227,6 +227,7 @@ function decrypt_vault() {
 function check_updates() {
 	if [[ "x$(git config user.name)" != "x" ]]
 	then
+		[[ -f ${1} ]] && grep 'REPOPASS=' ${1} 1>/dev/null && rm -f ${1}
 		if [[ -f ${1} ]]
 		then
 			cp ${1} ${1}.${ENAME}
@@ -434,7 +435,7 @@ ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST="epel-release sshpass"
-ANSIBLE_VERSION='2.9.9'
+ANSIBLE_VERSION='2.9.10'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
 REPOVAULT="${PWD}/.repovault.yml"

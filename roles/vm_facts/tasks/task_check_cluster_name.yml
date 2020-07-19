@@ -51,9 +51,9 @@
         - "cluster_host1 == cluster_host2"
       fail_msg: "HA hosts cannot be in different clusters. Aborting"
     when:
+      - information.resources|length > 1
       - cluster_host1 != ''
       - cluster_host2 != ''
-      - information.resources|length > 1
 
   - name: verify that DR host is not in the same cluster as HA hosts
     assert:
@@ -67,9 +67,9 @@
   - debug:
       msg: "{{ 'HA hosts are' if information.resources|length > 1 else 'Host is' }} already in the '{{ cluster_host1 }}' cluster. Primary cluster name spcified in definition file will be ignored"
     when:
+      - information.resources|length > 1
       - cluster_host1 != ''
       - cluster_host1 != information.cluster
-      - information.resources|length > 1
 
   - debug:
       msg: "DR host is already in the '{{ cluster_host3 }}' cluster. Secondary cluster name spcified in definition file will be ignored"
