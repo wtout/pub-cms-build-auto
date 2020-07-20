@@ -41,7 +41,7 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='free')|list|join }}"
       vmvar: "{{ stack01_ssd_required_space|default(0)|float }}"
-      exreg: "02|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
+      exreg: "-02|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
       mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
@@ -67,7 +67,7 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='free')|list|join }}"
       vmvar: "{{ stack02_ssd_required_space|default(0)|float }}"
-      exreg: "01|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
+      exreg: "-01|(do not use)|donotuse{{ '|' + ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
       mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
@@ -93,7 +93,7 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|map(attribute='free')|list|join }}"
       vmvar: "{{ dr_ssd_required_space|default(0)|float }}"
-      exreg: '02|(do not use)|donotuse'
+      exreg: '-02|(do not use)|donotuse'
       inreg: "{{ ds_ssd_prefix|last if customer.disaster_recovery else '' }}"
       mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'ssd')|selectattr('name', 'search', inreg)|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
@@ -142,7 +142,7 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='free')|list|join }}"
       vmvar: "{{ stack01_sas_required_space|default(0)|float }}"
-      exreg: "02|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}"
+      exreg: "-02|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}"
       mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
@@ -168,7 +168,7 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='free')|list|join }}"
       vmvar: "{{ stack02_sas_required_space|default(0)|float }}"
-      exreg: "01|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}"
+      exreg: "-01|(do not use)|donotuse{{ '|' + ds_sas_prefix|last if customer.disaster_recovery else '' }}"
       mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
     loop_control:
@@ -194,7 +194,7 @@
     vars:
       myvar: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='free')|list|join }}"
       vmvar: "{{ dr_sas_required_space|default(0)|float }}"
-      exreg: '02|(do not use)|donotuse'
+      exreg: '-02|(do not use)|donotuse'
       inreg: "{{ ds_sas_prefix|last if customer.disaster_recovery else '' }}"
       mydst: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|selectattr('name', 'search', inreg)|map(attribute='name')|list|join }}"
     loop: "{{ host_facts.results }}"
