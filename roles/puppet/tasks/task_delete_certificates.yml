@@ -16,7 +16,7 @@
       run_once: true
     - name: get list of certificates on {{ puppet.vmname }}
       shell: >
-        puppet cert list --all | egrep '{{ customer.name_prefix }}{{ ('|' + customer.secondary_name_prefix) if customer.disaster_recovery else '' }}' || echo 'Found no certificate'
+        puppet cert list --all | egrep '{{ customer.secondary_name_prefix if 'dr' in group_names else customer.name_prefix }}' || echo 'Found no certificate'
       become: true
       ignore_errors: true
       register: certs_on_server
