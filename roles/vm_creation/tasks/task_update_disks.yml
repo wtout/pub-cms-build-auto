@@ -74,6 +74,7 @@
       validate_certs: no
     register: vmguest_disk0
     until: vmguest_disk0 is succeeded
+    ignore_errors: true
 #    notify: expand disk0
     when:
       - vm.disk0 is defined
@@ -95,6 +96,7 @@
       validate_certs: no
     register: vmguest_disk1
     until: vmguest_disk1 is succeeded
+    ignore_errors: true
 #    notify: expand disk1
     when:
       - vm.disk1 is defined
@@ -116,6 +118,7 @@
       validate_certs: no
     register: vmguest_disk2
     until: vmguest_disk2 is succeeded
+    ignore_errors: true
 #    notify: expand disk2
     when:
       - vm.disk2 is defined
@@ -138,6 +141,7 @@
       validate_certs: no
     register: vmguest_disk3
     until: vmguest_disk3 is succeeded
+    ignore_errors: true
 #    notify: expand disk3
     when:
       - vm.disk3 is defined
@@ -145,4 +149,10 @@
       - vm.disk3|float > 0
   when: not ansible_check_mode
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vm_creation
+
+- block:
+  - name: determine if disk update failed
+    set_fact:
+      vmguest_disk: "{{ vmguest_disk0|default(false) or vmguest_disk1|default(false) or vmguest_disk2|default(false) or vmguest_disk3|default(false) }}"
   tags: vm_creation

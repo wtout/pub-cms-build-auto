@@ -6,6 +6,8 @@
       - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] == ''
   - include_tasks: task_deploy_ova.yml
   - include_tasks: task_update_disks.yml
+  - include_tasks: task recreate_vm.yml
+    when: vmguest_disk is failed
   - include_tasks: task_update_hardware.yml
   - include_tasks: task_enable_root_login.yml
   - include_tasks: task_update_default_route.yml
