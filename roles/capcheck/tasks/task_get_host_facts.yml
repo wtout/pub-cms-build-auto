@@ -116,7 +116,7 @@
 
   - name: define list of stack ssd datastores with enough free space
     set_fact:
-      stack_ssd_ds_names: "{{ stack01_ssd_ds_names|default([]) | union(stack02_ssd_ds_names|default([])) | sort }}"
+      stack_ssd_ds_names: "{{ stack01_ssd_ds_names|default([]) | union(stack02_ssd_ds_names|default([])) }}"
     when:
       - ansible_play_hosts | select('search', 'em7db|splind') | reject('search', 'dr') | list | length >= 1
 
@@ -132,7 +132,7 @@
 
   - name: define list of ssd datastores with enough free space
     set_fact:
-      ssd_ds_names: "{{ stack_ssd_ds_names|default([]) | union(dr_ssd_ds_names|default([])) | sort }}"
+      ssd_ds_names: "{{ stack_ssd_ds_names|default([]) | union(dr_ssd_ds_names|default([])) }}"
     when:
       - ansible_play_hosts | select('search', 'em7db|splind') | list | length >= 1
 
@@ -217,13 +217,13 @@
 
   - name: define list of stack sas datastores with enough free space
     set_fact:
-      stack_sas_ds_names: "{{ stack01_sas_ds_names|default([]) | union(stack02_sas_ds_names|default([])) | sort }}"
+      stack_sas_ds_names: "{{ stack01_sas_ds_names|default([]) | union(stack02_sas_ds_names|default([])) }}"
     when:
       - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | list | length >= 1
 
   - name: define list of sas datastores with enough free space
     set_fact:
-      sas_ds_names: "{{ stack_sas_ds_names|default([]) | union(dr_sas_ds_names|default([])) | sort }}"
+      sas_ds_names: "{{ stack_sas_ds_names|default([]) | union(dr_sas_ds_names|default([])) }}"
     when:
       - ansible_play_hosts | reject('search', 'em7db|vcenter|bastion|puppet') | list | length >= 1
 
