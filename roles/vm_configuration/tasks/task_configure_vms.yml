@@ -1,6 +1,7 @@
 ---
 # tasks file to configure_vms
 - block:
+  - include_tasks: task_start_msgs_log.yml
   - include_tasks: task_configure_snmp.yml
   - include_tasks: task_update_chrony.yml
   - include_tasks: task_update_repo.yml

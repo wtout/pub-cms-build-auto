@@ -3,8 +3,8 @@
 - block:
   - name: define IP addresses
     set_fact:
-      ipaddress1: "{{ netconfig.ippool1[index|int - 1] if netconfig.ippool1 != [] else (customer.secondary_octets if inventory_hostname is search('dr') else customer.octets) + '.' + netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) else '' }}"
-      ipaddress2: "{{ netconfig.ippool2[index|int - 1] if netconfig.ippool2 != [] else (customer.secondary_octets if inventory_hostname is search('dr') else customer.octets) + '.' + netconfig.octetpool2[index|int - 1]|string if (netconfig.octetpool2 != [] and index|int <= netconfig.octetpool2|length) else '' }}"
+      ipaddress1: "{{ netconfig.ippool1[index|int - 1] if netconfig.ippool1 != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) else '' }}"
+      ipaddress2: "{{ netconfig.ippool2[index|int - 1] if netconfig.ippool2 != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.octetpool2[index|int - 1]|string if (netconfig.octetpool2 != [] and index|int <= netconfig.octetpool2|length) else '' }}"
     vars:
       index: "{{ inventory_hostname[-2:] }}"
 

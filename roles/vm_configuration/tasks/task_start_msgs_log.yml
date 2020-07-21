@@ -1,0 +1,42 @@
+---
+# Tasks to start a new /var/log/messages file on the VM
+- block:
+  - name: check if {{ sys_msgs }} file exist
+    stat:
+      path: "{{ sys_msgs }}"
+    register: msgs_log
+  - block:
+    - name: get date
+      command: date +"%Y%m%d"
+      register: date_string
+      check_mode: no
+    - name: compress {{ sys_msgs }}
+      archive:
+        path: "{{ sys_msgs }}"
+        dest: "{{ sys_msgs }}-{{ date_string.stdout }}.gz"
+        force: yes
+        format: gz
+        owner: root
+        group: root
+        mode: 0600
+    - name: create a new {{ sys_msgs }} file
+      copy:
+        content: ""
+        dest: "{{ sys_msgs }}"
+        force: yes
+        group: "{{ 'adm' if inventory_hostname is search('em7') else 'root' }}"
+        owner: root
+        mode: 0640
+    when: msgs_log.stat.exists
+  - name: create a new {{ sys_msgs }} file
+    copy:
+      content: ""
+      dest: "{{ sys_msgs }}"
+      force: yes
+      group: adm
+      owner: root
+      mode: 0640
+    when: not msgs_log.stat.exists
+  when: ansible_ssh_pass != postppp
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  tags: vm_configuration

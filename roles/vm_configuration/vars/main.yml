@@ -1,3 +1,4 @@
 ---
 # vars file for vm_configuration
 chrony_file: '/etc/chrony.conf'
+sys_msgs: '/var/log/messages'
