@@ -1,15 +1,6 @@
 ---
 # Tasks to create the kickstart ISO
 - block:
-  - name: get proxy setting
-    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-    register: proxy_string
-    check_mode: no
-
-  - name: define proxy_address
-    set_fact:
-      proxy_address: "{{ proxy_string.stdout }}"
-
   - name: Create kickstart cfg
     template:
       src: templates/kickstart.cfg.j2

@@ -36,9 +36,9 @@
       - "The log file is **`{{ LFILE }}`**"
       - ' '
       - '========================================================='
-  - name: get proxy setting
-    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-    register: proxy_string
+  - include_role:
+      name: "{{ auto_dir + '/roles/pypkgs' }}"
+      tasks_from: task_get_proxy_address.yml
 # This module cannot be used currently due to a known bug. Will revisit in the future
 #  - name: Send notification via Webex Teams
 #    cisco_spark:
@@ -63,6 +63,6 @@
         roomId: Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj
         markdown: "{{ NOTIF_MSG | join('\n') }}"
     environment:
-      http_proxy: "{{ proxy_string.stdout }}"
-      https_proxy: "{{ proxy_string.stdout }}" # Ansible only supports http proxies currently
+      http_proxy: "{{ proxy_address }}"
+      https_proxy: "{{ proxy_address }}" # Ansible only supports http proxies currently
   tags: [ 'never', 'notify' ]

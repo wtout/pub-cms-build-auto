@@ -42,10 +42,6 @@
   tags: vm_configuration
 
 - block:
-  - name: get proxy setting
-    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-    register: proxy_string
-    check_mode: no
   - name: connect to sciencelogic api to get a license
     uri:
       url: https://portal.sciencelogic.com/portal/license_api
@@ -66,8 +62,8 @@
     retries: 3
     delay: 5
     environment:
-      http_proxy: "{{ proxy_string.stdout }}"
-      https_proxy: "{{ proxy_string.stdout }}"
+      http_proxy: "{{ proxy_address }}"
+      https_proxy: "{{ proxy_address }}"
   when:
     - inventory_hostname is search('em7')
     - inventory_hostname is not regex('mc|dc') or customer.release is not search('9.2')
