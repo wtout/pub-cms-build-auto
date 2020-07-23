@@ -119,7 +119,17 @@
     when: inventory_hostname is search('prt')
   - name: load the EM7 license
     shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
+    register: load_license
+    ignore_errors: "{{ true if inventory_hostname is regex('em7[prt|db]') else false }}"
     become: "{{ true if inventory_hostname is search('em7') else false }}"
+  - block:
+    - include_tasks: task_update_password_silo_file.yml
+    - name: re-load the EM7 license
+      shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
+    when:
+      - load_license is failed
+      - inventory_hostname is regex('em7[prt|db]')
   - block:
     - name: reboot the VM
       reboot:
