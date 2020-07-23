@@ -10,6 +10,34 @@
     set_fact:
       proxy_address: "{{ proxy_string.stdout }}"
 
+  - name: validate detected proxy setting
+    uri:
+      url: "https://www.google.com"
+    register: validate_proxy1
+    ignore_errors: true
+    environment:
+      http_proxy: "{{ proxy_address }}"
+      https_proxy: "{{ proxy_address }}"
+
+  - block:
+    - name: update proxy_address
+      set_fact:
+        proxy_address: "{{ proxy_address | regex_replace('//.*@', '//') \ regex_replace('//', '//' + SVC_USER + ':' + SVC_PASS + '@') }}"
+    - name: validate updated proxy setting
+      uri:
+        url: "https://www.google.com"
+      register: validate_proxy2
+      ignore_errors: true
+      environment:
+        http_proxy: "{{ proxy_address }}"
+        https_proxy: "{{ proxy_address }}"
+    - name: check if updated proxy address failed
+      assert:
+        that:
+          - validate_proxy2 is succeeded
+        fail_msg: "{{ SVC_USER }} service account credentials are not valid for the detected proxy. Aborting!"
+    when: validate_proxy1 is failed
+
   delegate_to: "{{ host_delegate|default('localhost') }}"
   run_once: true
   tags: [ 'always', 'pypkgs' ]

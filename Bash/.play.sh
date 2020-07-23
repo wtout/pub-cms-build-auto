@@ -106,10 +106,60 @@ function get_centos_release() {
 }
 
 function get_proxy() {
-	grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
+	chmod +x Bash/get*
+	local MYPROXY=$(grep -r "^proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
+	if [[ ${MYPROXY} == '' ]]
+	then
+		echo -e "\nUnable to find proxy configuration in /etc/environment /etc/profile ~/.bashrc ~/.bash_profile. Aborting!\n"
+		return 1
+	else
+		local PUBLIC_ADDRESS="https://www.google.com"
+		curl --proxy ${MYPROXY} ${PUBLIC_ADDRESS} &>/dev/null
+		if [[ ${?} -eq 0 ]]
+		then
+			echo ${MYPROXY}
+			return 0
+		else
+			read -r PUSER <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_USER | cut -d "'" -f2)
+			read -r PPASS <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_PASS | cut -d "'" -f2)
+			local MYPROXY=$(echo ${MYPROXY} | sed -e "s|//.*@|//|g" -e sed "s|//|//${PUSER}:${PPASS}|g")
+			curl --proxy $(echo ${MYPROXY}) ${PUBLIC_ADDRESS} &>/dev/null
+			if [[ ${?} -eq 0 ]]
+			then
+				echo ${MYPROXY}
+				return 0
+			else
+				echo -e "\nProxy credentials are not valid. Aborting!\n"
+				return 1
+			fi
+		fi
+	fi
+}
+
+function add_proxy_yum() {
+	[[ ${#} -ne 2 ]] && echo -e "\nFunction add_proxy_yum requires 2 arguments\n" && exit 1
+	if [[ "${2}" != "" ]]
+	then
+		grep proxy /etc/yum.conf &>/dev/null || sudo -S sed -i "s|^\(\[main\]\)$|\1\nproxy=${1}|" /etc/yum.conf <<< ${2}
+	else
+		echo -e "\nUnable to edit /etc/yum.conf without sudo password. Aborting!\n"
+		exit 1
+	fi
+}
+
+function remove_proxy_yum() {
+	if [[ "${1}" != "" ]]
+	then
+		grep proxy /etc/yum.conf &>/dev/null && sudo -S sed -i '/^proxy=.*$/,+d' /etc/yum.conf <<< ${1}
+	else
+		echo -e "\nUnable to edit /etc/yum.conf without sudo password. Aborting!\n"
+		exit 1
+	fi
 }
 
 function install_packages() {
+	local PROXY_ADDRESS=$(get_proxy) || local FS=${?}
+	[[ ${FS} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${FS}
 	for pkg in ${PKG_LIST}
 	do
 		if [ "x$(yum list installed ${pkg} &>/dev/null;echo ${?})" == "x1" ]
@@ -120,10 +170,12 @@ function install_packages() {
 				SUDO_PASS=$(get_sudopass) || FS=${?}
 				[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
 			fi
+			add_proxy_yum ${PROXY_ADDRESS} ${SUDO_PASS}
 			PKG_ARR=(${PKG_LIST})
 			[[ ${pkg} == ${PKG_ARR[0]} ]] && printf "\n\nInstalling ${pkg} on localhost ..." || \
 			printf "\nInstalling ${pkg} on localhost ..."
 			sudo -S yum install -y ${pkg} --quiet <<< ${SUDO_PASS} 2>/dev/null
+			remove_proxy_yum ${SUDO_PASS}
 			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed ${pkg} | tail -1 | awk '{print $2}')\n" || exit 1
 		fi
 	done
@@ -148,13 +200,13 @@ function install_packages() {
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
 		printf "\nInstalling ansible on localhost ..."
-		pip3 install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="$(get_proxy)"
+		pip3 install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
 		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 	else
 		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
 		then
 			printf "\nUpgrading Ansible from version $(ansible --version | grep '^ansible' | cut -d ' ' -f2)"
-			pip3 install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION} --proxy="$(get_proxy)"
+			pip3 install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
 			[[ ${?} == 0 ]] && printf " to version ${ANSIBLE_VERSION}\n" || exit 1
 		fi
 	fi
@@ -218,9 +270,9 @@ function encrypt_vault() {
 	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && ansible-vault encrypt --vault-password-file ${2} ${1} &>/dev/null
 }
 
-function decrypt_vault() {
-	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && ansible-vault decrypt --vault-password-file ${2} ${1} 2> /tmp/decrypt_error.${PID}
-	[[ $(grep "was not found" /tmp/decrypt_error.${PID}) != "" ]] && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && ansible-vault decrypt --vault-password-file ${2} ${1} &>/dev/null
+function view_vault() {
+	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && ansible-vault view --vault-password-file ${2} ${1} 2> /tmp/decrypt_error.${PID}
+	[[ $(grep "was not found" /tmp/decrypt_error.${PID}) != "" ]] && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && ansible-vault view --vault-password-file ${2} ${1} &>/dev/null
 	rm -f /tmp/decrypt_error.${PID}
 }
 
@@ -235,13 +287,17 @@ function check_updates() {
 			retries=3
 			while [ ${i} -lt ${retries} ]
 			do
-				[[ $(grep "ANSIBLE_VAULT" ${1}.${ENAME}) != "" ]] && decrypt_vault ${1}.${ENAME} ${2} || break
+				[[ $- =~ x ]] && debug=1 && set +x
+				if [[ ${REPOPASS} == "" ]]
+				then
+					[[ ${debug} == 1 ]] && set -x
+					read -r REPOPASS <<< $(view_vault ${1}.${ENAME} ${2} | cut -d "'" -f2)
+				else
+					break
+				fi
 				i=$((++i))
 				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
 			done
-			[[ $- =~ x ]] && debug=1 && set +x
-			source ${1}.${ENAME}
-			[[ ${debug} == 1 ]] && set -x
 			rm ${1}.${ENAME}
 		else
 			echo
