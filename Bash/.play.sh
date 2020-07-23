@@ -318,7 +318,7 @@ function check_updates() {
 			do
 				[[ $- =~ x ]] && debug=1 && set +x
 				local REPOPWD=$(echo ${REPOPASS} | sed -e 's/@/%40/g')
-				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/dev/null | cut -c1-7)
+				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy || git config http.proxy $(get_proxy); git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/dev/null | cut -c1-7)
 				[[ ${debug} == 1 ]] && set -x
 				[[ ${REMOTEID} == "" ]] && sleep 3 || break
 			done
@@ -340,6 +340,7 @@ function check_updates() {
 					EC='continue'
 				fi
 			fi
+			git config --remove-section http
 			[[ ${reset_proxy} == "true" ]] && source ~/.bashrc /etc/profile /etc/environment
 			${EC}
 		fi
