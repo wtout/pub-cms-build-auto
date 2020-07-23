@@ -1,42 +1,35 @@
 ---
 # Tasks to start a new /var/log/messages file on the VM
 - block:
-  - name: check if {{ sys_msgs }} file exist
+  - name: get list of old system messages files
+    find:
+      path: "{{ syslog_path }}"
+      patterns: "^messages-.*\\.gz$"
+      use_regex: yes
+    register: old_files
+
+  - name: delete old system messages files
+    file:
+      path: "{{ file_item.path }}"
+      state: absent
+    loop: "{{ old_files.files }}"
+    loop_control:
+      loop_var: file_item
+      label: "{{ file_item }}"
+    when: old_files.matched >= 1
+
+  - name: check if {{ sys_msgs }} file exists
     stat:
       path: "{{ sys_msgs }}"
     register: msgs_log
   - block:
-    - name: get date
-      command: date +"%Y%m%d"
-      register: date_string
-      check_mode: no
-    - name: compress {{ sys_msgs }}
-      archive:
+    - name: reset {{ sys_msgs }} file
+      lineinfile:
         path: "{{ sys_msgs }}"
-        dest: "{{ sys_msgs }}-{{ date_string.stdout }}.gz"
-        force: yes
-        format: gz
-        owner: root
-        group: root
-        mode: 0600
-    - name: create a new {{ sys_msgs }} file
-      copy:
-        content: ""
-        dest: "{{ sys_msgs }}"
-        force: yes
-        group: "{{ 'adm' if inventory_hostname is search('em7') else 'root' }}"
-        owner: root
-        mode: 0640
+        regexp: "^.*$"
+        state: absent
+    - include_tasks: task_bounce_syslogd.yml
     when: msgs_log.stat.exists
-  - name: create a new {{ sys_msgs }} file
-    copy:
-      content: ""
-      dest: "{{ sys_msgs }}"
-      force: yes
-      group: adm
-      owner: root
-      mode: 0640
-    when: not msgs_log.stat.exists
   when: ansible_ssh_pass != postppp
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration
