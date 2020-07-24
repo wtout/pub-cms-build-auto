@@ -1,4 +1,5 @@
 ---
 # vars file for vm_configuration
 chrony_file: '/etc/chrony.conf'
-sys_msgs: '/var/log/messages'
+syslog_path: '/var/log'
+sys_msgs: "{{ syslog_path }}/messages"
