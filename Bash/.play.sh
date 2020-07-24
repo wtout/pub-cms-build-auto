@@ -107,6 +107,7 @@ function get_centos_release() {
 
 function get_proxy() {
 	chmod +x Bash/get*
+	grep '^proxy.*:.*@' /etc/environment /etc/profile ~/.bashrc ~/.bash_profile &>/dev/null && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 	local MYPROXY=$(grep -r "^proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
 	if [[ ${MYPROXY} == '' ]]
 	then
@@ -120,15 +121,17 @@ function get_proxy() {
 			echo ${MYPROXY}
 			return 0
 		else
+			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 			read -r PUSER <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_USER | cut -d "'" -f2)
 			read -r PPASS <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_PASS | cut -d "'" -f2)
-			local MYPROXY=$(echo ${MYPROXY} | sed -e "s|//.*@|//|g" -e sed "s|//|//${PUSER}:${PPASS}|g")
+			local MYPROXY=$(echo ${MYPROXY} | sed -e "s|//.*@|//|g" -e "s|//|//${PUSER}:${PPASS}@|g")
 			curl --proxy $(echo ${MYPROXY}) ${PUBLIC_ADDRESS} &>/dev/null
 			if [[ ${?} -eq 0 ]]
 			then
 				echo ${MYPROXY}
 				return 0
 			else
+				[[ ${debug} == 1 ]] && debug=0 && set -x
 				echo -e "\nProxy credentials are not valid. Aborting!\n"
 				return 1
 			fi
@@ -140,7 +143,9 @@ function add_proxy_yum() {
 	[[ ${#} -ne 2 ]] && echo -e "\nFunction add_proxy_yum requires 2 arguments\n" && exit 1
 	if [[ "${2}" != "" ]]
 	then
-		grep proxy /etc/yum.conf &>/dev/null || sudo -S sed -i "s|^\(\[main\]\)$|\1\nproxy=${1}|" /etc/yum.conf <<< ${2}
+		[[ "$(echo ${1} | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+		grep '^proxy' /etc/yum.conf &>/dev/null || sudo -S sed -i "s|^\(\[main\]\)$|\1\nproxy=${1}|" /etc/yum.conf <<< ${2}
+		[[ ${debug} == 1 ]] && debug=0 && set -x
 	else
 		echo -e "\nUnable to edit /etc/yum.conf without sudo password. Aborting!\n"
 		exit 1
@@ -158,8 +163,10 @@ function remove_proxy_yum() {
 }
 
 function install_packages() {
+	[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 	local PROXY_ADDRESS=$(get_proxy) || local FS=${?}
 	[[ ${FS} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${FS}
+	[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -ne 0 ]] && [[ ${debug} == 1 ]] && debug=0 && set -x
 	for pkg in ${PKG_LIST}
 	do
 		if [ "x$(yum list installed ${pkg} &>/dev/null;echo ${?})" == "x1" ]
@@ -200,14 +207,18 @@ function install_packages() {
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
 		printf "\nInstalling ansible on localhost ..."
+		[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 		pip3 install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
 		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
+		[[ ${debug} == 1 ]] && debug=0 && set -x
 	else
 		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
 		then
 			printf "\nUpgrading Ansible from version $(ansible --version | grep '^ansible' | cut -d ' ' -f2)"
+			[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 			pip3 install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
 			[[ ${?} == 0 ]] && printf " to version ${ANSIBLE_VERSION}\n" || exit 1
+			[[ ${debug} == 1 ]] && debug=0 && set -x
 		fi
 	fi
 }
@@ -277,6 +288,9 @@ function view_vault() {
 }
 
 function check_updates() {
+	local PROXY_ADDRESS=$(get_proxy) || local FS=${?}
+	[[ ${FS} -eq 1 ]] && exit ${FS}
+	[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -ne 0 ]] && [[ ${debug} == 1 ]] && debug=0 && set -x
 	if [[ "x$(git config user.name)" != "x" ]]
 	then
 		[[ -f ${1} ]] && grep 'REPOPASS=' ${1} 1>/dev/null && rm -f ${1}
@@ -287,7 +301,7 @@ function check_updates() {
 			retries=3
 			while [ ${i} -lt ${retries} ]
 			do
-				[[ $- =~ x ]] && debug=1 && set +x
+				[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 				if [[ ${REPOPASS} == "" ]]
 				then
 					[[ ${debug} == 1 ]] && set -x
@@ -302,7 +316,7 @@ function check_updates() {
 		else
 			echo
 			read -sp "Enter your Repository password [ENTER]: " REPOPASS
-			[[ $- =~ x ]] && debug=1 && set +x
+			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 			[[ -f ${1} ]] && rm -f ${1}
 			printf "REPOPASS='${REPOPASS}'\n" > ${1}
 			encrypt_vault ${1} ${2}
@@ -316,9 +330,9 @@ function check_updates() {
 			[[ $(git config --get remote.origin.url | grep "www-github") == "" ]] && [[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true"
 			for i in {1..3}
 			do
-				[[ $- =~ x ]] && debug=1 && set +x
+				[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 				local REPOPWD=$(echo ${REPOPASS} | sed -e 's/@/%40/g')
-				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy || git config http.proxy $(get_proxy); git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/dev/null | cut -c1-7)
+				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy || git config http.proxy ${PROXY_ADDRESS}; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/dev/null | cut -c1-7)
 				[[ ${debug} == 1 ]] && set -x
 				[[ ${REMOTEID} == "" ]] && sleep 3 || break
 			done
@@ -428,7 +442,7 @@ function get_credentials() {
 		[[ ${GET_CREDS_STATUS} != 0 ]] && exit 1
 		if [[ ${REPOPASS} != "" ]]
 		then
-			[[ $- =~ x ]] && debug=1 && set +x
+			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 			encrypt_vault ${CRVAULT} Bash/get_creds_vault_pass.sh
 			[[ ${debug} == 1 ]] && set -x
 		else
@@ -496,6 +510,7 @@ ANSIBLE_VERSION='2.9.10'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
 REPOVAULT="${PWD}/.repovault.yml"
+SECON=true
 
 # Main
 PID=${$}

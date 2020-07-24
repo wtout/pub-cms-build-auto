@@ -4,11 +4,13 @@
   - name: get proxy setting
     shell: grep -r "^proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
     register: proxy_string
+    no_log: true
     check_mode: no
 
   - name: define proxy_address
     set_fact:
       proxy_address: "{{ proxy_string.stdout }}"
+    no_log: "{{ true if proxy_string.stdout is regex(':.*@') else false }}"
 
   - name: validate detected proxy setting
     uri:
@@ -23,6 +25,7 @@
     - name: update proxy_address
       set_fact:
         proxy_address: "{{ proxy_address | regex_replace('//.*@', '//') \ regex_replace('//', '//' + SVC_USER + ':' + SVC_PASS + '@') }}"
+      no_log: true
     - name: validate updated proxy setting
       uri:
         url: "https://www.google.com"
