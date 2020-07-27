@@ -167,8 +167,10 @@ function install_packages() {
 	local PROXY_ADDRESS=$(get_proxy) || local FS=${?}
 	[[ ${FS} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${FS}
 	[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -ne 0 ]] && [[ ${debug} == 1 ]] && debug=0 && set -x
+	local OS_VERSION=$(get_centos_release)
 	for pkg in ${PKG_LIST}
 	do
+		[[ ${OS_VERSION} -eq 8 && "$(echo ${pkg} | grep python3)" != "" ]] && continue
 		if [ "x$(yum list installed ${pkg} &>/dev/null;echo ${?})" == "x1" ]
 		then
 			if [[ "x${SUDO_PASS}" == "x" ]]
@@ -186,24 +188,6 @@ function install_packages() {
 			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed ${pkg} | tail -1 | awk '{print $2}')\n" || exit 1
 		fi
 	done
-	if [[ $(get_centos_release) -ne 8 ]]
-	then
-		if [[ "x$(which pip3 2>/dev/null)" == "x" ]]
-		then
-			if [[ "x${SUDO_PASS}" == "x" ]]
-			then
-				echo
-				SUDO_PASS=$(get_sudopass) || FS=${?}
-				[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
-			fi
-			printf "\nInstalling python3 on localhost ..."
-			sudo -S yum install -y python3 --quiet <<< ${SUDO_PASS} 2>/dev/null
-			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed python3 | tail -1 | awk '{print $2}')\n" || exit 1
-			printf "\nInstalling libselinux-python3 on localhost ..."
-			sudo -S yum install -y libselinux-python3 --quiet <<< ${SUDO_PASS} 2>/dev/null
-			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed libselinux-python3 | tail -1 | awk '{print $2}')\n" || exit 1
-		fi
-	fi
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
 		printf "\nInstalling ansible on localhost ..."
@@ -327,12 +311,12 @@ function check_updates() {
 		if [ ${?} -eq 0 ]
 		then
 			local LOCALID=$(git rev-parse --short HEAD)
-			[[ $(git config --get remote.origin.url | grep "www-github") == "" ]] && [[ "x$(echo ${http_proxy})" != "x" ]] && reset_proxy="true"
+			[[ $(git config --get remote.origin.url | grep "www-github") == "" ]] && [[ "x$(echo ${http_proxy})" != "x" ]] && RESET_PROXY="true"
 			for i in {1..3}
 			do
 				[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 				local REPOPWD=$(echo ${REPOPASS} | sed -e 's/@/%40/g')
-				local REMOTEID=$([[ ${reset_proxy} ]] && unset https_proxy || git config http.proxy ${PROXY_ADDRESS}; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/dev/null | cut -c1-7)
+				local REMOTEID=$([[ ${RESET_PROXY} ]] && unset https_proxy || git config http.proxy ${PROXY_ADDRESS}; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/dev/null | cut -c1-7)
 				[[ ${debug} == 1 ]] && set -x
 				[[ ${REMOTEID} == "" ]] && sleep 3 || break
 			done
@@ -355,7 +339,7 @@ function check_updates() {
 				fi
 			fi
 			git config --remove-section http
-			[[ ${reset_proxy} == "true" ]] && source ~/.bashrc /etc/profile /etc/environment
+			[[ ${RESET_PROXY} == "true" ]] && source ~/.bashrc /etc/profile /etc/environment
 			${EC}
 		fi
 	fi
@@ -505,7 +489,7 @@ ANSIBLE_CFG="./ansible.cfg"
 ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
-PKG_LIST="epel-release sshpass"
+PKG_LIST="epel-release sshpass python3 libselinux-python3 python3-pip"
 ANSIBLE_VERSION='2.9.10'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"

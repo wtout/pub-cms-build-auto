@@ -35,9 +35,14 @@
       register: certs_on_puppet2
       delegate_to: "{{ groups['puppet']|first }}"
       run_once: true
-    - name: check if certificate is created on server
+    - name: look for certificate on server
       set_fact:
         cert_exists2: "{{ certs_on_puppet2.stdout_lines|default([]) | select('search', host_cert_name) | list | length == 1 }}"
+    - name: check if certificate is created on server
+      assert:
+        that:
+          - cert_exists2
+        fail_msg: "Certificate could not be created for host. Aborting!"
     when: not cert_exists1|default(false)
   - name: puppet sign certs
     shell: >

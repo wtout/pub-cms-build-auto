@@ -52,8 +52,7 @@
     set_fact:
       delete_client_cert_on_server: true
     when:
-      - client_cert_on_server != ''
-      - not client_cert_status.stat.exists
+      - client_cert_on_server != '' and (not client_cert_status.stat.exists or client_cert_match is failed)
 
   - name: define delete client cert on VM
     set_fact:

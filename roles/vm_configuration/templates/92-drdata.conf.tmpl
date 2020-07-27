@@ -6,7 +6,7 @@ secondary_relay_server_IP={{ drrly_ip1_list[1] if drrly_ip1_list|length >= 2 els
 mcIP={{ netconfig.ipaddress1 }}
 ipaddress1={{ netconfig.ipaddress1 }}
 ipaddress2={{ netconfig.ipaddress2 }}
-isGeoServer=False
+isGeoServer=True
 netscalar_ip_list={{ customer.secondary.octets }}.53,{{ customer.secondary.octets }}.54,{{ customer.secondary.octets }}.55
 netscaler_ip1={{ customer.secondary.octets }}.53
 netscaler_ip2={{ customer.secondary.octets }}.54
