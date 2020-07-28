@@ -1,0 +1,7 @@
+---
+# Tasks to recreate VM
+- block:
+  - include_tasks: task_delete_vm.yml
+  - include_tasks: task_deploy_ova.yml
+  - include_tasks: task_update_disks.yml
+  tags: vm_creation

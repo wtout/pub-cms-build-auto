@@ -1,14 +1,19 @@
 ---
 # Tasks to copy the ISO file to datastore
 - block:
+  - name: define iso_datastore and iso_path
+    set_fact:
+      iso_datastore: "{{ hostvars[groups['vcenter'][0]]['information']['storage_datastore'] if hostvars[groups['vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}"
+      iso_path: "ISO{{ '/' + hostvars[groups['vcenter'][0]]['information']['storage_path'] if hostvars[groups['vcenter'][0]]['information']['storage_path'] != '' else '' }}"
+
   - name: create a directory on the datastore
     vsphere_file:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
-      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}"
+      datastore: "{{ iso_datastore }}"
+      path: "{{ iso_path }}"
       state: directory
       validate_certs: false
     register: ds_folder
@@ -22,9 +27,9 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+      datastore: "{{ iso_datastore }}"
       src: "{{ role_path }}/files/{{ vm.name }}-kickstart.iso"
-      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+      path: "{{ iso_path }}/{{ vm.name }}-kickstart.iso"
       validate_certs: false
     when: ds_folder is succeeded
 
@@ -34,14 +39,14 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
-      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ iso_installer }}"
+      datastore: "{{ iso_datastore }}"
+      path: "{{ iso_path }}/{{ iso_installer }}"
       state: file
       validate_certs: false
     register: iso_present
     ignore_errors: true
     when: ds_folder is succeeded
-    run_once: "{{ true if hostvars[groups['vcenter'][0]]['information']['datacenter'] is regex('PAE-HX-DC|RTP5') else false }}"
+    run_once: "{{ true if hostvars[groups['vcenter'][0]]['information']['deptype'] is search('h') else false }}"
 
   - name: copy installer ISO file to vsphere
     vsphere_copy:
@@ -49,13 +54,13 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+      datastore: "{{ iso_datastore }}"
       src: "{{ auto_dir }}/Packages/ISO/{{ iso_installer }}"
-      dest: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ iso_installer }}"
+      dest: "{{ iso_path }}/{{ iso_installer }}"
       validate_certs: false
     async: 7200
     poll: 30
-    run_once: "{{ true if hostvars[groups['vcenter'][0]]['information']['datacenter'] is regex('PAE-HX-DC|RTP5') else false }}"
+    run_once: "{{ true if hostvars[groups['vcenter'][0]]['information']['deptype'] is search('h') else false }}"
     when:
       - iso_present is failed
       - not ansible_check_mode

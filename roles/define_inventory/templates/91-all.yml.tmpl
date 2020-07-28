@@ -9,23 +9,27 @@ customer:
   # Official build name
   name: '{{ environment_definition.customer.name }}'
 
-  # Primary name prefix
-  name_prefix: '{{ environment_definition.customer.primary.name_prefix }}'
-
-  # Primary first 3 octets
-  octets: '{{ environment_definition.customer.primary.octets }}'
+  # Release version
+  release: '{{ environment_definition.customer.release_version }}'
 
   # Disaster recovery (boolean yes/no)
   disaster_recovery: {{ environment_definition.customer.disaster_recovery }}
 
-  # Secondary name prefix
-  secondary_name_prefix: '{{ environment_definition.customer.secondary.name_prefix if environment_definition.customer.disaster_recovery else "" }}'
+  primary:
 
-  # Secondary first 3 octets
-  secondary_octets: '{{ environment_definition.customer.secondary.octets if environment_definition.customer.disaster_recovery else "" }}'
+    # Primary name prefix
+    name_prefix: '{{ environment_definition.customer.primary.name_prefix }}'
 
-  # Release version
-  release: '{{ environment_definition.customer.release_version }}'
+    # Primary first 3 octets
+    octets: '{{ environment_definition.customer.primary.octets }}'
+
+  secondary:
+
+    # Secondary name prefix
+    name_prefix: '{{ environment_definition.customer.secondary.name_prefix if environment_definition.customer.disaster_recovery else "" }}'
+
+    # Secondary first 3 octets
+    octets: '{{ environment_definition.customer.secondary.octets if environment_definition.customer.disaster_recovery else "" }}'
 
 
 ##################################################################################
@@ -74,8 +78,8 @@ sysconfig:
   domain_name: 'cisco-cms.com'
 
   # NTP server
-  ntp_server: "{{ '{{ customer.octets }}' + '.62' }}"
-  secondary_ntp_server: "{{ '{{ customer.secondary_octets }}' + '.62' if environment_definition.customer.disaster_recovery else '' }}"
+  ntp_server: "{{ '{{ customer.primary.octets }}' + '.62' }}"
+  secondary_ntp_server: "{{ '{{ customer.secondary.octets }}' + '.62' if environment_definition.customer.disaster_recovery else '' }}"
 
 
 ##################################################################################
@@ -156,22 +160,22 @@ splunk:
 vip:
 
   # Message collectors VIP
-  mc: "{{ '{{' }} customer.octets {{ '}}' }}.42"
+  mc: "{{ '{{' }} customer.primary.octets {{ '}}' }}.42"
 
   # EM7 portals (application servers) VIP
-  prt: "{{ '{{' }} customer.octets {{ '}}' }}.49"
+  prt: "{{ '{{' }} customer.primary.octets {{ '}}' }}.49"
 
   # EM7 databases VIP
-  db: "{{ '{{' }} customer.octets {{ '}}' }}.40"
+  db: "{{ '{{' }} customer.primary.octets {{ '}}' }}.40"
 
   # Splunk search heads VIP
-  src: "{{ '{{' }} customer.octets {{ '}}' }}.41"
+  src: "{{ '{{' }} customer.primary.octets {{ '}}' }}.41"
 
   # Relay servers VIP
-  rly: "{{ '{{' }} customer.octets {{ '}}' }}.120"
+  rly: "{{ '{{' }} customer.primary.octets {{ '}}' }}.120"
 
   # Relay servers database VIP
-  rly_db: "{{ '{{' }} customer.octets {{ '}}' }}.1"
+  rly_db: "{{ '{{' }} customer.primary.octets {{ '}}' }}.1"
 
 
 

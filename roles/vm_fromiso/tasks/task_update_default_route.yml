@@ -27,7 +27,7 @@
     - name: ping gateway1
       shell: |
         sleep 10
-        ping {{ (customer.secondary_octets if 'dr' in group_names else customer.octets) + '.62' }} -c 1
+        ping {{ (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62' }} -c 1
       register: gtw_ping
       async: 120
       poll: 10

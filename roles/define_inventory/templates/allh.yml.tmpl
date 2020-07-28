@@ -42,7 +42,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -61,7 +61,7 @@ vm_vars:
         netmask: '255.255.255.252'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-db-heartbeat" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-db-heartbeat" }}'
 
 
     ################
@@ -98,7 +98,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -117,7 +117,7 @@ vm_vars:
         netmask: '255.255.255.224'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\")}}-64-27-cust" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\")}}-64-27-cust" }}'
 
 
     ################
@@ -154,7 +154,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -210,7 +210,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -229,7 +229,7 @@ vm_vars:
         netmask: '255.255.255.224'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-96-27-lbnet" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-96-27-lbnet" }}'
 
 
   ################
@@ -271,7 +271,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -327,7 +327,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -383,7 +383,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -439,7 +439,7 @@ vm_vars:
         netmask: '255.255.255.192'
 
         # Network name
-        network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+        network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
       # Network interface 2
       ################
@@ -495,7 +495,7 @@ vm_vars:
       netmask: '255.255.255.192'
 
       # Network name
-      network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+      network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
     # Network interface 2
     ################
@@ -514,7 +514,7 @@ vm_vars:
       netmask: '255.255.255.224'
 
       # Network name
-      network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-64-27-cust" }}'
+      network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-64-27-cust" }}'
 
 
   ################
@@ -551,7 +551,7 @@ vm_vars:
       netmask: '255.255.255.192'
 
       # Network name
-      network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+      network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
 
     # Network interface 2
     ################
@@ -570,4 +570,4 @@ vm_vars:
       netmask: '255.255.255.224'
 
       # Network name
-      network: '{{ "QS-{{ customer.name_prefix }}-{{ customer.octets | replace(\".\", \"-\") }}-96-27-lbnet" }}'
+      network: '{{ "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-96-27-lbnet" }}'

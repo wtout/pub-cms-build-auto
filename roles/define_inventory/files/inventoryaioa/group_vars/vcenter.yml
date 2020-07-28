@@ -6,8 +6,8 @@ ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ ssh_username }}@{{ ssh_address }}"
 ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else '' }}"
 
 credentials:
-  username: "{{ datacenters[datacenter.name]['vsphere'].split('.')[-2].split('-')|last }}\\{{ VCENTER_USER | default('') }}"
-  password: "{{ VCENTER_PASS | default('') }}"
+  username: "{{ datacenters[datacenter.name]['vsphere'].split('.')[-2].split('-')|last }}\\{{ SVC_USER | default('') }}"
+  password: "{{ SVC_PASS | default('') }}"
 
 pcluster_name: "{{ (datacenter.resources[0].split('.')|last if datacenter.resources|length == 1 else (datacenter.resources[0].split('.')|last + '-' + datacenter.resources[1].split('.')|last) if datacenter.resources[0].split('.')|last|int < datacenter.resources[1].split('.')|last|int else (datacenter.resources[1].split('.')|last + '-' + datacenter.resources[0].split('.')|last)) if datacenter.resources != [] and datacenter.resources != [''] else '' }}"
 scluster_name: "{{ datacenter.resources[2].split('.')|last if (customer.disaster_recovery and datacenter.resources != [] and datacenter.resources != ['']) else '' }}"
@@ -19,7 +19,9 @@ information:
   resources: "{{ datacenter.resources if (datacenter.resources != [] and datacenter.resources != ['']) else datacenters[datacenter.name]['resources'] if datacenters[datacenter.name]['resources'] is defined else [] }}"
   hostuser: "{{ datacenter.hostuser if (datacenter.hostuser is defined and datacenter.hostuser != '') else ESXI_HOST_USER if ESXI_HOST_USER is defined else '' }}"
   hostpass: "{{ datacenter.hostpass if (datacenter.hostpass is defined and datacenter.hostpass != '') else ESXI_HOST_PASS if ESXI_HOST_PASS is defined else '' }}"
-  cluster: "{{ datacenter.pcluster if datacenter.pcluster != '' else datacenters[datacenter.name]['cluster'] if datacenters[datacenter.name]['cluster'] is defined else 'CMSP - '+ pcluster_name if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
+  cluster: "{{ datacenter.pcluster if datacenter.pcluster != '' else datacenters[datacenter.name]['cluster'] if (datacenters[datacenter.name]['cluster'] is defined and datacenters[datacenter.name]['cluster'] != '') else 'CMSP - '+ pcluster_name if datacenters[datacenter.name]['deptype'] == 'a' else '' }}"
   drcluster: "{{ datacenter.scluster if datacenter.scluster != '' else 'CMSP - '+ scluster_name if customer.disaster_recovery else '' }}"
   folder: "{{ datacenters[datacenter.name]['folder'] if datacenters[datacenter.name]['folder'] is defined else '' }}"
   datastore_cluster: "{{ datacenters[datacenter.name]['datastore_cluster'] if datacenters[datacenter.name]['datastore_cluster'] is defined else '' }}"
+  storage_datastore: "{{ datacenters[datacenter.name]['storage_datastore'] if datacenters[datacenter.name]['storage_datastore'] is defined else '' }}"
+  storage_path: "{{ datacenters[datacenter.name]['storage_path'] if datacenters[datacenter.name]['storage_path'] is defined else '' }}"

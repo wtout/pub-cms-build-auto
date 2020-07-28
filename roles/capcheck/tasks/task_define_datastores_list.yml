@@ -9,8 +9,9 @@
       loop_var: ds_item
       label: "{{ ds_item.name }}"
     when:
-      - ds_item.freeSpace >= (hostvars[groups[vm_group]|first]['vm']['disk']|int + hostvars[groups[vm_group]|first]['vm']['memory']|int) * 1024|pow(3)
+      - ds_item.freeSpace >= (hostvars[ansible_play_hosts|select('search', vm_group)|list|first]['vm']['disk']|int + hostvars[ansible_play_hosts|select('search', vm_group)|list|first]['vm']['memory']|int) * 1024|pow(3)
       - ds_item.name|lower is not regex('do not use|donotuse|backup')
+      - ds_item.name is regex('^.*-DS-[0-9]+$')
       - ds_item.maintenanceMode is search('normal')
 
   - name: check if there is at least 2 datastores to host {{ vm_group }}
@@ -18,7 +19,9 @@
       that:
         - "mylist|length >= 2"
       fail_msg: "Not enough storage space to deploy {{ vm_group }} VMs"
-    when: hostvars[groups[vm_group]|first]['vm']['name'] is not search('aio')
+    when:
+      - hostvars[ansible_play_hosts|select('search', vm_group)|list|first]['vm']['name'] is not search('aio')
+      - ansible_play_hosts|select('search', vm_group)|list|length >= 2
 
   - name: define {{ vm_group }} required space
     set_fact:
@@ -26,6 +29,7 @@
     loop: "{{ groups[vm_group] }}"
     loop_control:
       loop_var: task_item
+    when: task_item in ansible_play_hosts
 
   - name: define {{ vm_group }} datastores free space
     set_fact:

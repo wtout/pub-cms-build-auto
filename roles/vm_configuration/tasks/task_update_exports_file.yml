@@ -11,10 +11,10 @@
       path: /etc/exports
       line: "{{ line_item }}"
     loop:
-      - /backup/em7/config {{ customer.secondary_octets if 'dr' in group_names else customer.octets }}.13(rw,all_squash,anonuid=600,anongid=600)
-      - /backup/em7/full {{ customer.secondary_octets if 'dr' in group_names else customer.octets }}.13(rw,all_squash,anonuid=600,anongid=600) 
-      - /backup/em7/config {{ customer.secondary_octets if 'dr' in group_names else customer.octets }}.14(rw,all_squash,anonuid=600,anongid=600)
-      - /backup/em7/full {{ customer.secondary_octets if 'dr' in group_names else customer.octets }}.14(rw,all_squash,anonuid=600,anongid=600)
+      - /backup/em7/config {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.13(rw,all_squash,anonuid=600,anongid=600)
+      - /backup/em7/full {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.13(rw,all_squash,anonuid=600,anongid=600) 
+      - /backup/em7/config {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.14(rw,all_squash,anonuid=600,anongid=600)
+      - /backup/em7/full {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.14(rw,all_squash,anonuid=600,anongid=600)
     loop_control:
       loop_var: line_item
     register: exports_update

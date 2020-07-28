@@ -42,10 +42,6 @@
   tags: vm_configuration
 
 - block:
-  - name: get proxy setting
-    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-    register: proxy_string
-    check_mode: no
   - name: connect to sciencelogic api to get a license
     uri:
       url: https://portal.sciencelogic.com/portal/license_api
@@ -66,8 +62,8 @@
     retries: 3
     delay: 5
     environment:
-      http_proxy: "{{ proxy_string.stdout }}"
-      https_proxy: "{{ proxy_string.stdout }}"
+      http_proxy: "{{ proxy_address }}"
+      https_proxy: "{{ proxy_address }}"
   when:
     - inventory_hostname is search('em7')
     - inventory_hostname is not regex('mc|dc') or customer.release is not search('9.2')
@@ -123,7 +119,17 @@
     when: inventory_hostname is search('prt')
   - name: load the EM7 license
     shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
+    register: load_license
+    ignore_errors: "{{ true if inventory_hostname is regex('em7[prt|db]') else false }}"
     become: "{{ true if inventory_hostname is search('em7') else false }}"
+  - block:
+    - include_tasks: task_update_password_silo_file.yml
+    - name: re-load the EM7 license
+      shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
+    when:
+      - load_license is failed
+      - inventory_hostname is regex('em7[prt|db]')
   - block:
     - name: reboot the VM
       reboot:

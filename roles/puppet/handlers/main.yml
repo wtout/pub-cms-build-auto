@@ -1,12 +1,2 @@
 ---
 # handlers file for puppet
-- name: puppet sign certs
-  shell: >
-    /usr/local/bin/puppet cert sign {{ (ansible_user + '.') if inventory_hostname is search('em7') else '' }}{{ vm.name }}.{{ sysconfig.domain_name }}
-  register: pcs
-  until: pcs is succeeded
-  retries: 5
-  become: true
-  ignore_errors: true
-  delegate_to: "{{ groups['puppet']|first }}"
-  tags: puppet
