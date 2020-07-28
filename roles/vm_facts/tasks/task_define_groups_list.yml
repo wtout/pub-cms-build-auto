@@ -18,4 +18,3 @@
     run_once: true
     when:  customer.disaster_recovery
   tags: ['always', 'vm_facts']
-

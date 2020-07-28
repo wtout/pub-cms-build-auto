@@ -1,0 +1,135 @@
+---
+# Task file to configure VPX
+- block:
+  - name: Check OVA deployment status
+    async_status:
+      jid: "{{ nsvpx_deployment.ansible_job_id }}"
+    register: nsvpx_poll_results
+    until: nsvpx_poll_results.finished
+    retries: 60
+
+  - name: Update VM hardware settings with correct NICs
+    vmware_guest:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      datacenter: "{{ datacenter.name }}"
+      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if inventory_hostname is search('dr') else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      networks:
+        - name: "{{ netconfig.network1 }}"
+          device_type: e1000
+        - name: "{{ netconfig.network2 }}"
+          device_type: e1000
+      customvalues:
+        - key: machine.id
+          value: "ip={{ netconfig.ipaddress1 }}&netmask={{ netconfig.netmask1 }}&gateway={{ netconfig.gateway1 }}"
+      customization:
+        dns_servers: "{{ sysconfig.dns_servers }}"
+        hostname: "{{ vm.name }}"
+      validate_certs: no
+    
+  - name: Power on Netscaler
+    vmware_guest_powerstate:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      state: powered-on
+      validate_certs: no
+    register: power
+
+  - name: Wait for Netscaler to boot
+    pause:
+      seconds: 130
+    when: power.changed
+
+  - name: Define Netscaler key
+    shell: ssh-keyscan -t rsa {{ netconfig.ipaddress1 }}
+    register: host_key
+
+  - name: Add Netscaler key to known_hosts
+    known_hosts:
+      name: "{{ netconfig.ipaddress1 }}"
+      key: "{{ host_key.stdout }}"
+      state: present
+
+  - name: Check credentials
+    shell: sshpass -p {{ credentials.password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'exit'
+    register: login_result
+    failed_when: login_result.rc != 0 and login_result.rc != 5 and login_result.rc != 6
+
+  - name: Retry add Netscaler key to known_hosts
+    known_hosts:
+      name: "{{ netconfig.ipaddress1 }}"
+      key: "{{ host_key.stdout }}"
+      state: present
+    when: login_result.rc == 6
+
+  - name: Update credentials
+    set_fact:
+      password: "{{ credentials.password if login_result.rc == 0 else credentials.complex_password }}"
+    no_log: yes
+
+  - name: Render configuration file
+    template:
+      src: "templates/{{ inventory_hostname }}.conf.j2"
+      dest: "{{ role_path }}/files/{{ inventory_hostname }}.conf"
+
+  - name: Upload Netscaler configuration file
+    vars:
+      conf_file: files/{{ inventory_hostname }}.conf
+    uri:
+      url: "http://{{ netconfig.ipaddress1 }}/nitro/v1/config/systemfile"
+      method: POST
+      status_code: 201
+      return_content: yes
+      headers:
+        X-NITRO-USER: "{{ credentials.username }}"
+        X-NITRO-PASS: "{{ password }}"
+      body_format: json
+      body:
+        systemfile:
+          filename: "config"
+          filecontent: "{{ lookup('file', conf_file) | b64encode }}"
+          filelocation: "/tmp/"
+      validate_certs: no
+    environment:
+      http_proxy: ""
+      https_proxy: ""
+    register: upload
+    failed_when: upload.status != 201 and not upload.content is search('1642')
+
+  - name: Apply Netscaler 1 configuration
+    shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
+    register: config_1
+    no_log: yes
+    failed_when: config_1.rc > 1
+    when: inventory_hostname is search('01')
+
+  - name: Apply Netscaler 2 configuration
+    shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
+    register: config_2
+    no_log: yes
+    failed_when: config_2.rc > 1
+    when: inventory_hostname is search('02')
+  
+  - name: Define Netscaler serial number
+    block:
+    - shell: sshpass -p {{ credentials.complex_password }} ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'shell lmutil lmhostid'
+      register: hostid
+      no_log: yes
+    - set_fact:
+        serial_number: "{{ (hostid.stdout.split('\"'))[1] }}"
+
+  - name: Define Netscaler key
+    shell: ssh-keyscan -t rsa {{ netconfig.ipaddress1 }}
+    register: host_key
+
+  - name: Remove Netscaler key from known_hosts
+    known_hosts:
+      name: "{{ netconfig.ipaddress1 }}"
+      key: "{{ host_key.stdout }}"
+      state: absent
+  tags: ['build_infra_nodes', 'never']
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

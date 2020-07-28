@@ -1,0 +1,77 @@
+---
+# tasks file for build_infra_nodes
+- block:
+  - name: Deploy infrastructure
+    block:
+    - name: Create datastores
+      block:
+      - include_tasks:
+          file: task_create_datastores.yml
+          apply:
+            vars:
+              resource: "{{ resource }}"
+              customer_prefix: "{{ customer.name_prefix }}"
+              count: "{{ count }}"
+        loop: "{{ resources[:2] }}"
+        loop_control:
+          loop_var: resource
+          index_var: count
+
+      - include_tasks:
+          file: task_create_datastores.yml
+          apply:
+            vars:
+              resource: "{{ resources | last }}"
+              customer_prefix: "{{ customer.secondary_name_prefix }}"
+              count: 0
+        when: customer.disaster_recovery
+
+    - name: Add vSwitches
+      include_tasks: 
+        file: task_add_vswitches.yml
+        apply:
+          vars:
+            resource: "{{ resource }}"
+      loop: "{{ resources }}"
+      loop_control:
+        loop_var: resource
+
+    - name: Create portgroups
+      block:
+      - include_tasks:
+          file: task_create_portgroups.yml
+          apply:
+            vars:
+              resource: "{{ resource }}"
+              customer_prefix: "{{ customer.name_prefix }}"
+        loop: "{{ resources[:2] }}"
+        loop_control:
+          loop_var: resource
+
+      - include_tasks:
+          file: task_create_portgroups.yml
+          apply:
+            vars:
+              resource: "{{ resources | last }}"
+              customer_prefix: "{{ customer.secondary_name_prefix }}"
+              count: 1
+        when: customer.disaster_recovery
+   
+    - name: Create clusters
+      include_tasks: task_create_clusters.yml
+    when: configure_infra | default(false) | bool
+    tags: ['configure_infra', 'build_infra_nodes', 'capcheck', 'vm_creation']
+
+  - name: Rollback infrastructure
+    include_tasks: task_rollback_infra.yml
+    loop:
+      - task_delete_datastores.yml
+      - task_remove_vswitches.yml
+      - task_delete_portgroups.yml
+      - task_remove_hosts_from_cluster.yml
+      - task_delete_cluster.yml
+    loop_control:
+      loop_var: rollback_task
+    when: rollback_infra | default(false) | bool
+    tags: ['configure_infra']
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

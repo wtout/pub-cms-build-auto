@@ -1,0 +1,32 @@
+---
+# Task file to delete infra nodes
+- block:
+  - name: Delete VM
+    vmware_guest:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      datacenter: "{{ datacenter.name }}"
+      state: absent
+      force: yes
+      validate_certs: no
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost' }}"
+    when: not inventory_hostname is search('nexus')
+
+  - block:
+    - name: Define Netscaler key
+      shell: ssh-keyscan -t rsa {{ netconfig.ipaddress1 }}
+      register: host_key
+
+    - name: Remove Netscaler 2 from known_hosts
+      known_hosts:
+        name: "{{ netconfig.ipaddress1 }}"
+        key: "{{ host_key.stdout }}"
+        state: absent
+    when: inventory_hostname is search('nsvpx')
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost' }}"
+
+  - include_tasks: task_rollback_nexus_update.yml
+    when: inventory_hostname is search('nexus')
+  tags: ['build_infra_nodes', 'never']

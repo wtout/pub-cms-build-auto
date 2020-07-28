@@ -1,0 +1,57 @@
+---
+# Task file to update Nexus switch with CSR route
+- block:
+  - block:
+    - name: Define existing static IP routes
+      nxos_command:
+        commands: 'sh run | i route'
+      register: static_routes_list
+
+    - set_fact:
+        existing_route: "{{ static_routes_list.stdout_lines[0] | select('search', dhcp_address) | list | first }}"
+      when: "{{ static_routes_list.stdout_lines[0] | select('search', dhcp_address) | list != [] }}"
+
+    - name: Remove dead DHCP entry from nexus
+      nxos_command:
+        commands:
+          - configure terminal
+          - "no {{ existing_route }}"
+      when:
+        - existing_route is defined
+        - not existing_route is search(customer.octets)
+
+    - name: Add new DHCP entry
+      nxos_command:
+        commands:
+          - configure terminal
+          - "ip route {{ customer.octets }}.0/24 {{ dhcp_address }}"
+      when: (not existing_route is defined) or (not existing_route is search(customer.octets))
+    when: not dr_route
+
+  - block:
+    - name: Define existing static IP routes
+      nxos_command:
+        commands: 'sh run | i route'
+      register: static_routes_list
+
+    - set_fact:
+        existing_dr_route: "{{ static_routes_list.stdout_lines[0] | select('search', dhcp_address) | list | first }}"
+      when: "{{ static_routes_list.stdout_lines[0] | select('search', dhcp_address) | list != [] }}"
+
+    - name: Remove dead DHCP entry from nexus
+      nxos_command:
+        commands:
+          - configure terminal
+          - "no {{ existing_dr_route }}"
+      when:
+        - existing_dr_route is defined
+        - not existing_dr_route is search(customer.secondary_octets)
+
+    - name: Add new DHCP entry
+      nxos_command:
+        commands:
+          - configure terminal
+          - "ip route {{ customer.secondary_octets }}.0/24 {{ dhcp_address }}"
+      when: (not existing_dr_route is defined) or (not existing_dr_route is search(customer.secondary_octets))
+    when: dr_route
+  tags: ['build_infra_nodes', 'never']

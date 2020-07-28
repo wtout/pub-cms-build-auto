@@ -1,0 +1,29 @@
+---
+# tasks file to delete datastores
+- block:
+  - name: Define existing datastores
+    vmware_datastore_info:
+      hostname: "{{ resource }}"
+      username: "{{ information.hostuser }}"
+      password: "{{ information.hostpass }}"
+      validate_certs: no
+    register: existing_datastores
+
+  - debug:
+      msg: "DATASTORES: {{ existing_datastores }}"
+
+  - name: Unmount datastore
+    vmware_host_datastore:
+      hostname: "{{ resource }}"
+      username: "{{ information.hostuser }}"
+      password: "{{ information.hostpass }}"
+      datastore_name: "{{ datastore.name }}"
+      validate_certs: no
+      state: absent
+    register: response
+    ignore_errors: yes
+    loop: "{{ existing_datastores.datastores }}"
+    loop_control:
+      loop_var: datastore
+    when: existing_datastores.datastores != []
+  tags: ['configure_infra', 'build_infra_nodes', 'capcheck', 'vm_creation']

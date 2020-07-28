@@ -1,5 +1,12 @@
 ---
 # Variables for csr hosts
+ansible_user: 'admin'
+ansible_ssh_pass: "{{ CSR_PASS|default('') }}"
+ansible_become: yes
+ansible_become_method: enable
+ansible_network_os: ios
+ansible_connection: network_cli
+
 credentials:
   username: 'admin'
   password: "{{ CSR_PASS|default('') }}"
@@ -34,3 +41,17 @@ netconfig:
   gateway3: "{{ customer.octets + '.' + vm_vars.infra.csr.nic3.gtw_octet if vm_vars.infra.csr.nic3.gtw_octet != '' else '' }}"
   netmask3: "{{ vm_vars.infra.csr.nic3.netmask }}"
   network3: "{{ customer.name_prefix + '-' + vm_vars.infra.csr.nic3.network if vm_vars.infra.csr.nic3.network != '' else '' }}"
+
+  netname4: "{{ vm_vars.infra.csr.nic4.name }}"
+  ippool4: "{{ vm_vars.infra.csr.nic4.ip_pool | default([]) }}"
+  octetpool4: "{{ vm_vars.infra.csr.nic4.ip_octetpool | default([]) }}"
+  gateway4: "{{ customer.octets + '.' + vm_vars.infra.csr.nic4.gtw_octet if vm_vars.infra.csr.nic4.gtw_octet != '' else '' }}"
+  netmask4: "{{ vm_vars.infra.csr.nic4.netmask }}"
+  network4: "{{ customer.name_prefix + '-' + vm_vars.infra.csr.nic4.network if vm_vars.infra.csr.nic4.network != '' else '' }}"
+
+  netname5: "{{ vm_vars.infra.csr.nic5.name }}"
+  ippool5: "{{ vm_vars.infra.csr.nic5.ip_pool | default([]) }}"
+  octetpool5: "{{ vm_vars.infra.csr.nic5.ip_octetpool | default([]) }}"
+  gateway5: "{{ customer.octets + '.' + vm_vars.infra.csr.nic5.gtw_octet if vm_vars.infra.csr.nic5.gtw_octet != '' else '' }}"
+  netmask5: "{{ vm_vars.infra.csr.nic5.netmask }}"
+  network5: "{{ customer.name_prefix + '-' + vm_vars.infra.csr.nic5.network if vm_vars.infra.csr.nic5.network != '' else '' }}"

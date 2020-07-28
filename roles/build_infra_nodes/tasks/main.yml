@@ -1,0 +1,11 @@
+---
+# tasks file for build_infra_nodes
+- block:
+  - name: Deploy infra nodes
+    include_tasks: task_create_infra_nodes.yml
+    when: build_infra_nodes | default(false) | bool
+
+  - name: Rollback infra nodes
+    include_tasks: task_rollback_infra_nodes.yml
+    when: rollback_infra_nodes | default(false) | bool
+  tags: ['build_infra_nodes', 'never']

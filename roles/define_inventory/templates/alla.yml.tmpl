@@ -600,6 +600,44 @@ vm_vars:
       nic1:
 
       # Interface name
+        name: ''
+
+      # IP fourth octet pool
+        ip_octetpool: ''
+
+      # Gateway fourth octet
+        gtw_octet: ''
+
+      # Netmask
+        netmask: ''
+
+      # Network name
+        network: 'Customer-Net-Internet'
+
+    # Network interface 2
+    ################
+      nic2:
+
+      # Interface name
+        name: ''
+
+      # IP fourth octet pool
+        ip_octetpool: ''
+
+      # Gateway fourth octet
+        gtw_octet: ''
+
+      # Netmask
+        netmask: ''
+
+      # Network name
+        network: 'Customer-Net-Outside'
+
+    # Network interface 3
+    ################
+      nic3:
+
+      # Interface name
         name: 'ens160'
 
       # IP fourth octet pool
@@ -614,9 +652,9 @@ vm_vars:
       # Network name
         network: 'Internal-Net'
 
-    # Network interface 2
+    # Network interface 4
     ################
-      nic2:
+      nic4:
 
       # Interface name
         name: 'ens192'
@@ -633,9 +671,9 @@ vm_vars:
       # Network name
         network: 'Customer-Net-Inside'
 
-    # Network interface 3
+    # Network interface 5
     ################
-      nic3:
+      nic5:
 
       # Interface name
         name: 'ens224'
@@ -644,7 +682,7 @@ vm_vars:
         ip_octetpool: "{{ range(124, 125 + 1)|list }}"
 
       # Gateway fourth octet
-        gtw_octet: '123'
+        gtw_octet: '126'
 
       # Netmask
         netmask: '255.255.255.224'
@@ -670,12 +708,13 @@ vm_vars:
       disk2: "{{ environment_definition.vm_size.infra.nsvpx.disk2 if (environment_definition.vm_size.infra.nsvpx.disk2 is defined and environment_definition.vm_size.infra.nsvpx.disk2 != none) else '0' }}"
       disk3: "{{ environment_definition.vm_size.infra.nsvpx.disk3 if (environment_definition.vm_size.infra.nsvpx.disk3 is defined and environment_definition.vm_size.infra.nsvpx.disk3 != none) else '0' }}"
 
+
       # Network interface 1
       ################
       nic1:
 
         # Interface name
-        name: 'ens160'
+        name: '0/1'
 
         # IP fourth octet pool
         ip_octetpool: "{{ range(53, 54 + 1)|list }}"
@@ -694,19 +733,19 @@ vm_vars:
       nic2:
 
         # Interface name
-        name: ''
+        name: '1/1'
 
         # IP fourth octet pool
-        ip_octetpool: []
+        ip_octetpool: ''
 
-        # Gateway fourth octet
+      # Gateway fourth octet
         gtw_octet: ''
 
-        # Netmask
+      # Netmask
         netmask: ''
 
         # Network name
-        network: ''
+        network: 'Loadbalancer-Net'
 
 
     ################
@@ -725,12 +764,25 @@ vm_vars:
       disk1: "{{ environment_definition.vm_size.infra.winjmp.disk1 if (environment_definition.vm_size.infra.winjmp.disk1 is defined and environment_definition.vm_size.infra.winjmp.disk1 != none) else '100' }}"
       disk2: "{{ environment_definition.vm_size.infra.winjmp.disk2 if (environment_definition.vm_size.infra.winjmp.disk2 is defined and environment_definition.vm_size.infra.winjmp.disk2 != none) else '0' }}"
 
+      # Static route IPs
+      static_ips:
+        - ip: 172.21.240.0
+          netmask: 255.255.240.0
+        - ip: 172.19.240.0
+          netmask: 255.255.240.0
+        - ip: 172.26.9.0
+          netmask: 255.255.255.0
+        - ip: 172.30.240.0
+          netmask: 255.255.255.0
+
       # Network interface 1
       ################
       nic1:
 
         # Interface name
-        name: 'ens160'
+        name: 'QS Head-end'
+
+        default_name: 'Ethernet0'
 
         # IP fourth octet pool
         ip_octetpool: [ '59', '57' ]
@@ -749,7 +801,9 @@ vm_vars:
       nic2:
 
         # Interface name
-        name: 'ens192'
+        name: 'Customer Inner-net'
+
+        default_name: 'Ethernet1'
 
         # IP fourth octet pool
         ip_octetpool: [ '75', '73' ]

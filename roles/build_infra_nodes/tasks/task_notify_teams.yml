@@ -1,0 +1,33 @@
+---
+# Task file for notifying teams with csr serial no. for license
+- block:
+  - name: Get proxy setting
+    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
+    register: proxy_string
+    run_once: true
+
+  - name: Generate notification message
+    set_fact:
+      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [item] | list }}"
+    loop:
+      - "**Infra Serial Numbers**"
+      - "{{ customer.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['csr01']['serial_number'] }}"
+      - "{{ customer.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['csr02']['serial_number'] }}"
+      - "{{ customer.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['nsvpx01']['serial_number'] }}"
+      - "{{ customer.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['nsvpx02']['serial_number'] }}"
+
+  - name: Send notification via Webex Teams with infra serial numbers 
+    uri:
+      url: "https://webexapis.com/v1/messages"
+      method: POST
+      headers:
+        Authorization: "Bearer MDZlM2NiNjktNTNjNi00ZDNiLWE5ZDYtMjRkZjk4NTljYTdmMzI5ZWU0YTUtZWY0_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
+      body_format: json
+      body: 
+        roomId: Y2lzY29zcGFyazovL3VzL1JPT00vMzI0ZWY3YTAtZjZhYS0xMWU5LWE3ZmItMTM1MzQ3ZWE1NjQ2
+        markdown: "{{ NOTIF_MSG | join('  \n') }}"
+    environment:
+      http_proxy: "{{ proxy_string.stdout }}"
+      https_proxy: "{{ proxy_string.stdout }}"
+    run_once: true
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

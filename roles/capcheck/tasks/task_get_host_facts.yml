@@ -144,7 +144,7 @@
       loop_var: ds_item
       label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list }}"
     when:
-      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | reject('match', '^.+[02468]$') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet|nexus') | reject('match', '^.+[02468]$') | list | length >= 1
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex(myreg)
 
@@ -155,7 +155,7 @@
       fail_msg: "No SAS storage space available for the odd VMs of the stack"
       success_msg: "Found {{ stack01_sas_ds_names|length }} SAS storage space available for the odd VMs of the stack"
     when:
-      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | reject('match', '^.+[02468]$') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet|nexus') | reject('match', '^.+[02468]$') | list | length >= 1
 
   - name: define list of stack02 sas datastores with enough free space
     set_fact:
@@ -169,7 +169,7 @@
       loop_var: ds_item
       label: "{{ ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list }}"
     when:
-      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | select('match', '^.+[02468]$') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet|nexus') | select('match', '^.+[02468]$') | list | length >= 1
       - myvar|regex_replace(' [T|G]B', '')|float >= (vmvar|float / 1024 if myvar is search('TB') else vmvar|float)
       - ds_item.ansible_facts.ansible_datastore|selectattr('name', 'search', 'sas')|map(attribute='name')|list|first is not regex(myreg)
 
@@ -180,7 +180,7 @@
       fail_msg: "No SAS storage space available for the even VMs of the stack"
       success_msg: "Found {{ stack02_sas_ds_names|length }} SAS storage space available for the even VMs of the stack"
     when:
-      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | select('match', '^.+[02468]$') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet|nexus') | select('match', '^.+[02468]$') | list | length >= 1
 
   - name: define list of DR sas datastores with enough free space
     set_fact:
@@ -211,13 +211,13 @@
     set_fact:
       stack_sas_ds_names: "{{ stack01_sas_ds_names|default([]) | union(stack02_sas_ds_names|default([])) | sort }}"
     when:
-      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet|nexus') | list | length >= 1
 
   - name: define list of sas datastores with enough free space
     set_fact:
       sas_ds_names: "{{ stack_sas_ds_names|default([]) | union(dr_sas_ds_names|default([])) | sort }}"
     when:
-      - ansible_play_hosts | reject('search', 'em7db|vcenter|bastion|puppet') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'em7db|vcenter|bastion|puppet|nexus') | list | length >= 1
 
   - assert:
       that:
@@ -225,7 +225,7 @@
       fail_msg: "Not enough SAS storage space to deploy the non-DB VMs"
       success_msg: "Found {{ stack_sas_ds_names|length }} SAS datastores to deploy the stack non-DB VMs"
     when:
-      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet|nexus') | list | length >= 1
       - stack01_sas_ds_names|default([]) | length >= 1
       - stack02_sas_ds_names|default([]) | length >= 1
 
@@ -235,7 +235,7 @@
       fail_msg: "Not enough SAS storage space to deploy the non-DB VMs"
       success_msg: "Found {{ sas_ds_names|length }} SAS datastores to deploy the non-DB VMs"
     when:
-      - ansible_play_hosts | reject('search', 'em7db|vcenter|bastion|puppet') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'em7db|vcenter|bastion|puppet|nexus') | list | length >= 1
       - hostvars[groups['vcenter'][0]]['information']['resources']|length == 1
 
   - name: define ssd_ds_total_fs
@@ -260,7 +260,7 @@
       loop_var: ds_item
       label: "{{ ds_item.1.ansible_facts.ansible_datastore|selectattr('name', 'equalto', ds_item.0)|map(attribute='free')|list }}"
     when:
-      - ansible_play_hosts | reject('search', 'em7db|vcenter|bastion|puppet') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'em7db|vcenter|bastion|puppet|nexus') | list | length >= 1
 
   - name: define lists of datastores to host the VMs
     set_fact:
@@ -269,7 +269,7 @@
     loop_control:
       loop_var: group_item
     when:
-      - ansible_play_hosts | reject('search', 'dr|vcenter|bastion|puppet') | list | length >= 1
+      - ansible_play_hosts | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
   - name: define lists of datastores to host the DR VMs
     set_fact:
@@ -301,4 +301,5 @@
         - "{{ (ssd_ds_total_fs|default(0)|float / 1024|pow(4))|string + ' TiB' if ssd_ds_total_fs|default('0')|length > 12 else (ssd_ds_total_fs|default(0)|float / 1024|pow(3))|string + ' GiB' }}"
         - "{{ sas_ds_names|default([]) }}"
         - "{{ (sas_ds_total_fs|default(0)|float / 1024|pow(4))|string + ' TiB' if sas_ds_total_fs|default('0')|length > 12 else (sas_ds_total_fs|default(0)|float / 1024|pow(3))|string + ' GiB' }}"
-  tags: ['capcheck', 'vm_creation', 'puppet']
+  tags: ['capcheck', 'vm_creation', 'puppet', 'configure_infra', 'build_infra_nodes']
+  

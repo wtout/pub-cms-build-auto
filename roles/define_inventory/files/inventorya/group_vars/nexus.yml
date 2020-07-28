@@ -1,0 +1,6 @@
+---
+# Variables for nexus hosts
+ansible_connection: network_cli
+ansible_network_os: nxos
+ansible_user: admin
+ansible_ssh_pass: "{{ NEXUS_PASS|default('') }}"

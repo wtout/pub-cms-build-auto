@@ -1,0 +1,1 @@
+ansible_host: "{{ nexus.address[1] if nexus.address[1] is defined else '' }}"

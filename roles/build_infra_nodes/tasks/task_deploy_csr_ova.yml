@@ -1,0 +1,33 @@
+---
+# Task file to deploy CSR from ova
+- name: Deploy CSRs from OVA
+  vmware_deploy_ovf:
+    hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+    username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+    password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+    datacenter: "{{ datacenter.name }}"
+    cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if inventory_hostname is search('dr') else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+    datastore: "{{ 'HX-Datastore-Cluster' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else vm_ds }}"
+    folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+    name: "{{ vm.name }}"
+    networks: {}
+    ova: "{{ ova_dir }}/{{ customer.release }}/csr1000v-universalk9.16.09.02.ova"
+    power_on: no
+    wait: yes
+    allow_duplicates: no
+    validate_certs: no
+    properties:
+      com.cisco.csr1000v.login-username.1: "{{ credentials.username }}"
+      com.cisco.csr1000v.login-password.1: "{{ credentials.password }}"
+      com.cisco.csr1000v.enable-scp-server.1: 'True'
+      com.cisco.csr1000v.enable-ssh-server.1: 'True'
+      com.cisco.csr1000v.mgmt-ipv4-addr.1: 'dhcp'
+      com.cisco.csr1000v.mgmt-ipv4-gateway.1: "dhcp"
+      com.cisco.csr1000v.privilege-password.1 : "{{ credentials.password }}"
+      com.cisco.csr1000v.hostname.1 : "{{ vm.name }}"
+      com.cisco.csr1000v.domain-name.1 : "{{ sysconfig.domain_name }}"
+  environment:
+    http_proxy: ''
+    https_proxy: ''
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: ['build_infra_nodes', 'never']

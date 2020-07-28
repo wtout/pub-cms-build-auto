@@ -27,5 +27,5 @@
       new_item: "{'cluster': '{{ cluster_name|first }}'}"
 
   no_log: true
-  tags: ['capcheck', 'vm_creation', 'puppet']
-
+  tags: ['capcheck', 'vm_creation', 'puppet', 'configure_infra', 'build_infra_nodes']
+  

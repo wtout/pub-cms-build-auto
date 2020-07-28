@@ -4,7 +4,7 @@
   - name: get list of stack groups in play
     set_fact:
       play_stack_group_list: "{{ play_stack_group_list|default([]) | union([host_item[:-2]]) }}"
-    loop: "{{ ansible_play_hosts | reject('match', 'dr*|bastion*|puppet*|vcenter*') | list }}"
+    loop: "{{ ansible_play_hosts | reject('match', 'dr*|bastion*|puppet*|vcenter*|nexus*') | list }}"
     loop_control:
       loop_var: host_item
       label: "{{ host_item }}"
@@ -39,5 +39,5 @@
       - information.deptype == 'a'
 
   when: capcheck | default(false) | bool
-  tags: ['capcheck', 'vm_creation', 'puppet']
+  tags: ['capcheck', 'vm_creation', 'puppet', 'configure_infra', 'build_infra_nodes']
 
