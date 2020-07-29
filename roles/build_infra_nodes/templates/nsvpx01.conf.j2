@@ -3,17 +3,17 @@ enable ns mode FR L3 Edge USNIP PMTUD
 set snmp mib -name {{ vm.name }}
 set ns hostname {{ vm.name }}
 
-add route 172.19.248.0 255.255.248.0 {{ customer.octets }}.62
+add route 172.19.248.0 255.255.248.0 {{ customer.primary.octets }}.62
 
-add ns ip {{ customer.octets }}.55 255.255.255.192 -vServer DISABLED
-add ns ip {{ customer.octets }}.123 255.255.255.224 -vServer DISABLED -gui DISABLED -mgmtAccess ENABLED
-add route 172.30.100.0 255.255.255.0 {{ customer.octets }}.62
-add route 0.0.0.0 0.0.0.0 {{ customer.octets }}.126
+add ns ip {{ customer.primary.octets }}.55 255.255.255.192 -vServer DISABLED
+add ns ip {{ customer.primary.octets }}.123 255.255.255.224 -vServer DISABLED -gui DISABLED -mgmtAccess ENABLED
+add route 172.30.100.0 255.255.255.0 {{ customer.primary.octets }}.62
+add route 0.0.0.0 0.0.0.0 {{ customer.primary.octets }}.126
 
 set rsskeytype -rsstype ASYMMETRIC
 set lacp -sysPriority 32768 -mac 00:50:56:8d:4f:78
 
-add HA node 1 {{ customer.octets }}.54
+add HA node 1 {{ customer.primary.octets }}.54
 
 {% for server in nsvpx.configuration.servers %}
 add server {{ server.name }} {{ server.ipaddress }} -comment "{{ server.comment }}"
@@ -57,12 +57,12 @@ bind lb vserver {{ lb_server_bind.name }} {{ lb_server_bind.service }}
 add snmp community Ir0nh0rs3 ALL
 add snmp trap specific 172.19.254.23 -communityName Ir0nh0rs3
 
-add ntp server {{ customer.octets }}.62
+add ntp server {{ customer.primary.octets }}.62
 enable ntp sync
 
 add dns nameServer 172.19.251.21
 add dns nameServer 172.19.251.22
-rm route 0.0.0.0 0.0.0.0 {{ customer.octets }}.62
+rm route 0.0.0.0 0.0.0.0 {{ customer.primary.octets }}.62
 
 set system user nsroot C1sc0123
 

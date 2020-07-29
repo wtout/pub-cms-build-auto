@@ -10,7 +10,7 @@
           apply:
             vars:
               resource: "{{ resource }}"
-              customer_prefix: "{{ customer.name_prefix }}"
+              customer_prefix: "{{ customer.primary.name_prefix }}"
               count: "{{ count }}"
         loop: "{{ resources[:2] }}"
         loop_control:
@@ -22,7 +22,7 @@
           apply:
             vars:
               resource: "{{ resources | last }}"
-              customer_prefix: "{{ customer.secondary_name_prefix }}"
+              customer_prefix: "{{ customer.secondary.name_prefix }}"
               count: 0
         when: customer.disaster_recovery
 
@@ -43,7 +43,7 @@
           apply:
             vars:
               resource: "{{ resource }}"
-              customer_prefix: "{{ customer.name_prefix }}"
+              customer_prefix: "{{ customer.primary.name_prefix }}"
         loop: "{{ resources[:2] }}"
         loop_control:
           loop_var: resource
@@ -53,7 +53,7 @@
           apply:
             vars:
               resource: "{{ resources | last }}"
-              customer_prefix: "{{ customer.secondary_name_prefix }}"
+              customer_prefix: "{{ customer.secondary.name_prefix }}"
               count: 1
         when: customer.disaster_recovery
    

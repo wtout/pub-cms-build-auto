@@ -30,6 +30,7 @@
     - {role: "{{ auto_dir }}/roles/capcheck", when: capcheck | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/build_infra_nodes", when: build_infra_nodes | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/get_release", when: get_release | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/dns_records", when: add_dns_records | default(false) | bool}
 
 # Plays to create, configure the VMs and to run the puppet push
 - name: Deploy VMs
@@ -57,3 +58,4 @@
     - {role: "{{ auto_dir }}/roles/build_infra_nodes", when: rollback_infra_nodes | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/configure_infra", when: rollback_infra | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/ssh_keys", when: rollback_ssh_keys | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/dns_records", when: rollback_dns_records | default(false) | bool}

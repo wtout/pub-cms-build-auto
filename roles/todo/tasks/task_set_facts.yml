@@ -59,6 +59,22 @@
     - inventory_hostname in groups['infra'] or inventory_hostname in groups['nexus'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra'])
   tags: ['build_infra_nodes', 'configure_infra', 'never']
 
+- name: define add_dns_records
+  set_fact:
+    add_dns_records: true
+  when: 
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+  tags: [ 'dns_records', 'never' ]
+
+- name: define rollback_dns_records
+  set_fact:
+    rollback_dns_records: true
+  when: 
+    - rollback | default(false) | bool
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+  tags: [ 'dns_records', 'never' ]
+
 - name: define get_release
   set_fact:
     get_release: true

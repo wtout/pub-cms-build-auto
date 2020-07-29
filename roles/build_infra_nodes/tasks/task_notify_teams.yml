@@ -4,17 +4,34 @@
   - name: Get proxy setting
     shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
     register: proxy_string
-    run_once: true
-
+    
   - name: Generate notification message
     set_fact:
-      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [item] | list }}"
+      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line] | list }}"
     loop:
       - "**Infra Serial Numbers**"
-      - "{{ customer.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['csr01']['serial_number'] }}"
-      - "{{ customer.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['csr02']['serial_number'] }}"
-      - "{{ customer.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['nsvpx01']['serial_number'] }}"
-      - "{{ customer.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['nsvpx02']['serial_number'] }}"
+      - "{{ customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['csr01']['serial_number'] }}"
+      - "{{ customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['csr02']['serial_number'] }}"
+      - "{{ customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['nsvpx01']['serial_number'] }}"
+      - "{{ customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['nsvpx02']['serial_number'] }}"
+    loop_control:
+      loop_var: line
+    when: not customer.disaster_recovery
+
+  - name: Generate notification message (DR)
+    set_fact:
+      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line] | list }}"
+    loop:
+      - "**Infra Serial Numbers**"
+      - "{{ customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['csr01']['serial_number'] }}"
+      - "{{ customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['csr02']['serial_number'] }}"
+      - "{{ customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['nsvpx01']['serial_number'] }}"
+      - "{{ customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['nsvpx02']['serial_number'] }}"
+      - "{{ customer.secondary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['drcsr01']['serial_number'] }}"
+      - "{{ customer.secondary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['drnsvpx01']['serial_number'] }}"
+    loop_control:
+      loop_var: line
+    when: customer.disaster_recovery
 
   - name: Send notification via Webex Teams with infra serial numbers 
     uri:
@@ -29,5 +46,5 @@
     environment:
       http_proxy: "{{ proxy_string.stdout }}"
       https_proxy: "{{ proxy_string.stdout }}"
-    run_once: true
+  run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

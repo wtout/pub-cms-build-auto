@@ -1,7 +1,7 @@
 ---
 # Task file to configure Windows Jump Server
 - block:
-  - name: Wait for OVA deployment
+  - name: Wait for Windows Jump Server OVA deployment
     async_status:
       jid: "{{ winjmp_deployment.ansible_job_id }}"
     register: winjmp_poll_results

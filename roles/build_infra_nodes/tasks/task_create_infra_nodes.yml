@@ -54,10 +54,8 @@
     include_tasks: task_configure_winjmp.yml
     when: inventory_hostname is search('winjmp')
 
-  # - name: Add DNS records
-  #   include_tasks: task_add_dns_records.yml
-  #   when: not inventory_hostname is search('nexus')
-
-  # - name: Send Webex Teams notification with CSR/Netscaler serial numbers
-  #   include_tasks: task_notify_teams.yml
+  - name: Send Webex Teams notification with CSR/Netscaler serial numbers
+    include_tasks: task_notify_teams.yml
+    run_once: true
+    # when: inventory_hostname is search('')
   tags: ['build_infra_nodes', 'never']
