@@ -35,7 +35,7 @@
         find:
           paths: "{{ pkg_dir }}/Packages/{{ customer.release }}"
           file_type: file
-          patterns: '*.ova, *.tar, *.zip, *.gz, *.tgz, *.conf'
+          patterns: '*.ova,*.tar,*.zip,*.gz,*.tgz,*.conf'
           recurse: yes
           get_checksum: yes
         register: files_list
