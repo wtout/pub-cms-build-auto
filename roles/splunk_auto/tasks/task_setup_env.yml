@@ -1,0 +1,11 @@
+---
+# Tasks to set up splunk env
+- block:
+  - name: run the environment set up script
+    command: ./setup-env.sh
+    register: setup_env
+    args:
+      chdir: "{{ auto_dir }}/{{ spl_wd }}/dev/mdr-splunk-env"
+  delegate_to: localhost
+  run_once: true
+  tags: splunk_auto

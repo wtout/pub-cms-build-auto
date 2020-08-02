@@ -1,0 +1,165 @@
+---
+
+# Ideally the mdr drilldown_url and search head would be a vip
+drilldown_url_default: "{{ 'https://{{ groups[\'splunk_search_head\'][0] }}:8000' }}"
+search_head_default: "{{ '{{ groups[\'splunk_search_head\'][0] }}' }}"
+mdr:
+  drilldown_url: "{{ '{{ lookup(\'env\',\'SEARCHHEAD_URL\') or drilldown_url_default }}' }}"
+  search_head: "{{ '{{ lookup(\'env\',\'SEARCHHEAD_VIP\') or search_head_default }}' }}"
+  drilldown_app: cms_mdr_gsoc
+
+ansible_post_tasks: null
+ansible_pre_tasks: null
+hide_password: false
+lic_retry_num: 50
+retry_num: 50
+# retry_num: 50
+shc_bootstrap_delay: 30
+splunk_home_ownership_enforcement: true
+#ajs add delay_num
+delay_num: 10
+
+config:
+  baked: default.yml
+  defaults_dir: /tmp/defaults
+  env:
+    headers: null
+    var: SPLUNK_DEFAULTS_URL
+    verify: true
+  host:
+    headers: null
+    url: null
+    verify: true
+  max_delay: 60
+  max_retries: 3
+  max_timeout: 1200
+
+########################################################
+# Set some environment variables global, do not scope in splunk due to exception in defs
+ansbile_home: "{{ '{{ lookup(\'env\',\'HOME\') }}' }}"
+ansible_deploy_location: "{{ '{{ lookup(\'env\',\'HOME\') }}/deploy' }}"
+splunk_rpm: "{{ '{{ lookup(\'env\',\'SPLUNK_RPM\') or \'splunk-7.3.4-13e97039fb65-linux-2.6-x86_64.rpm\' }}' }}"
+phatnom_offline_tar: "{{ '{{ lookup(\'env\',\'PHANTOM_TAR\') or \'phantom_offline_setup_centos7-4.8.24304.tgz\' }}' }}"
+internal_dns_server: "{{ '{{ lookup(\'env\',\'INTERNAL_DNS\') or \'' + sysconfig.dns_servers|first + '\' }}' }}"
+
+splunk:
+########################################################
+# Set some environment variables
+  opt: /opt
+  home: /opt/splunk
+  pid: /opt/splunk/var/run/splunk/splunkd.pid
+  exec: /opt/splunk/bin/splunk
+
+# This defines the location of the local repository on the Automation Server
+  apps_location: null
+  apps_ds_location: "{{ '{{ ansible_deploy_location }}/splunkApps/deployment_server/' }}"
+  apps_cm_location: "{{ '{{ ansible_deploy_location }}/splunkApps/cluster_master/' }}"
+  apps_dpl_location: "{{ '{{ ansible_deploy_location }}/splunkApps/deployer/' }}"
+  apps_hf_location: "{{ '{{ ansible_deploy_location }}/splunkApps/hf/' }}"
+  apps_phantom_location: "{{ '{{ ansible_deploy_location }}/splunkApps/phantom/' }}"
+
+# Define directories that store applications in a Splunk Environment
+  app_paths:
+    default: /opt/splunk/etc/apps
+    deployment: /opt/splunk/etc/deployment-apps
+    httpinput: /opt/splunk/etc/apps/splunk_httpinput
+    idxc: /opt/splunk/etc/master-apps
+    shc: /opt/splunk/etc/shcluster/apps
+
+########################################################
+# Splunk Installation options - define user and group
+  build_location: "{{ '/tmp/{{ splunk_rpm }}' }}"
+  build_remote_src: false
+  enable_service: true
+  user: splunk
+  group: splunk
+
+# Flag to setup index clustering
+  indexer_cluster: true
+
+# Flag to setup Search head clustering
+  search_head_cluster: true
+
+# Flag to indicate we are upgrading Splunk - not tested
+  upgrade: false
+
+# Flag to signal this is an RPM Build
+  build_rpm: true
+
+# Flag that a deployment_server is in mix - dunno
+  deployment_server: false
+
+# Flag to set minimum free memory
+  minfreemb: 1000
+
+# Define the location of an external license server
+
+# TEST
+#  license_uri: https://mdr-license-01:8089
+# PAE LAB
+#  license_uri: https://172.23.252.29:8089
+# LA
+#  license_uri: https://rtp5spllicp01.cisco-cms.com:8089
+# ALLAN
+# license_uri: https://alln1spllicp01.cisco-cms.com:8089
+# ART
+#  https://74.103.200.115:18089
+  license_uri: "{{ '{{ lookup(\'env\',\'LICENSE_URI\') or \'' + splunk.license_server_url + '\' }}' }}"
+
+########################################################
+# Splunk Web Options
+
+# Define Splunk Web Port
+  http_port: 8000
+  svc_port: 8089
+
+# Configure Splunk Web for SSL
+  http_enableSSL: true
+  http_enableSSL_cert: null
+  http_enableSSL_privKey: null
+  http_enableSSL_privKey_password: null
+
+
+########################################################
+# Indexer Replication and Search Factor
+  idxc:
+    enable: true
+    label: idxc_label
+    replication_factor: 3
+    replication_port: 9887
+    search_factor: 3
+
+# Define multisite Indexer Replication and Search Factor
+  multisite_replication_factor_origin: 1
+  multisite_replication_factor_total: 3
+  multisite_search_factor_origin: 1
+  multisite_search_factor_total: 3
+  all_sites: site1,site2,site3
+
+########################################################
+# Search Head Cluster Replication and Search Factor
+  shc:
+    enable: true
+    label: shc_label
+    replication_factor: 3
+    replication_port: 9887
+
+# Dunno - or not used
+  ignore_license: false
+  license_download_dest: /tmp/splunk.lic
+  license_master_included: true
+  search_head_cluster_url: null
+  secret: null
+  smartstore: null
+  tar_dir: splunk
+  wildcard_license: false
+
+#################################################
+# Define HTTP Input on Indexer - used by Phantom
+  hec_disabled: 0
+  hec_role: search_head
+  hec_name: phantom_token
+  hec_enableSSL: 1
+  hec_port: 8088
+  hec_default_index: phantom_action_run
+  hec_allowed_indexes: phantom_action_run,phantom_container,phantom_app,phantom_app_run,phantom_artifact,phantom_asset,phantom_container_attachment,phantom_container_comment,phantom_container_note,phantom_decided_list,phantom_playbook,phantom_playbook_failures,phantom_workflow_note

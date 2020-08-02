@@ -1,0 +1,5 @@
+---
+# vars file for splunk_auto
+spl_wd: 'splunk_install'
+spl_ansible_path: "{{ spl_wd + '/dev/mdr-automation/splunk-ansible' }}"
+spl_inventory_path: "{{ spl_ansible_path + '/inventory/cisco_inventory' }}"

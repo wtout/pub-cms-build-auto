@@ -1,0 +1,26 @@
+---
+# Tasks to update variables files
+- block:
+  - name: Update default.yml file
+    template:
+      src: "{{ tmpl_item.name }}"
+      dest: "{{ tmpl_item.dest }}"
+    loop:
+      - { name: 'templates/default.yml.tmpl', dest: "{{ auto_dir }}/{{ spl_ansible_path }}/default.yml" }
+    loop_control:
+      loop_var: tmpl_item
+  - name: Update SSH passwords vault
+    template:
+      src: "{{ tmpl_item.name }}"
+      dest: "{{ tmpl_item.dest }}"
+    loop:
+      - { name: 'templates/ssh_passwords.yml.tmpl', dest: "{{ auto_dir }}/{{ spl_ansible_path }}/ssh_passwords.yml" }
+    loop_control:
+      loop_var: tmpl_item
+  - name: Encrypt ssh_passwords vault
+    shell: ansible-vault encrypt --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh ssh_passwords.yml
+    args:
+      chdir: "{{ auto_dir }}/{{ spl_ansible_path }}"
+  delegate_to: localhost
+  run_once: true
+  tags: splunk_auto

@@ -1,0 +1,42 @@
+---
+# tasks to get the info required to request the license for the EM7 VM
+- block:
+  - name: get MAC address
+    shell: ip a show ens160 | grep ether
+    register: host_mac
+    check_mode: no
+
+  - name: get registration key
+    shell: /usr/local/silo/proc/appliance_init.py -r
+    register: registration_key
+    check_mode: no
+
+  - name: define license authorization key
+    set_fact:
+      license_authorization_key: '61ee336f-fe0b-4e20-9586-2a41771b4b21'
+  - name: define license registration key file content
+    set_fact:
+      license_registration_key_file_contents: "{{ registration_key.stdout }}\n"
+  - name: define license appliance type
+    set_fact:
+      license_appliance_type: "{{ 'db' if inventory_hostname is search('em7db') else 'cu' if inventory_hostname is search('em7dc') else 'mc' if inventory_hostname is search('em7mc') else 'ap' if inventory_hostname is search('em7prt') else 'is' if inventory_hostname is search('is4') else 'ao' }}"
+  - name: define license appliance environment
+    set_fact:
+      license_appliance_environment: "{{ 'trial' if 'dev' in customer.name|lower else 'production' }}"
+  - name: define license hostname
+    set_fact:
+      license_hostname: "{{ vm.name }}"
+  - name: define license MAC address
+    set_fact:
+      license_mac_address: "{{ host_mac.stdout.split()[1] }}"
+#  - name: define license duration
+#    set_fact:
+#      license_duration_requested: "{{ '2 years' if 'dev' in customer.name|lower else '5 years' }}"
+#  - name: define license reason
+#    set_fact:
+#      license_reason_for_request: "{{ 'Trial' if 'dev' in customer.name|lower else 'Production' }}"
+  when:
+    - inventory_hostname is search('em7')
+    - inventory_hostname is not regex('mc|dc') or customer.release is not search('9.2')
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  tags: vm_configuration

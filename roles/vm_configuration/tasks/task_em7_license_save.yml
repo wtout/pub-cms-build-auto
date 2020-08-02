@@ -1,0 +1,53 @@
+---
+# tasks to save the EM7 license on the VM
+- block:
+  - block:
+    - name: check if mysql is running on db01
+      command: systemctl status mysql
+      register: service_check
+      check_mode: no
+      ignore_errors: true
+      delegate_to: "{{ groups['em7db']|first }}"
+      when:
+        - "'dr' not in group_names"
+    - name: check if db vip is reachable
+      command: ping {{ vip.db }} -c 1
+      retries: 3
+      delay: 5
+      register: db_vip_reachable1
+      ignore_errors: true
+    - include_tasks: task_reboot_em7dbs.yml
+      when: db_vip_reachable1 is failed or ('dr' not in group_names and service_check.stdout is regex('dead|failed'))
+    when: inventory_hostname is search('prt')
+  - debug:
+      msg:
+        - "{{ get_cert.json }}"
+  - name: create the license folder on the EM7 VM
+    file:
+      path: '/home/{{ ansible_user }}/license'
+      state: directory
+      mode: 0755
+  - name: save the license on the EM7 VM under {{ hostvars[groups['em7']|first]['ansible_user'] }} home directory
+    copy:
+      content: "{{ get_cert.json.license }}"
+      dest: '/home/{{ ansible_user }}/license/em7.lic'
+  - block:
+    - name: save the license on the EM7 VM under /tmp
+      copy:
+        content: "{{ get_cert.json.license }}"
+        dest: '/tmp/em7.lic'
+        group: em7admin
+        owner: em7admin
+    - name: create the runLicense script under /home/em7admin
+      copy:
+        content: '/usr/local/silo/proc/appliance_init.py -l < /tmp/em7.lic'
+        dest: '/home/em7admin/runLicense'
+        group: em7admin
+        owner: em7admin
+        mode: 0755
+    become: "{{ true if inventory_hostname is search('em7') else false }}"
+    when: customer.release is search('9.2')
+  when:
+    - get_cert.json is defined
+    - inventory_hostname is search('em7')
+  tags: vm_configuration

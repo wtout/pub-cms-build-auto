@@ -1,0 +1,21 @@
+---
+# Tasks to create the Splunk automation inventory
+- block:
+  - name: define facts
+    set_fact:
+      splunk_type: "{{ 'customer' if inventory_hostname is search('splfwd') else 'headend' }}"
+      tmpl_name: "{{ 'customer_inventory.yml.tmpl' if inventory_hostname is search('splfwd') else 'headend_inventory.yml.tmpl' }}"
+      he_inv_file_name: "headend_{{ customer.primary.name_prefix | regex_replace('[0-9]+', '') }}_{{ customer.env_identifier }}_inventory.yml"
+      cu_inv_file_name: "customer_{{ customer.primary.name_prefix }}_{{ customer.env_identifier }}_inventory.yml"
+      tmpl_dest: "{{ auto_dir }}/{{ spl_inventory_path }}"
+  - name: create {{ splunk_type }} inventory
+    template:
+      src: "{{ tmpl_item.name }}"
+      dest: "{{ tmpl_item.dest }}"
+    loop:
+      - { name: "templates/{{ tmpl_name }}", dest: "{{ tmpl_dest }}/{{ cu_inv_file_name if inventory_hostname is search('splfwd') else he_inv_file_name }}" }
+    loop_control:
+      loop_var: tmpl_item
+  delegate_to: localhost
+  run_once: true
+  tags: splunk_auto

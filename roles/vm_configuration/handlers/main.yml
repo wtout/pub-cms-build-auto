@@ -45,7 +45,8 @@
     df | grep /drbd1
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   register: drbd1_status
-  until: drbd1_status.stdout is search('drbd1')
+  until: drbd1_status.stdout is regex('drbd1|Secondary')
+  failed_when: drbd1_status.stdout is not regex('drbd1|Secondary')
   retries: 3
   when:
     - not ansible_check_mode
@@ -57,7 +58,9 @@
     name: mysql
     state: started
   become: "{{ true if inventory_hostname is search('em7') else false }}"
-  when: inventory_hostname is search('01')
+  when:
+    - inventory_hostname is search('01')
+    - drbd1_status.stdout is not search('Secondary')
   tags: vm_configuration
 
 - name: start em7
