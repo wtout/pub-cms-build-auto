@@ -11,8 +11,8 @@
       - 161
     loop_control:
       loop_var: port_item
-    notify: restart iptables
-  - name: save iptables
-    command: service iptables save
+    notify:
+      - save iptables
+      - restart iptables
   become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation

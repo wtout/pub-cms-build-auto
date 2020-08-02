@@ -15,19 +15,21 @@
   - name: Deploy Splunk headend (core)
     shell: |
       export ANSIBLE_LOG_PATH={{ log_file_name.stdout }}
-      ./buildcore.sh  --inv=inventory/cisco_inventory/{{ he_inv_file_name }} --defaults=default.yml  --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh"
+      ./buildcore.sh  --inv=inventory/cisco_inventory/{{ he_inv_file_name }} --defaults=default.yml  --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
     register: he_install
     args:
       chdir: "{{ auto_dir }}/{{ spl_ansible_path }}"
     when: inventory_hostname is not search('splfwd')
+    no_log: true
   - name: Deploy Splunk heavy forwarder (customer)
     shell: |
       export ANSIBLE_LOG_PATH={{ log_file_name.stdout }}
-      ./buildcustomer.sh  --inv=inventory/cisco_inventory/{{ he_inv_file_name }} --invcustomer=inventory/cisco_inventory/{{ cu_inv_file_name }} --defaults=default.yml  --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh"
+      ./buildcustomer.sh  --inv=inventory/cisco_inventory/{{ he_inv_file_name }} --invcustomer=inventory/cisco_inventory/{{ cu_inv_file_name }} --defaults=default.yml  --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
     register: cu_install
     args:
       chdir: "{{ auto_dir }}/{{ spl_ansible_path }}"
     when: inventory_hostname is search('splfwd')
+    no_log: true
   - name: define delete_proxy
     set_fact:
       delete_proxy: "{{ he_install is succeeded or cu-install is succeeded }}"
