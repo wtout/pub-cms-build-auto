@@ -20,13 +20,22 @@
     args:
       chdir: "{{ auto_dir }}/{{ spl_ansible_path }}"
     when: inventory_hostname is not search('splfwd')
-  - name: Deploy Splunk heavy forwarder (customer)
-    shell: |
-      export ANSIBLE_LOG_PATH={{ log_file_name.stdout }}
-      ./buildcustomer.sh  --inv=inventory/cisco_inventory/{{ he_inv_file_name }} --invcustomer=inventory/cisco_inventory/{{ cu_inv_file_name }} --defaults=default.yml  --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
-    register: cu_install
-    args:
-      chdir: "{{ auto_dir }}/{{ spl_ansible_path }}"
+  - block:
+    - name: check if headend inventory file exists
+      stat:
+        path: "inventory/cisco_inventory/{{ he_inv_file_name }}"
+      register: he_inv
+    - name: fail if Headend inventory file is not found
+      assert:
+        that: he_inv.stat.exists
+        fail_msg: "The headend inventory file is not available. Unable to deploy a customer forwarder without a Headend. Aborting!"
+    - name: Deploy Splunk heavy forwarder (customer)
+      shell: |
+        export ANSIBLE_LOG_PATH={{ log_file_name.stdout }}
+        ./buildcustomer.sh  --inv=inventory/cisco_inventory/{{ he_inv_file_name }} --invcustomer=inventory/cisco_inventory/{{ cu_inv_file_name }} --defaults=default.yml  --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+      register: cu_install
+      args:
+        chdir: "{{ auto_dir }}/{{ spl_ansible_path }}"
     when: inventory_hostname is search('splfwd')
   - name: define delete_proxy
     set_fact:
