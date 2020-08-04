@@ -6,12 +6,13 @@
       repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
       dest: "{{ auto_dir }}/{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
       version: "{{ repo_item.release }}"
-      force: yes
+#      force: yes
     loop:
-      - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-automation.git', release: 'v1.0.010' }
-      - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-splunk-env.git', release: 'v1.0.009' }
+      - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-automation.git', release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
+      - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-splunk-env.git', release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
     loop_control:
       loop_var: repo_item
   delegate_to: localhost
+  ignore_errors: yes
   run_once: true
   tags: splunk_auto

@@ -20,7 +20,6 @@
     args:
       chdir: "{{ auto_dir }}/{{ spl_ansible_path }}"
     when: inventory_hostname is not search('splfwd')
-    no_log: true
   - name: Deploy Splunk heavy forwarder (customer)
     shell: |
       export ANSIBLE_LOG_PATH={{ log_file_name.stdout }}
@@ -29,7 +28,6 @@
     args:
       chdir: "{{ auto_dir }}/{{ spl_ansible_path }}"
     when: inventory_hostname is search('splfwd')
-    no_log: true
   - name: define delete_proxy
     set_fact:
       delete_proxy: "{{ he_install is succeeded or cu-install is succeeded }}"
