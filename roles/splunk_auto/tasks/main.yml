@@ -1,0 +1,61 @@
+---
+# tasks file for splunk_auto
+- block:
+  - block:
+    - name: check VM reachable
+      command: ping {{ ansible_host }} -c 1
+      register: sa_vm_reachable
+      ignore_errors: true
+      check_mode: no
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - block:
+      - name: switch to cmsbuild user
+        set_fact:
+          ansible_user: "{{ vm_svc_user }}"
+      - name: check connection
+        wait_for:
+          host: "{{ ansible_host }}"
+          port: 22
+          timeout: 10
+        register: sa_vm_connection
+        ignore_errors: true
+        check_mode: no
+        delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+      - debug:
+          msg: "VM hardening is enabled"
+        when: sa_vm_connection is succeeded
+      - name: revert user
+        set_fact:
+          ansible_user: "{{ credentials.username }}"
+        when: sa_vm_connection is failed
+      when: sa_vm_reachable is failed
+    - block:
+      - name: check VM credentials
+        wait_for_connection:
+          timeout: 3
+        register: sa_vm_creds
+        ignore_errors: true
+        check_mode: no
+      - name: Update SSH password
+        set_fact:
+          ansible_ssh_pass: "{{ postppp }}"
+        no_log: true
+        when:
+          - sa_vm_creds is failed
+          - sa_vm_creds.msg is search('Invalid/incorrect username/password')
+      when: sa_vm_reachable is succeeded
+    when:
+      - ansible_ssh_pass != postppp
+
+  - include_tasks: task_create_directory_structure.yml
+  - include_tasks: task_get_repo_creds.yml
+  - include_tasks: task_clone_repos.yml
+  - include_tasks: task_setup_env.yml
+  - include_tasks: task_create_inventory.yml
+  - include_tasks: task_update_variables_files.yml
+  - include_tasks: task_install_splunk.yml
+  - include_tasks: task_update_yum_conf.yml
+    when: delete_proxy|default(false)|bool
+  when: install_splunk | default(false) | bool
+  tags: splunk_auto
+  

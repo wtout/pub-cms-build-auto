@@ -1,0 +1,59 @@
+---
+# tasks to apply the EM7 license
+- block:
+  - name: load the EM7 license
+    shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
+    register: load_license1
+    ignore_errors: "{{ true if inventory_hostname is regex('em7[prt|db]') else false }}"
+    become: "{{ true if inventory_hostname is search('em7') else false }}"
+  - block:
+    - include_tasks: task_update_password_silo_file.yml
+    - name: re-load the EM7 license
+      shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
+      register: load_license2
+      ignore_errors: "{{ true if inventory_hostname is regex('em7[prt|db]') else false }}"
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
+    - block:
+      - include_tasks: task_rebuild_host.yml
+      - include_tasks: task_start_msgs_log.yml
+      - include_tasks: task_configure_snmp.yml
+      - include_tasks: task_update_chrony.yml
+      - include_tasks: task_update_repo.yml
+      - include_tasks: task_update_puppet_data_file.yml
+      - include_tasks: task_update_hosts_file.yml
+      - include_tasks: task_update_silo_file.yml
+      - include_tasks: task_update_siloconf_file.yml
+      - include_tasks: task_update_drop_file.yml
+      - include_tasks: task_update_em7vg_files.yml
+      - include_tasks: task_update_drbd_res_file.yml
+      - include_tasks: task_update_corosync_file.yml
+      - include_tasks: task_install_packages.yml
+      - name: flush handlers
+        meta: flush_handlers
+      - include_tasks: task_update_cluster_vip.yml
+      - name: flush handlers
+        meta: flush_handlers
+      - include_tasks: task_update_exports_file.yml
+      - include_tasks: task_update_dbconns_file.yml
+      - include_tasks: task_restore_silo_dr_file.yml
+      - include_tasks: task_em7_license_get_info.yml
+      - include_tasks: task_em7_license_request.yml
+      - include_tasks: task_em7_license_save.yml
+      - name: load the EM7 license
+        shell: /usr/local/silo/proc/appliance_init.py -l < /home/{{ ansible_user }}/license/em7.lic
+        register: load_license3
+        ignore_errors: "{{ true if inventory_hostname is regex('em7[prt|db]') else false }}"
+        become: "{{ true if inventory_hostname is search('em7') else false }}"
+      - name: check if loading the license failed
+        assert:
+          that: load_license3 is succeeded
+          fail_msg: "Third attempt to load the license failed. Please investigate!"
+      when:
+        - load_license2 is failed
+    when:
+      - load_license1 is failed
+      - inventory_hostname is regex('em7[prt|db]')
+  when:
+    - get_cert.json is defined
+    - inventory_hostname is search('em7')
+  tags: vm_configuration

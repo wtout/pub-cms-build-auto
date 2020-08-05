@@ -1,0 +1,25 @@
+---
+# Tasks to get repo credentials
+- block:
+  - name: get remote url
+    command: git config --get remote.origin.url
+    register: remote_url
+  - name: define repo username
+    set_fact:
+      repo_username: "{{ remote_url.stdout | regex_replace('^.*//(.*)@.*$', '\\1') }}"
+    when: remote_url is succeeded
+  - block:
+    - name: get repo password
+      shell: ansible-vault view --vault-password-file {{ auto_dir }}/Bash/get_repo_vault_pass.sh {{ auto_dir }}/.repovault.yml | cut -d "'" -f2
+      register: repo_pass
+    - name: define repo password
+      set_fact:
+        repo_password: "{{ repo_pass.stdout }}"
+    when: repo_username is not search(':')
+  - name: define credentials string
+    set_fact:
+      repo_creds: "{{ repo_username if repo_username is search(':') else repo_username + ':' + repo_password|default('') }}"
+  no_log: true
+  delegate_to: localhost
+  run_once: true
+  tags: splunk_auto

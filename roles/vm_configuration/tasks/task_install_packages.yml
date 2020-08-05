@@ -13,7 +13,7 @@
       loop_var: pkg_item
     register: pkg_install
     until: pkg_install is succeeded
-    retries: 3
+    retries: 7
     when: not ansible_check_mode
 
   - block:
@@ -28,7 +28,7 @@
       notify: start nfs
       register: nfs_install
       until: nfs_install is succeeded
-      retries: 3
+      retries: 7
       when: not ansible_check_mode
     when:
       - inventory_hostname is search('rly')

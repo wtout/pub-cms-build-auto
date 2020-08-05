@@ -2,5 +2,5 @@
 # tasks to determine the VM's OVF/OVA file name
 - name: get OVA file name
   set_fact:
-    ova_name: "{{ 'qs_em7_aio.ova' if vm.name is search('em7aio') else 'qs_em7_ap.ova' if inventory_hostname is search('em7prt') else 'qs_em7_db.ova' if (inventory_hostname is search('em7db') and customer.primary.name_prefix is not regex('[\\w]c[\\d]{2,}')) else 'qs_em7_db_250.ova' if (inventory_hostname is search('em7db') and customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}')) else 'qs_em7_dc.ova' if inventory_hostname is search('em7dc') else 'qs_em7_mc.ova' if inventory_hostname is search('em7mc') else 'cms-qs-vm-template.ova' }}"
+    ova_name: "{{ 'qs_em7_aio.ova' if vm.name is search('em7aio') else 'qs_em7_ap.ova' if inventory_hostname is search('em7prt') else 'qs_em7_db.ova' if (inventory_hostname is search('em7db') and customer.primary.name_prefix is not regex('[\\w]c[\\d]{2,}') and vm.disk0|int == 1024) else 'qs_em7_db_250.ova' if (inventory_hostname is search('em7db') and (customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') or vm.disk0|int == 250)) else 'qs_em7_dc.ova' if inventory_hostname is search('em7dc') else 'qs_em7_mc.ova' if inventory_hostname is search('em7mc') else 'cms-qs-vm-template.ova' }}"
   tags: vm_creation

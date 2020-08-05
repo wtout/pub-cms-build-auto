@@ -1,0 +1,44 @@
+---
+# Tasks to create the directory structure
+- block:
+  - name: create the directory structure
+    file:
+      path: "{{ auto_dir }}/{{ dir_item }}"
+      state: directory
+    loop:
+      - "{{ spl_wd }}"
+      - "{{ spl_wd }}/dev"
+      - "{{ spl_wd }}/deploy"
+    loop_control:
+      loop_var: dir_item
+  - name: create the splunkApps symolic link
+    file:
+      path: "{{ auto_dir }}/{{ spl_wd }}/deploy/splunkApps"
+      src: "{{ auto_dir }}/{{ spl_wd }}/dev/mdr-splunk-env"
+      state: link
+      force: yes
+  - name: get list of Splunk artifacts
+    find:
+      paths: "{{ auto_dir }}/Packages/Splunk"
+      file_type: file
+      patterns: '*.rpm,*.tgz'
+    register: artifacts_list
+  - debug:
+      msg:
+        - "{{ link_item.path }}"
+        - "{{ link_item.path | basename }}"
+    loop: "{{ artifacts_list.files }}"
+    loop_control:
+      loop_var: link_item
+  - name: create the splunk artifacts symbolic links
+    file:
+      path: "{{ auto_dir }}/{{ spl_wd }}/deploy/{{ link_item.path | basename }}"
+      src: "{{ link_item.path }}"
+      state: link
+      force: yes
+    loop: "{{ artifacts_list.files }}"
+    loop_control:
+      loop_var: link_item
+  delegate_to: localhost
+  run_once: true
+  tags: splunk_auto

@@ -1,0 +1,31 @@
+---
+# tasks to request the EM7 license
+- block:
+  - name: connect to sciencelogic api to get a license
+    uri:
+      url: https://portal.sciencelogic.com/portal/license_api
+      method: POST
+      body_format: json
+      body:
+        permanent: "{{ 'no' if 'dev' in customer.name|lower else 'yes' }}"
+        authorization_key: "{{ license_authorization_key }}"
+        registration_key_file_contents: "{{ license_registration_key_file_contents }}"
+        appliance_type: "{{ license_appliance_type }}"
+        appliance_environment: "{{ license_appliance_environment }}"
+        hostname: "{{ license_hostname }}"
+        mac_address: "{{ license_mac_address }}"
+#        duration_requested: "{{ license_duration_requested }}"
+#        reason_for_request: "{{ license_reason_for_request }}"
+    register: get_cert
+    until: get_cert is succeeded
+    retries: 3
+    delay: 5
+    environment:
+      http_proxy: "{{ proxy_address }}"
+      https_proxy: "{{ proxy_address }}"
+  when:
+    - inventory_hostname is search('em7')
+    - inventory_hostname is not regex('mc|dc') or customer.release is not search('9.2')
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vm_configuration
+

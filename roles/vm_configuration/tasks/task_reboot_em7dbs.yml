@@ -2,13 +2,28 @@
 # tasks to reboot the EM7 DB VMs
 # If the below code is moved up one level to replace the include_tasks statement, it will be ignored if run_once is set to true
 - block:
+#  - name: reboot the EM7 DBs
+#    reboot:
+#      post_reboot_delay: 30
+#      reboot_timeout: 600
+#    when: not hostvars[db_item]['vco_vm_reachable']['failed']
+#    become: "{{ true if inventory_hostname is search('em7') else false }}"
+#    delegate_to: "{{ db_item }}"
+#    loop: "{{ groups['em7db'] }}"
+#    loop_control:
+#      loop_var: db_item
+#    run_once: true
   - name: reboot the EM7 DBs
-    reboot:
-      post_reboot_delay: 30
-      reboot_timeout: 600
+    vmware_guest_powerstate:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      validate_certs: false
+      name: "{{ hostvars[db_item]['vm']['name'] }}"
+      state: restarted
+      state_change_timeout: 60
     when: not hostvars[db_item]['vco_vm_reachable']['failed']
-    become: "{{ true if inventory_hostname is search('em7') else false }}"
-    delegate_to: "{{ db_item }}"
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     loop: "{{ groups['em7db'] }}"
     loop_control:
       loop_var: db_item
