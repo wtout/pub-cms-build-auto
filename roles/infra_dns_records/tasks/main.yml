@@ -1,0 +1,44 @@
+---
+# Task file to add DNS records
+- block:
+  - name: Add stack DNS records
+    nsupdate:
+      server: "{{ sysconfig.dns_servers[0] }}"
+      record: "{{ vm.name }}"
+      value: "{{ netconfig.ipaddress1 if not inventory_hostname is search('csr') else netconfig.ipaddress3 }}"
+      zone: "{{ sysconfig.domain_name }}"
+    when: add_dns_records | default(false) | bool
+  
+  - name: Add additional DNS records
+    nsupdate:
+      server: "{{ sysconfig.dns_servers[0] }}"
+      record: "{{ list_item.record }}"
+      value: "{{ list_item.value }}"
+      zone: "{{ sysconfig.domain_name }}"
+    loop: "{{ dns_records }}"
+    loop_control:
+      loop_var: list_item
+    when: add_dns_records | default(false) | bool
+
+  - name: Remove DNS records
+    nsupdate:
+      server: "{{ sysconfig.dns_servers[0] }}"
+      record: "{{ vm.name }}"
+      value: "{{ netconfig.ipaddress1 if not inventory_hostname is search('csr') else netconfig.ipaddress3 }}"
+      zone: "{{ sysconfig.domain_name }}"
+      state: absent
+    when: rollback_dns_records | default(false) | bool
+
+  - name: Remove additional DNS records
+    nsupdate:
+      server: "{{ sysconfig.dns_servers[0] }}"
+      record: "{{ list_item.record }}"
+      value: "{{ list_item.value }}"
+      zone: "{{ sysconfig.domain_name }}"
+      state: absent
+    loop: "{{ dns_records }}"
+    loop_control:
+      loop_var: list_item
+    when: rollback_dns_records | default(false) | bool
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}" 
+  tags: infra_dns_records

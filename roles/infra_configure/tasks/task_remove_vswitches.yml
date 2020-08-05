@@ -1,0 +1,25 @@
+---
+# tasks file to remove vswitches
+- name: define existing vSwitches
+  vmware_vswitch_info:
+    hostname: "{{ information.address }}"
+    username: "{{ credentials.username }}"
+    password: "{{ credentials.password }}"
+    esxi_hostname: "{{ resource }}"
+    validate_certs: no
+  register: existing_vswitches
+
+- name: remove vSwitches
+  vmware_vswitch:
+    hostname: "{{ information.address }}"
+    username: "{{ credentials.username }}"
+    password: "{{ credentials.password }}"
+    esxi_hostname: "{{ resource }}"
+    validate_certs: no
+    switch: "{{ vswitch }}"
+    state: absent
+  loop: "{{ (existing_vswitches.hosts_vswitch_info|dict2items|first).value|difference('vSwitch0') }}"
+  loop_control:
+    loop_var: vswitch
+  tags: ['infra_configure', 'infra_build_nodes', 'capcheck', 'vm_creation']
+

@@ -1,0 +1,103 @@
+---
+# Task file to configure Windows Jump Server
+- block:
+  - name: Wait for Windows Jump Server OVA deployment
+    async_status:
+      jid: "{{ winjmp_deployment.ansible_job_id }}"
+    register: winjmp_poll_results
+    until: winjmp_poll_results.finished
+    retries: 200
+
+  - name: Power on VM
+    vmware_guest_powerstate:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      state: powered-on
+      validate_certs: no
+    register: power
+    
+  - name: Set VM interfaces
+    vmware_guest:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if inventory_hostname is search('dr') else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      name: "{{ vm.name }}"
+      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+      networks:
+      - name: "{{ netconfig.network1 }}"
+        start_connected: yes
+        wake_on_lan: yes
+      - name: "{{ netconfig.network2 }}"
+        start_connected: yes
+        wake_on_lan: yes
+      validate_certs: no
+
+  - name: Wait for VM to boot
+    pause:
+      seconds: 400
+    when: power.changed
+  
+  - name: Apply interface configuration settings
+    vmware_vm_shell:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+      vm_id: "{{ vm.name }}"
+      vm_username: "{{ credentials.username }}"
+      vm_password: "{{ credentials.password }}"
+      vm_shell: "{{ config.shell }}"
+      vm_shell_args: "{{ config.command }}"
+      validate_certs: no
+      wait_for_process: true
+    ignore_errors: "{{ config.ignore_errors }}"
+    register: output
+    loop: "{{ winjmp.interface_configuration }}"
+    loop_control:
+      loop_var: config
+      
+  - name: Add static routes
+    vmware_vm_shell:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+      vm_id: "{{ vm.name }}"
+      vm_username: "{{ credentials.username }}"
+      vm_password: "{{ credentials.password }}"
+      vm_shell: c:\windows\system32\route.exe
+      vm_shell_args: "add {{ route_ip.ip }} mask {{ route_ip.netmask }} {{ netconfig.gateway1 }} metric 1 -p"
+      validate_certs: no
+      wait_for_process: yes
+    register: output
+    loop: "{{ netconfig.static_route_ips }}"
+    loop_control:
+      loop_var: route_ip
+
+  - name: Apply user and security settings
+    vmware_vm_shell:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+      vm_id: "{{ vm.name }}"
+      vm_username: "{{ credentials.username }}"
+      vm_password: "{{ credentials.password }}"
+      vm_shell: "{{ config.shell }}"
+      vm_shell_args: "{{ config.command }}"
+      validate_certs: no
+      wait_for_process: yes
+    ignore_errors: "{{ config.ignore_errors }}"
+    register: output
+    loop: "{{ winjmp.other_configuration }}"
+    loop_control:
+      loop_var: config
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: ['infra_build_nodes', 'never']

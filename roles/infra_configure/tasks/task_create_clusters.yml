@@ -1,0 +1,67 @@
+---
+# tasks file to create clusters
+- block:
+  - name: Create cluster '{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}' 
+    vmware_cluster:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      state: present
+      validate_certs: no
+    register: cust_cluster
+
+  - name: Create cluster '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}'
+    vmware_cluster:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}"
+      state: present
+      validate_certs: no
+    register: cust_drcluster
+    when: customer.disaster_recovery
+    
+  - name: Check if hosts are in a different cluster
+    assert:
+      that:
+        - hostvars[groups['vcenter']|first]['host_cluster'][host_item] == none or ((hostvars[groups['vcenter']|first]['host_cluster'][host_item] != none and hostvars[groups['vcenter']|first]['host_cluster'][host_item] == hostvars[groups['vcenter'][0]]['information']['drcluster']) if (customer.disaster_recovery and host_item == hostvars[groups['vcenter'][0]]['information']['resources']|last) else (hostvars[groups['vcenter']|first]['host_cluster'][host_item] != none and hostvars[groups['vcenter']|first]['host_cluster'][host_item] == hostvars[groups['vcenter'][0]]['information']['cluster']))
+    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
+    loop_control:
+      loop_var: host_item
+
+  - name: Add hosts to cluster '{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}' cluster
+    vmware_host:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      esxi_hostname: "{{ host_item }}"
+      esxi_username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
+      esxi_password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
+      state: present
+      validate_certs: no
+    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
+    loop_control:
+      loop_var: host_item
+
+  - name: Add hosts to cluster '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
+    vmware_host:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ datacenter.name }}"
+      cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}"
+      esxi_hostname: "{{ host_item }}"
+      esxi_username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
+      esxi_password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
+      state: present
+      validate_certs: no
+    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
+    loop_control:
+      loop_var: host_item
+    when: customer.disaster_recovery
+    tags: ['infra_configure', 'infra_build_nodes', 'capcheck', 'vm_creation']

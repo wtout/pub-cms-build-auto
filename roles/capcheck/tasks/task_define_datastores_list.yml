@@ -57,4 +57,4 @@
       mylist: []
       vm_required_space: 0
       vm_free_space: 0
-  tags: ['capcheck', 'vm_creation', 'puppet', 'configure_infra', 'build_infra_nodes']
+  tags: ['capcheck', 'vm_creation', 'puppet', 'infra_configure', 'infra_build_nodes']

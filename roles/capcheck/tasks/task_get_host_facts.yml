@@ -309,5 +309,5 @@
         - "{{ (ssd_ds_total_fs|default(0)|float / 1024|pow(4))|string + ' TiB' if ssd_ds_total_fs|default('0')|length > 12 else (ssd_ds_total_fs|default(0)|float / 1024|pow(3))|string + ' GiB' }}"
         - "{{ sas_ds_names|default([]) }}"
         - "{{ (sas_ds_total_fs|default(0)|float / 1024|pow(4))|string + ' TiB' if sas_ds_total_fs|default('0')|length > 12 else (sas_ds_total_fs|default(0)|float / 1024|pow(3))|string + ' GiB' }}"
-  tags: ['capcheck', 'vm_creation', 'puppet', 'configure_infra', 'build_infra_nodes']
+  tags: ['capcheck', 'vm_creation', 'puppet', 'infra_configure', 'infra_build_nodes']
   

@@ -71,5 +71,5 @@
         - "Total DR required storage space: {{ (dr_required_space|default(0)|float / 1024)|string + ' TiB' if (dr_required_space|default(0)|int)|string|length > 3 else dr_required_space|default(0)|string + ' GiB' }}"
     when:
       - customer.disaster_recovery
-  tags: ['capcheck', 'vm_creation', 'puppet', 'configure_infra', 'build_infra_nodes']
+  tags: ['capcheck', 'vm_creation', 'puppet', 'infra_configure', 'infra_build_nodes']
   

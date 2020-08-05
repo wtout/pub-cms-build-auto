@@ -1,0 +1,70 @@
+enable ns mode FR L3 Edge USNIP PMTUD
+
+set snmp mib -name {{ vm.name }}
+set ns hostname {{ vm.name }}
+
+add route 172.19.248.0 255.255.248.0 {{ customer.secondary.octets }}.62
+
+add ns ip {{ customer.secondary.octets }}.55 255.255.255.192 -vServer DISABLED
+add ns ip {{ customer.secondary.octets }}.123 255.255.255.224 -vServer DISABLED -gui DISABLED -mgmtAccess ENABLED
+add route 172.30.100.0 255.255.255.0 {{ customer.secondary.octets }}.62
+add route 0.0.0.0 0.0.0.0 {{ customer.secondary.octets }}.126
+
+set rsskeytype -rsstype ASYMMETRIC
+set lacp -sysPriority 32768 -mac 00:50:56:8d:4f:78
+
+add HA node 1 {{ customer.secondary.octets }}.54
+
+{% for server in drnsvpx.configuration.servers %}
+add server {{ server.name }} {{ server.ipaddress }} -comment "{{ server.comment }}"
+{% endfor %}
+
+{% for service in drnsvpx.configuration.services %}
+add service {{ service.name }} {{ service.server }} {{ service.type }} {{ service.port }} -gslb NONE -maxClient 0 -maxReq 0 -cip DISABLED -usip {{ service.usip }} -useproxyport {{ service.useproxyport }} -sp {{ service.sp }} -cltTimeout {{ service.clt_timeout }} -svrTimeout {{ service.svr_timeout }} -CKA NO -TCPB NO -CMP NO
+{% endfor %}
+
+set ssl service nshttps-127.0.0.1-443 -eRSA DISABLED
+add db user rsuser
+add lb monitor MYSQL-ECV-26 MYSQL-ECV -userName rsuser -LRTM DISABLED -interval 1 MIN -database reportstore -sqlQuery "select count(*) from reports;" -evalRule "MYSQL.RES.ATLEAST_ROWS_COUNT(0)"
+
+{% for lb_server in drnsvpx.configuration.lb_servers %}
+add lb vserver {{ lb_server.name }} {{ lb_server.type }} {{ lb_server.ipaddress }} {{ lb_server.port }} -persistenceType {{ lb_server.persistence_type }} -lbMethod {{ lb_server.lb_method }} -Listenpolicy None -sessionless {{ lb_server.sessionless }} -cltTimeout {{ lb_server.clt_timeout }}
+{% endfor %}
+
+set aaa tacacsParams -serverIP 172.19.250.14 -tacacsSecret fd7e034327967070 -encrypted -authorization ON -accounting ON
+add authentication tacacsAction qstacacs1 -serverIP 172.19.250.14 -tacacsSecret fd7e034327967070 -encrypted -authorization ON -accounting ON
+add authentication localPolicy Local ns_true
+add authentication tacacsPolicy qstac ns_true qstacacs1
+bind system global qstac -priority 100
+bind system global Local
+
+{% for ssl_service in drnsvpx.configuration.ssl_services %}
+set ssl service {{ ssl_service.name }} -eRSA {{ ssl_service.eRSA }} -sessReuse {{ ssl_service.sessReuse }}
+{% endfor %}
+
+{% for ssl_service in drnsvpx.configuration.ssl_services[:2] %}
+bind ssl service {{ ssl_service.name }} -certkeyName ns-server-certificate
+{% endfor %}
+
+{% for ssl_server_bind in drnsvpx.configuration.ssl_server_binds %}
+bind ssl service {{ ssl_server_bind.name }} -eccCurveName {{ ssl_server_bind.eccCurveName }}
+{% endfor %}
+
+{% for lb_server_bind in drnsvpx.configuration.lb_server_binds %}
+bind lb vserver {{ lb_server_bind.name }} {{ lb_server_bind.service }}
+{% endfor %}
+
+add snmp community Ir0nh0rs3 ALL
+add snmp trap specific 172.19.254.23 -communityName Ir0nh0rs3
+
+add ntp server {{ customer.secondary.octets }}.62
+enable ntp sync
+
+add dns nameServer 172.19.251.21
+add dns nameServer 172.19.251.22
+rm route 0.0.0.0 0.0.0.0 {{ customer.secondary.octets }}.62
+
+set system user nsroot C1sc0123
+
+save ns config
+.
