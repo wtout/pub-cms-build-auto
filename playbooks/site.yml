@@ -18,7 +18,7 @@
     - role: "{{ auto_dir }}/roles/todo"
     - role: "{{ auto_dir }}/roles/vm_facts"
 
-# Play to deploy the ssh_keys to bastion server(s), to perform the infrastructure capacity check and to download the release package
+# Play to deploy the ssh_keys to bastion server(s), deploy the infrastructure, perform the infrastructure capacity check, and download the release package
 - name: Pre-deploy preparation
   hosts: all
   any_errors_fatal: true
@@ -26,11 +26,12 @@
 
   roles:
     - {role: "{{ auto_dir }}/roles/ssh_keys", when: configure_ssh_keys | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/configure_infra", when: configure_infra | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/infra_configure", when: configure_infra | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/capcheck", when: capcheck | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/build_infra_nodes", when: build_infra_nodes | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/get_release", when: get_release | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/dns_records", when: add_dns_records | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/infra_build_nodes", when: build_infra_nodes | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/infra_dns_records", when: add_dns_records | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/infra_license", when: infra_license | default(false) | bool}
 
 # Plays to create, configure the VMs and to run the puppet push
 - name: Deploy VMs
@@ -55,7 +56,7 @@
     - {role: "{{ auto_dir }}/roles/puppet", when: rollback_puppet | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_creation", when: rollback_vms_ova | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_fromiso", when: rollback_vms_iso | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/build_infra_nodes", when: rollback_infra_nodes | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/configure_infra", when: rollback_infra | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/ssh_keys", when: rollback_ssh_keys | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/dns_records", when: rollback_dns_records | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/infra_dns_records", when: rollback_dns_records | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/infra_build_nodes", when: rollback_infra_nodes | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/infra_configure", when: rollback_infra | default(false) | bool}
