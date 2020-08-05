@@ -23,11 +23,18 @@
   - block:
     - name: check if headend inventory file exists
       stat:
-        path: "inventory/cisco_inventory/{{ he_inv_file_name }}"
-      register: he_inv
+        path: "{{ auto_dir }}/{{ spl_ansible_path }}/inventory/cisco_inventory/{{ he_inv_file_name }}"
+      register: he_inv1
+    - block:
+      - include_tasks: task_create_headend_inventory_file.yml
+      - name: check if headend inventory file exists
+        stat:
+          path: "{{ auto_dir }}/{{ spl_ansible_path }}/inventory/cisco_inventory/{{ he_inv_file_name }}"
+        register: he_inv2
+      when: not he_inv1.stat.exists
     - name: fail if Headend inventory file is not found
       assert:
-        that: he_inv.stat.exists
+        that: he_inv1.stat.exists or he_inv2.stat.exists
         fail_msg: "The headend inventory file is not available. Unable to deploy a customer forwarder without a Headend. Aborting!"
     - name: Deploy Splunk heavy forwarder (customer)
       shell: |
@@ -39,7 +46,7 @@
     when: inventory_hostname is search('splfwd')
   - name: define delete_proxy
     set_fact:
-      delete_proxy: "{{ he_install is succeeded or cu-install is succeeded }}"
+      delete_proxy: "{{ he_install is succeeded or cu_install is succeeded }}"
   delegate_to: localhost
   run_once: true
   tags: splunk_auto

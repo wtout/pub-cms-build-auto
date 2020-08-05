@@ -6,6 +6,7 @@
     register: setup_env
     args:
       chdir: "{{ auto_dir }}/{{ spl_wd }}/dev/mdr-splunk-env"
+  when: clone_repos is succeeded
   delegate_to: localhost
   run_once: true
   tags: splunk_auto
