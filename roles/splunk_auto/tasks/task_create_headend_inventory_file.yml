@@ -1,0 +1,50 @@
+---
+# Tasks to get the Headend hosts list
+- block:
+  - name: check if headend hosts inventory file exists
+    stat:
+      path: "{{ auto_dir }}/inventories/{{ customer.he_identifier }}/hosts.yml"
+    register: he_hosts_file
+  - name: check if the headend hosts file is found
+    assert:
+      that:
+        - he_hosts_file.stat.exists
+      fail_msg: "The Headend inventory is not found. Aborting!"
+  - name: read Headend hosts list
+    shell: ansible stack -i inventories/{{ customer.he_identifier }} --list-hosts | grep -v hosts | sed -e 's/^"*\s*\(.*\)"*$/\1/g'
+    args:
+      chdir: "{{ auto_dir }}"
+    register: he_hosts_list
+    check_mode: no
+  - name: read Headend VMs list
+    shell: ansible stack -i inventories/{{ customer.he_identifier }} -m debug -a "var='vm.name'" | grep -v SUCCESS | awk '{print $2}' | cut -d '"' -f2 | sed -e '/^$/d'
+    args:
+      chdir: "{{ auto_dir }}"
+    register: he_vms_list
+    check_mode: no
+  - name: define list of headend host groups
+    set_fact:
+      he_group_list: "{{ he_group_list|default([]) | union([host_item[:-2]]) }}"
+    loop: "{{ he_hosts_list.stdout_lines }}"
+    loop_control:
+      loop_var: host_item
+  - name: define lists of headend VMs per group
+    set_fact:
+      "{{ list_item + '_list' }}" : "{{ he_vms_list.stdout_lines | select('search', list_item) | list }}"
+    loop: "{{ he_group_list }}"
+    loop_control:
+      loop_var: list_item
+  - name: define Headend facts
+    set_fact:
+      tmpl_name: 'headend_inventory.yml.tmpl'
+      he_inv_file_name: "headend_{{ customer.primary.name_prefix | regex_replace('[0-9]+', '') }}_{{ customer.env_identifier }}_inventory.yml"
+      tmpl_dest: "{{ auto_dir }}/{{ spl_inventory_path }}"
+  - name: create Headend inventory file
+    template:
+      src: "{{ tmpl_item.name }}"
+      dest: "{{ tmpl_item.dest }}"
+    loop:
+      - { name: "templates/{{ tmpl_name }}", dest: "{{ tmpl_dest }}/{{ he_inv_file_name }}" }
+    loop_control:
+      loop_var: tmpl_item
+  tags: splunk_auto
