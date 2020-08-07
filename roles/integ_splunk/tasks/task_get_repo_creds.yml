@@ -23,4 +23,4 @@
   no_log: true
   delegate_to: localhost
   run_once: true
-  tags: splunk_auto
+  tags: integ_splunk

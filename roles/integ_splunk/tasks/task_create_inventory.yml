@@ -7,7 +7,7 @@
       tmpl_name: "{{ 'customer_inventory.yml.tmpl' if inventory_hostname is search('splfwd') else 'headend_inventory.yml.tmpl' }}"
       he_inv_file_name: "headend_{{ customer.primary.name_prefix | regex_replace('[0-9]+', '') }}_{{ customer.env_identifier }}_inventory.yml"
       cu_inv_file_name: "customer_{{ customer.primary.name_prefix }}_{{ customer.env_identifier }}_inventory.yml"
-      tmpl_dest: "{{ auto_dir }}/{{ spl_inventory_path }}"
+      tmpl_dest: "{{ spl_inventory_path }}"
   - name: create {{ splunk_type }} inventory
     template:
       src: "{{ tmpl_item.name }}"
@@ -18,4 +18,4 @@
       loop_var: tmpl_item
   delegate_to: localhost
   run_once: true
-  tags: splunk_auto
+  tags: integ_splunk

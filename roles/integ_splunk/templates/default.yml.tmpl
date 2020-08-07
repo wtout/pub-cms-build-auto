@@ -37,7 +37,7 @@ config:
 ########################################################
 # Set some environment variables global, do not scope in splunk due to exception in defs
 ansbile_home: "{{ '{{ lookup(\'env\',\'HOME\') }}' }}"
-ansible_deploy_location: "{{ auto_dir }}/splunk_install/deploy"
+ansible_deploy_location: "{{ spl_wd }}/deploy"
 splunk_rpm: "{{ '{{ lookup(\'env\',\'SPLUNK_RPM\') or \'splunk-7.3.4-13e97039fb65-linux-2.6-x86_64.rpm\' }}' }}"
 phatnom_offline_tar: "{{ '{{ lookup(\'env\',\'PHANTOM_TAR\') or \'phantom_offline_setup_centos7-4.8.24304.tgz\' }}' }}"
 internal_dns_server: "{{ '{{ lookup(\'env\',\'INTERNAL_DNS\') or \'' + sysconfig.dns_servers|first + '\' }}' }}"

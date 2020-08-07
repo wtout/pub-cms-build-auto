@@ -4,7 +4,7 @@
   - name: clone the repos
     git:
       repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
-      dest: "{{ auto_dir }}/{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
+      dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
       version: "{{ repo_item.release }}"
 #      force: yes
     loop:
@@ -16,4 +16,4 @@
   delegate_to: localhost
   ignore_errors: yes
   run_once: true
-  tags: splunk_auto
+  tags: integ_splunk
