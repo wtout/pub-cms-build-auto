@@ -36,7 +36,7 @@
 
   roles:
     - {role: "{{ auto_dir }}/roles/vm_fromiso", when: create_vms_iso | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/splunk_auto", when: install_splunk | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/integ_splunk", when: install_splunk | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_creation", when: create_vms_ova | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_configuration", when: configure_vms | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/puppet", when: push_puppet | default(false) | bool}
