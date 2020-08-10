@@ -26,7 +26,7 @@
           path: "{{ pkg_dir }}/Packages/{{ customer.release }}"
           state: directory
       - name: download the package for release version {{ customer.release }}
-        shell: "wget --no-proxy -np -nH -nd -r -R index.html http://engci-maven-master.cisco.com/artifactory/cms-quicksilver-release/{{ customer.release }}/Puppet/ -A ova,ova.sha1"
+        shell: "wget --no-proxy -np -nH -nd -r -R index.html {{ artifactory.baseurl }}/artifactory/cms-quicksilver-release/{{ customer.release }}/Puppet/ -A ova,ova.sha1"
         args:
           chdir: "{{ pkg_dir }}/Packages/{{ customer.release }}"
         async: 7200
