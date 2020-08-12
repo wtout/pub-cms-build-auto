@@ -111,6 +111,7 @@ The list of roles used in the playbooks:
   - **vm_configuration**: configures the stack's VMs
   - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
   - **vm_ppp_configuration**: configures the stack's VMs post initial puppet push
+  - **integ_splunk**: Downloads, configures and runs the MDR-Splunk automation package to install the core and the customer forwarder
   - **splunk_mop**: implements the datetime fix for splunk VMs
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 

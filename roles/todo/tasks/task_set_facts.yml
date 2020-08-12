@@ -118,8 +118,7 @@
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is search('mdr')
-    - not inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra'])    
-  tags: splunk_auto
+  tags: integ_splunk
 
 - name: define create_vms_ova
   set_fact:

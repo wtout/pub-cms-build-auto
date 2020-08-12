@@ -4,7 +4,7 @@
   - name: clone the repos
     git:
       repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
-      dest: "{{ auto_dir }}/{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
+      dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
       version: "{{ repo_item.release }}"
 #      force: yes
     loop:
@@ -12,7 +12,8 @@
       - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-splunk-env.git', release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
     loop_control:
       loop_var: repo_item
+    register: clone_repos
   delegate_to: localhost
   ignore_errors: yes
   run_once: true
-  tags: splunk_auto
+  tags: integ_splunk

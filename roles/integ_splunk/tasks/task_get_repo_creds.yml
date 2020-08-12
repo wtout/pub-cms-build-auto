@@ -19,7 +19,8 @@
   - name: define credentials string
     set_fact:
       repo_creds: "{{ repo_username if repo_username is search(':') else repo_username + ':' + repo_password|default('') }}"
+  check_mode: no
   no_log: true
   delegate_to: localhost
   run_once: true
-  tags: splunk_auto
+  tags: integ_splunk
