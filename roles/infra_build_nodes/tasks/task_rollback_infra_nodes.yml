@@ -1,6 +1,9 @@
 ---
 # Task file to delete infra nodes
 - block:
+  # remove this line
+  - pause:
+  #
   - name: Delete VM
     vmware_guest:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"

@@ -35,7 +35,7 @@
 
 # Plays to create, configure the VMs and to run the puppet push
 - name: Deploy VMs
-  hosts: all
+  hosts: all, !*infra
   gather_facts: no
 
   roles:
