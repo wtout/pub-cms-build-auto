@@ -6,7 +6,7 @@
       src: "{{ tmpl_item.name }}"
       dest: "{{ tmpl_item.dest }}"
     loop:
-      - { name: 'templates/default.yml.tmpl', dest: "{{ spl_ansible_path }}/default.yml" }
+      - { name: 'templates/default.yml.tmpl', dest: "{{ tmpl_dest }}/default.yml" }
     loop_control:
       loop_var: tmpl_item
   - name: Update SSH passwords vault
@@ -19,6 +19,25 @@
       loop_var: tmpl_item
   - name: Encrypt ssh_passwords vault
     shell: ansible-vault encrypt --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh ssh_passwords.yml
+    args:
+      chdir: "{{ spl_ansible_path }}"
+  - name: Decrypt phantom config assets file
+    shell: head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt --vault-password-file vault-password-file phantom_config_assets.yml
+    args:
+      chdir: "{{ spl_ansible_path }}"
+  - name: Update phantom config assets file
+    replace:
+      path: "{{ spl_ansible_path }}/phantom_config_assets.yml"
+      regexp: "^({{ line_item.param }}:).*$"
+      replace: '\g<1> {{ line_item.value }}'
+    loop:
+      - { param: 'my_phantom_email', value: '{{ SPLPHN_USER }}' }
+      - { param: 'my_phantom_password', value: '{{ SPLPHN_PASS }}' }
+    loop_control:
+      loop_var: line_item
+    no_log: true
+  - name: Encrypt phantom config assets file
+    shell: head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh phantom_config_assets.yml
     args:
       chdir: "{{ spl_ansible_path }}"
   delegate_to: localhost

@@ -1,12 +1,8 @@
 ---
 
 # Ideally the mdr drilldown_url and search head would be a vip
-drilldown_url_default: "{{ 'https://{{ groups[\'splunk_search_head\'][0] }}:8000' }}"
-search_head_default: "{{ '{{ groups[\'splunk_search_head\'][0] }}' }}"
-mdr:
-  drilldown_url: "{{ '{{ lookup(\'env\',\'SEARCHHEAD_URL\') or drilldown_url_default }}' }}"
-  search_head: "{{ '{{ lookup(\'env\',\'SEARCHHEAD_VIP\') or search_head_default }}' }}"
-  drilldown_app: cms_mdr_gsoc
+#drilldown_url_default: "{{ 'https://{{ groups[\'splunk_search_head\'][0] }}:8000' }}"
+#search_head_default: "{{ '{{ groups[\'splunk_search_head\'][0] }}' }}"
 
 ansible_post_tasks: null
 ansible_pre_tasks: null
@@ -37,12 +33,86 @@ config:
 ########################################################
 # Set some environment variables global, do not scope in splunk due to exception in defs
 ansbile_home: "{{ '{{ lookup(\'env\',\'HOME\') }}' }}"
-ansible_deploy_location: "{{ spl_wd }}/deploy"
-splunk_rpm: "{{ '{{ lookup(\'env\',\'SPLUNK_RPM\') or \'splunk-7.3.4-13e97039fb65-linux-2.6-x86_64.rpm\' }}' }}"
-phatnom_offline_tar: "{{ '{{ lookup(\'env\',\'PHANTOM_TAR\') or \'phantom_offline_setup_centos7-4.8.24304.tgz\' }}' }}"
-internal_dns_server: "{{ '{{ lookup(\'env\',\'INTERNAL_DNS\') or \'' + sysconfig.dns_servers|first + '\' }}' }}"
+ansible_deploy_location: "{{ '{{ lookup(\'env\',\'DEPLOY_HOME\') or ansbile_home }}/deploy' }}"
+
+
+########################################################
+########################################################
+#
+# Start Common Config Options
+#
+########################################################
+########################################################
+
+# IP, HOSTNAME of external license server, set to localhost if unknown
+g_splunk_license_server: "{{ splunk.license_server }}"
+
+# IP,HOSTNAME of external deployer, set to localhost if unknown
+g_splunk_deployer_server: "localhost"
+
+# IP,  HOSTNAME of external deployment, set to localhost if unknown
+g_splunk_deployment_server: "localhost"
+
+proxy:
+  #  Setup PROXY info
+  url: "{{ proxy_address | regex_replace('^.*//(.*):.*$', '\\1') | regex_replace('^.*@(.*)$', '\\1') }}"
+  port: "8080"
+  no_proxy: "{{ '127.0.0.1,localhost,{{ groups[\'all\'] | join(\',\') }},{{ g_splunk_license_server }},{{ g_splunk_deployer_server }},{{ g_splunk_deployment_server }}' }}"
+  # Username and password are in default vault
+  #username: ""
+  #password: ""
+
+# Avoid nested templates
+g_splunk_rpm: "splunk-7.3.4-13e97039fb65-linux-2.6-x86_64.rpm"
+
+phantom:
+  # For RPM BASED installed set the inital RPMs to installed
+  repo_nginx_url: "https://repo.phantom.us/phantom/4.8/base/7/x86_64/nginx-1.17.7-1.el7.ngx.x86_64.rpm"
+  repo_rpm_url: "https://repo.phantom.us/phantom/4.8/base/7/x86_64/phantom_repo-4.8.24304-1.x86_64.rpm"
+
+  # Allow prerequisites
+  #centos7_yum_prerequisites: "htop"
+
+  # DNS server that Phantom will use
+  internal_dns_server: "{{ sysconfig.dns_servers|first }}"
+
+  # For offline installs
+  #offline_tar: "phantom_offline_setup_centos7-4.8.24304.tgz"
+
+  # Allow Patching of Phantom install and Phantom env
+  install_workarounds: true
+
+  # Phantom VIP
+  mdr_phantom_head: "{{ '{{ groups[\'splunk_phantom\'][0] }}' }}"
 
 splunk:
+  # Splunk RPM name, ref the global RPM name
+  rpm: "{{ '{{ g_splunk_rpm }}' }}"
+
+  # Trusted IP for SAML AUTH
+  trustedIP: "127.0.0.1"
+
+  # Splunk License url
+  license_uri: "{{ 'https://{{ g_splunk_license_server }}:8089' }}"
+
+  # Ideally the mdr drilldown_url and search head would be a vip
+  mdr_drilldown_url: "https://{{ splunk.he_searchhead_vip }}:8000"
+
+  # Search HEAD VIP
+  mdr_search_head:  "{{ splunk.he_searchhead_vip }}"
+
+  # Default app for events
+  mdr_drilldown_app: cms_mdr_gsoc
+
+
+########################################################
+########################################################
+#
+# End Common Config Options
+#
+########################################################
+########################################################
+
 ########################################################
 # Set some environment variables
   opt: /opt
@@ -68,7 +138,7 @@ splunk:
 
 ########################################################
 # Splunk Installation options - define user and group
-  build_location: "{{ '/tmp/{{ splunk_rpm }}' }}"
+  build_location: "{{ '/tmp/{{ g_splunk_rpm }}' }}"
   build_remote_src: false
   enable_service: true
   user: splunk
@@ -91,20 +161,6 @@ splunk:
 
 # Flag to set minimum free memory
   minfreemb: 1000
-
-# Define the location of an external license server
-
-# TEST
-#  license_uri: https://mdr-license-01:8089
-# PAE LAB
-#  license_uri: https://172.23.252.29:8089
-# LA
-#  license_uri: https://rtp5spllicp01.cisco-cms.com:8089
-# ALLAN
-# license_uri: https://alln1spllicp01.cisco-cms.com:8089
-# ART
-#  https://74.103.200.115:18089
-  license_uri: "{{ '{{ lookup(\'env\',\'LICENSE_URI\') or \'' + splunk.license_server_url + '\' }}' }}"
 
 ########################################################
 # Splunk Web Options

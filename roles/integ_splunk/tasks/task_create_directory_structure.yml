@@ -21,7 +21,7 @@
     find:
       paths: "{{ auto_dir }}/Packages/Splunk"
       file_type: file
-      patterns: '*.rpm,*.tgz'
+      patterns: '*.rpm'
     register: artifacts_list
   - debug:
       msg:
