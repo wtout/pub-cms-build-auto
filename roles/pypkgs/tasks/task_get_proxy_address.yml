@@ -24,7 +24,7 @@
   - block:
     - name: update proxy_address
       set_fact:
-        proxy_address: "{{ proxy_address | regex_replace('//.*@', '//') \ regex_replace('//', '//' + SVC_USER + ':' + SVC_PASS + '@') }}"
+        proxy_address: "{{ proxy_address | regex_replace('//.*@', '//') | regex_replace('//', '//' + SVC_USER + ':' + SVC_PASS + '@') }}"
       no_log: true
     - name: validate updated proxy setting
       uri:
