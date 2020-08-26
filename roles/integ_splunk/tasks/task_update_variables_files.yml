@@ -40,6 +40,16 @@
     shell: head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh phantom_config_assets.yml
     args:
       chdir: "{{ spl_ansible_path }}"
+  - name: Implement changes to avoid ssh timeout
+    lineinfile:
+      path: "{{ spl_ansible_path }}/roles/phantom/tasks/yum_upgrade.yml"
+      insertafter: '    lock_timeout: 120'
+      line: "{{ line_item }}"
+    loop:
+      - '  poll: 25'
+      - '  async: 8200'
+    loop_control:
+      loop_var: line_item
   delegate_to: localhost
   run_once: true
   tags: integ_splunk

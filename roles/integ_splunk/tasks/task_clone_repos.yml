@@ -1,6 +1,10 @@
 ---
 # Tasks to clone the repos
 - block:
+  - name: Cache the repo credentials
+    shell: |
+      git config --global credential.helper cache
+      git config --global credential.helper "cache --timeout=600"
   - name: clone the repos
     git:
       repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"

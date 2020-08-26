@@ -27,7 +27,7 @@
       ANSIBLE_LOG_PATH={{ log_file_name.stdout }}
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
-      ./build_customer.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+      ./build_customer.sh  --environment={{ customer.env_identifier }} --customerhost={{ vm.name }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
     register: cu_install
     args:
       chdir: "{{ spl_ansible_path }}"
