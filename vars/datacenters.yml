@@ -1,5 +1,6 @@
 ---
 auto_dir: "{{ playbook_dir.split('/')[:-1] | join('/') }}"
+#bfiso: true
 
 ##########################################
 # Do not modify anything below this line
@@ -55,6 +56,6 @@ datacenters:
     deptype: 'h'
     folder: 'Hosted Solution'
     cluster: 'HX Cluster'
-    datastore_cluster: ''
+    datastore_cluster: 'HX-Cluster-1'
     storage_datastore: 'ALLN1-HX-DS-01'
     storage_path: 'Linux'
