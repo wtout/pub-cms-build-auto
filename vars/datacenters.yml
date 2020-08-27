@@ -51,7 +51,7 @@ datacenters:
     storage_datastore: 'RTP5-HX-DS-01'
     storage_path: 'Linux'
 
-  ALLN1:
+  Alln1:
     vsphere: 'alln1vcsap01.cisco-cms.com'
     deptype: 'h'
     folder: 'Hosted Solution'

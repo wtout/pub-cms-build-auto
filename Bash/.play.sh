@@ -111,10 +111,10 @@ function get_proxy() {
 	local MYPROXY=$(grep -r "^proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
 	if [[ ${MYPROXY} == '' ]]
 	then
-		echo -e "\nUnable to find proxy configuration in /etc/environment /etc/profile ~/.bashrc ~/.bash_profile. Aborting!\n"
+		echo -e "Unable to find proxy configuration in /etc/environment /etc/profile ~/.bashrc ~/.bash_profile. Aborting!\n"
 		return 1
 	else
-		local PUBLIC_ADDRESS="https://www.google.com"
+		local PUBLIC_ADDRESS="https://www.cisco.com"
 		curl --proxy ${MYPROXY} ${PUBLIC_ADDRESS} &>/dev/null
 		if [[ ${?} -eq 0 ]]
 		then
@@ -122,8 +122,14 @@ function get_proxy() {
 			return 0
 		else
 			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-			read -r PUSER <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_USER | cut -d "'" -f2)
-			read -r PPASS <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_PASS | cut -d "'" -f2)
+			if [[ "x$(which ansible 2>/dev/null)" == "x" ]]
+			then
+				read -p "Enter a valid proxy username and press [ENTER]: " PUSER
+				read -s -p "Enter a valid proxy password and press [ENTER]: " PPASS
+			else
+				read -r PUSER <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_USER | cut -d "'" -f2)
+				read -r PPASS <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_PASS | cut -d "'" -f2)
+			fi
 			local MYPROXY=$(echo ${MYPROXY} | sed -e "s|//.*@|//|g" -e "s|//|//${PUSER}:${PPASS}@|g")
 			curl --proxy $(echo ${MYPROXY}) ${PUBLIC_ADDRESS} &>/dev/null
 			if [[ ${?} -eq 0 ]]
@@ -132,7 +138,7 @@ function get_proxy() {
 				return 0
 			else
 				[[ ${debug} == 1 ]] && debug=0 && set -x
-				echo -e "\nProxy credentials are not valid. Aborting!\n"
+				echo -e "Proxy credentials are not valid. Aborting!\n"
 				return 1
 			fi
 		fi
@@ -164,8 +170,6 @@ function remove_proxy_yum() {
 
 function install_packages() {
 	[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-	local PROXY_ADDRESS=$(get_proxy) || local FS=${?}
-	[[ ${FS} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${FS}
 	[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -ne 0 ]] && [[ ${debug} == 1 ]] && debug=0 && set -x
 	local OS_VERSION=$(get_centos_release)
 	for pkg in ${PKG_LIST}
@@ -236,7 +240,9 @@ function remove_extra_vars_arg() {
 }
 
 function install_pypkgs() {
-	ansible-playbook playbooks/pypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v
+	[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
+	[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
+	ansible-playbook playbooks/pypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh
 	INSTALL_PYPKGS_STATUS=${?}
 	[[ ${INSTALL_PYPKGS_STATUS} != 0 ]] && echo -e "\n${BOLD}Unable to install Python packages successfully. Aborting!${NORMAL}" && exit 1
 }
@@ -272,8 +278,6 @@ function view_vault() {
 }
 
 function check_updates() {
-	local PROXY_ADDRESS=$(get_proxy) || local FS=${?}
-	[[ ${FS} -eq 1 ]] && exit ${FS}
 	[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -ne 0 ]] && [[ ${debug} == 1 ]] && debug=0 && set -x
 	if [[ "x$(git config user.name)" != "x" ]]
 	then
@@ -453,8 +457,6 @@ function run_playbook() {
 			local BCV="-e @${CRVAULT} --vault-password-file Bash/get_creds_vault_pass.sh"
 		fi
 		### End
-		[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
-		[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
 		ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
@@ -512,6 +514,8 @@ check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
 git_config
+PROXY_ADDRESS=$(get_proxy) || PA=${?}
+[[ ${PA} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${PA}
 install_packages
 check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
 install_pypkgs ${@}
