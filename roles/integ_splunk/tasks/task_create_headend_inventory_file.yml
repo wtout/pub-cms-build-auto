@@ -37,8 +37,6 @@
   - name: define Headend facts
     set_fact:
       tmpl_name: 'headend_inventory.yml.tmpl'
-      he_inv_file_name: "headend_{{ customer.primary.name_prefix | regex_replace('[0-9]+', '') }}_{{ customer.env_identifier }}_inventory.yml"
-      tmpl_dest: "{{ spl_inventory_path }}"
   - name: create Headend inventory file
     template:
       src: "{{ tmpl_item.name }}"

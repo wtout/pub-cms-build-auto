@@ -1,12 +1,16 @@
 ---
 # Tasks to clone the repos
 - block:
+  - name: Cache the repo credentials
+    shell: |
+      git config --global credential.helper cache
+      git config --global credential.helper "cache --timeout=600"
   - name: clone the repos
     git:
       repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
       dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
       version: "{{ repo_item.release }}"
-#      force: yes
+      force: yes
     loop:
       - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-automation.git', release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
       - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-splunk-env.git', release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
@@ -14,6 +18,5 @@
       loop_var: repo_item
     register: clone_repos
   delegate_to: localhost
-  ignore_errors: yes
   run_once: true
   tags: integ_splunk

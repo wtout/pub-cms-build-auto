@@ -2,4 +2,4 @@
 # vars file for integ_splunk
 spl_wd: "{{ auto_dir }}/../imp_auto/{{ 'splunk_install' }}"
 spl_ansible_path: "{{ spl_wd + '/dev/mdr-automation/splunk-ansible' }}"
-spl_inventory_path: "{{ spl_ansible_path + '/inventory/cisco_inventory' }}"
+spl_inventory_path: "{{ spl_ansible_path + '/environments/' + customer.env_identifier }}"

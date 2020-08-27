@@ -1,0 +1,7 @@
+splunk_heavy_forwarder:
+  hosts:
+  vars:
+    splunk:
+      role: splunk_heavy_forwarder
+      yum_proxy_enabled: {{ true if proxy_address != '' else false }}
+      TA_proxy_enabled: {{ true if proxy_address != '' else false }}

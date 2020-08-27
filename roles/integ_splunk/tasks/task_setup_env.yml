@@ -6,6 +6,12 @@
     register: setup_env
     args:
       chdir: "{{ spl_wd }}/dev/mdr-splunk-env"
+  - name: Disable caching of repo credentials
+    command: git config --global --unset credential.helper
+  - name: Delete global gitconfig
+    file:
+      path: '~/.gitconfig'
+      state: absent
   when: clone_repos is succeeded
   delegate_to: localhost
   run_once: true
