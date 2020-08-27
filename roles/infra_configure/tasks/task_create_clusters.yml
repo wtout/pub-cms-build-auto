@@ -24,10 +24,6 @@
     register: cust_drcluster
     when: customer.disaster_recovery
 
-  - debug:
-      msg: "{{ hostvars[groups['vcenter']|first] }}"
-  - pause:
-
   - name: Check if hosts are in a different cluster
     assert:
       that: hostvars[groups['vcenter']|first]['host_cluster'][host_item] == none or ((hostvars[groups['vcenter']|first]['host_cluster'][host_item] != none and hostvars[groups['vcenter']|first]['host_cluster'][host_item] == hostvars[groups['vcenter'][0]]['information']['drcluster']) if (customer.disaster_recovery and host_item == hostvars[groups['vcenter'][0]]['information']['resources']|last) else (hostvars[groups['vcenter']|first]['host_cluster'][host_item] != none and hostvars[groups['vcenter']|first]['host_cluster'][host_item] == hostvars[groups['vcenter'][0]]['information']['cluster']))

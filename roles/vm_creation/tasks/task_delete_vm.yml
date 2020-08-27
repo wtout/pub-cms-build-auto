@@ -4,9 +4,6 @@
   - name: Define folder name
     set_fact:
       fldr_name: "{{ hostvars[groups['vcenter'][0]]['information']['folder'] + '/' + customer.name if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups['vcenter'][0]]['information']['folder'] }}"
-  # remove this line
-  - pause:
-  #
   - name: Delete VM
     vmware_guest:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"

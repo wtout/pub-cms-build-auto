@@ -8,8 +8,7 @@
 
   - set_fact:
       existing_route: "{{ static_routes_list.stdout_lines[0] | select('search', customer.primary.octets) | list | first }}"
-    when: "{{ static_routes_list.stdout_lines[0] 
-    customer.primary.octets) | list != [] }}"
+    when: "{{ static_routes_list.stdout_lines[0] | select('search', customer.primary.octets) | list != [] }}"
 
   - name: Remove DHCP entry from nexus
     nxos_command:

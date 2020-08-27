@@ -75,7 +75,7 @@
       failed_when: csr_license_details_1 is search('1/1 licenses were failed to install')
       tags: infra_license
 
-    - name: Remove Netscaler key from known_hosts
+    - name: Remove CSR key from known_hosts
       known_hosts:
         name: "{{ netconfig.ipaddress3 }}"
         key: "{{ host_key.stdout }}"

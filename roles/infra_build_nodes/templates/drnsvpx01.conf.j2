@@ -64,7 +64,7 @@ add dns nameServer 172.19.251.21
 add dns nameServer 172.19.251.22
 rm route 0.0.0.0 0.0.0.0 {{ customer.secondary.octets }}.62
 
-set system user nsroot C1sc0123
+set system user nsroot {{ credentials.complex_password }}
 
 save ns config
 .
