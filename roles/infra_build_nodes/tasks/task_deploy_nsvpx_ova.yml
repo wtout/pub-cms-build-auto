@@ -12,7 +12,7 @@
     folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
     name: "{{ vm.name }}"
     networks: {}
-    ova: "{{ ova_dir }}/{{ customer.release }}/NSVPX-ESX-11.1-53.11_nc.ovf"
+    ova: "{{ ova_dir }}/{{ customer.release }}/NSVPX-ESX-12.1-57.18_nc_64.ovf"
     power_on: no
     allow_duplicates: no
     validate_certs: no
