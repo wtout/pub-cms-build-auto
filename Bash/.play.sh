@@ -109,12 +109,19 @@ function get_proxy() {
 	chmod +x Bash/get*
 	grep '^proxy.*:.*@' /etc/environment /etc/profile ~/.bashrc ~/.bash_profile &>/dev/null && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 	local MYPROXY=$(grep -r "^proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
+	local PUBLIC_ADDRESS="https://www.cisco.com"
 	if [[ ${MYPROXY} == '' ]]
 	then
-		echo -e "Unable to find proxy configuration in /etc/environment /etc/profile ~/.bashrc ~/.bash_profile. Aborting!\n"
-		return 1
+		curl ${PUBLIC_ADDRESS} &>/dev/null
+		if [[ ${?} -eq 0 ]]
+		then
+			echo ${MYPROXY}
+			return 0
+		else
+			echo -e "Unable to find proxy configuration in /etc/environment /etc/profile ~/.bashrc ~/.bash_profile. Aborting!\n"
+			return 1
+		fi
 	else
-		local PUBLIC_ADDRESS="https://www.cisco.com"
 		curl --proxy ${MYPROXY} ${PUBLIC_ADDRESS} &>/dev/null
 		if [[ ${?} -eq 0 ]]
 		then
@@ -342,7 +349,7 @@ function check_updates() {
 					EC='continue'
 				fi
 			fi
-			git config --remove-section http
+			git config --get http.proxy 1>/dev/null && git config --remove-section http
 			[[ ${RESET_PROXY} == "true" ]] && source ~/.bashrc /etc/profile /etc/environment
 			${EC}
 		fi
