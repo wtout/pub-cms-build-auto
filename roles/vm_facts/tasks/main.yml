@@ -6,17 +6,36 @@
       tasks_from: task_get_proxy_address.yml
     vars:
       host_delegate: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - name: get list of stack groups in play
+    set_fact:
+      play_stack_group_list: "{{ play_stack_group_list|default([]) | union([host_item[:-2]]) }}"
+    loop: "{{ ansible_play_hosts | reject('match', 'dr*|bastion*|puppet*|vcenter*') | list }}"
+    loop_control:
+      loop_var: host_item
+      label: "{{ host_item }}"
+    run_once: true
+  - name: get list of DR groups in play
+    set_fact:
+      play_dr_group_list: "{{ play_dr_group_list|default([]) | union([host_item[:-2]]) }}"
+    loop: "{{ ansible_play_hosts | select('match', 'dr*') | list }}"
+    loop_control:
+      loop_var: host_item
+      label: "{{ host_item }}"
+    when: customer.disaster_recovery
+    run_once: true
   - include_tasks: task_check_cluster_name.yml
     when:
       - inventory_hostname in groups['vcenter']
       - information.deptype == 'a'
   - block:
     - include_tasks: task_define_vm_ip.yml
-    - include_tasks: task_define_vm_disk_size.yml
-    - include_tasks: task_define_groups_list.yml
-    - include_tasks: task_define_hosts_variables.yml
-      when: configure_vms | default(false) | bool or configure_ppp_vms | default(false) | bool
+    - block:
+      - include_tasks: task_define_vm_disk_size.yml
+      - include_tasks: task_define_groups_list.yml
+      - include_tasks: task_define_hosts_variables.yml
+        when: configure_vms | default(false) | bool or configure_ppp_vms | default(false) | bool
+      when:
+        - deploy | default(false) | bool
     when:
-      - deploy | default(false) | bool
       - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
   tags: ['always', 'vm_facts']

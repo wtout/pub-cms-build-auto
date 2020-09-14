@@ -45,7 +45,7 @@ customer:
 ##################################################################################
 datacenter:
 
-  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC-1, PAE-HX-DC-2, ALLN1 (string)
+  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC-1, PAE-HX-DC-2, Alln1 (string)
   name: cdra-Build-Development
 
   # Required if a custom cluster name is to be used

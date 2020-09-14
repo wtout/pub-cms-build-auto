@@ -13,7 +13,7 @@
     register: playbook_status
   - name: Get playbook execution time from {{ LFILE }}
     shell: |
-      grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ NHOSTS }}+2;i++){print $0;getline}}' {{ LFILE }} | egrep -v 'awk|RECAP' | egrep '.[1-9]{,3} \*\*\*\*\*\*\*' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
+      grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ NHOSTS }}+2;i++){print $0;getline}}' {{ LFILE }} | egrep -v 'awk|RECAP|===' | egrep '.[1-9]{,3} \*{3,}' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
     register: playbook_execution
   - set_fact:
       playbook_time: "{{ playbook_time|default('') + ' ' + time_item.0|regex_replace('^0*', '') + time_item.1 }}"
