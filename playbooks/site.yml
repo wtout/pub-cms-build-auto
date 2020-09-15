@@ -56,5 +56,5 @@
     - {role: "{{ auto_dir }}/roles/drs_creation", when: rollback_drs | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_creation", when: rollback_vms_ova | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_fromiso", when: rollback_vms_iso | default(false) | bool}
-    - {role: "{{ auto_dir }}/roles/ssh_keys", when: rollback_ssh_keys | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/drs_status", when: check_drs_removal | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/ssh_keys", when: rollback_ssh_keys | default(false) | bool}

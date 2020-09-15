@@ -12,5 +12,4 @@
   - include_tasks: task_enable_root_login.yml
   - include_tasks: task_update_default_route.yml
   - include_tasks: task_update_vmwaretools.yml
-    when: hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
   tags: vm_creation

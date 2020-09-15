@@ -16,7 +16,7 @@
     uri:
       url: "https://www.cisco.com"
     register: validate_proxy1
-    ignore_errors: true
+    ignore_errors: "{{ true if proxy_address != '' else false }}"
     environment:
       http_proxy: "{{ proxy_address }}"
       https_proxy: "{{ proxy_address }}"
@@ -40,7 +40,6 @@
           - validate_proxy2 is succeeded
         fail_msg: "{{ SVC_USER }} service account credentials are not valid for the detected proxy. Aborting!"
     when:
-      - proxy_address != ''
       - validate_proxy1 is failed
 
   delegate_to: "{{ host_delegate|default('localhost') }}"

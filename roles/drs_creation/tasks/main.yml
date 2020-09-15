@@ -1,8 +1,6 @@
 ---
 # tasks file for drs_creation
 - block:
-  - debug:
-      msg: "drs_creation"
   - include_tasks: task_create_drs_rule.yml
     when:
       - deploy_drs | default(false) | bool
