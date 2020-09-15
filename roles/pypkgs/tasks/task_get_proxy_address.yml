@@ -39,7 +39,9 @@
         that:
           - validate_proxy2 is succeeded
         fail_msg: "{{ SVC_USER }} service account credentials are not valid for the detected proxy. Aborting!"
-    when: validate_proxy1 is failed
+    when:
+      - proxy_address != ''
+      - validate_proxy1 is failed
 
   delegate_to: "{{ host_delegate|default('localhost') }}"
   run_once: true

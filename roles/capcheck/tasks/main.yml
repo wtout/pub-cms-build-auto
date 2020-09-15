@@ -1,23 +1,6 @@
 ---
 # tasks file for capcheck
 - block:
-  - name: get list of stack groups in play
-    set_fact:
-      play_stack_group_list: "{{ play_stack_group_list|default([]) | union([host_item[:-2]]) }}"
-    loop: "{{ ansible_play_hosts | reject('match', 'dr*|bastion*|puppet*|vcenter*|nexus*') | list }}"
-    loop_control:
-      loop_var: host_item
-      label: "{{ host_item }}"
-
-  - name: get list of DR groups in play
-    set_fact:
-      play_dr_group_list: "{{ play_dr_group_list|default([]) | union([host_item[:-2]]) }}"
-    loop: "{{ ansible_play_hosts | select('match', 'dr*') | list }}"
-    loop_control:
-      loop_var: host_item
-      label: "{{ host_item }}"
-    when: customer.disaster_recovery
-
   - include_tasks: task_get_required_space.yml
 
   - block:
