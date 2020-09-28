@@ -27,7 +27,7 @@ function check_hosts_limit() {
 		local MYHOSTS=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
 		[[ "x$(echo ${@} | egrep -w '\-\-tags')" != "x" ]] && local MYTAGS=$(echo ${@} | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
 		[[ "x$(echo ${MYTAGS})" == "x" ]] && local update_args=1
-		[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation|capcheck|puppet')" != "x" ]] && local update_args=1
+		[[ "x$(echo ${MYTAGS} | egrep -w 'none')" == "x" ]] && local update_args=1
 		if [[ ${update_args} -eq 1 ]]
 		then
 			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},vcenter/")
@@ -327,11 +327,20 @@ function check_updates() {
 			do
 				[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 				local REPOPWD=$(echo ${REPOPASS} | sed -e 's/@/%40/g')
-				local REMOTEID=$([[ ${RESET_PROXY} ]] && unset https_proxy || git config http.proxy ${PROXY_ADDRESS}; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/dev/null | cut -c1-7)
+				local REMOTEID=$([[ ${RESET_PROXY} ]] && unset https_proxy || git config http.proxy ${PROXY_ADDRESS}; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/tmp/${PID}-remoteid.stderr | cut -c1-7)
 				[[ ${debug} == 1 ]] && set -x
 				[[ ${REMOTEID} == "" ]] && sleep 3 || break
 			done
-			[[ "${REMOTEID}" == "" ]] && printf "\nYour Repository credentials are invalid!\n\n" && rm -f ${1} && exit
+			if [[ "${REMOTEID}" == "" ]]
+			then
+				local REPO_ERR=$(grep -i maintenance /tmp/${PID}-remoteid.stderr)
+				if [[ "${REPO_ERR}" == "" ]]
+				then
+				 	printf "\nYour Repository credentials are invalid!\n\n" && rm -f ${1} && exit
+				else
+				 	printf "\n${REPO_ERR}" && rm -f /tmp/${PID}-remoteid.stderr && exit
+				fi
+			fi
 			if [[ "${LOCALID}" != "${REMOTEID}" ]]
 			then
 				echo

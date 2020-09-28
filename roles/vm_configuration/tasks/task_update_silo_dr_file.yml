@@ -7,7 +7,7 @@
       regexp: '^({{ task_item.param }}) (.*)$'
       replace: '\g<1> {{ task_item.value }}'
     loop:
-      - { param: 'dbpasswd =', value: '{{ vars[customer.release[1:4].split(".")|join + "EM7PPP_PASS"] }}' }
+      - { param: 'dbpasswd =', value: '{{ EM7DBPPP_PASS }}' }
     loop_control:
       loop_var: task_item
     no_log: true

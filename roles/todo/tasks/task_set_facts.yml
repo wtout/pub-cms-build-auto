@@ -25,7 +25,7 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['vcenter']
-  tags: [ 'capcheck', 'vm_creation', 'puppet' ]
+  tags: [ 'capcheck', 'vm_creation', 'vm_configuration', 'puppet' ]
 
 - name: define get_release
   set_fact:
