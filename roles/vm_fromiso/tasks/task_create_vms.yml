@@ -3,7 +3,9 @@
 - block:
   - block:
     - block:
-      - include_tasks: task_create_folder.yml
+      - include_role:
+          name: "{{ auto_dir + '/roles/vm_creation' }}"
+          tasks_from: task_create_folder.yml
         run_once: true
       - block:
         - name: get list of groups in play
@@ -33,7 +35,9 @@
           - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
 
     - block:
-      - include_tasks: task_create_cluster.yml
+      - include_role:
+          name: "{{ auto_dir + '/roles/vm_creation' }}"
+          tasks_from: task_create_cluster.yml
         run_once: true
       - include_tasks: task_create_configure_vms.yml
       when:
