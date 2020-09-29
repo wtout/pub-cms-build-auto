@@ -101,6 +101,8 @@ proxy=_none_
 {% endif %}
 EOF
 
+{% if customer.primary.name_prefix is search('mdr') %}
+{% block artifactory_repo %}
 cat <<EOF > /etc/yum.repos.d/artifactory.repo
 [EpelArtifactory]
 name=Epel Artifactory
@@ -130,9 +132,13 @@ enabled=1
 gpgcheck=1
 gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
 EOF
+{% endblock artifactory_repo %}
 
+{% block yum_conf %}
 # Add proxy to yum.conf on VM
 grep proxy /etc/yum.conf || sed -i 's|^\(\[main\]\)$|\1\nproxy={{ proxy_address }}|' /etc/yum.conf
+{% endblock yum_conf %}
+{% endif %}
 
 # Configure Chrony
 sed -i '/^server.*iburst$/d' /etc/chrony.conf

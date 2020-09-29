@@ -12,5 +12,4 @@
   - include_tasks: task_update_default_route.yml
   - name: flush handlers
     meta: flush_handlers
-  - include_tasks: task_enable_hardening.yml
   tags: vm_creation
