@@ -22,7 +22,7 @@
   loop: "{{ vm_info.results }}"
   loop_control:
     loop_var: host_item
-    label: "{{ host_item }}"
+    label: "{{ host_item.virtual_machines | map(attribute='guest_name') | list }}"
   tags: vm_creation
 
 - name: Get the guest_info
@@ -52,7 +52,7 @@
   loop: "{{ vmguest_info.results }}"
   loop_control:
     loop_var: vm_item
-    label: "{{ vm_item }}"
+    label: "{{ vm_item.instance.hw_name }}"
   tags: vm_creation
 
 - name: Check if '{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}' cluster exists
