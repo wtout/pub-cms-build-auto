@@ -1,7 +1,8 @@
 ---
 # Tasks for vm_facts
 - block:
-  - include_role:
+  - name: "{{ auto_dir + '/roles/pypkgs' }}: get proxy address"
+    include_role:
       name: "{{ auto_dir + '/roles/pypkgs' }}"
       tasks_from: task_get_proxy_address.yml
     vars:

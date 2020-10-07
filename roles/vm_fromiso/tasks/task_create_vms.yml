@@ -2,7 +2,8 @@
 # tasks file to create vms
 - block:
   - block:
-    - include_role:
+    - name: "{{ auto_dir + '/roles/vm_creation' }}: create folder"
+      include_role:
         name: "{{ auto_dir + '/roles/vm_creation' }}"
         tasks_from: task_create_folder.yml
       run_once: true
@@ -34,7 +35,8 @@
         - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
 
   - block:
-    - include_role:
+    - name: "{{ auto_dir + '/roles/vm_creation' }}: create cluster"
+      include_role:
         name: "{{ auto_dir + '/roles/vm_creation' }}"
         tasks_from: task_create_cluster.yml
       run_once: true

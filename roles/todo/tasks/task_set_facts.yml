@@ -99,7 +99,6 @@
     - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
     - inventory_hostname in groups['stack']
     - customer.name | lower is not search('mdr')
-    - not bfiso | default(false) | bool
   tags: [ 'drs_creation', 'vm_creation' ]
 
 - name: define rollback_drs
@@ -110,7 +109,6 @@
     - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
     - inventory_hostname in groups['stack']
     - customer.name | lower is not search('mdr')
-    - not bfiso | default(false) | bool
   tags: [ 'drs_creation', 'vm_creation' ]
 
 - name: define check_drs_creation
@@ -121,7 +119,6 @@
     - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
     - inventory_hostname in groups['stack']
     - customer.name | lower is not search('mdr')
-    - not bfiso | default(false) | bool
   tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]
 
 - name: define check_drs_removal
@@ -132,7 +129,6 @@
     - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
     - inventory_hostname in groups['stack']
     - customer.name | lower is not search('mdr')
-    - not bfiso | default(false) | bool
   tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]
 
 - name: define configure_vms
