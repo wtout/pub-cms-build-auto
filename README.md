@@ -107,12 +107,15 @@ The list of roles used in the playbooks:
   - **get_release**: downloads the release package from the repository
   - **vm_facts**: defines the individual VM facts required in the playbook
   - **vm_creation**: deploys the stack's VMs from OVA
+  - **drs_creation**: creates the DRS rules
   - **vm_fromiso**: deploys the stack's VMs from ISO
+  - **vm_hardening**: enables hardening on the VMS created from ISO
+  - **integ_splunk**: Downloads, configures and runs the MDR-Splunk automation package to install the core and the customer forwarder
   - **vm_configuration**: configures the stack's VMs
   - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
   - **vm_ppp_configuration**: configures the stack's VMs post initial puppet push
-  - **integ_splunk**: Downloads, configures and runs the MDR-Splunk automation package to install the core and the customer forwarder
   - **splunk_mop**: implements the datetime fix for splunk VMs
+  - **drs_status**: checks the status the DRS rules
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
 To execute specific role(s), add "_--tags 'role1,role2,...'_" as argument to the script.

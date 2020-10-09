@@ -14,6 +14,8 @@
     register: pkg_install
     until: pkg_install is succeeded
     retries: 7
+    async: 600
+    poll: 10
     when: not ansible_check_mode
 
   - block:
@@ -29,6 +31,8 @@
       register: nfs_install
       until: nfs_install is succeeded
       retries: 7
+      async: 600
+      poll: 10
       when: not ansible_check_mode
     when:
       - inventory_hostname is search('rly')
