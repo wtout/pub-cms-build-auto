@@ -18,7 +18,7 @@
       cluster_empty: "{{ cluster_empty|default(true) and not vm_in_cluster }}"
   #    cluster_empty: "{{ cluster_empty|default(true) and not (vm_in_cluster and vm_on) }}"
     vars:
-      clus_name: "{{ hostvars[groups['vcenter'][0]]['information']['dr' if (drvm_names is defined and vm_name in drvm_names) else '' + 'cluster'] }}"
+      clus_name: "{{ hostvars[groups['vcenter'][0]]['information'][('dr' if (drvm_names is defined and vm_name in drvm_names) else '') + 'cluster'] }}"
       vm_in_cluster: "{{ true if vmguest_info.instance.hw_cluster == clus_name else false }}"
   #    vm_on: "{{ true if vmguest_info.instance.hw_power_status|lower is search('poweredon') else false }}"
   when: cluster_empty | default(true)
