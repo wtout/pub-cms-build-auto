@@ -14,7 +14,7 @@
     register: pkg_install
     until: pkg_install is succeeded
     retries: 7
-    async: 600
+    async: 8400
     poll: 10
     when: not ansible_check_mode
 

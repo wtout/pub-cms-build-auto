@@ -20,6 +20,8 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.em7.disk2 if (environment_definition.vm_setting.em7.disk2 is defined and environment_definition.vm_setting.em7.disk2 != none) else '0' }}"
     disk3: "{{ environment_definition.vm_setting.em7.disk3 if (environment_definition.vm_setting.em7.disk3 is defined and environment_definition.vm_setting.em7.disk3 != none) else '0' }}"
 
+    name: "{{ environment_definition.vm_setting.em7.name if (environment_definition.vm_setting.em7.name is defined and environment_definition.vm_setting.em7.name != none) else '' }}"
+
     # Network interface 1
     ################
     nic1:
@@ -33,14 +35,20 @@ vm_vars:
       # IP fourth octet pool
       ip_octetpool: "{{ environment_definition.vm_setting.em7.nic1.ip_octetpool if (environment_definition.vm_setting.em7.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.nic1.ip_octetpool != none) else [ '13' ] }}"
 
+      # Gateway
+      gtw: "{{ environment_definition.vm_setting.em7.nic1.gtw if (environment_definition.vm_setting.em7.nic1.gtw is defined and environment_definition.vm_setting.em7.nic1.gtw != none) else '' }}"
+
       # Gateway fourth octet
       gtw_octet: "{{ environment_definition.vm_setting.em7.nic1.gtw_octet if (environment_definition.vm_setting.em7.nic1.gtw_octet is defined and environment_definition.vm_setting.em7.nic1.gtw_octet != none) else '' }}"
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.em7.nic1.netmask if (environment_definition.vm_setting.em7.nic1.netmask is defined and environment_definition.vm_setting.em7.nic1.netmask != none) else '255.255.255.192' }}"
 
-      # Network name
-      network: '{{ environment_definition.vm_setting.em7.nic1.network if (environment_definition.vm_setting.em7.nic1.network is defined and environment_definition.vm_setting.em7.nic1.network != none) else "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+      # Net Name
+      netname: "{{ environment_definition.vm_setting.em7.nic1.netname if (environment_definition.vm_setting.em7.nic1.netname is defined and environment_definition.vm_setting.em7.nic1.netname != none) else '' }}"
+
+      # Net Base
+      netbase: '{{ environment_definition.vm_setting.em7.nic1.network if (environment_definition.vm_setting.em7.nic1.network is defined and environment_definition.vm_setting.em7.nic1.network != none) else "-0-26-int" }}'
 
 
     # Network interface 2
@@ -56,14 +64,20 @@ vm_vars:
       # IP fourth octet pool
       ip_octetpool: "{{ environment_definition.vm_setting.em7.nic2.ip_octetpool if (environment_definition.vm_setting.em7.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.nic2.ip_octetpool != none) else [ '65' ] }}"
 
+      # Gateway
+      gtw: "{{ environment_definition.vm_setting.em7.nic2.gtw if (environment_definition.vm_setting.em7.nic2.gtw is defined and environment_definition.vm_setting.em7.nic2.gtw != none) else '' }}"
+
       # Gateway fourth octet
       gtw_octet: "{{ environment_definition.vm_setting.em7.nic2.gtw_octet if (environment_definition.vm_setting.em7.nic2.gtw_octet is defined and environment_definition.vm_setting.em7.nic2.gtw_octet != none) else '94' }}"
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.em7.nic2.netmask if (environment_definition.vm_setting.em7.nic2.netmask is defined and environment_definition.vm_setting.em7.nic2.netmask != none) else '255.255.255.224' }}"
 
-      # Network name
-      network: '{{ environment_definition.vm_setting.em7.nic2.network if (environment_definition.vm_setting.em7.nic2.network is defined and environment_definition.vm_setting.em7.nic2.network != none) else "QS-{{ customer.primary.name_prefix }}-db-heartbeat" }}'
+      # Net Name
+      netname: "{{ environment_definition.vm_setting.em7.nic2.netname if (environment_definition.vm_setting.em7.nic2.netname is defined and environment_definition.vm_setting.em7.nic2.netname != none) else '' }}"
+
+      # Net Base
+      netbase: '{{ environment_definition.vm_setting.em7.nic2.network if (environment_definition.vm_setting.em7.nic2.network is defined and environment_definition.vm_setting.em7.nic2.network != none) else "-db-heartbeat" }}'
 
 
   ################
@@ -83,6 +97,8 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.spl.disk2 if (environment_definition.vm_setting.spl.disk2 is defined and environment_definition.vm_setting.spl.disk2 != none) else '100' }}"
     disk3: "{{ environment_definition.vm_setting.spl.disk3 if (environment_definition.vm_setting.spl.disk3 is defined and environment_definition.vm_setting.spl.disk3 != none) else '200' }}"
 
+    name: "{{ environment_definition.vm_setting.spl.name if (environment_definition.vm_setting.spl.name is defined and environment_definition.vm_setting.spl.name != none) else '' }}"
+
     # Network interface 1
     ################
     nic1:
@@ -96,14 +112,20 @@ vm_vars:
       # IP fourth octet pool
       ip_octetpool: "{{ environment_definition.vm_setting.spl.nic1.ip_octetpool if (environment_definition.vm_setting.spl.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.nic1.ip_octetpool != none) else [ '20' ] }}"
 
+      # Gateway
+      gtw: "{{ environment_definition.vm_setting.spl.nic1.gtw if (environment_definition.vm_setting.spl.nic1.gtw is defined and environment_definition.vm_setting.spl.nic1.gtw != none) else '' }}"
+
       # Gateway fourth octet
       gtw_octet: "{{ environment_definition.vm_setting.spl.nic1.gtw_octet if (environment_definition.vm_setting.spl.nic1.gtw_octet is defined and environment_definition.vm_setting.spl.nic1.gtw_octet != none) else '62' }}"
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.spl.nic1.netmask if (environment_definition.vm_setting.spl.nic1.netmask is defined and environment_definition.vm_setting.spl.nic1.netmask != none) else '255.255.255.192' }}"
 
-      # Network name
-      network: '{{ environment_definition.vm_setting.spl.nic1.network if (environment_definition.vm_setting.spl.nic1.network is defined and environment_definition.vm_setting.spl.nic1.network != none) else "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+      # Net Name
+      netname: "{{ environment_definition.vm_setting.spl.nic1.netname if (environment_definition.vm_setting.spl.nic1.netname is defined and environment_definition.vm_setting.spl.nic1.netname != none) else '' }}"
+
+      # Net Base
+      netbase: '{{ environment_definition.vm_setting.spl.nic1.network if (environment_definition.vm_setting.spl.nic1.network is defined and environment_definition.vm_setting.spl.nic1.network != none) else "-0-26-int" }}'
 
     # Network interface 2
     ################
@@ -118,14 +140,20 @@ vm_vars:
       # IP fourth octet pool
       ip_octetpool: "{{ environment_definition.vm_setting.spl.nic2.ip_octetpool if (environment_definition.vm_setting.spl.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.nic2.ip_octetpool != none) else [] }}"
 
+      # Gateway
+      gtw: "{{ environment_definition.vm_setting.spl.nic2.gtw if (environment_definition.vm_setting.spl.nic2.gtw is defined and environment_definition.vm_setting.spl.nic2.gtw != none) else '' }}"
+
       # Gateway fourth octet
       gtw_octet: "{{ environment_definition.vm_setting.spl.nic2.gtw_octet if (environment_definition.vm_setting.spl.nic2.gtw_octet is defined and environment_definition.vm_setting.spl.nic2.gtw_octet != none) else '' }}"
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.spl.nic2.netmask if (environment_definition.vm_setting.spl.nic2.netmask is defined and environment_definition.vm_setting.spl.nic2.netmask != none) else '' }}"
 
-      # Network name
-      network: "{{ environment_definition.vm_setting.spl.nic2.network if (environment_definition.vm_setting.spl.nic2.network is defined and environment_definition.vm_setting.spl.nic2.network != none) else '' }}"
+      # Net Name
+      netname: "{{ environment_definition.vm_setting.spl.nic2.netname if (environment_definition.vm_setting.spl.nic2.netname is defined and environment_definition.vm_setting.spl.nic2.netname != none) else '' }}"
+
+      # Net Base
+      netbase: "{{ environment_definition.vm_setting.spl.nic2.network if (environment_definition.vm_setting.spl.nic2.network is defined and environment_definition.vm_setting.spl.nic2.network != none) else '' }}"
 
 
   ################
@@ -145,6 +173,8 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.lnxjmp.disk2 if (environment_definition.vm_setting.lnxjmp.disk2 is defined and environment_definition.vm_setting.lnxjmp.disk2 != none) else '0' }}"
     disk3: "{{ environment_definition.vm_setting.lnxjmp.disk3 if (environment_definition.vm_setting.lnxjmp.disk3 is defined and environment_definition.vm_setting.lnxjmp.disk3 != none) else '0' }}"
 
+    name: "{{ environment_definition.vm_setting.lnxjmp.name if (environment_definition.vm_setting.lnxjmp.name is defined and environment_definition.vm_setting.lnxjmp.name != none) else '' }}"
+
     # Network interface 1
     ################
     nic1:
@@ -158,14 +188,20 @@ vm_vars:
       # IP fourth octet pool
       ip_octetpool: "{{ environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool if (environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool is defined and environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool != none) else [ '58' ] }}"
 
+      # Gateway
+      gtw: "{{ environment_definition.vm_setting.lnxjmp.nic1.gtw if (environment_definition.vm_setting.lnxjmp.nic1.gtw is defined and environment_definition.vm_setting.lnxjmp.nic1.gtw != none) else '' }}"
+
       # Gateway fourth octet
       gtw_octet: "{{ environment_definition.vm_setting.lnxjmp.nic1.gtw_octet if (environment_definition.vm_setting.lnxjmp.nic1.gtw_octet is defined and environment_definition.vm_setting.lnxjmp.nic1.gtw_octet != none) else '' }}"
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.lnxjmp.nic1.netmask if (environment_definition.vm_setting.lnxjmp.nic1.netmask is defined and environment_definition.vm_setting.lnxjmp.nic1.netmask != none) else '255.255.255.192' }}"
 
-      # Network name
-      network: '{{ environment_definition.vm_setting.lnxjmp.nic1.network if (environment_definition.vm_setting.lnxjmp.nic1.network is defined and environment_definition.vm_setting.lnxjmp.nic1.network != none) else "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+      # Net Name
+      netname: "{{ environment_definition.vm_setting.lnxjmp.nic1.netname if (environment_definition.vm_setting.lnxjmp.nic1.netname is defined and environment_definition.vm_setting.lnxjmp.nic1.netname != none) else '' }}"
+
+      # Net Base
+      netbase: '{{ environment_definition.vm_setting.lnxjmp.nic1.network if (environment_definition.vm_setting.lnxjmp.nic1.network is defined and environment_definition.vm_setting.lnxjmp.nic1.network != none) else "-0-26-int" }}'
 
     # Network interface 2
     ################
@@ -180,14 +216,20 @@ vm_vars:
       # IP fourth octet pool
       ip_octetpool: "{{ environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool if (environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool is defined and environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool != none) else [ '76' ] }}"
 
+      # Gateway
+      gtw: "{{ environment_definition.vm_setting.lnxjmp.nic2.gtw if (environment_definition.vm_setting.lnxjmp.nic2.gtw is defined and environment_definition.vm_setting.lnxjmp.nic2.gtw != none) else '' }}"
+
       # Gateway fourth octet
       gtw_octet: "{{ environment_definition.vm_setting.lnxjmp.nic2.gtw_octet if (environment_definition.vm_setting.lnxjmp.nic2.gtw_octet is defined and environment_definition.vm_setting.lnxjmp.nic2.gtw_octet != none) else '94' }}"
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.lnxjmp.nic2.netmask if (environment_definition.vm_setting.lnxjmp.nic2.netmask is defined and environment_definition.vm_setting.lnxjmp.nic2.netmask != none) else '255.255.255.224' }}"
 
-      # Network name
-      network: '{{ environment_definition.vm_setting.lnxjmp.nic2.network if (environment_definition.vm_setting.lnxjmp.nic2.network is defined and environment_definition.vm_setting.lnxjmp.nic2.network != none) else "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-64-27-cust" }}'
+      # Net Name
+      netname: "{{ environment_definition.vm_setting.lnxjmp.nic2.netname if (environment_definition.vm_setting.lnxjmp.nic2.netname is defined and environment_definition.vm_setting.lnxjmp.nic2.netname != none) else '' }}"
+
+      # Net Base
+      netbase: '{{ environment_definition.vm_setting.lnxjmp.nic2.network if (environment_definition.vm_setting.lnxjmp.nic2.network is defined and environment_definition.vm_setting.lnxjmp.nic2.network != none) else "-64-27-cust" }}'
 
 
   ################
@@ -207,6 +249,8 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.rly.disk2 if (environment_definition.vm_setting.rly.disk2 is defined and environment_definition.vm_setting.rly.disk2 != none) else '100' }}"
     disk3: "{{ environment_definition.vm_setting.rly.disk3 if (environment_definition.vm_setting.rly.disk3 is defined and environment_definition.vm_setting.rly.disk3 != none) else '450' }}"
 
+    name: "{{ environment_definition.vm_setting.rly.name if (environment_definition.vm_setting.rly.name is defined and environment_definition.vm_setting.rly.name != none) else '' }}"
+
     # Network interface 1
     ################
     nic1:
@@ -220,14 +264,20 @@ vm_vars:
       # IP fourth octet pool
       ip_octetpool: "{{ environment_definition.vm_setting.rly.nic1.ip_octetpool if (environment_definition.vm_setting.rly.nic1.ip_octetpool is defined and environment_definition.vm_setting.rly.nic1.ip_octetpool != none) else [ '1' ] }}"
 
+      # Gateway
+      gtw: "{{ environment_definition.vm_setting.rly.nic1.gtw if (environment_definition.vm_setting.rly.nic1.gtw is defined and environment_definition.vm_setting.rly.nic1.gtw != none) else '' }}"
+
       # Gateway fourth octet
       gtw_octet: "{{ environment_definition.vm_setting.rly.nic1.gtw_octet if (environment_definition.vm_setting.rly.nic1.gtw_octet is defined and environment_definition.vm_setting.rly.nic1.gtw_octet != none) else '' }}"
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.rly.nic1.netmask if (environment_definition.vm_setting.rly.nic1.netmask is defined and environment_definition.vm_setting.rly.nic1.netmask != none) else '255.255.255.192' }}"
 
-      # Network name
-      network: '{{ environment_definition.vm_setting.rly.nic1.network if (environment_definition.vm_setting.rly.nic1.network is defined and environment_definition.vm_setting.rly.nic1.network != none) else "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-0-26-int" }}'
+      # Net Name
+      netname: "{{ environment_definition.vm_setting.rly.nic1.netname if (environment_definition.vm_setting.rly.nic1.netname is defined and environment_definition.vm_setting.rly.nic1.netname != none) else '' }}"
+
+      # Net Base
+      netbase: '{{ environment_definition.vm_setting.rly.nic1.network if (environment_definition.vm_setting.rly.nic1.network is defined and environment_definition.vm_setting.rly.nic1.network != none) else "-0-26-int" }}'
 
     # Network interface 2
     ################
@@ -242,11 +292,17 @@ vm_vars:
       # IP fourth octet pool
       ip_octetpool: "{{ environment_definition.vm_setting.rly.nic2.ip_octetpool if (environment_definition.vm_setting.rly.nic2.ip_octetpool is defined and environment_definition.vm_setting.rly.nic2.ip_octetpool != none) else [ '97' ] }}"
 
+      # Gateway
+      gtw: "{{ environment_definition.vm_setting.rly.nic2.gtw if (environment_definition.vm_setting.rly.nic2.gtw is defined and environment_definition.vm_setting.rly.nic2.gtw != none) else '' }}"
+
       # Gateway fourth octet
       gtw_octet: "{{ environment_definition.vm_setting.rly.nic2.gtw_octet if (environment_definition.vm_setting.rly.nic2.gtw_octet is defined and environment_definition.vm_setting.rly.nic2.gtw_octet != none) else '123' }}"
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.rly.nic2.netmask if (environment_definition.vm_setting.rly.nic2.netmask is defined and environment_definition.vm_setting.rly.nic2.netmask != none) else '255.255.255.224' }}"
 
-      # Network name
-      network: '{{ environment_definition.vm_setting.rly.nic2.network if (environment_definition.vm_setting.rly.nic2.network is defined and environment_definition.vm_setting.rly.nic2.network != none) else "QS-{{ customer.primary.name_prefix }}-{{ customer.primary.octets | replace(\".\", \"-\") }}-96-27-lbnet" }}'
+      # Net Name
+      netname: "{{ environment_definition.vm_setting.rly.nic2.netname if (environment_definition.vm_setting.rly.nic2.netname is defined and environment_definition.vm_setting.rly.nic2.netname != none) else '' }}"
+
+      # Net Base
+      netbase: '{{ environment_definition.vm_setting.rly.nic2.network if (environment_definition.vm_setting.rly.nic2.network is defined and environment_definition.vm_setting.rly.nic2.network != none) else "-96-27-lbnet" }}'

@@ -15,8 +15,8 @@ keyboard --vckeymap=us --xlayouts='us'
 lang en_US.UTF-8
 
 # Network information
-network --bootproto=static --device={{ netconfig.netname1 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway1 }} --ip={{ netconfig.ipaddress1 }} --nameserver={{ sysconfig.dns_servers|join(',') }} --netmask={{ netconfig.netmask1 }} --noipv6 --activate
-network --bootproto=static --device={{ netconfig.netname2 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway2 }} --ip={{ netconfig.ipaddress2 }} --nameserver={{ sysconfig.dns_servers|join(',') }} --netmask={{ netconfig.netmask2 }} --noipv6 --activate
+network --bootproto=static --device={{ netconfig.intname1 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway1 }} --ip={{ netconfig.ipaddress1 }} --nameserver={{ sysconfig.dns_servers|join(',') }} --netmask={{ netconfig.netmask1 }} --noipv6 --activate
+network --bootproto=static --device={{ netconfig.intname2 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway2 }} --ip={{ netconfig.ipaddress2 }} --nameserver={{ sysconfig.dns_servers|join(',') }} --netmask={{ netconfig.netmask2 }} --noipv6 --activate
 network --hostname={{ vm.name }}
 
 # Root password
@@ -82,8 +82,8 @@ policycoreutils-python
 
 %post
 # Add search domain
-echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.netname1 }}
-{{ "echo 'DOMAIN=\"" + sysconfig.domain_name + "\"' >> /etc/sysconfig/network-scripts/ifcfg-" + netconfig.netname2 if netconfig.netname2 != '' else '' }}
+echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname1 }}
+{{ "echo 'DOMAIN=\"" + sysconfig.domain_name + "\"' >> /etc/sysconfig/network-scripts/ifcfg-" + netconfig.intname2 if netconfig.intname2 != '' else '' }}
 
 # Yum repos
 rm -f /etc/yum.repos.d/*
