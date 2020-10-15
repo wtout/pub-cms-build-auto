@@ -20,14 +20,14 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.em7.disk2 if (environment_definition.vm_setting.em7.disk2 is defined and environment_definition.vm_setting.em7.disk2 != none) else '0' }}"
     disk3: "{{ environment_definition.vm_setting.em7.disk3 if (environment_definition.vm_setting.em7.disk3 is defined and environment_definition.vm_setting.em7.disk3 != none) else '0' }}"
 
-    name: "{{ environment_definition.vm_setting.em7.name if (environment_definition.vm_setting.em7.name is defined and environment_definition.vm_setting.em7.name != none) else '' }}"
+    vmname: "{{ environment_definition.vm_setting.em7.vmname if (environment_definition.vm_setting.em7.vmname is defined and environment_definition.vm_setting.em7.vmname != none) else '' }}"
 
     # Network interface 1
     ################
     nic1:
 
       # Interface name
-      name: "{{ environment_definition.vm_setting.em7.nic1.name if (environment_definition.vm_setting.em7.nic1.name is defined and environment_definition.vm_setting.em7.nic1.name != none) else 'ens160' }}"
+      intname: "{{ environment_definition.vm_setting.em7.nic1.intname if (environment_definition.vm_setting.em7.nic1.intname is defined and environment_definition.vm_setting.em7.nic1.intname != none) else 'ens160' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.em7.nic1.ip_pool if (environment_definition.vm_setting.em7.nic1.ip_pool is defined and environment_definition.vm_setting.em7.nic1.ip_pool != none) else [] }}"
@@ -55,7 +55,7 @@ vm_vars:
     nic2:
 
       # Interface name
-      name: "{{ environment_definition.vm_setting.em7.nic2.name if (environment_definition.vm_setting.em7.nic2.name is defined and environment_definition.vm_setting.em7.nic2.name != none) else 'ens192' }}"
+      intname: "{{ environment_definition.vm_setting.em7.nic2.intname if (environment_definition.vm_setting.em7.nic2.intname is defined and environment_definition.vm_setting.em7.nic2.intname != none) else 'ens192' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.em7.nic2.ip_pool if (environment_definition.vm_setting.em7.nic2.ip_pool is defined and environment_definition.vm_setting.em7.nic2.ip_pool != none) else [] }}"
@@ -96,14 +96,14 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.spl.disk2 if (environment_definition.vm_setting.spl.disk2 is defined and environment_definition.vm_setting.spl.disk2 != none) else '100' }}"
     disk3: "{{ environment_definition.vm_setting.spl.disk3 if (environment_definition.vm_setting.spl.disk3 is defined and environment_definition.vm_setting.spl.disk3 != none) else '200' }}"
 
-    name: "{{ environment_definition.vm_setting.spl.name if (environment_definition.vm_setting.spl.name is defined and environment_definition.vm_setting.spl.name != none) else '' }}"
+    vmname: "{{ environment_definition.vm_setting.spl.vmname if (environment_definition.vm_setting.spl.vmname is defined and environment_definition.vm_setting.spl.vmname != none) else '' }}"
 
     # Network interface 1
     ################
     nic1:
 
       # Interface name
-      name: "{{ environment_definition.vm_setting.spl.nic1.name if (environment_definition.vm_setting.spl.nic1.name is defined and environment_definition.vm_setting.spl.nic1.name != none) else 'ens160' }}"
+      intname: "{{ environment_definition.vm_setting.spl.nic1.intname if (environment_definition.vm_setting.spl.nic1.intname is defined and environment_definition.vm_setting.spl.nic1.intname != none) else 'ens160' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.spl.nic1.ip_pool if (environment_definition.vm_setting.spl.nic1.ip_pool is defined and environment_definition.vm_setting.spl.nic1.ip_pool != none) else [] }}"
@@ -131,7 +131,7 @@ vm_vars:
     nic2:
 
       # Interface name
-      name: "{{ environment_definition.vm_setting.spl.nic2.name if (environment_definition.vm_setting.spl.nic1.name is defined and environment_definition.vm_setting.spl.nic1.name != none) else '' }}"
+      intname: "{{ environment_definition.vm_setting.spl.nic2.intname if (environment_definition.vm_setting.spl.nic1.intname is defined and environment_definition.vm_setting.spl.nic1.intname != none) else '' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.spl.nic2.ip_pool if (environment_definition.vm_setting.spl.nic2.ip_pool is defined and environment_definition.vm_setting.spl.nic2.ip_pool != none) else [] }}"
@@ -172,14 +172,14 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.lnxjmp.disk2 if (environment_definition.vm_setting.lnxjmp.disk2 is defined and environment_definition.vm_setting.lnxjmp.disk2 != none) else '0' }}"
     disk3: "{{ environment_definition.vm_setting.lnxjmp.disk3 if (environment_definition.vm_setting.lnxjmp.disk3 is defined and environment_definition.vm_setting.lnxjmp.disk3 != none) else '0' }}"
 
-    name: "{{ environment_definition.vm_setting.lnxjmp.name if (environment_definition.vm_setting.lnxjmp.name is defined and environment_definition.vm_setting.lnxjmp.name != none) else '' }}"
+    vmname: "{{ environment_definition.vm_setting.lnxjmp.vmname if (environment_definition.vm_setting.lnxjmp.vmname is defined and environment_definition.vm_setting.lnxjmp.vmname != none) else '' }}"
 
     # Network interface 1
     ################
     nic1:
 
       # Interface name
-      name: "{{ environment_definition.vm_setting.lnxjmp.nic1.name if (environment_definition.vm_setting.lnxjmp.nic1.name is defined and environment_definition.vm_setting.lnxjmp.nic1.name != none) else 'ens160' }}"
+      intname: "{{ environment_definition.vm_setting.lnxjmp.nic1.intname if (environment_definition.vm_setting.lnxjmp.nic1.intname is defined and environment_definition.vm_setting.lnxjmp.nic1.intname != none) else 'ens160' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.lnxjmp.nic1.ip_pool if (environment_definition.vm_setting.lnxjmp.nic1.ip_pool is defined and environment_definition.vm_setting.lnxjmp.nic1.ip_pool != none) else [] }}"
@@ -207,7 +207,7 @@ vm_vars:
     nic2:
 
       # Interface name
-      name: "{{ environment_definition.vm_setting.lnxjmp.nic2.name if (environment_definition.vm_setting.lnxjmp.nic2.name is defined and environment_definition.vm_setting.lnxjmp.nic2.name != none) else 'ens192' }}"
+      intname: "{{ environment_definition.vm_setting.lnxjmp.nic2.intname if (environment_definition.vm_setting.lnxjmp.nic2.intname is defined and environment_definition.vm_setting.lnxjmp.nic2.intname != none) else 'ens192' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.lnxjmp.nic2.ip_pool if (environment_definition.vm_setting.lnxjmp.nic2.ip_pool is defined and environment_definition.vm_setting.lnxjmp.nic2.ip_pool != none) else [] }}"
@@ -248,14 +248,14 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.rly.disk2 if (environment_definition.vm_setting.rly.disk2 is defined and environment_definition.vm_setting.rly.disk2 != none) else '100' }}"
     disk3: "{{ environment_definition.vm_setting.rly.disk3 if (environment_definition.vm_setting.rly.disk3 is defined and environment_definition.vm_setting.rly.disk3 != none) else '450' }}"
 
-    name: "{{ environment_definition.vm_setting.rly.name if (environment_definition.vm_setting.rly.name is defined and environment_definition.vm_setting.rly.name != none) else '' }}"
+    vmname: "{{ environment_definition.vm_setting.rly.vmname if (environment_definition.vm_setting.rly.vmname is defined and environment_definition.vm_setting.rly.vmname != none) else '' }}"
 
     # Network interface 1
     ################
     nic1:
 
       # Interface name
-      name: "{{ environment_definition.vm_setting.rly.nic1.name if (environment_definition.vm_setting.rly.nic1.name is defined and environment_definition.vm_setting.rly.nic1.name != none) else 'ens160' }}"
+      intname: "{{ environment_definition.vm_setting.rly.nic1.intname if (environment_definition.vm_setting.rly.nic1.intname is defined and environment_definition.vm_setting.rly.nic1.intname != none) else 'ens160' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.rly.nic1.ip_pool if (environment_definition.vm_setting.rly.nic1.ip_pool is defined and environment_definition.vm_setting.rly.nic1.ip_pool != none) else [] }}"
@@ -283,7 +283,7 @@ vm_vars:
     nic2:
 
       # Interface name
-      name: "{{ environment_definition.vm_setting.rly.nic2.name if (environment_definition.vm_setting.rly.nic2.name is defined and environment_definition.vm_setting.rly.nic2.name != none) else 'ens192' }}"
+      intname: "{{ environment_definition.vm_setting.rly.nic2.intname if (environment_definition.vm_setting.rly.nic2.intname is defined and environment_definition.vm_setting.rly.nic2.intname != none) else 'ens192' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.rly.nic2.ip_pool if (environment_definition.vm_setting.rly.nic2.ip_pool is defined and environment_definition.vm_setting.rly.nic2.ip_pool != none) else [] }}"
@@ -329,14 +329,14 @@ vm_vars:
       disk2: "{{ environment_definition.vm_setting.infra.csr.disk2 if (environment_definition.vm_setting.infra.csr.disk2 is defined and environment_definition.vm_setting.infra.csr.disk2 != none) else '0' }}"
       disk3: "{{ environment_definition.vm_setting.infra.csr.disk3 if (environment_definition.vm_setting.infra.csr.disk3 is defined and environment_definition.vm_setting.infra.csr.disk3 != none) else '0' }}"
 
-      name: "{{ environment_definition.vm_setting.infra.csr.name if (environment_definition.vm_setting.infra.csr.name is defined and environment_definition.vm_setting.infra.csr.name != none) else '' }}"
+      vmname: "{{ environment_definition.vm_setting.infra.csr.vmname if (environment_definition.vm_setting.infra.csr.vmname is defined and environment_definition.vm_setting.infra.csr.vmname != none) else '' }}"
 
     # Network interface 1
     ################
       nic1:
 
         # Interface name
-        name: "{{ environment_definition.vm_setting.infra.csr.nic1.name if (environment_definition.vm_setting.infra.csr.nic1.name is defined and environment_definition.vm_setting.infra.csr.nic1.name != none) else '' }}"
+        intname: "{{ environment_definition.vm_setting.infra.csr.nic1.intname if (environment_definition.vm_setting.infra.csr.nic1.intname is defined and environment_definition.vm_setting.infra.csr.nic1.intname != none) else '' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic1.ip_pool if (environment_definition.vm_setting.infra.csr.nic1.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic1.ip_pool != none) else [] }}"
@@ -364,7 +364,7 @@ vm_vars:
       nic2:
 
         # Interface name
-        name: "{{ environment_definition.vm_setting.infra.csr.nic2.name if (environment_definition.vm_setting.infra.csr.nic2.name is defined and environment_definition.vm_setting.infra.csr.nic2.name != none) else '' }}"
+        intname: "{{ environment_definition.vm_setting.infra.csr.nic2.intname if (environment_definition.vm_setting.infra.csr.nic2.intname is defined and environment_definition.vm_setting.infra.csr.nic2.intname != none) else '' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic2.ip_pool if (environment_definition.vm_setting.infra.csr.nic2.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic2.ip_pool != none) else [] }}"
@@ -392,7 +392,7 @@ vm_vars:
       nic3:
 
        # Interface name
-        name: "{{ environment_definition.vm_setting.infra.csr.nic3.name if (environment_definition.vm_setting.infra.csr.nic3.name is defined and environment_definition.vm_setting.infra.csr.nic3.name != none) else 'ens160' }}"
+        intname: "{{ environment_definition.vm_setting.infra.csr.nic3.intname if (environment_definition.vm_setting.infra.csr.nic3.intname is defined and environment_definition.vm_setting.infra.csr.nic3.intname != none) else 'ens160' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic3.ip_pool if (environment_definition.vm_setting.infra.csr.nic3.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic3.ip_pool != none) else [] }}"
@@ -420,7 +420,7 @@ vm_vars:
       nic4:
 
        # Interface name
-        name: "{{ environment_definition.vm_setting.infra.csr.nic4.name if (environment_definition.vm_setting.infra.csr.nic4.name is defined and environment_definition.vm_setting.infra.csr.nic4.name != none) else 'ens192' }}"
+        intname: "{{ environment_definition.vm_setting.infra.csr.nic4.intname if (environment_definition.vm_setting.infra.csr.nic4.intname is defined and environment_definition.vm_setting.infra.csr.nic4.intname != none) else 'ens192' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic4.ip_pool if (environment_definition.vm_setting.infra.csr.nic4.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic4.ip_pool != none) else [] }}"
@@ -448,7 +448,7 @@ vm_vars:
       nic5:
 
        # Interface name
-        name: "{{ environment_definition.vm_setting.infra.csr.nic5.name if (environment_definition.vm_setting.infra.csr.nic5.name is defined and environment_definition.vm_setting.infra.csr.nic5.name != none) else 'ens224' }}"
+        intname: "{{ environment_definition.vm_setting.infra.csr.nic5.intname if (environment_definition.vm_setting.infra.csr.nic5.intname is defined and environment_definition.vm_setting.infra.csr.nic5.intname != none) else 'ens224' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic5.ip_pool if (environment_definition.vm_setting.infra.csr.nic5.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic5.ip_pool != none) else [] }}"
@@ -489,14 +489,14 @@ vm_vars:
       disk2: "{{ environment_definition.vm_setting.infra.nsvpx.disk2 if (environment_definition.vm_setting.infra.nsvpx.disk2 is defined and environment_definition.vm_setting.infra.nsvpx.disk2 != none) else '0' }}"
       disk3: "{{ environment_definition.vm_setting.infra.nsvpx.disk3 if (environment_definition.vm_setting.infra.nsvpx.disk3 is defined and environment_definition.vm_setting.infra.nsvpx.disk3 != none) else '0' }}"
 
-      name: "{{ environment_definition.vm_setting.infra.nsvpx.name if (environment_definition.vm_setting.infra.nsvpx.name is defined and environment_definition.vm_setting.infra.nsvpx.name != none) else '' }}"
+      vmname: "{{ environment_definition.vm_setting.infra.nsvpx.vmname if (environment_definition.vm_setting.infra.nsvpx.vmname is defined and environment_definition.vm_setting.infra.nsvpx.vmname != none) else '' }}"
 
       # Network interface 1
       ################
       nic1:
 
         # Interface name
-        name: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.name if (environment_definition.vm_setting.infra.nsvpx.nic1.name is defined and environment_definition.vm_setting.infra.nsvpx.nic1.name != none) else 'ens160' }}"
+        intname: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.intname if (environment_definition.vm_setting.infra.nsvpx.nic1.intname is defined and environment_definition.vm_setting.infra.nsvpx.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool if (environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool != none) else [] }}"
@@ -524,7 +524,7 @@ vm_vars:
       nic2:
 
         # Interface name
-        name: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.name if (environment_definition.vm_setting.infra.nsvpx.nic2.name is defined and environment_definition.vm_setting.infra.nsvpx.nic2.name != none) else '' }}"
+        intname: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.intname if (environment_definition.vm_setting.infra.nsvpx.nic2.intname is defined and environment_definition.vm_setting.infra.nsvpx.nic2.intname != none) else '' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool if (environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool != none) else [] }}"
@@ -557,21 +557,21 @@ vm_vars:
       cpu: "{{ environment_definition.vm_setting.infra.winjmp.cpu if (environment_definition.vm_setting.infra.winjmp.cpu is defined and environment_definition.vm_setting.infra.winjmp.cpu != none) else '2' }}"
 
       # Memory size in GiB
-      memory: "{{ environment_definition.vm_setting.infra.winjmp.memory if (environment_definition.vm_setting.infra.winjmp.memory is defined and environment_definition.vm_setting.infra.winjmp.memory != none) else '4' if environment_definition.customer.primary.name_prefix is regex('[\\w]c[\\d]{2,}') else '8' }}"
+      memory: "{{ environment_definition.vm_setting.infra.winjmp.memory if (environment_definition.vm_setting.infra.winjmp.memory is defined and environment_definition.vm_setting.infra.winjmp.memory != none) else '8' }}"
 
       # Disks sizing in GiB
       disk0: "{{ environment_definition.vm_setting.infra.winjmp.disk0 if (environment_definition.vm_setting.infra.winjmp.disk0 is defined and environment_definition.vm_setting.infra.winjmp.disk0 != none) else '100' }}"
       disk1: "{{ environment_definition.vm_setting.infra.winjmp.disk1 if (environment_definition.vm_setting.infra.winjmp.disk1 is defined and environment_definition.vm_setting.infra.winjmp.disk1 != none) else '100' }}"
       disk2: "{{ environment_definition.vm_setting.infra.winjmp.disk2 if (environment_definition.vm_setting.infra.winjmp.disk2 is defined and environment_definition.vm_setting.infra.winjmp.disk2 != none) else '0' }}"
 
-      name: "{{ environment_definition.vm_setting.infra.winjmp.name if (environment_definition.vm_setting.infra.winjmp.name is defined and environment_definition.vm_setting.infra.winjmp.name != none) else '' }}"
+      vmname: "{{ environment_definition.vm_setting.infra.winjmp.vmname if (environment_definition.vm_setting.infra.winjmp.vmname is defined and environment_definition.vm_setting.infra.winjmp.vmname != none) else '' }}"
 
       # Network interface 1
       ################
       nic1:
 
         # Interface name
-        name: "{{ environment_definition.vm_setting.infra.winjmp.nic1.name if (environment_definition.vm_setting.infra.winjmp.nic1.name is defined and environment_definition.vm_setting.infra.winjmp.nic1.name != none) else 'ens160' }}"
+        intname: "{{ environment_definition.vm_setting.infra.winjmp.nic1.intname if (environment_definition.vm_setting.infra.winjmp.nic1.intname is defined and environment_definition.vm_setting.infra.winjmp.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.winjmp.nic1.ip_pool if (environment_definition.vm_setting.infra.winjmp.nic1.ip_pool is defined and environment_definition.vm_setting.infra.winjmp.nic1.ip_pool != none) else [] }}"
@@ -599,7 +599,7 @@ vm_vars:
       nic2:
 
         # Interface name
-        name: "{{ environment_definition.vm_setting.infra.winjmp.nic2.name if (environment_definition.vm_setting.infra.winjmp.nic2.name is defined and environment_definition.vm_setting.infra.winjmp.nic2.name != none) else 'ens192' }}"
+        intname: "{{ environment_definition.vm_setting.infra.winjmp.nic2.intname if (environment_definition.vm_setting.infra.winjmp.nic2.intname is defined and environment_definition.vm_setting.infra.winjmp.nic2.intname != none) else 'ens192' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.winjmp.nic2.ip_pool if (environment_definition.vm_setting.infra.winjmp.nic2.ip_pool is defined and environment_definition.vm_setting.infra.winjmp.nic2.ip_pool != none) else [] }}"
