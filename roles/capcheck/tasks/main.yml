@@ -22,5 +22,4 @@
       - information.deptype == 'a'
 
   when: capcheck | default(false) | bool
-  tags: ['capcheck', 'vm_creation', 'puppet', 'infra_configure', 'infra_build_nodes']
-
+  tags: ['capcheck', 'vm_creation', 'puppet', 'infra_build_nodes']

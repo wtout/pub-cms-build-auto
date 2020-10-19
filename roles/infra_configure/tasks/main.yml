@@ -9,13 +9,13 @@
           file: task_create_datastores.yml
           apply:
             vars:
-              resource: "{{ resource }}"
+              resource: "{{ resource_item }}"
               customer_prefix: "{{ customer.primary.name_prefix }}"
-              count: "{{ count }}"
+              count: "{{ count_idx }}"
         loop: "{{ resources[:2] }}"
         loop_control:
-          loop_var: resource
-          index_var: count
+          loop_var: resource_item
+          index_var: count_idx
 
       - include_tasks:
           file: task_create_datastores.yml
@@ -31,10 +31,10 @@
         file: task_add_vswitches.yml
         apply:
           vars:
-            resource: "{{ resource }}"
+            resource: "{{ resource_item }}"
       loop: "{{ resources }}"
       loop_control:
-        loop_var: resource
+        loop_var: resource_item
 
     - name: Create portgroups
       block:
@@ -68,7 +68,7 @@
       - task_delete_datastores.yml
       - task_remove_vswitches.yml
       - task_delete_portgroups.yml
-      - task_remove_hosts_from_cluster.yml
+      - task_remove_resources_from_cluster.yml
       - task_delete_cluster.yml
     loop_control:
       loop_var: rollback_task

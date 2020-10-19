@@ -49,5 +49,5 @@
       that:
         - "(total_fs|float / 1024|pow(3)) >= stack_required_space|float"
       fail_msg: "Not enough storage space to deploy all the VMs"
-  tags: ['capcheck', 'vm_creation', 'puppet', 'infra_configure', 'infra_build_nodes']
+  tags: ['capcheck', 'vm_creation', 'puppet', 'infra_build_nodes']
   

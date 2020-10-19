@@ -1,5 +1,5 @@
 ---
-# tasks file for infra_build_nodes
+# Tasks file for infra_build_nodes
 - block:
   - name: Deploy infra nodes
     include_tasks: task_create_infra_nodes.yml

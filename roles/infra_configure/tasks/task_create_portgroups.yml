@@ -6,11 +6,11 @@
     username: "{{ credentials.username }}"
     password: "{{ credentials.password }}"
     hosts: "{{ resource }}"
-    switch: "{{ new_portgroup.switch }}"
-    portgroup: "{{ new_portgroup.name }}"
-    vlan_id: "{{ new_portgroup.vlan_id | default('0') }}"
+    switch: "{{ portgroup_item.switch }}"
+    portgroup: "{{ portgroup_item.name }}"
+    vlan_id: "{{ portgroup_item.vlan_id | default('0') }}"
     teaming:
-      active_adapters: "{{ new_portgroup.active_adapter }}"
+      active_adapters: "{{ portgroup_item.active_adapter }}"
     validate_certs: no
   loop:
     - { name: "{{ customer_prefix }}-Customer-Net-Internet", switch: 'vSwitch0', active_adapter: 'vmnic0' }
@@ -20,6 +20,6 @@
     - { name: "{{ customer_prefix }}-Customer-Net-Inside", switch: 'vSwitch3', active_adapter: 'vmnic3', vlan_id: 200 }
     - { name: "{{ customer_prefix }}-EM7-DB-Heartbeat-Link", switch: 'vSwitch4', active_adapter: 'vmnic4' }
   loop_control:
-    loop_var: new_portgroup
+    loop_var: portgroup_item
   run_once: true
   tags: ['infra_configure', 'infra_build_nodes', 'capcheck', 'vm_creation']

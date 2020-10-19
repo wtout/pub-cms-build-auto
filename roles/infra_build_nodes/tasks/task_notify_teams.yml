@@ -21,7 +21,6 @@
     set_fact:
       NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line] | list }}"
     loop:
-      - "**Infra Serial Numbers**"
       - "{{ customer.secondary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['drcsr01']['serial_number'] }}"
       - "{{ customer.secondary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['drnsvpx01']['serial_number'] }}"
     loop_control:

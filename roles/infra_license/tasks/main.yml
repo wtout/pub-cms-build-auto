@@ -11,8 +11,6 @@
       validate_certs: no
     register: csr_info
     until: csr_info.instance.ipv4 != None
-    retries: 60
-    delay: 10
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     tags: infra_license
   - set_fact:
@@ -20,12 +18,7 @@
       dhcp_address: "{{ csr_info.instance.ipv4 }}"
     tags: infra_license
 
-  - name: Check if CSR is licensed
-    ios_command:
-      commands: "show license detail"
-    register: lic_detail
-    ignore_errors: true
-    tags: infra_license
+  - include_tasks: task_check_csr_license.yml
 
   - block:
     - name: Define CSR key
@@ -88,7 +81,7 @@
       register: csr_license_details_2
       failed_when: csr_license_details_2 == []
       tags: infra_license
-    when: "{{ lic_detail.failed }}"
+    when: lic_detail is failed
     tags: infra_license
   tags: infra_license
   when: inventory_hostname is search('csr')
