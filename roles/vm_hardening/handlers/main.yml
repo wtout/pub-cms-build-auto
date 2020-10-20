@@ -1,0 +1,14 @@
+---
+# handlers file for vm_hardening
+- name: save iptables
+  command: service iptables save
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_hardening
+
+- name: restart iptables
+  systemd:
+    name: iptables
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_hardening

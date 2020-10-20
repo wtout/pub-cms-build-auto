@@ -1,0 +1,64 @@
+---
+# tasks file for vm_fromiso
+- block:
+  - block:
+    - name: check VM reachable
+      command: ping {{ ansible_host }} -c 1
+      register: vh_vm_reachable
+      ignore_errors: true
+      check_mode: no
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - block:
+      - name: switch to cmsbuild user
+        set_fact:
+          ansible_user: "{{ vm_svc_user }}"
+      - name: check connection
+        wait_for:
+          host: "{{ ansible_host }}"
+          port: 22
+          timeout: 10
+        register: vh_vm_connection
+        ignore_errors: true
+        check_mode: no
+        delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+      - debug:
+          msg: "VM hardening is enabled. Nothing to do"
+        when: vh_vm_connection is succeeded
+      - name: set flag to not harden the VMs
+        set_fact:
+          hardv: false
+        when: vh_vm_connection is succeeded
+      - name: revert user
+        set_fact:
+          ansible_user: "{{ credentials.username }}"
+        when: vh_vm_connection is failed
+      when: vh_vm_reachable is failed
+    - block:
+      - name: check VM credentials
+        wait_for_connection:
+          timeout: 3
+        register: vh_vm_creds
+        ignore_errors: true
+        check_mode: no
+      - name: Update SSH password
+        set_fact:
+          ansible_ssh_pass: "{{ postppp }}"
+        no_log: true
+        when:
+          - vh_vm_creds is failed
+          - vh_vm_creds.msg is search('Invalid/incorrect username/password')
+      when: vh_vm_reachable is succeeded
+    when:
+      - ansible_ssh_pass != postppp
+      - inventory_hostname is not search('em7')
+
+  - include_tasks: task_enable_hardening.yml
+    when: hardv | default(true) | bool
+  - name: switch to cmsbuild user
+    set_fact:
+      ansible_user: "{{ vm_svc_user }}"
+  - include_tasks: task_update_iptables.yml
+  - name: flush handlers
+    meta: flush_handlers
+  when: harden_vms | default(false) | bool
+  tags: vm_hardening

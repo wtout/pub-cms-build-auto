@@ -1,0 +1,4 @@
+---
+# vars file for vm_hardening
+vm_svc_user: "{{ SVC_USER }}"
+vm_svc_pass: "{{ credentials.password }}"

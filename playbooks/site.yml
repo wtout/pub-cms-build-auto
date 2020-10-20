@@ -41,6 +41,7 @@
 
   roles:
     - {role: "{{ auto_dir }}/roles/vm_fromiso", when: create_vms_iso | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/vm_hardening", when: harden_vms | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/integ_splunk", when: install_splunk | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/vm_creation", when: create_vms_ova | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/drs_creation", when: deploy_drs | default(false) | bool}
@@ -66,3 +67,4 @@
     - {role: "{{ auto_dir }}/roles/infra_build_nodes", when: rollback_infra_nodes | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/infra_configure", when: rollback_infra | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/drs_status", when: check_drs_removal | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/ssh_keys", when: rollback_ssh_keys | default(false) | bool}

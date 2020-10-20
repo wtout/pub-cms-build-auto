@@ -1,17 +1,20 @@
 ---
 # Tasks to rebuild host
 - block:
-  - include_role:
+  - name: "{{ auto_dir + '/roles/vm_creation' }}: rollback vms"
+    include_role:
       name: "{{ auto_dir + '/roles/vm_creation' }}"
     vars:
       create_vms_ova: false
       rollback_vms_ova: true
-  - include_role:
+  - name: "{{ auto_dir + '/roles/vm_creation' }}: create vms"
+    include_role:
       name: "{{ auto_dir + '/roles/vm_creation' }}"
     vars:
       create_vms_ova: true
       rollback_vms_ova: false
-  - include_role:
+  - name: "{{ auto_dir + '/roles/vm_creation' }}: configure vms"
+    include_role:
       name: "{{ auto_dir + '/roles/vm_configuration' }}"
     vars:
       configure_vms: true

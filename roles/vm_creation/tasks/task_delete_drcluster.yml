@@ -1,138 +1,121 @@
 ---
 # tasks to delete drcluster
-- name: Get DR VM facts
-  vmware_vm_info:
-    hostname: "{{ host_item }}"
-    username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
-    password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
-    vm_type: vm
-    validate_certs: no
-  loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
-  loop_control:
-    loop_var: host_item
-    label: "{{ host_item }}"
-  check_mode: no
-  register: drvm_info
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation
-
-- name: define DR vm names list
-  set_fact:
-    drvm_names: "{{ drvm_names|default([]) + [host_item.virtual_machines | map(attribute='guest_name') | list] | flatten }}"
-  loop: "{{ drvm_info.results }}"
-  loop_control:
-    loop_var: host_item
-    label: "{{ host_item }}"
-  tags: vm_creation
-
-- name: Get the DR guest_info
-  vmware_guest_info:
-    hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-    username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-    password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-    datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-    name: "{{ vm_item }}"
-    validate_certs: no
-  loop: "{{ drvm_names }}"
-  loop_control:
-    loop_var: vm_item
-    label: "{{ vm_item }}"
-  check_mode: no
-  register: drvmguest_info
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation
-
-- name: define delete_drcluster
-  set_fact:
-    delete_drcluster: "{{ delete_drcluster|default(true) and not vm_in_cluster }}"
-#    delete_cluster: "{{ delete_cluster|default(true) and not (vm_in_cluster and vm_on) }}"
-  vars:
-    vm_in_cluster: "{{ true if vm_item.instance.hw_cluster == hostvars[groups['vcenter'][0]]['information']['drcluster'] else false }}"
-#    vm_on: "{{ true if vm_item.instance.hw_power_status|lower is search('poweredon') else false }}"
-  loop: "{{ drvmguest_info.results }}"
-  loop_control:
-    loop_var: vm_item
-    label: "{{ vm_item }}"
-  tags: vm_creation
-
-- name: Check if '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster exists
-  vmware_cluster_info:
-    hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-    username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-    password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-    cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}"
-    validate_certs: no
-  register: drcluster_status
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  run_once: true
-  ignore_errors: true
-  when: delete_drcluster|bool
-  check_mode: no
-  tags: vm_creation
-
 - block:
-  - name: Put DR hosts in maintenance mode
-    vmware_maintenancemode:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      esxi_hostname: "{{ host_item }}"
-      timeout: 3600
-      state: present
+  - name: Get DR VM facts
+    vmware_vm_info:
+      hostname: "{{ host_item }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
+      vm_type: vm
       validate_certs: no
     loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
     loop_control:
       loop_var: host_item
       label: "{{ host_item }}"
-    register: drmaint_mode
+    check_mode: no
+    register: drvm_info
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
-  - name: Move DR hosts out of the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
-    vmware_host:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/host"
-      esxi_hostname: "{{ host_item }}"
-      esxi_username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
-      esxi_password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
-      state: present
-      validate_certs: no
-    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
+  - name: define DR vm names list
+    set_fact:
+      drvm_names: "{{ drvm_names|default([]) + [host_item.virtual_machines | map(attribute='guest_name') | list] | flatten }}"
+    loop: "{{ drvm_info.results }}"
     loop_control:
       loop_var: host_item
-      label: "{{ host_item }}"
-    register: move_drhosts
+      label: "{{ host_item.virtual_machines | map(attribute='guest_name') | list }}"
 
-  - name: Put DR hosts in normal mode
-    vmware_maintenancemode:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      esxi_hostname: "{{ host_item }}"
-      timeout: 3600
-      state: absent
-      validate_certs: no
-    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
+  - include_tasks:
+      file:
+        task_check_cluster_empty.yml
+      apply:
+        vars:
+          - vm_name: "{{ vm_item }}"
+    loop: "{{ drvm_names }}"
     loop_control:
-      loop_var: host_item
-      label: "{{ host_item }}"
-    register: drnormal_mode
+      loop_var: vm_item
+      label: "{{ vm_item }}"
 
-  - name: Delete the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
-    vmware_cluster:
+  - name: define delete_drcluster
+    set_fact:
+      delete_drcluster: "{{ cluster_empty }}"
+
+  - name: Check if '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster exists
+    vmware_cluster_info:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
       cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}"
-      state: absent
       validate_certs: no
-    register: cust_drcluster
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  run_once: true
-  when:
-    - drcluster_status is successful
-    - hostvars[groups['vcenter'][0]]['information']['drcluster'] != ''
-    - delete_drcluster|bool
+    register: drcluster_status
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    run_once: true
+    ignore_errors: true
+    when: delete_drcluster|bool
+    check_mode: no
+
+  - block:
+    - name: Put DR hosts in maintenance mode
+      vmware_maintenancemode:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        esxi_hostname: "{{ host_item }}"
+        timeout: 3600
+        state: present
+        validate_certs: no
+      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
+      loop_control:
+        loop_var: host_item
+        label: "{{ host_item }}"
+      register: drmaint_mode
+
+    - name: Move DR hosts out of the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
+      vmware_host:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/host"
+        esxi_hostname: "{{ host_item }}"
+        esxi_username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
+        esxi_password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
+        state: present
+        validate_certs: no
+      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
+      loop_control:
+        loop_var: host_item
+        label: "{{ host_item }}"
+      register: move_drhosts
+
+    - name: Put DR hosts in normal mode
+      vmware_maintenancemode:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        esxi_hostname: "{{ host_item }}"
+        timeout: 3600
+        state: absent
+        validate_certs: no
+      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][2:] }}"
+      loop_control:
+        loop_var: host_item
+        label: "{{ host_item }}"
+      register: drnormal_mode
+
+    - name: Delete the '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster
+      vmware_cluster:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}"
+        state: absent
+        validate_certs: no
+      register: cust_drcluster
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    run_once: true
+    when:
+      - drcluster_status is successful
+      - hostvars[groups['vcenter'][0]]['information']['drcluster'] != ''
+      - delete_drcluster|bool
   tags: vm_creation
