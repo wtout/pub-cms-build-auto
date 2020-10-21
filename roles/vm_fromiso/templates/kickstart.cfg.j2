@@ -83,7 +83,11 @@ policycoreutils-python
 %post
 # Add search domain
 echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname1 }}
-{{ "echo 'DOMAIN=\"" + sysconfig.domain_name + "\"' >> /etc/sysconfig/network-scripts/ifcfg-" + netconfig.intname2 if netconfig.intname2 != '' else '' }}
+{% if netconfig.intname2 != '' %}
+{% block nic2_domain %}
+echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname2 }}
+{% endblock nic2_domain %}
+{% endif %}
 
 # Yum repos
 rm -f /etc/yum.repos.d/*
@@ -157,14 +161,14 @@ echo 'SSHD: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
 echo 'snmpd: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
 
 # Add user
-useradd {{ vm_svc_user}}
-echo '{{ vm_svc_user }}:{{ vm_svc_pass }}' |chpasswd
-cat  << xxEOFxx >> /etc/sudoers.d/{{ vm_svc_user }}
+useradd {{ vm_svc_user if customer.primary.name_prefix is search('mdr') else ansible_user }}
+echo '{{ vm_svc_user if customer.primary.name_prefix is search('mdr') else ansible_user }}:{{ vm_svc_pass if customer.primary.name_prefix is search('mdr') else ansible_ssh_pass }}' |chpasswd
+cat  << xxEOFxx >> /etc/sudoers.d/{{ vm_svc_user if customer.primary.name_prefix is search('mdr') else ansible_user }}
 Host_Alias  BUILDUSER_SUDO_HOSTS = ALL
 Runas_Alias BUILDUSER_SUDO_RUNAS = ALL
 Cmnd_Alias  BUILDUSER_SUDO_CMNDS = ALL
 Cmnd_Alias      BUILDUSER_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
-%{{ vm_svc_user }} BUILDUSER_SUDO_HOSTS = (BUILDUSER_SUDO_RUNAS) NOPASSWD: BUILDUSER_SUDO_CMNDS, !BUILDUSER_SHELLS
+%{{ vm_svc_user if customer.primary.name_prefix is search('mdr') else ansible_user }} BUILDUSER_SUDO_HOSTS = (BUILDUSER_SUDO_RUNAS) NOPASSWD: BUILDUSER_SUDO_CMNDS, !BUILDUSER_SHELLS
 xxEOFxx
 %end
 

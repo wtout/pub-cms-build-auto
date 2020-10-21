@@ -58,7 +58,6 @@
         when: vcr_vm_reachable is succeeded
       when:
         - ansible_ssh_pass != postppp
-        - inventory_hostname is not search('em7')
 
     - include_tasks: task_create_vms.yml
     when: create_vms_iso | default(false) | bool
