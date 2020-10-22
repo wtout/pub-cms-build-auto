@@ -6,7 +6,7 @@
       jid: "{{ winjmp_deployment.ansible_job_id }}"
     register: winjmp_poll_results
     until: winjmp_poll_results.finished
-    retries: 200
+    retries: 400
 
   - name: Power on VM
     vmware_guest_powerstate:
@@ -40,7 +40,7 @@
     pause:
       seconds: 400
     when: power.changed
-  
+
   - name: Apply interface configuration settings
     vmware_vm_shell:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
@@ -60,7 +60,7 @@
     loop: "{{ winjmp.interface_configuration }}"
     loop_control:
       loop_var: config
-      
+  
   - name: Add static routes
     vmware_vm_shell:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
