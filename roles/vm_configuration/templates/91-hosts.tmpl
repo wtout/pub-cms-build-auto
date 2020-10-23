@@ -18,6 +18,13 @@
 
 {{ rly_ip1_list[0] + ' ' + rly_hst_list[0] + ' ' + rly_hst_list[0] + '.' + sysconfig.domain_name }}
 {{ rly_ip1_list[1] + ' ' + rly_hst_list[1] + ' ' + rly_hst_list[1] + '.' + sysconfig.domain_name if mc_ip1_list|length >= 2 else '' }}
+
+{% if groups['atarly'] is defined %}
+{% block ata %}
+{{ atarly_ip1_list[0] + "\t" + atarly_hst_list[0] + "\t" + atarly_hst_list[0] + '.' + sysconfig.domain_name }}
+{% endblock ata %}
+{% endif %}
+
 {{ splind_ip1_list[0] }} splunk-site1-indexer01 splunk-site1-indexer01
 {{ splind_ip1_list[1] + ' splunk-site2-indexer01 splunk-site2-indexer01' if splind_ip1_list|length >= 2 else '' }}
 {{ splsrc_ip1_list[0] }} splunk-site1-search-head01 splunk-site1-search-head01

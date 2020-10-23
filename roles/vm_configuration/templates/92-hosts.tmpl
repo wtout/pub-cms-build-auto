@@ -36,6 +36,12 @@
 {{ rly_ip1_list[0] + "\t" + rly_hst_list[0] + "\t" + rly_hst_list[0] + '.' + sysconfig.domain_name }}
 {{ rly_ip1_list[1] + "\t" + rly_hst_list[1] + "\t" + rly_hst_list[1] + '.' + sysconfig.domain_name if rly_ip1_list|length >= 2 else '' }}
 
+{% if groups['atarly'] is defined %}
+{% block ata %}
+{{ atarly_ip1_list[0] + "\t" + atarly_hst_list[0] + "\t" + atarly_hst_list[0] + '.' + sysconfig.domain_name }}
+{% endblock ata %}
+{% endif %}
+
 {{ spl_ip1_list[0] + "\t" + spl_hst_list[0] + "\t" + spl_hst_list[0] + '.' + sysconfig.domain_name if spl_ip1_list is defined else '' }}
 {{ splsrc_ip1_list[0] + "\t" + splsrc_hst_list[0] + "\t" + splsrc_hst_list[0] + '.' + sysconfig.domain_name if splsrc_ip1_list is defined else '' }}
 {{ splsrc_ip1_list[1] + "\t" + splsrc_hst_list[1] + "\t" + splsrc_hst_list[1] + '.' + sysconfig.domain_name if splsrc_ip1_list|default([])|length >= 2 else '' }}

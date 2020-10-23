@@ -85,6 +85,10 @@
       yum:
         name: puppet-agent
         state: absent
+      register: uninstall_status
+      until: uninstall_status is succeeded
+      retries: 5
+      delay: 30
     when:
       - inventory_hostname is not search('em7')
       - delete_client_cert_on_vm | default(false) | bool

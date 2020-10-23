@@ -4,6 +4,9 @@
   - name: check if puppet agent test is already running
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
     register: puppet_push_running
+    until: puppet_push_running is succeeded
+    retries: 5
+    delay: 10
     check_mode: no
 
   - block:

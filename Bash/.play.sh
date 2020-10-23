@@ -207,12 +207,14 @@ function install_packages() {
 		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 		[[ ${debug} == 1 ]] && debug=0 && set -x
 	else
-		if [ "$(printf '%s\n' $(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}') ${ANSIBLE_VERSION} | sort -V | head -1)" != "${ANSIBLE_VERSION}" ]
+		if [ "$(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}')" != "${ANSIBLE_VERSION}" ]
 		then
-			printf "\nUpgrading Ansible from version $(ansible --version | grep '^ansible' | cut -d ' ' -f2)"
+			pip3 uninstall -y ansible
+			find ~/.local -maxdepth 4 -name "ansible*" -exec rm -rf {} \;
 			[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-			pip3 install --user --no-cache-dir --quiet --upgrade -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
-			[[ ${?} == 0 ]] && printf " to version ${ANSIBLE_VERSION}\n" || exit 1
+			printf "\nInstalling Ansible ..."
+			pip3 install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
+			[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 			[[ ${debug} == 1 ]] && debug=0 && set -x
 		fi
 	fi
@@ -508,7 +510,7 @@ ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST="epel-release sshpass python3 libselinux-python3 python3-pip"
-ANSIBLE_VERSION='2.9.10'
+ANSIBLE_VERSION='2.9.14'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
 REPOVAULT="${PWD}/.repovault.yml"

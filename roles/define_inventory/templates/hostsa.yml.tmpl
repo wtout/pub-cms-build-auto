@@ -56,3 +56,10 @@ all:
         rly:
           hosts:
             rly[01:02]:
+{% if environment_definition.customer.ata %}
+{% block ata %}
+        atarly:
+          hosts:
+            atarly[01:01]:
+{% endblock ata %}
+{% endif %}
