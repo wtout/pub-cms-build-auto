@@ -1,9 +1,0 @@
----
-# tasks to license the EM7 VM
-- block:
-  - include_tasks: task_em7_license_get_info.yml
-  - include_tasks: task_em7_license_request.yml
-  - include_tasks: task_em7_license_save.yml
-  - include_tasks: task_em7_license_apply.yml
-  - include_tasks: task_em7_license_reboot.yml
-  tags: vm_configuration

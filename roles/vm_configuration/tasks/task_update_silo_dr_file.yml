@@ -12,6 +12,6 @@
       loop_var: task_item
     no_log: true
   when:
-    - (inventory_hostname is regex('drem7[prt|db]') and customer.release is search('9.2')) or (inventory_hostname is search('drem7prt') and customer.release is not search('9.2'))
+    - (inventory_hostname is regex('drem7(prt|db)') and customer.release is search('9.2')) or (inventory_hostname is search('drem7prt') and customer.release is not search('9.2'))
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

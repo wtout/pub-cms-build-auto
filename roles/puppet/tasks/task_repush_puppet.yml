@@ -6,6 +6,10 @@
       ansible_ssh_pass: "{{ preppp }}"
       ansible_become_pass: "{{ preppp }}"
     no_log: true
+  - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      tasks_from: task_make_db01_primary.yml
   - name: "relaunch puppet push #1"
     shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
     async: 30
@@ -29,9 +33,16 @@
       no_log: true
     - include_tasks: task_delete_certificates.yml
     - include_tasks: task_add_vm_to_class.yml
-    - include_tasks: task_generate_cert.yml
-    - include_tasks: task_generate_cert_for_em7.yml
-    - include_tasks: task_check_certificate.yml
+    - block:
+      - include_tasks: task_generate_cert.yml
+      - include_tasks: task_generate_cert_for_em7.yml
+      - include_tasks: task_check_certificate.yml
+      when:
+        - delete_client_cert_on_vm | default(false) | bool
+    - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+      include_role:
+        name: "{{ auto_dir + '/roles/vm_configuration' }}"
+        tasks_from: task_make_db01_primary.yml
     - name: "relaunch puppet push #2"
       shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
       async: 30
@@ -56,9 +67,16 @@
       - include_tasks: task_rebuild_host.yml
       - include_tasks: task_delete_certificates.yml
       - include_tasks: task_add_vm_to_class.yml
-      - include_tasks: task_generate_cert.yml
-      - include_tasks: task_generate_cert_for_em7.yml
-      - include_tasks: task_check_certificate.yml
+      - block:
+        - include_tasks: task_generate_cert.yml
+        - include_tasks: task_generate_cert_for_em7.yml
+        - include_tasks: task_check_certificate.yml
+        when:
+          - delete_client_cert_on_vm | default(false) | bool
+      - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+        include_role:
+          name: "{{ auto_dir + '/roles/vm_configuration' }}"
+          tasks_from: task_make_db01_primary.yml
       - name: "relaunch puppet push #3"
         shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
         async: 30

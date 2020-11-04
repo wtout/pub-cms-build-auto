@@ -4,6 +4,7 @@
   - include_tasks: task_get_vm_datastore.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] == ''
+      - vm_ds is not defined or vm_ds == ''
   - include_tasks: task_deploy_ova.yml
   - include_tasks: task_update_disks.yml
   - include_tasks: task recreate_vm.yml

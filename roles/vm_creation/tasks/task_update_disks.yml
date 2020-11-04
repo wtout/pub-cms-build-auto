@@ -36,6 +36,7 @@
     set_fact:
       splind_datastore: "{{ (hostvars[groups['vcenter']|first]['ssd_ds_names']|last if 'dr' in group_names else hostvars[groups['vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1]) if hostvars[groups['vcenter']|first]['ssd_ds_names']|length > 1 else hostvars[groups['vcenter']|first]['ssd_ds_names']|first }}"
     when:
+      - splind_datastore is not defined or splind_datastore == ''
       - inventory_hostname is search('splind')
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
   - name: Define VM disk2

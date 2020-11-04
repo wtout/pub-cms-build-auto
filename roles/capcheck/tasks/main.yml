@@ -22,5 +22,5 @@
       - information.deptype == 'a'
 
   when: capcheck | default(false) | bool
-  tags: ['capcheck', 'vm_creation', 'puppet']
+  tags: ['capcheck', 'vm_creation']
 

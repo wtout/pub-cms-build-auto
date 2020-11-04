@@ -1,6 +1,10 @@
 ---
 # tasks to do a puppet push
 - block:
+  - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      tasks_from: task_make_db01_primary.yml
   - name: check if {{ push_type }} puppet push {{ push_num|int }} is already running
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
     register: ppr1

@@ -5,8 +5,8 @@
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
     register: puppet_push_running
     until: puppet_push_running is succeeded
-    retries: 5
-    delay: 10
+    async: 60
+    poll: 10
     check_mode: no
 
   - block:
@@ -97,9 +97,24 @@
       - name: Wait for puppet agent test to start
         shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not started"
         register: puppet_push_start
+        ignore_errors: true
         until: puppet_push_start.stdout is not search('not started')
         retries: 18
         delay: 10
+      - block:
+        - name: restart puppet push 1
+          shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+          register: puppet_agent
+          async: 30
+          poll: 0
+        - name: Wait for puppet agent test to start
+          shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not started"
+          register: puppet_push_start2
+          ignore_errors: true
+          until: puppet_push_start2.stdout is not search('not started')
+          retries: 18
+          delay: 10
+        when: puppet_push_start is failed
       - name: Update SSH password
         set_fact:
           ansible_ssh_pass: "{{ postppp }}"

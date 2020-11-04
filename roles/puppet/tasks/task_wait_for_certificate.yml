@@ -50,6 +50,7 @@
     register: psc
     until: psc is succeeded
     retries: 5
+    delay: 10
     become: true
     ignore_errors: true
     delegate_to: "{{ groups['puppet']|first }}"

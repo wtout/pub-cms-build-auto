@@ -1,19 +1,35 @@
 ---
 # Tasks to rebuild host
 - block:
+  - name: "{{ auto_dir + '/roles/vm_configuration' }}: configure vms"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      tasks_from: task_detect_datastore.yml
   - name: "{{ auto_dir + '/roles/vm_creation' }}: rollback vms"
     include_role:
       name: "{{ auto_dir + '/roles/vm_creation' }}"
-    vars:
-      create_vms_ova: false
-      rollback_vms_ova: true
+      tasks_from: task_delete_vm.yml
+  - name: "{{ auto_dir + '/roles/vm_creation' }}: get OVA file name"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      tasks_from: task_get_ova_name.yml
   - name: "{{ auto_dir + '/roles/vm_creation' }}: create vms"
     include_role:
       name: "{{ auto_dir + '/roles/vm_creation' }}"
+      tasks_from: task_create_configure_vms.yml
     vars:
-      create_vms_ova: true
-      rollback_vms_ova: false
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: configure vms"
+      vm_ds: "{{ ds2reuse }}"
+      splind_datastore: "{{ ssd2reuse|default('') }}"
+    when:
+      - ds2reuse is defined
+      - ds2reuse != ''
+  - name: "{{ auto_dir + '/roles/vm_creation' }}: create vms"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      tasks_from: task_create_configure_vms.yml
+    when:
+      - ds2reuse is not defined
+  - name: "{{ auto_dir + '/roles/vm_configuration' }}: configure vms"
     include_role:
       name: "{{ auto_dir + '/roles/vm_configuration' }}"
     vars:

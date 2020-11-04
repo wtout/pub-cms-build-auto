@@ -25,6 +25,9 @@
       power_on: no
       validate_certs: no
     register: deploy_ovf
+    until: deploy_ovf is succeeded
+    retries: 5
+    delay: 10
     environment:
       http_proxy: ''
       https_proxy: ''

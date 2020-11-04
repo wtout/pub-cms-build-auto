@@ -8,6 +8,7 @@
   - include_tasks: task_update_puppet_data_file.yml
   - include_tasks: task_update_hosts_file.yml
   - include_tasks: task_update_silo_file.yml
+  - include_tasks: task_update_password_silo_file.yml
   - include_tasks: task_update_siloconf_file.yml
   - include_tasks: task_update_drop_file.yml
   - include_tasks: task_update_em7vg_files.yml
@@ -22,6 +23,10 @@
   - include_tasks: task_update_exports_file.yml
   - include_tasks: task_update_dbconns_file.yml
   - include_tasks: task_restore_silo_dr_file.yml
-  - include_tasks: task_em7_license_get.yml
+  - include_tasks: task_em7_license_get_info.yml
+  - include_tasks: task_em7_license_request.yml
+  - include_tasks: task_em7_license_save.yml
+  - include_tasks: task_em7_license_apply.yml
+  - include_tasks: task_em7_license_reboot.yml
   - include_tasks: task_update_silo_dr_file.yml
   tags: vm_configuration
