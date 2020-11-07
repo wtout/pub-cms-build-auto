@@ -31,8 +31,8 @@ add lb monitor MYSQL-ECV-26 MYSQL-ECV -userName rsuser -LRTM DISABLED -interval 
 add lb vserver {{ lb_server.name }} {{ lb_server.type }} {{ lb_server.ipaddress }} {{ lb_server.port }} -persistenceType {{ lb_server.persistence_type }} -lbMethod {{ lb_server.lb_method }} -Listenpolicy None -sessionless {{ lb_server.sessionless }} -cltTimeout {{ lb_server.clt_timeout }}
 {% endfor %}
 
-set aaa tacacsParams -serverIP 172.19.250.14 -tacacsSecret fd7e034327967070 -encrypted -authorization ON -accounting ON
-add authentication tacacsAction qstacacs1 -serverIP 172.19.250.14 -tacacsSecret fd7e034327967070 -encrypted -authorization ON -accounting ON
+set aaa tacacsParams -serverIP {{ nsvpx.configuration.ise_server }} -tacacsSecret fd7e034327967070 -encrypted -authorization ON -accounting ON
+add authentication tacacsAction qstacacs1 -serverIP {{ nsvpx.configuration.ise_server }} -tacacsSecret fd7e034327967070 -encrypted -authorization ON -accounting ON
 add authentication localPolicy Local ns_true
 add authentication tacacsPolicy qstac ns_true qstacacs1
 bind system global qstac -priority 100
@@ -55,16 +55,16 @@ bind lb vserver {{ lb_server_bind.name }} {{ lb_server_bind.service }}
 {% endfor %}
 
 add snmp community Ir0nh0rs3 ALL
-add snmp trap specific 172.19.254.23 -communityName Ir0nh0rs3
+add snmp trap specific {{ splunk.mom_rly_vip }}-communityName Ir0nh0rs3
 
 add ntp server {{ customer.primary.octets }}.62
 enable ntp sync
 
-add dns nameServer 172.19.251.21
-add dns nameServer 172.19.251.22
+add dns nameServer {{ sysconfig.dns_servers[0] }}
+add dns nameServer {{ sysconfig.dns_servers[1] }}
 rm route 0.0.0.0 0.0.0.0 {{ customer.primary.octets }}.62
 
-set system user nsroot {{ credentials.complex_password }}
+set system user nsroot {{ credentials.password }}
 
 save ns config
 .

@@ -32,7 +32,7 @@
     - {role: "{{ auto_dir }}/roles/infra_dns_records", when: add_dns_records | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/infra_build_nodes", when: build_infra_nodes | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/infra_license", when: infra_license | default(false) | bool}
-# Add role to check license here
+    - {role: "{{ auto_dir }}/roles/infra_check_csr_license", when: check_csr_license | default(false) | bool}
 
 # Plays to create, configure the VMs and to run the puppet push
 - name: Deploy VMs

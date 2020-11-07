@@ -7,38 +7,41 @@
 
   - name: Generate notification message
     set_fact:
-      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line] | list }}"
+      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line_item] | list }}"
     loop:
-      - "**Infra Serial Numbers**"
-      - "{{ customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['csr01']['serial_number'] }}"
-      - "{{ customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['csr02']['serial_number'] }}"
-      - "{{ customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['nsvpx01']['serial_number'] }}"
-      - "{{ customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}02: {{ hostvars['nsvpx02']['serial_number'] }}"
+      - "{{ ( customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] + '01: ' + hostvars['csr01']['ansible_net_serialnum'] ) if hostvars['csr01']['ansible_net_serialnum'] is defined else '' }}"
+      - "{{ ( customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] + '02: ' + hostvars['csr02']['ansible_net_serialnum'] ) if hostvars['csr01']['ansible_net_serialnum'] is defined else '' }}"
+      - "{{ ( customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] + '01: ' + hostvars['nsvpx01']['serial_number'] ) if hostvars['nsvpx01']['serial_number'] is defined else '' }}"
+      - "{{ ( customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] + '02: ' + hostvars['nsvpx02']['serial_number'] ) if hostvars['nsvpx01']['serial_number'] is defined else '' }}"
     loop_control:
-      loop_var: line
+      loop_var: line_item
+    when: line_item != ''
 
   - name: Append DR VMs to notification message
     set_fact:
-      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line] | list }}"
+      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line_item] | list }}"
     loop:
-      - "{{ customer.secondary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['drcsr01']['serial_number'] }}"
-      - "{{ customer.secondary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] }}01: {{ hostvars['drnsvpx01']['serial_number'] }}"
+      - "{{ ( customer.secondary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] + '01: ' + hostvars['drcsr01']['ansible_net_serialnum'] ) if hostvars['drcsr01']['ansible_net_serialnum'] is defined else '' }}"
+      - "{{ ( customer.secondary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] + '01: ' + hostvars['drnsvpx01']['serial_number'] ) if hostvars['drnsvpx01']['serial_number'] is defined else '' }}"
     loop_control:
-      loop_var: line
-    when: customer.disaster_recovery
+      loop_var: line_item
+    when:
+      - customer.disaster_recovery
+      - line_item != ''
 
-  - name: Send notification via Webex Teams with infra serial numbers 
+  - name: Send notification via Webex Teams with infra serial numbers
     uri:
       url: "https://webexapis.com/v1/messages"
       method: POST
       headers:
         Authorization: "Bearer MDZlM2NiNjktNTNjNi00ZDNiLWE5ZDYtMjRkZjk4NTljYTdmMzI5ZWU0YTUtZWY0_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
       body_format: json
-      body: 
+      body:
         roomId: Y2lzY29zcGFyazovL3VzL1JPT00vMzI0ZWY3YTAtZjZhYS0xMWU5LWE3ZmItMTM1MzQ3ZWE1NjQ2
-        markdown: "{{ NOTIF_MSG | join('  \n') }}"
+        markdown: "{{ '**Infra Serial Numbers**' + '\n' + NOTIF_MSG | join('  \n') }}"
     environment:
       http_proxy: "{{ proxy_string.stdout }}"
       https_proxy: "{{ proxy_string.stdout }}"
+    when: NOTIF_MSG is defined and NOTIF_MSG != []
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

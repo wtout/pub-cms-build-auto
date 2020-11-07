@@ -1,5 +1,3 @@
-serial_number: ''
-
 interfaces:
   - name: interface GigabitEthernet3
     properties:

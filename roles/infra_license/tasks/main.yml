@@ -12,20 +12,20 @@
     register: csr_info
     until: csr_info.instance.ipv4 != None
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    tags: infra_license
   - set_fact:
       ansible_host: "{{ csr_info.instance.ipv4 }}"
       dhcp_address: "{{ csr_info.instance.ipv4 }}"
-    tags: infra_license
 
-  - include_tasks: task_check_csr_license.yml
+  - include_role:
+      name: "{{ auto_dir + '/roles/infra_check_csr_license' }}"
+    vars:
+      ignore: true
 
   - block:
     - name: Define CSR key
       shell: ssh-keyscan -t rsa {{ netconfig.ipaddress3 }}
       register: host_key
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-      tags: infra_license
 
     - name: Add CSR key to known_hosts
       known_hosts:
@@ -33,31 +33,24 @@
         key: "{{ host_key.stdout }}"
         state: present
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-      tags: infra_license
 
     - name: Define CSR serial number
       block:
       - ios_facts:
           gather_subset: min
-      - set_fact:
-          serial_number: "{{ ansible_net_serialnum }}"
-      tags: infra_license
 
-    - name: List Packages directory
-      shell: "ls {{ auto_dir }}/Packages"
+    - name: List Licenses directory
+      shell: "ls {{ auto_dir }}/Packages/licenses"
       register: license_file_names
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-      tags: infra_license
 
     - name: Define CSR license file name
       set_fact:
-        license_file_name: "{{ license_file_names.stdout_lines | select('search', serial_number) | list | first }}"
-      tags: infra_license
+        license_file_name: "{{ license_file_names.stdout_lines | select('search', ansible_net_serialnum) | list | first }}"
 
-    - name: Transfe license from Packages to CSR
-      shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.ipaddress3 }}:/bootflash:{{ license_file_name }}"
+    - name: Transfer license from Packages to CSR
+      shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.ipaddress3 }}:/bootflash:{{ license_file_name }}"
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-      tags: infra_license
 
     - ios_command:
         commands:
@@ -66,7 +59,6 @@
             answer: 'yes'
       register: csr_license_details_1
       failed_when: csr_license_details_1 is search('1/1 licenses were failed to install')
-      tags: infra_license
 
     - name: Remove CSR key from known_hosts
       known_hosts:
@@ -74,14 +66,6 @@
         key: "{{ host_key.stdout }}"
         state: absent
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-    - name: Check if CSR is licensed
-      ios_command:
-        commands: "show license detail"
-      register: csr_license_details_2
-      failed_when: csr_license_details_2 == []
-      tags: infra_license
-    when: lic_detail is failed
-    tags: infra_license
-  tags: infra_license
+    when: not is_licensed
   when: inventory_hostname is search('csr')
+  tags: infra_license

@@ -11,7 +11,7 @@
     folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
     name: "{{ vm.name }}"
     networks: {}
-    ova: "{{ ova_dir }}/{{ customer.release }}/csr1000v-universalk9.16.09.02.ova"
+    ova: "{{ ova_dir }}/{{ customer.release }}/{{ ova_names.csr }}"
     power_on: no
     wait: yes
     allow_duplicates: no

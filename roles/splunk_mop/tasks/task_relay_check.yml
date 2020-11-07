@@ -2,7 +2,7 @@
 # Tasks to apply fix to relay
 - block:
   - set_fact:
-      splunk_dir: "/opt/splunk/{{ fwd }}/splunkforwarder" 
+      splunk_dir: "/opt/splunk/{{ fwd_item }}/splunkforwarder" 
   - include_tasks: task_check_datetime.yml
 
   - block:

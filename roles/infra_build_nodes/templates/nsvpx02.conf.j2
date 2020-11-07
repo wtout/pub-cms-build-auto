@@ -3,6 +3,6 @@ set ns hostname {{ vm.name }}
 add HA node 1 {{ customer.primary.octets }}.53
 shell sleep 60
 rm route 0.0.0.0 0.0.0.0 {{ customer.primary.octets }}.62
-set system user nsroot {{ credentials.complex_password }}
+set system user nsroot {{ credentials.password }}
 save ns config
 .

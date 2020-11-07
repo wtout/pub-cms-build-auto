@@ -41,7 +41,7 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['vcenter']
-  tags: [ 'infra_configure', 'infra_build_nodes', 'vm_creation', 'never' ]
+  tags: [ 'infra_configure', 'infra_build_nodes', 'never' ]
 
 - name: define rollback_infra
   set_fact:
@@ -57,7 +57,7 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['vcenter']
-  tags: [ 'capcheck', 'vm_creation', 'puppet', 'infra_build_nodes', 'vm_configuration' ]
+  tags: [ 'capcheck', 'vm_creation', 'infra_build_nodes' ]
   
 - name: define build_infra_nodes
   set_fact:
@@ -82,6 +82,14 @@
     - deploy | default(false) | bool
     - inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra'])
   tags: [ 'infra_license', 'never' ]
+
+- name: define check_csr_license
+  set_fact:
+    check_csr_license: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra'])
+  tags: [ 'infra_check_csr_license', 'always' ]
 
 - name: define get_release
   set_fact:

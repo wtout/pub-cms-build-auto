@@ -20,17 +20,13 @@
       vars:
         index: "{{ inventory_hostname[-2:] }}"
 
-    - name: Define Netscaler key
-      shell: ssh-keyscan -t rsa {{ ipaddress1 }}
-      register: host_key
-
-    - name: Remove Netscaler 2 from known_hosts
-      known_hosts:
-        name: "{{ ipaddress1 }}"
-        key: "{{ host_key.stdout }}"
-        state: absent
+    - name: Purge known hosts file
+      copy:
+        dest: ~/.ssh/known_hosts
+        content: ''
+      run_once: true
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     when: inventory_hostname is search('nsvpx')
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost' }}"
 
   - include_tasks: task_rollback_nexus_update.yml
     when: inventory_hostname is search('nexus')

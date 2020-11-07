@@ -64,11 +64,11 @@
   - block:
     - name: Apply Primary CSR configuration
       ios_config:
-        lines: "{{ interface.properties }}"
-        parents: "{{ interface.name }}"
+        lines: "{{ interface_item.properties }}"
+        parents: "{{ interface_item.name }}"
       loop: "{{ interfaces }}"
       loop_control:
-        loop_var: interface
+        loop_var: interface_item
 
     - name: Set NTP server
       ios_ntp:
@@ -87,11 +87,11 @@
   - block:
     - name: Apply Secondary CSR configuration
       ios_config:
-        lines: "{{ interface.properties }}"
-        parents: "{{ interface.name }}"
+        lines: "{{ interface_item.properties }}"
+        parents: "{{ interface_item.name }}"
       loop: "{{ interfaces }}"
       loop_control:
-        loop_var: interface
+        loop_var: interface_item
 
     - name: Save Secondary CSR configuration
       ios_command:
@@ -105,6 +105,4 @@
     block:
     - ios_facts:
         gather_subset: min
-    - set_fact:
-        serial_number: "{{ ansible_net_serialnum }}"
   tags: ['infra_build_nodes', 'never']

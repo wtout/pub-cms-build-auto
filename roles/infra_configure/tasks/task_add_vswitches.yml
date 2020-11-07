@@ -7,11 +7,11 @@
     password: "{{ credentials.password }}"
     esxi_hostname: "{{ resource }}"
     validate_certs: false
-    switch: "vSwitch{{ counter | int }}"
-    nics: "vmnic{{ counter | int }}"
+    switch: "vSwitch{{ counter_item | int }}"
+    nics: "vmnic{{ counter_item | int }}"
   loop: "{{ range(0, 5)|list }}"
   loop_control:
-    loop_var: counter
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    loop_var: counter_item
   run_once: true
-  tags: ['infra_configure', 'infra_build_nodes', 'capcheck', 'vm_creation']
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

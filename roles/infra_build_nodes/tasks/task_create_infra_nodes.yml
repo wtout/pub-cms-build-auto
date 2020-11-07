@@ -50,12 +50,11 @@
     include_tasks: task_configure_nsvpx.yml
     when: inventory_hostname is search('nsvpx')
 
+  - name: Send Webex Teams notification with CSR/Netscaler serial numbers
+    include_tasks: task_notify_teams.yml
+    when: not inventory_hostname is search('nexus')
+
   - name: Configure Windows Jump Severs
     include_tasks: task_configure_winjmp.yml
     when: inventory_hostname is search('winjmp')
-
-  - name: Send Webex Teams notification with CSR/Netscaler serial numbers
-    include_tasks: task_notify_teams.yml
-    run_once: true
-    when: not inventory_hostname is search('nexus')
   tags: ['infra_build_nodes', 'never']

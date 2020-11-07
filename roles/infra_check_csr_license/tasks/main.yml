@@ -1,0 +1,13 @@
+---
+# tasks file for infra_check_csr_license
+- block:
+  - name: Check if CSR is licensed
+    ios_command:
+      commands: "show license detail"
+    register: lic_detail
+    ignore_errors: "{{ ignore | default(false) }}"
+    when: inventory_hostname is search('csr')
+
+  - set_fact:
+      is_licensed: "{{ false if lic_detail is failed else true }}"
+  tags: [ 'infra_check_csr_license', 'always' ]

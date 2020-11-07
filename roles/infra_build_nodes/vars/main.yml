@@ -2,6 +2,10 @@
 # vars file for infra_build_nodes
 ova_dir: "{{ auto_dir }}/Packages"
 
+ova_names:
+  nsvpx: NSVPX-ESX-12.1-57.18_nc_64.ovf
+  csr: csr1000v-universalk9.16.09.02.ova
+
 winjmp:
   interface_configuration:
     - name: Rename interface 1
@@ -50,8 +54,10 @@ winjmp:
       shell: c:\windows\system32\icacls.exe
       ignore_errors: no
 
-nsvpx: 
+nsvpx:
   configuration:
+    ise_server: 172.19.250.14
+
     servers:
       - name: EM7App01
         ipaddress: "{{ hostvars['em7prt01']['ipaddress2'] }}"
@@ -536,49 +542,25 @@ drnsvpx:
         ipaddress: "{{ hostvars['drem7prt01']['ipaddress2'] }}"
         comment: EM7App01
 
-      # - name: EM7App02
-      #   ipaddress: "{{ hostvars['drem7prt02']['ipaddress2'] }}"
-      #   comment: EM7App02
-
       - name: EM7App01-INT
         ipaddress: "{{ hostvars['drem7prt01']['ipaddress1'] }}"
         comment: EM7App01-INT
-
-      # - name: EM7App02-INT
-      #   ipaddress: "{{ hostvars['drem7prt02']['ipaddress1'] }}"
-      #   comment: EM7App02-INT
 
       - name: EM7MC01
         ipaddress: "{{ hostvars['drem7mc01']['ipaddress1'] }}"
         comment: EM7MC01
 
-      # - name: EM7MC02
-      #   ipaddress: "{{ hostvars['drem7mc02']['ipaddress1'] }}"
-      #   comment: EM7MC02
-
       - name: Splunk-Search01
         ipaddress: "{{ hostvars['drsplsrc01']['ipaddress1'] }}"
         comment: Splunk-Search01
-
-      # - name: Splunk-Search02
-      #   ipaddress: "{{ hostvars['drsplsrc02']['ipaddress1'] }}"
-      #   comment: Splunk-Search02
 
       - name: Net-SNMP-1
         ipaddress: "{{ hostvars['drrly01']['ipaddress2'] }}"
         comment: Net SNMP poller 1
 
-      # - name: Net-SNMP-2
-      #   ipaddress: "{{ hostvars['drrly02']['ipaddress2'] }}"
-      #   comment: Net SNMP poller 2
-
       - name: Net-SNMP-3
         ipaddress: "{{ hostvars['drrly01']['ipaddress1'] }}"
         comment: Net SNMP poller 3
-
-      # - name: Net-SNMP-4
-      #   ipaddress: "{{ hostvars['drrly02']['ipaddress1'] }}"
-      #   comment: Net SNMP poller 4
 
     services:
       - name: NETSNMP-TrapService-01

@@ -1,6 +1,6 @@
 galaxy_info:
   author: Daniel DeLima
-  description: Creates datastores, portgroups, and clusters for given stack
+  description: Checks if CSRs for stack is licensed
   company: your company (optional)
 
   # If the issue tracker for your role is not on github, uncomment the
