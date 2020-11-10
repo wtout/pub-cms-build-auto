@@ -62,6 +62,20 @@
       - groups['rly'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
+  - name: define atarly lists
+    set_fact:
+      atarly_ip1_list: "{{ atarly_ip1_list | default([]) + ipvar1 if (atarly_ip1_list is defined and atarly_ip1_list != '') else ipvar1 }}"
+      atarly_hst_list: "{{ atarly_hst_list | default([]) + hstvar if (atarly_hst_list is defined and atarly_hst_list != '') else hstvar }}"
+    vars:
+      ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
+      hstvar: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.vmname') | list }}"
+    loop: "{{ groups['rly'] }}"
+    loop_control:
+      loop_var: info_item
+    when:
+      - groups['atarly'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
   - name: define spl lists
     set_fact:
       spl_ip1_list: "{{ spl_ip1_list | default([]) + ipvar1 if (spl_ip1_list is defined and spl_ip1_list != '') else ipvar1 }}"

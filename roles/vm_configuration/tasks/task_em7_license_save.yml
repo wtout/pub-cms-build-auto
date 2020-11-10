@@ -1,24 +1,7 @@
 ---
 # tasks to save the EM7 license on the VM
 - block:
-  - block:
-    - name: check if mysql is running on db01
-      command: systemctl status mysql
-      register: service_check
-      check_mode: no
-      ignore_errors: true
-      delegate_to: "{{ groups['em7db']|first }}"
-      when:
-        - "'dr' not in group_names"
-    - name: check if db vip is reachable
-      command: ping {{ vip.db }} -c 1
-      retries: 3
-      delay: 5
-      register: db_vip_reachable1
-      ignore_errors: true
-    - include_tasks: task_reboot_em7dbs.yml
-      when: db_vip_reachable1 is failed or ('dr' not in group_names and service_check.stdout is regex('dead|failed'))
-    when: inventory_hostname is search('prt')
+  - include_tasks: task_make_db01_primary.yml
   - debug:
       msg:
         - "{{ get_cert.json }}"

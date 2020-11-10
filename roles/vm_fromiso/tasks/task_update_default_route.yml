@@ -36,6 +36,7 @@
       systemd:
         name: network
         state: restarted
+      become: "{{ true if ansible_user != 'root' else false }}"
       async: 30
       poll: 0
       when: copy_file_status is succeeded

@@ -10,19 +10,20 @@
 
   - name: check if required variables are defined
     set_fact:
-      cn: "{{ 'Customer name is not defined' if environment_definition.customer.name == none else '' }}"
-      dm: "{{ 'Deployment model is not defined' if environment_definition.customer.deployment_model == none else '' }}"
-      np: "{{ 'Primary number of Portals is not defined' if environment_definition.customer.primary.number_of_prts == none else '' }}"
-      nm: "{{ 'Primary number of Message Collectors is not defined' if environment_definition.customer.primary.number_of_mcs == none else '' }}"
-      nd: "{{ 'Primary number of Data Collectors is not defined' if environment_definition.customer.primary.number_of_dcs == none else '' }}"
-      dr: "{{ 'Disaster recovery is not defined' if environment_definition.customer.disaster_recovery == none else '' }}"
-      pn: "{{ 'Primary name_prefix is not defined' if environment_definition.customer.primary.name_prefix == none else '' }}"
-      po: "{{ 'Primary octets is not defined' if environment_definition.customer.primary.octets == none else '' }}"
-      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.name_prefix == none and datacenters[environment_definition.datacenter.name]['deptype'] is search('a')) else '' }}"
-      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.secondary.octets == none and datacenters[environment_definition.datacenter.name]['deptype'] is search('a')) else '' }}"
-      rv: "{{ 'Release version is not defined' if environment_definition.customer.release_version == none else '' }}"
-      dn: "{{ 'Datacenter name is not defined' if environment_definition.datacenter.name == none else '' }}"
-      dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and datacenters[environment_definition.datacenter.name]['deptype'] is search('a') and environment_definition.datacenter.resources == none) else '' }}"
+      cn: "{{ 'Customer name is not defined' if (environment_definition.customer.name is not defined or environment_definition.customer.name == none) else '' }}"
+      dm: "{{ 'Deployment model is not defined' if (environment_definition.customer.deployment_model is not defined or environment_definition.customer.deployment_model == none) else '' }}"
+      ar: "{{ 'ATA relay is not defined' if (environment_definition.customer.ata is not defined or environment_definition.customer.ata == none) else '' }}"
+      dr: "{{ 'Disaster recovery is not defined' if (environment_definition.customer.disaster_recovery is not defined or environment_definition.customer.disaster_recovery == none) else '' }}"
+      np: "{{ 'Primary number of Portals is not defined' if (environment_definition.customer.primary.number_of_prts is not defined or environment_definition.customer.primary.number_of_prts == none) else '' }}"
+      nm: "{{ 'Primary number of Message Collectors is not defined' if (environment_definition.customer.primary.number_of_mcs is not defined or environment_definition.customer.primary.number_of_mcs == none) else '' }}"
+      nd: "{{ 'Primary number of Data Collectors is not defined' if (environment_definition.customer.primary.number_of_dcs is not defined or environment_definition.customer.primary.number_of_dcs == none) else '' }}"
+      pn: "{{ 'Primary name_prefix is not defined' if (environment_definition.customer.primary.name_prefix is not defined or  environment_definition.customer.primary.name_prefix == none) else '' }}"
+      po: "{{ 'Primary octets is not defined' if (environment_definition.customer.primary.octets is not defined or environment_definition.customer.primary.octets == none) else '' }}"
+      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.name_prefix is not defined or environment_definition.customer.secondary.name_prefix == none) and datacenters[environment_definition.datacenter.name]['deptype'] is search('a')) else '' }}"
+      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.octets is not defined or environment_definition.customer.secondary.octets == none) and datacenters[environment_definition.datacenter.name]['deptype'] is search('a')) else '' }}"
+      rv: "{{ 'Release version is not defined' if (environment_definition.customer.release_version is not defined or environment_definition.customer.release_version == none) else '' }}"
+      dn: "{{ 'Datacenter name is not defined' if (environment_definition.datacenter.name is not defined or environment_definition.datacenter.name == none) else '' }}"
+      dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and datacenters[environment_definition.datacenter.name]['deptype'] is search('a') and (environment_definition.datacenter.resources is not defined or environment_definition.datacenter.resources == none)) else '' }}"
       dc: "{{ 'Datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
       ps: "{{ 'Puppet server_name is not defined' if (environment_definition.puppet is not defined or environment_definition.puppet.server_name is not defined or environment_definition.puppet.server_name == none) else '' }}"
       ys: "{{ 'Yum server_name is not defined' if (environment_definition.yum is not defined or environment_definition.yum.server_name is not defined or environment_definition.yum.server_name == none) else '' }}"
@@ -36,7 +37,7 @@
       that:
         - vars[item] == ''
       fail_msg: "{{ vars[item] }}"
-    loop: [ cn, dm, dr, np, nm, nd, pn, po, sn, so, rv, dn, dh, ps, ys ]
+    loop: [ cn, dm, ar, dr, np, nm, nd, pn, po, sn, so, rv, dn, dh, ps, ys ]
 
   - name: check if deployment model value is valid
     assert:
@@ -69,6 +70,13 @@
     loop_control:
       loop_var: loop_item
       label: "{{ 'number_of_' + loop_item.name }}"
+
+  - name: check if ata value is valid
+    assert:
+      that:
+        - not environment_definition.customer.ata | lower | regex_search('yes|no|true|false') == none
+      fail_msg: "ATA is not valid. Only yes/no/true/false are valid"
+    when: environment_definition.customer.deployment_model | lower is not search('aio')
 
   - name: check if disaster recovery value is valid
     assert:
@@ -115,12 +123,28 @@
         - "datacenters[environment_definition.datacenter.name]['deptype'] is search(environment_definition.customer.deployment_model[-1:])"
       fail_msg: "The datacenter selected, {{ environment_definition.datacenter.name }}, only supports the {{ 'on-prem' if datacenters[environment_definition.datacenter.name]['deptype'] is search('a') else 'hosted' }} deployment model. Aborting!"
 
+  - name: verify if selected deployment model supports ATA relay
+    assert:
+      that:
+        - "environment_definition.customer.deployment_model | lower is not search('aio')"
+      fail_msg: "The ATA relay is only supported with the non-AIO on-prem or hosted deployment model. Aborting!"
+    when: environment_definition.customer.ata
+
   - name: verify if selected deployment model supports disaster recovery
     assert:
       that:
         - "environment_definition.customer.deployment_model == 'a'"
       fail_msg: "The disaster recovery is only supported with the non-AIO on-prem or ucm deployment model. Aborting!"
     when: environment_definition.customer.disaster_recovery
+
+  - name: check if ata and disaster_recovery values are in conflict
+    assert:
+      that:
+        - environment_definition.customer.ata != environment_definition.customer.disaster_recovery
+      fail_msg: "Geo-redundancy and ATA Relay are mutually exclusive. Aborting!"
+    when:
+      - environment_definition.customer.deployment_model | lower is not search('aio')
+      - environment_definition.customer.ata or environment_definition.customer.disaster_recovery
 
   - block:
     - name: verify if resources are separated

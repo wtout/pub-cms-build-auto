@@ -11,6 +11,9 @@ customer:
   # Deployment model (string a/h/aioa/aioh)
   deployment_model: a
 
+  # ATA relay (boolean yes/no)
+  ata: no
+
   # Disaster recovery (boolean yes/no)
   disaster_recovery: yes
 

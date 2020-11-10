@@ -34,7 +34,7 @@
       - include_tasks: task_define_vm_disk_size.yml
       - include_tasks: task_define_groups_list.yml
       - include_tasks: task_define_hosts_variables.yml
-        when: configure_vms | default(false) | bool or configure_ppp_vms | default(false) | bool
+        when: configure_vms | default(false) | bool or push_puppet | default(false) | bool or configure_ppp_vms | default(false) | bool
       when:
         - deploy | default(false) | bool
     when:

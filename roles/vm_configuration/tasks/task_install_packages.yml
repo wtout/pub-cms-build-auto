@@ -35,6 +35,7 @@
       poll: 10
       when: not ansible_check_mode
     when:
+      - inventory_hostname is not search('atarly')
       - inventory_hostname is search('rly')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   when:

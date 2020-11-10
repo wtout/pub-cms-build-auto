@@ -5,6 +5,7 @@
     shell: $(which yum) list installed puppet-agent || echo "No puppet-agent installed"
     check_mode: no
     register: puppet_installed
+    until: puppet_installed is succeeded
     ignore_errors: true
   - block:
     - name: Download Puppet to VM
@@ -26,4 +27,5 @@
       delay: 5
       when: download_action is succeeded
     when: "'No puppet-agent installed' in puppet_installed.stdout"
+  - include_tasks: task_disable_puppet_sync.yml
   tags: puppet

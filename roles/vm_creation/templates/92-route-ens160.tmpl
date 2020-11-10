@@ -1,36 +1,41 @@
-ADDRESS0=172.19.251.0
-NETMASK0=255.255.255.0
+ADDRESS0=172.19.240.0
+NETMASK0=255.255.240.0
 GATEWAY0={{ customer.primary.octets }}.62
-ADDRESS1=172.19.252.0
-NETMASK1=255.255.255.0
+ADDRESS1=172.21.240.0
+NETMASK1=255.255.240.0
 GATEWAY1={{ customer.primary.octets }}.62
-ADDRESS2=172.19.253.0
+ADDRESS2=172.26.9.0
 NETMASK2=255.255.255.0
 GATEWAY2={{ customer.primary.octets }}.62
-ADDRESS3=172.19.254.0
+ADDRESS3=172.29.9.0
 NETMASK3=255.255.255.0
 GATEWAY3={{ customer.primary.octets }}.62
-ADDRESS4=172.19.255.0
+ADDRESS4=172.30.240.0
 NETMASK4=255.255.255.0
 GATEWAY4={{ customer.primary.octets }}.62
-ADDRESS5=172.19.240.0
-NETMASK5=255.255.240.0
+ADDRESS5=172.30.251.0
+NETMASK5=255.255.255.0
 GATEWAY5={{ customer.primary.octets }}.62
-ADDRESS6=172.21.240.0
-NETMASK6=255.255.240.0
+{% if hostvars[groups['vcenter'][0]]['information']['datacenter'] is regex('RTP5|Alln1') %}
+{% block prod %}
+{% if customer.disaster_recovery and inventory_hostname is regex('em7prt|rly') %}
+ADDRESS6={{ customer.secondary.octets }}.0
+NETMASK6=255.255.255.{{ '0' if inventory_hostname is regex('em7prt') else '192' }}
 GATEWAY6={{ customer.primary.octets }}.62
-ADDRESS7=172.26.9.0
+{% endif %}
+{% endblock prod %}
+{% else %}
+{% block lab %}
+ADDRESS6=172.30.240.0
+NETMASK6=255.255.255.0
+GATEWAY6={{ customer.primary.octets }}.62
+ADDRESS7=172.30.251.0
 NETMASK7=255.255.255.0
 GATEWAY7={{ customer.primary.octets }}.62
-ADDRESS8=172.29.9.0
-NETMASK8=255.255.255.0
+{% if customer.disaster_recovery and inventory_hostname is regex('em7prt|rly') %}
+ADDRESS8={{ customer.secondary.octets }}.0
+NETMASK8=255.255.255.{{ '0' if inventory_hostname is regex('em7prt') else '192' }}
 GATEWAY8={{ customer.primary.octets }}.62
-ADDRESS9=172.30.240.0
-NETMASK9=255.255.255.0
-GATEWAY9={{ customer.primary.octets }}.62
-ADDRESS10=172.30.251.0
-NETMASK10=255.255.255.0
-GATEWAY10={{ customer.primary.octets }}.62
-{{ 'ADDRESS11=' + customer.secondary.octets + '.0' if (customer.disaster_recovery and inventory_hostname is regex('em7prt|rly')) else '' }}
-{{ 'NETMASK11=' + '255.255.255' + '.0' if (customer.disaster_recovery and inventory_hostname is regex('em7prt')) else 'NETMASK11=' + '255.255.255' + '.192' if (customer.disaster_recovery and inventory_hostname is regex('rly')) else '' }}
-{{ 'GATEWAY11=' + customer.primary.octets + '.62' if (customer.disaster_recovery and inventory_hostname is regex('em7prt|rly')) else '' }}
+{% endif %}
+{% endblock lab %}
+{% endif %}

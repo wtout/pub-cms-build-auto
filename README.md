@@ -43,7 +43,8 @@ The system definition file name **must match the customer name** as defined in t
   - **customer.name** (_String_): Customer Name. Required
   - **customer.release_version** (_String_): Required. Must start with **R** to match the naming convention in Maven
   - **customer.deployment_model** (_String_): Required. Valid values are: **a** and **h**, where **a** represents “**a**ppliance” and **h** represents “**h**osted”
-  - **customer.disaster_recovery** (_Boolean_ **yes**/**no**): Required. Default value “**no**”
+  - **customer.ata** (_Boolean_ **yes**/**no**): Required. Indicates whether or not to build an ATA relay
+  - **customer.disaster_recovery** (_Boolean_ **yes**/**no**): Required. Indicates whether or not to build a geo-redundant stack
   - **customer.primary.number_of_prts** (_String_): Required. Number of EM7 portals in primary stack. Valid values are even numbers in [2-4]
   - **customer.primary.number_of_mcs** (_String_): Required. Number of EM7 message collectors in primary stack. Valid values are even numbers in [2-6]
   - **customer.primary.number_of_dcs** (_String_): Required. Number of EM7 data collectors in primary stack. Valid values are even numbers in [2-12]

@@ -207,8 +207,12 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
+<<<<<<< HEAD
     - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: [ 'vm_configuration', 'puppet' ]
+=======
+  tags: [ 'vm_configuration' ]
+>>>>>>> master
 
 - name: define push_puppet
   set_fact:

@@ -1,11 +1,15 @@
 ---
 # tasks to do a puppet push
 - block:
-  - name: check if {{ push_type }} puppet push {{ push_num|int }} is already running
+  - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      tasks_from: task_make_db01_primary.yml
+  - name: check if puppet push {{ push_num|int }} is already running
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
     register: ppr1
     check_mode: no
-  - name: Wait for {{ push_type }} puppet push {{ push_num|int }} to finish
+  - name: Wait for puppet push {{ push_num|int }} to finish
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
     register: ppr2
     until: ppr2.stdout is search('finished')
@@ -14,18 +18,37 @@
     when:
       - not ansible_check_mode
       - ppr1.stdout is not search('not running')
-  - name: Start {{ push_type }} puppet push {{ push_num|int + 1 }}
+  - block:
+    - name: check if puppet agent_catalog_run.lock exists {{ push_num|int + 1 }}
+      stat:
+        path: "{{ '.puppetlabs/opt/puppet' if inventory_hostname is search('em7') else '/opt/puppetlabs/puppet' }}/cache/state/agent_catalog_run.lock"
+      register: lock_file
+    - name: Wait for puppet agent_catalog_run.lock to disappear {{ push_num|int + 1 }}
+      wait_for:
+        path: "{{ '.puppetlabs/opt/puppet' if inventory_hostname is search('em7') else '/opt/puppetlabs/puppet' }}/cache/state/agent_catalog_run.lock"
+        state: absent
+        timeout: 180
+      when: lock_file.stat.exists
+    ignore_errors: true
+    when: ppr1 is search('not running')
+  - name: Start puppet push {{ push_num|int + 1 }}
     shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
     register: puppet_push
+    no_log: true
     failed_when:
       - puppet_push.stdout is not search('Run of Puppet configuration client already in progress')
       - puppet_push.stdout is not search('Applied catalog in')
-  - name: Wait for {{ push_type }} puppet push {{ push_num|int + 1 }} to finish
-    shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
-    register: ppr3
-    until: ppr3.stdout is search('finished')
-    retries: 180
-    delay: 10
+  - debug:
+      msg:
+        - "{{ puppet_push.stdout }}"
     when:
-      - not ansible_check_mode
+      - puppet_push.stdout_lines is defined
+      - puppet_push.stdout_lines == [] or puppet_push.stdout_lines|last is not search('Applied catalog')
+  - debug:
+      msg:
+        - "{{ puppet_push.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
+    when:
+      - puppet_push.stdout_lines is defined
+      - puppet_push.stdout_lines != []
+      - puppet_push.stdout_lines|last is search('Applied catalog')
   tags: vm_ppp_configuration

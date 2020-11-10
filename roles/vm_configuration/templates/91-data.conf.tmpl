@@ -13,8 +13,12 @@ netscaler_ip2={{ customer.primary.octets }}.54
 netscaler_snip={{ customer.primary.octets }}.55
 is4_ip_01={{ customer.primary.octets }}.6
 isSNOWEnabled=No
-isATAEnabled=False
-{{ 'isCommonRelayServer=False' if inventory_hostname is search('rly') else '' }}
+isATAEnabled={{ True if groups['atarly'] is defined else False }}
+{% if inventory_hostname is not search('atarly') %}
+{% block ata %}
+{{ 'isCommonRelayServer=False' if (inventory_hostname is search('rly') and vm.name is not search('aio')) else '' }}
+{% endblock ata %}
+{% endif %}
 customer_name={{ customer.name }}
 custNamePrefix={{ customer.primary.name_prefix }}
 em7_db_vip={{ vip.db }}

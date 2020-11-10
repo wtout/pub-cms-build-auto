@@ -4,6 +4,9 @@
   - name: check if puppet agent test is already running
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
     register: puppet_push_running
+    until: puppet_push_running is succeeded
+    async: 60
+    poll: 10
     check_mode: no
 
   - block:
@@ -89,14 +92,23 @@
       - name: puppet push 1
         shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
         register: puppet_agent
-        async: 30
-        poll: 0
-      - name: Wait for puppet agent test to start
-        shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not started"
-        register: puppet_push_start
-        until: puppet_push_start.stdout is not search('not started')
-        retries: 18
-        delay: 10
+        async: 3600
+        poll: 10
+        ignore_errors: true
+        no_log: true
+      - debug:
+          msg:
+            - "{{ puppet_agent.stdout }}"
+        when:
+          - puppet_agent.stdout_lines is defined
+          - puppet_agent.stdout_lines == [] or puppet_agent.stdout_lines|last is not search('Applied catalog')
+      - debug:
+          msg:
+            - "{{ puppet_agent.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
+        when:
+          - puppet_agent.stdout_lines is defined
+          - puppet_agent.stdout_lines != []
+          - puppet_agent.stdout_lines|last is search('Applied catalog')
       - name: Update SSH password
         set_fact:
           ansible_ssh_pass: "{{ postppp }}"
@@ -105,23 +117,17 @@
       - name: check updated VM credentials
         wait_for_connection:
           sleep: 10
-          timeout: "{{ 600 if inventory_hostname is search('em7') else 2700 }}"
+          timeout: 10
         register: connection_status2
         ignore_errors: true
       - include_tasks: task_repush_puppet.yml
         when: connection_status2 is failed
-      - include_tasks:
-          file: task_puppet_push.yml
-          apply:
-            vars:
-              push_num: "{{ loop_item }}"
-              push_type: 'EM7'
-        loop: "{{ range(1, 2 + 1)|list }}"
-        loop_control:
-          loop_var: loop_item
-        when:
-           - inventory_hostname is search('em7')
-           - customer.release is search('9.2')
+      - assert:
+          that:
+            - myvar.stdout_lines|last is search('Applied catalog')
+          fail_msg: "{{ myvar.stdout }}"
+        vars:
+          myvar: "{{ repush_status if (repush_status is defined and repush_status is not skipped and repush_status != '') else puppet_agent }}"
       - block:
         - name: wait for non-EM7 puppet push 1 to finish
           shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
@@ -152,10 +158,11 @@
       apply:
         vars:
           push_num: "{{ loop_item }}"
-          push_type: 'non-EM7'
     loop: "{{ range(1, 2 + 1)|list }}"
     loop_control:
       loop_var: loop_item
     when:
-       - inventory_hostname is not search('em7')
+       - inventory_hostname is not search('em7') or (inventory_hostname is search('em7') and customer.release is search('9.2'))
+
+  - include_tasks: task_enable_puppet_sync.yml
   tags: puppet

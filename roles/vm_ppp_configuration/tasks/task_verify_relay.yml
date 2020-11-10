@@ -6,36 +6,38 @@
       path: '/opt/CSCO-CMS/relayweb/conf/common.properties'
     register: prop_file1
 
-  - include_tasks: task_puppet_push.yml
+  - block:
+    - include_tasks: task_puppet_push.yml
+
+    - name: check if /opt/CSCO-CMS/relayweb/conf/common.properties is created on the relay
+      stat:
+        path: '/opt/CSCO-CMS/relayweb/conf/common.properties'
+      register: prop_file2
+
+    - assert:
+        that:
+          - prop_file2.stat.exists
+        fail_msg: "Unable to have relayweb path created. Aborting!"
     when: not prop_file1.stat.exists
-
-  - name: check if /opt/CSCO-CMS/relayweb/conf/common.properties is created on the relay
-    stat:
-      path: '/opt/CSCO-CMS/relayweb/conf/common.properties'
-    register: prop_file2
-
-  - assert:
-      that:
-        - prop_file2.stat.exists
-      fail_msg: "Unable to have relayweb path created. Aborting!"
 
   - name: check if /data01/mysql_data/mysql/grastate.dat is created on the relay
     stat:
       path: /data01/mysql_data/mysql/grastate.dat
     register: grastate_file1
 
-  - include_tasks: task_puppet_push.yml
+  - block:
+    - include_tasks: task_puppet_push.yml
+
+    - name: check if /data01/mysql_data/mysql/grastate.dat is created on the relay
+      stat:
+        path: /data01/mysql_data/mysql/grastate.dat
+      register: grastate_file2
+
+    - assert:
+        that:
+          - grastate_file2.stat.exists
+        fail_msg: "Unable to have grastate.dat file created. Aborting!"
     when: not grastate_file1.stat.exists
-
-  - name: check if /data01/mysql_data/mysql/grastate.dat is created on the relay
-    stat:
-      path: /data01/mysql_data/mysql/grastate.dat
-    register: grastate_file2
-
-  - assert:
-      that:
-        - grastate_file2.stat.exists
-      fail_msg: "Unable to have grastate.dat file created. Aborting!"
 
   - name: check if mariadb is started
     shell: $(which systemctl) status mariadb

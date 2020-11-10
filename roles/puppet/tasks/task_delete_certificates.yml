@@ -38,7 +38,7 @@
       - client_cert_on_server == ''
 
   - name: check if client cert fingerprint matches cert on server
-    shell: openssl x509 -text -noout -{{ client_cert_on_server[0] }} -fingerprint -in {{ 'ca' if inventory_hostname is search('em7') else vm.name + '.' + sysconfig.domain_name }}.pem | tail -1 | cut -d '=' -f2 | grep {{ client_cert_on_server[1] }}
+    shell: openssl x509 -text -noout -{{ client_cert_on_server[0] }} -fingerprint -in {{ (ansible_user + '.' if inventory_hostname is search('em7') else '') + vm.name + '.' + sysconfig.domain_name }}.pem | tail -1 | cut -d '=' -f2 | grep {{ client_cert_on_server[1] }}
     args:
       chdir: "{{ '~/.puppetlabs/etc/puppet/ssl/certs' if inventory_hostname is search('em7') else '/etc/puppetlabs/puppet/ssl/certs' }}"
     register: client_cert_match
@@ -46,7 +46,7 @@
     ignore_errors: true
     when:
       - client_cert_status.stat.exists
-      - client_cert_on_server != ''
+      - client_cert_on_server != ['']
 
   - name: define delete client cert on puppet server
     set_fact:
@@ -58,7 +58,7 @@
     set_fact:
       delete_client_cert_on_vm: true
     when:
-      - (inventory_hostname is search('em7') and customer.release is search('9.2')) or (client_cert_status.stat.exists and (client_cert_on_server == '' or client_cert_match is failed)) or not client_cert_status.stat.exists
+      - (client_cert_status.stat.exists and (client_cert_on_server == [''] or client_cert_match is failed)) or not client_cert_status.stat.exists
 
   - name: delete the certificate on the EM7 VM
     block:
@@ -85,6 +85,10 @@
       yum:
         name: puppet-agent
         state: absent
+      register: uninstall_status
+      until: uninstall_status is succeeded
+      retries: 5
+      delay: 30
     when:
       - inventory_hostname is not search('em7')
       - delete_client_cert_on_vm | default(false) | bool
@@ -94,10 +98,12 @@
       puppet cert clean {{ host_cert_name }}
     args:
       chdir: '/usr/local/bin'
-    register: del_vm_cert
-    ignore_errors: true
     become: true
-    when: delete_client_cert_on_server | default(false) | bool
-    until: del_vm_cert is succeeded
+    ignore_errors: true
+    register: del_vm_cert
     delegate_to: "{{ groups['puppet']|first }}"
+    until: del_vm_cert is succeeded
+    retries: 5
+    delay: 10
+    when: delete_client_cert_on_server | default(false) | bool
   tags: puppet
