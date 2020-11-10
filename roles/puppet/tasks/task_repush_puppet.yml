@@ -12,8 +12,17 @@
       tasks_from: task_make_db01_primary.yml
   - name: "relaunch puppet push #1"
     shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
-    async: 30
-    poll: 0
+    register: puppet_agent2
+    async: 2700
+    poll: 10
+    ignore_errors: true
+    no_log: true
+  - debug:
+      msg:
+        - "{{ puppet_agent2.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
+    when:
+      - puppet_agent2.stdout_lines != []
+      - puppet_agent2.stdout_lines|last is search('Applied catalog')
   - name: Update SSH password
     set_fact:
       ansible_ssh_pass: "{{ postppp }}"
@@ -22,7 +31,7 @@
   - name: check updated VM credentials
     wait_for_connection:
       sleep: 10
-      timeout: "{{ 600 if inventory_hostname is search('em7') else 2700 }}"
+      timeout: 10
     register: repush1_status
     ignore_errors: true
   - block:
@@ -45,8 +54,17 @@
         tasks_from: task_make_db01_primary.yml
     - name: "relaunch puppet push #2"
       shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
-      async: 30
-      poll: 0
+      register: puppet_agent3
+      async: 2700
+      poll: 10
+      ignore_errors: true
+      no_log: true
+    - debug:
+        msg:
+          - "{{ puppet_agent3.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
+      when:
+        - puppet_agent3.stdout_lines != []
+        - puppet_agent3.stdout_lines|last is search('Applied catalog')
     - name: Update SSH password
       set_fact:
         ansible_ssh_pass: "{{ postppp }}"
@@ -55,7 +73,7 @@
     - name: check updated VM credentials
       wait_for_connection:
         sleep: 10
-        timeout: "{{ 600 if inventory_hostname is search('em7') else 2700 }}"
+        timeout: 10
       register: repush2_status
       ignore_errors: true
     - block:
@@ -79,8 +97,17 @@
           tasks_from: task_make_db01_primary.yml
       - name: "relaunch puppet push #3"
         shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
-        async: 30
-        poll: 0
+        register: puppet_agent4
+        async: 2700
+        poll: 10
+        ignore_errors: true
+        no_log: true
+      - debug:
+          msg:
+            - "{{ puppet_agent4.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
+        when:
+          - puppet_agent4.stdout_lines != []
+          - puppet_agent4.stdout_lines|last is search('Applied catalog')
       - name: Update SSH password
         set_fact:
           ansible_ssh_pass: "{{ postppp }}"
@@ -89,7 +116,7 @@
       - name: check updated VM credentials
         wait_for_connection:
           sleep: 10
-          timeout: "{{ 600 if inventory_hostname is search('em7') else 2700 }}"
+          timeout: 10
         register: repush3_status
         ignore_errors: true
       - assert:
@@ -98,4 +125,7 @@
           fail_msg: "Puppet could not be pushed succesfully on {{ inventory_hostname }}"
       when: repush2_status is failed
     when: repush1_status is failed
+  - name: define repush_status
+    set_fact:
+      repush_status: "{{ puppet_agent4 if puppet_agent4 is not skipped else puppet_agent3 if puppet_agent3 is not skipped else puppet_agent2 if puppet_agent2 is not skipped else puppet_agent1 if puppet_agent1 is not skipped else '' }}"
   tags: puppet

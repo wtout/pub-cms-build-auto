@@ -1,18 +1,36 @@
 ---
 # Tasks to ensure EM7 DB01 is primary
 - block:
-  - name: check if mysql is running on db01
-    command: systemctl status mysql
-    register: mysql_service_check
-    check_mode: no
-    ignore_errors: true
+  - block:
+    - name: check VM credentials
+      wait_for_connection:
+        timeout: 3
+      register: vm_creds
+      ignore_errors: true
+      check_mode: no
+    - name: Update SSH password
+      set_fact:
+        ansible_ssh_pass: "{{ postppp }}"
+        ansible_become_pass: "{{ postppp }}"
+      no_log: true
+      when:
+        - vm_creds is failed
+        - vm_creds.msg is search('Invalid/incorrect username/password')
     delegate_to: "{{ groups['em7db']|first }}"
+    delegate_facts: yes
+    run_once: true
   - name: check if db vip is reachable
     command: ping {{ vip.db }} -c 1
     retries: 3
     delay: 5
     register: db_vip_reachable1
     ignore_errors: true
+  - name: check if mysql is running on db01
+    command: systemctl status mysql
+    register: mysql_service_check
+    check_mode: no
+    ignore_errors: true
+    delegate_to: "{{ groups['em7db']|first }}"
   - include_tasks: task_reboot_em7dbs.yml
     when:
       - db_vip_reachable1 is failed or (mysql_service_check.stdout is not regex('Permission denied, please try again') and mysql_service_check.stdout is regex('dead|failed'))
@@ -20,5 +38,5 @@
     - em7_play_hosts_list | length > 0
     - inventory_hostname == em7_play_hosts_list|first
   vars:
-    em7_play_hosts_list: "{{ ansible_play_hosts | select('match', '.*em7.*') | list }}"
+    em7_play_hosts_list: "{{ ansible_play_hosts | select('match', 'em7.*') | list }}"
   tags: vm_configuration

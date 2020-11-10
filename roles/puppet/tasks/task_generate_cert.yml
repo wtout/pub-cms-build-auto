@@ -27,4 +27,5 @@
       delay: 5
       when: download_action is succeeded
     when: "'No puppet-agent installed' in puppet_installed.stdout"
+  - include_tasks: task_disable_puppet_sync.yml
   tags: puppet
