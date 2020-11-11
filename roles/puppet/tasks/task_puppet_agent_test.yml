@@ -92,7 +92,7 @@
       - name: puppet push 1
         shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
         register: puppet_agent
-        async: 3600
+        async: 4000
         poll: 10
         ignore_errors: true
         no_log: true
@@ -129,20 +129,20 @@
         vars:
           myvar: "{{ repush_status if (repush_status is defined and repush_status is not skipped and repush_status != '') else puppet_agent }}"
       - block:
-        - name: wait for non-EM7 puppet push 1 to finish
+        - name: wait for puppet push 1 to finish
           shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
           register: puppet_push_running2
           until: puppet_push_running2.stdout is search('finished')
           retries: 180
           delay: 10
-        - name: get non-EM7 puppet push 1 status
+        - name: get puppet push 1 status
           shell: "egrep ': Applied catalog in [0-9]+.*seconds' /var/log/messages || echo 'Puppet push failed'"
           register: puppet_push_status3
           until: puppet_push_status3.stdout is not search('push failed')
           retries: 20
           delay: 60
           become: "{{ true if inventory_hostname is search('em7') else false }}"
-        - name: check if non-EM7 puppet push 1 completed successfully
+        - name: check if puppet push 1 completed successfully
           assert:
             that: puppet_push_status3.stdout is not search('Puppet push failed')
             fail_msg: 'Puppet push did not complete successfully'

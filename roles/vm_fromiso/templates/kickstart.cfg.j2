@@ -146,7 +146,7 @@ grep proxy /etc/yum.conf || sed -i 's|^\(\[main\]\)$|\1\nproxy={{ proxy_address 
 
 # Configure Chrony
 sed -i '/^server.*iburst$/d' /etc/chrony.conf
-sed -i 's/^\(# Please consider.*\)$/\1\nserver {{ netconfig.ipaddress1.split('.')[:-1] | join('.') + '.254' if customer.name|lower is search('mdr') else sysconfig.ntp_server }} iburst/' /etc/chrony.conf
+sed -i 's/^\(# Please consider.*\)$/\1\nserver {{ netconfig.ipaddress1.split('.')[:-1] | join('.') + '.254' if customer.name|lower is search('mdr') else sysconfig.secondary_ntp_server if inventory_hostname is search('dr') else sysconfig.primary_ntp_server }} iburst/' /etc/chrony.conf
 
 # Configure SNMP
 /usr/bin/net-snmp-create-v3-user -ro -A "C1s20A798hPwec" -X "m91K0sl1ux9bsp" -a MD5 -x DES cmsmomuser

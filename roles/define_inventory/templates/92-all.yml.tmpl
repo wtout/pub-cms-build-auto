@@ -71,7 +71,7 @@ sysconfig:
   domain_name: 'cisco-cms.com'
 
   # NTP server
-  ntp_server: "{{ '{{ customer.primary.octets }}' + '.62' }}"
+  primary_ntp_server: "{{ '{{ customer.primary.octets }}' + '.62' }}"
   secondary_ntp_server: "{{ '{{ customer.secondary.octets }}' + '.62' if environment_definition.customer.disaster_recovery else '' }}"
 
 
