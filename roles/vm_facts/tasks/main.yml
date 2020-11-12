@@ -25,9 +25,6 @@
     when: customer.disaster_recovery
     run_once: true
   - include_tasks: task_check_cluster_name.yml
-    when:
-      - inventory_hostname in groups['vcenter']
-      - information.deptype == 'a'
   - block:
     - include_tasks: task_define_vm_ip.yml
     - block:
