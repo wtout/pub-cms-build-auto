@@ -60,27 +60,20 @@
     when:
       - (client_cert_status.stat.exists and (client_cert_on_server == [''] or client_cert_match is failed)) or not client_cert_status.stat.exists
 
-  - name: delete the certificate on the EM7 VM
+  - name: delete the certificate on the VM
     block:
     - name: delete ssl directory on VM
       file:
         path: '~/.puppetlabs/etc/puppet/ssl'
         state: absent
-    - name: uninstall puppet agent on VM
-      yum:
-        name: puppet-agent
-        state: absent
-      become: "{{ true if inventory_hostname is search('em7') else false }}"
-    when:
-      - inventory_hostname is search('em7')
-      - delete_client_cert_on_vm | default(false) | bool
-
-  - name: delete the certificate on the non-EM7 VM
-    block:
+      when:
+        - inventory_hostname is search('em7')
     - name: delete puppetlabs directory on VM
       file:
         path: '/etc/puppetlabs'
         state: absent
+      when:
+        - inventory_hostname is not search('em7')
     - name: uninstall puppet agent on VM
       yum:
         name: puppet-agent
@@ -89,11 +82,11 @@
       until: uninstall_status is succeeded
       retries: 5
       delay: 30
+      become: "{{ true if inventory_hostname is search('em7') else false }}"
     when:
-      - inventory_hostname is not search('em7')
       - delete_client_cert_on_vm | default(false) | bool
 
-  - name: delete the VM certificate
+  - name: delete the VM certificate on {{ puppet.vmname }}
     shell: >
       puppet cert clean {{ host_cert_name }}
     args:
