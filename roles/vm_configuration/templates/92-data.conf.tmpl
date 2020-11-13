@@ -50,7 +50,7 @@ em7_user_name=em7admin
 splunk_user_name=admin
 em7_access_portal_cpu_core_count={{ prt_cpu_list[0] if prt_cpu_list is defined else 2 }}
 em7_access_portal_ram_gb={{ prt_mem_list[0] if prt_mem_list is defined else em7_mem_list[0] }}
-ntp_source_ip={{ sysconfig.ntp_server }}
+ntp_source_ip={{ sysconfig.primary_ntp_server }}
 domain_name={{ sysconfig.domain_name }}
 installed_on_appliance={{ 'ESXiResource1' if (inventory_hostname[:-2]|int % 2 != 0 or hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h') else 'ESXiResource2' }}
 [headend]

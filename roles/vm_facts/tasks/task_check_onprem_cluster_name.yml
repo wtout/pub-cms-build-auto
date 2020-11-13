@@ -1,0 +1,95 @@
+---
+# tasks to get cluster name
+- block:
+  - name: Get host info
+    vmware_host_facts:
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      esxi_hostname: "{{ host_item }}"
+      validate_certs: no
+    loop: "{{ information.resources }}"
+    loop_control:
+      loop_var: host_item
+    register: host_facts
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+
+  - name: define host cluster
+    set_fact:
+      host_cluster: "{{ host_cluster|default({}) | combine( {loop_item.host_item: loop_item.ansible_facts.cluster} ) }}"
+    loop: "{{ host_facts.results }}"
+    loop_control:
+      loop_var: loop_item
+      label: "{{ loop_item.ansible_facts.ansible_hostname }}"
+
+  - debug:
+      msg:
+        - "{{ host_cluster[host_item] }}"
+    loop: "{{ information.resources }}"
+    loop_control:
+      loop_var: host_item
+
+  - name: define host cluster
+    set_fact:
+      cluster_host1: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first }}"
+    when: information.resources|length == 1
+
+  - name: define HA hosts clusters
+    set_fact:
+      cluster_host1: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first }}"
+      cluster_host2: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[1])|map(attribute='value')|list|first }}"
+    when: information.resources|length > 1
+
+  - name: define DR host cluster
+    set_fact:
+      cluster_host3: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[2])|map(attribute='value')|list|first }}"
+    when: customer.disaster_recovery
+
+  - name: verify that HA hosts are in the same cluster
+    assert:
+      that:
+        - "cluster_host1 == cluster_host2"
+      fail_msg: "HA hosts cannot be in different clusters. Aborting"
+    when:
+      - information.resources|length > 1
+      - cluster_host1 != ''
+      - cluster_host2 != ''
+
+  - name: verify that DR host is not in the same cluster as HA hosts
+    assert:
+      that:
+        - "cluster_host3 != cluster_host1"
+      fail_msg: "DR host cannot be in the same cluster as the HA hosts. Aborting"
+    when:
+      - customer.disaster_recovery
+      - cluster_host3 != ''
+
+  - debug:
+      msg: "{{ 'HA hosts are' if information.resources|length > 1 else 'Host is' }} already in the '{{ cluster_host1 }}' cluster. Primary cluster name spcified in definition file will be ignored"
+    when:
+      - information.resources|length > 1
+      - cluster_host1 != ''
+      - cluster_host1 != information.cluster
+
+  - debug:
+      msg: "DR host is already in the '{{ cluster_host3 }}' cluster. Secondary cluster name spcified in definition file will be ignored"
+    when:
+      - customer.disaster_recovery
+      - cluster_host3 != ''
+      - cluster_host3 != information.drcluster
+
+  - name: update vcenter's information with cluster names
+    set_fact:
+      information: "{{ information|default({}) | combine(new_item, recursive=true) }}"
+    vars:
+      new_item: "{'{{ task_item.key }}': '{{ task_item.value }}'}"
+    loop:
+      - { key: 'cluster', value: '{{ cluster_host1 }}' }
+      - { key: 'drcluster', value: '{{ cluster_host3|default("") }}' }
+    loop_control:
+      loop_var: task_item
+      label: "{{ task_item }}"
+    when:
+      - task_item.value != ''
+    no_log: true
+  tags: ['always', 'vm_facts']
