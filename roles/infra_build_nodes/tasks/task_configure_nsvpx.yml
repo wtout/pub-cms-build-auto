@@ -103,7 +103,6 @@
   - name: Apply Netscaler configuration
     shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ nsvpx_ip_item }} 'batch -f /tmp/config'
     register: config
-    # run_once: true
     no_log: yes
     failed_when: config.rc > 1
     loop:
@@ -115,8 +114,7 @@
   - name: Apply DR Netscaler configuration
     shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ hostvars['drnsvpx01']['ipaddress1'] }} 'batch -f /tmp/config'
     register: dr_config
-    # run_once: true
-    # no_log: yes
+    no_log: yes
     failed_when: dr_config.rc > 1
     when: customer.disaster_recovery
 
