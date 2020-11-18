@@ -1,6 +1,11 @@
 ---
 # Tasks to rebuild host
 - block:
+  - name: reset SSH password
+    set_fact:
+      ansible_ssh_pass: "{{ preppp }}"
+      ansible_become_pass: "{{ preppp }}"
+    no_log: true
   - include_tasks: task_detect_datastore.yml
   - name: "{{ auto_dir + '/roles/vm_creation' }}: rollback vms"
     include_role:

@@ -16,6 +16,20 @@
   - name: check if certificate is created on {{ puppet.vmname }}
     set_fact:
       cert_exists1: "{{ certs_on_puppet1.stdout_lines|default([]) | select('search', host_cert_name) | list | length == 1 }}"
+  - name: initialize hosts count
+    set_fact:
+      hosts_count: 0
+    run_once: true
+  - name: define number of hosts to rebuild
+    set_fact:
+      hosts_count: "{{ hosts_count|int + 1 if not hostvars[host_item]['cert_exists1'] else hosts_count }}"
+    vars:
+      myhosts: "{{ groups['stack'] | union(groups['dr']) if customer.disaster_recovery else groups['stack'] }}"
+    loop: "{{ ansible_play_batch | intersect(myhosts) }}"
+    loop_control:
+      loop_var: host_item
+    when: hostvars[host_item]['cert_exists1'] is defined
+    run_once: true
   - block:
     - name: reset SSH password
       set_fact:
@@ -34,7 +48,7 @@
       ignore_errors: true
       register: certs_on_puppet2
       delegate_to: "{{ groups['puppet']|first }}"
-      run_once: true
+      run_once: "{{ true if hosts_count|int > 1 else false }}"
     - name: look for certificate on server
       set_fact:
         cert_exists2: "{{ certs_on_puppet2.stdout_lines|default([]) | select('search', host_cert_name) | list | length == 1 }}"

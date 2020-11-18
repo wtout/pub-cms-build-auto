@@ -1,6 +1,11 @@
 ---
 # Tasks to rebuild host
 - block:
+  - name: reset SSH password
+    set_fact:
+      ansible_ssh_pass: "{{ preppp }}"
+      ansible_become_pass: "{{ preppp }}"
+    no_log: true
   - name: "{{ auto_dir + '/roles/vm_configuration' }}: configure vms"
     include_role:
       name: "{{ auto_dir + '/roles/vm_configuration' }}"
