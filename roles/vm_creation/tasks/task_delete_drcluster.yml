@@ -34,10 +34,11 @@
     loop_control:
       loop_var: vm_item
       label: "{{ vm_item }}"
+    when: drvm_names != []
 
   - name: define delete_drcluster
     set_fact:
-      delete_drcluster: "{{ cluster_empty }}"
+      delete_drcluster: "{{ cluster_empty|default(true) }}"
 
   - name: Check if '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster exists
     vmware_cluster_info:
