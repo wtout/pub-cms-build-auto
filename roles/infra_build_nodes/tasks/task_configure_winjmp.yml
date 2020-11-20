@@ -4,9 +4,50 @@
   - name: Wait for Windows Jump Server OVA deployment
     async_status:
       jid: "{{ winjmp_deployment.ansible_job_id }}"
-    register: winjmp_poll_results
-    until: winjmp_poll_results.finished
-    retries: 400
+    register: winjmp_poll_results_1
+    until: winjmp_poll_results_1.finished
+    ignore_errors: true
+    retries: 30
+    delay: 60
+
+  - block:
+    - name: First retry Windows Jump Server Deployment
+      include_tasks: task_deploy_winjmp.yml
+
+    - name: Wait for first retry Windows Jump Server OVA deployment
+      async_status:
+        jid: "{{ winjmp_deployment.ansible_job_id }}"
+      register: winjmp_poll_results_2
+      until: winjmp_poll_results_2.finished
+      ignore_errors: true
+      retries: 30
+      delay: 60
+
+    - block:
+      - name: Delete Windows Jump Server
+        vmware_guest:
+          hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+          username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+          password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+          name: "{{ vm.name }}"
+          datacenter: "{{ datacenter.name }}"
+          state: absent
+          force: yes
+          validate_certs: no
+
+      - name: Second retry Windows Jump Server Deployment
+        include_tasks: task_deploy_winjmp.yml
+
+      - name: Wait for second retry Windows Jump Server OVA deployment
+        async_status:
+          jid: "{{ winjmp_deployment.ansible_job_id }}"
+        register: winjmp_poll_results_3
+        until: winjmp_poll_results_3.finished
+        ignore_errors: true
+        retries: 30
+        delay: 60
+      when: winjmp_poll_results_2 is failed
+    when: winjmp_poll_results is failed
 
   - name: Power on VM
     vmware_guest_powerstate:

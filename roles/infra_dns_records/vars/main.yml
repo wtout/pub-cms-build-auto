@@ -11,7 +11,7 @@ dns_records:
     value: "{{ vip.prt }}"
   - record: "{{ customer.primary.name_prefix }}isa01"
     value: "{{ customer.primary.octets }}.6"
-    
+
 dr_dns_records:
   - record: "{{ customer.secondary.name_prefix }}-esxi-a-01"
     value: "{{ customer.secondary.octets }}.50"
