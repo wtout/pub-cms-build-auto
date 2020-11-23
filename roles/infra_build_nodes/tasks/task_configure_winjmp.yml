@@ -47,7 +47,7 @@
         retries: 30
         delay: 60
       when: winjmp_poll_results_2 is failed
-    when: winjmp_poll_results is failed
+    when: winjmp_poll_results_1 is failed
 
   - name: Power on VM
     vmware_guest_powerstate:
@@ -82,61 +82,32 @@
       seconds: 400
     when: power.changed
 
-  - name: Apply interface configuration settings
-    vmware_vm_shell:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
-      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
-      vm_id: "{{ vm.name }}"
-      vm_username: "{{ credentials.username }}"
-      vm_password: "{{ credentials.password }}"
-      vm_shell: "{{ config_item.shell }}"
-      vm_shell_args: "{{ config_item.command }}"
-      validate_certs: no
-      wait_for_process: true
-    ignore_errors: "{{ config_item.ignore_errors }}"
-    register: output
+  - include_tasks:
+      file:
+        task_apply_interface_configuration_settings.yml
+      apply:
+        vars:
+          myconfig: "{{ config_item }}"
     loop: "{{ winjmp.interface_configuration }}"
     loop_control:
       loop_var: config_item
   
-  - name: Add static routes
-    vmware_vm_shell:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
-      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
-      vm_id: "{{ vm.name }}"
-      vm_username: "{{ credentials.username }}"
-      vm_password: "{{ credentials.password }}"
-      vm_shell: c:\windows\system32\route.exe
-      vm_shell_args: "add {{ route_ip_item.ip }} mask {{ route_ip_item.netmask }} {{ netconfig.gateway1 }} metric 1 -p"
-      validate_certs: no
-      wait_for_process: yes
-    register: output
+  - include_tasks:
+      file:
+        task_add_static_routes.yml
+      apply:
+        vars:
+          myconfig: "{{ config_item }}"
     loop: "{{ netconfig.static_route_ips }}"
     loop_control:
       loop_var: route_ip_item
 
-  - name: Apply user and security settings
-    vmware_vm_shell:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ datacenter.name }}"
-      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
-      vm_id: "{{ vm.name }}"
-      vm_username: "{{ credentials.username }}"
-      vm_password: "{{ credentials.password }}"
-      vm_shell: "{{ config_item.shell }}"
-      vm_shell_args: "{{ config_item.command }}"
-      validate_certs: no
-      wait_for_process: yes
-    ignore_errors: "{{ config_item.ignore_errors }}"
-    register: output
+  - include_tasks:
+      file:
+        task_apply_user_security_settings.yml
+      apply:
+        vars:
+          myconfig: "{{ config_item }}"
     loop: "{{ winjmp.other_configuration }}"
     loop_control:
       loop_var: config_item

@@ -16,7 +16,8 @@
       ansible_host: "{{ csr_info.instance.ipv4 }}"
       dhcp_address: "{{ csr_info.instance.ipv4 }}"
 
-  - include_role:
+  - name: "{{ auto_dir + '/roles/infra_check_csr_license' }}: check CSR license"
+    include_role:
       name: "{{ auto_dir + '/roles/infra_check_csr_license' }}"
     vars:
       ignore: true
@@ -69,3 +70,4 @@
     when: not is_licensed
   when: inventory_hostname is search('csr')
   tags: infra_license
+  

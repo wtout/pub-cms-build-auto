@@ -99,6 +99,8 @@
       https_proxy: ""
     register: upload
     failed_when: upload.status != 201 and not upload.content is search('1642')
+    until: upload is succeeded
+    delay: 10
 
   - name: Apply Netscaler configuration
     shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ nsvpx_ip_item }} 'batch -f /tmp/config'

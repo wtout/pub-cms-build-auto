@@ -1,14 +1,6 @@
 ---
 # tasks to define vm ips
 - block:
-  # - debug:
-  #     msg: "{{ netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) }}"
-  #   vars:
-  #     index: "{{ inventory_hostname[-2:] }}"
-  #   when: inventory_hostname is search('csr')
-
-  # - pause:
-  
   - name: define IP addresses
     set_fact:
       ipaddress1: "{{ netconfig.ippool1[index|int - 1] if netconfig.ippool1 != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) else '' }}"
@@ -21,7 +13,7 @@
 
   - name: define ansible_host
     set_fact:
-      ansible_host: "{{ ipaddress1 }}"
+      ansible_host: "{{ ipaddress3 if inventory_hostname is search('csr') else ipaddress1 }}"
 
   - name: update netconfig with IP addresses
     set_fact:

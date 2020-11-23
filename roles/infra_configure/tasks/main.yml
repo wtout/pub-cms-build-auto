@@ -57,7 +57,8 @@
               count: 1
         when: customer.disaster_recovery
    
-    - include_role:
+    - name: "{{ auto_dir + '/roles/vm_creation' }}: create cluster"
+      include_role:
         name: "{{ auto_dir + '/roles/vm_creation' }}"
         tasks_from: task_create_cluster.yml
     when: configure_infra | default(false) | bool
@@ -69,21 +70,18 @@
         - task_delete_datastores.yml
         - task_remove_vswitches.yml
         - task_delete_portgroups.yml
-        - task_remove_resources_from_cluster.yml
       loop_control:
         loop_var: rollback_task_item
 
-    - include_role:
+    - name: "{{ auto_dir + '/roles/vm_creation' }}: delete cluster"
+      include_role:
         name: "{{ auto_dir + '/roles/vm_creation' }}"
         tasks_from: task_delete_cluster.yml
-      vars:
-        cluster_empty: true
 
-    - include_role:
+    - name: "{{ auto_dir + '/roles/vm_creation' }}: delete drcluster"
+      include_role:
         name: "{{ auto_dir + '/roles/vm_creation' }}"
         tasks_from: task_delete_drcluster.yml
-      vars:
-        cluster_empty: true
       when: customer.disaster_recovery
     when: rollback_infra | default(false) | bool
   tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]
