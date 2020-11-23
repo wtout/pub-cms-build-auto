@@ -3,6 +3,7 @@
 - name: Validate credentials
   hosts: all
   any_errors_fatal: true
+  max_fail_percentage: 0
   gather_facts: no
 
   roles:
@@ -12,6 +13,7 @@
 - name: Define variables
   hosts: all
   any_errors_fatal: true
+  max_fail_percentage: 0
   gather_facts: no
 
   roles:
@@ -22,6 +24,7 @@
 - name: Pre-deploy preparation
   hosts: all
   any_errors_fatal: true
+  max_fail_percentage: 0
   gather_facts: no
 
   roles:
