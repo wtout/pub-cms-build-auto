@@ -1,9 +1,10 @@
 ---
 # Task file for notifying teams with csr serial no. for license
 - block:
-  - name: Get proxy setting
-    shell: grep -r "proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-    register: proxy_string
+  - name: "{{ auto_dir + '/roles/pypkgs' }}: Get proxy setting"
+    include_role:
+      name: "{{ auto_dir + '/roles/pypkgs' }}"
+      tasks_from: task_get_proxy_address.yml
 
   - name: Generate notification message
     set_fact:
