@@ -74,11 +74,11 @@
   - name: Render configuration file
     template:
       src: "templates/{{ inventory_hostname }}.conf.j2"
-      dest: "{{ role_path }}/files/{{ inventory_hostname }}.conf"
+      dest: "{{ role_path }}/files/{{ vm.name }}.conf"
 
   - name: Upload Netscaler configuration file
     vars:
-      conf_file: files/{{ inventory_hostname }}.conf
+      conf_file: files/{{ vm.name }}.conf
     uri:
       url: "http://{{ netconfig.ipaddress1 }}/nitro/v1/config/systemfile"
       method: POST
@@ -101,6 +101,12 @@
     failed_when: upload.status != 201 and not upload.content is search('1642')
     until: upload is succeeded
     delay: 10
+
+  - name: delete configuration file locally
+    file:
+      path: "{{ role_path }}/files/{{ vm.name }}.conf"
+      state: absent
+    when: upload is succeeded
 
   - name: Apply Netscaler configuration
     shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ nsvpx_ip_item }} 'batch -f /tmp/config'
