@@ -24,6 +24,10 @@
       loop_var: host_item
       label: "{{ host_item.virtual_machines | map(attribute='guest_name') | list }}"
 
+  - name: initialize cluster_empty
+    set_fact:
+      cluster_empty: true
+
   - include_tasks:
       file:
         task_check_cluster_empty.yml
@@ -38,7 +42,7 @@
 
   - name: define delete_drcluster
     set_fact:
-      delete_drcluster: "{{ cluster_empty|default(true) }}"
+      delete_drcluster: "{{ cluster_empty }}"
 
   - name: Check if '{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] }}' cluster exists
     vmware_cluster_info:
