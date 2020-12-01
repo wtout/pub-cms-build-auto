@@ -7,7 +7,7 @@
     register: net_names
     check_mode: no
     when: net_names is not defined
-  - name: define network names to create
+  - name: define network names to create on {{ resource }}
     set_fact:
       net1: "{{ mynet1 if mynet1 != '' else customer_prefix + '-Customer-Net-Internet' }}"
       net2: "{{ mynet2 if mynet2 != '' else customer_prefix + '-Customer-Net-Outside' }}"
@@ -16,14 +16,13 @@
       net5: "{{ mynet5 if mynet5 != '' else customer_prefix + '-Customer-Net-Inside' }}"
       net6: "{{ mynet6 if mynet6 != '' else customer_prefix + '-EM7-DB-Heartbeat-Link' }}"
     vars:
-      mynet1: "{{ net_names.stdout_lines | select('search', 'Customer-Net-Internet') | list | join }}"
-      mynet2: "{{ net_names.stdout_lines | select('search', 'Customer-Net-Outside') | list | join }}"
-      mynet3: "{{ net_names.stdout_lines | select('search', 'Internal-Net') | list | join }}"
-      mynet4: "{{ net_names.stdout_lines | select('search', 'Loadbalancer-Net') | list | join }}"
-      mynet5: "{{ net_names.stdout_lines | select('search', 'Customer-Net-Inside') | list | join }}"
-      mynet6: "{{ net_names.stdout_lines | select('search', 'EM7-DB-Heartbeat-Link') | list | join }}"
-    when: net_names is changed
-  - name: Create port groups
+      mynet1: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Internet') | list | join }}"
+      mynet2: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Outside') | list | join }}"
+      mynet3: "{{ net_names.stdout_lines | default([]) | select('search', 'Internal-Net') | list | join }}"
+      mynet4: "{{ net_names.stdout_lines | default([]) | select('search', 'Loadbalancer-Net') | list | join }}"
+      mynet5: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Inside') | list | join }}"
+      mynet6: "{{ net_names.stdout_lines | default([]) | select('search', 'EM7-DB-Heartbeat-Link') | list | join }}"
+  - name: Create port groups on {{ resource }}
     vmware_portgroup:
       hostname: "{{ information.address }}"
       username: "{{ credentials.username }}"
