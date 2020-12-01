@@ -8,8 +8,12 @@
     run_once: true
   - block:
     - include_tasks: task_delete_cluster.yml
+      when:
+        - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
     - include_tasks: task_delete_drcluster.yml
-      when: customer.disaster_recovery
+      when:
+        - customer.disaster_recovery
+        - ansible_play_batch | select('search', 'dr') | list | length >= 1
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
     run_once: true

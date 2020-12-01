@@ -28,9 +28,13 @@ function check_hosts_limit() {
 		[[ "x$(echo ${@} | egrep -w '\-\-tags')" != "x" ]] && local MYTAGS=$(echo ${@} | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
 		[[ "x$(echo ${MYTAGS})" == "x" ]] && local update_args=1
 		[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation|capcheck|infra_configure')" != "x" ]] && local update_args=1
+		[[ "x$(echo ${MYTAGS} | egrep -w 'infra_build_nodes')" != "x" ]] && local update_args=2
 		if [[ ${update_args} -eq 1 ]]
 		then
 			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},vcenter/")
+		elif [[ ${update_args} -eq 2 ]]
+		then
+			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},vcenter,nexus/")
 		else
 			local NEWARGS=${@}
 		fi

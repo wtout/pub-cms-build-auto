@@ -36,6 +36,8 @@
   - block:
     - include_tasks: task_create_cluster.yml
       run_once: true
+    - include_tasks: task_create_drcluster.yml
+      run_once: true
     - include_tasks: task_create_configure_vms.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'

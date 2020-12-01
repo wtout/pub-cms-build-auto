@@ -25,7 +25,7 @@
   when: 
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
-  tags: [ 'infra_dns_records', 'infra_configure', 'never' ]
+  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
 
 - name: define rollback_dns_records
   set_fact:

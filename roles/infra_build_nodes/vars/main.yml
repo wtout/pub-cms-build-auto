@@ -60,51 +60,51 @@ nsvpx:
 
     servers:
       - name: EM7App01
-        ipaddress: "{{ hostvars['em7prt01']['ipaddress2'] }}"
+        ipaddress: "{{ prt_ip2_list[0] }}"
         comment: EM7App01
 
       - name: EM7App02
-        ipaddress: "{{ hostvars['em7prt02']['ipaddress2'] }}"
+        ipaddress: "{{ prt_ip2_list[1] }}"
         comment: EM7App02
 
       - name: EM7App01-INT
-        ipaddress: "{{ hostvars['em7prt01']['ipaddress1'] }}"
+        ipaddress: "{{ prt_ip1_list[0] }}"
         comment: EM7App01-INT
 
       - name: EM7App02-INT
-        ipaddress: "{{ hostvars['em7prt02']['ipaddress1'] }}"
+        ipaddress: "{{ prt_ip1_list[1] }}"
         comment: EM7App02-INT
 
       - name: EM7MC01
-        ipaddress: "{{ hostvars['em7mc01']['ipaddress1'] }}"
+        ipaddress: "{{ mc_ip1_list[0] }}"
         comment: EM7MC01
 
       - name: EM7MC02
-        ipaddress: "{{ hostvars['em7mc02']['ipaddress1'] }}"
+        ipaddress: "{{ mc_ip1_list[1] }}"
         comment: EM7MC02
 
       - name: Splunk-Search01
-        ipaddress: "{{ hostvars['splsrc01']['ipaddress1'] }}"
+        ipaddress: "{{ splsrc_ip1_list[0] }}"
         comment: Splunk-Search01
 
       - name: Splunk-Search02
-        ipaddress: "{{ hostvars['splsrc02']['ipaddress1'] }}"
+        ipaddress: "{{ splsrc_ip1_list[1] }}"
         comment: Splunk-Search02
 
       - name: Net-SNMP-1
-        ipaddress: "{{ hostvars['rly01']['ipaddress2'] }}"
+        ipaddress: "{{ rly_ip2_list[0] }}"
         comment: Net SNMP poller 1
 
       - name: Net-SNMP-2
-        ipaddress: "{{ hostvars['rly02']['ipaddress2'] }}"
+        ipaddress: "{{ rly_ip2_list[1] }}"
         comment: Net SNMP poller 2
 
       - name: Net-SNMP-3
-        ipaddress: "{{ hostvars['rly01']['ipaddress1'] }}"
+        ipaddress: "{{ rly_ip1_list[0] }}"
         comment: Net SNMP poller 3
 
       - name: Net-SNMP-4
-        ipaddress: "{{ hostvars['rly02']['ipaddress1'] }}"
+        ipaddress: "{{ rly_ip1_list[1] }}"
         comment: Net SNMP poller 4
 
     services:
@@ -539,27 +539,27 @@ drnsvpx:
   configuration:
     servers:
       - name: EM7App01
-        ipaddress: "{{ hostvars['drem7prt01']['ipaddress2'] }}"
+        ipaddress: "{{ drprt_ip2_list[0] }}"
         comment: EM7App01
 
       - name: EM7App01-INT
-        ipaddress: "{{ hostvars['drem7prt01']['ipaddress1'] }}"
+        ipaddress: "{{ drprt_ip1_list[0] }}"
         comment: EM7App01-INT
 
       - name: EM7MC01
-        ipaddress: "{{ hostvars['drem7mc01']['ipaddress1'] }}"
+        ipaddress: "{{ drmc_ip1_list[0] }}"
         comment: EM7MC01
 
       - name: Splunk-Search01
-        ipaddress: "{{ hostvars['drsplsrc01']['ipaddress1'] }}"
+        ipaddress: "{{ drsplsrc_ip1_list[0] }}"
         comment: Splunk-Search01
 
       - name: Net-SNMP-1
-        ipaddress: "{{ hostvars['drrly01']['ipaddress2'] }}"
+        ipaddress: "{{ drrly_ip2_list[0] }}"
         comment: Net SNMP poller 1
 
       - name: Net-SNMP-3
-        ipaddress: "{{ hostvars['drrly01']['ipaddress1'] }}"
+        ipaddress: "{{ drrly_ip1_list[0] }}"
         comment: Net SNMP poller 3
 
     services:
@@ -989,3 +989,4 @@ drnsvpx:
 
       - name: nsrpcs-{{ customer.secondary.octets }}.123-3008
         eccCurveName: P_521
+        

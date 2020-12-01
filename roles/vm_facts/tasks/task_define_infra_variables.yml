@@ -1,0 +1,21 @@
+---
+# Tasks to define hosts variables
+- block:
+  - include_tasks:
+      file: task_define_infra_variables_lists.yml
+      apply:
+        vars:
+          vm_group: "{{ group_item }}"
+    loop: "{{ group_list }}"
+    loop_control:
+      loop_var: group_item
+  - include_tasks:
+      file: task_define_dr_infra_variables_lists.yml
+      apply:
+        vars:
+          vm_group: "{{ group_item }}"
+    loop: "{{ drgroup_list }}"
+    loop_control:
+      loop_var: group_item
+    when:  customer.disaster_recovery
+  tags: ['always', 'vm_facts']

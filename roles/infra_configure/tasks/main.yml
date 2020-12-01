@@ -1,11 +1,11 @@
 ---
 # tasks file for infra_build_nodes
 - block:
-  - name: Deploy infrastructure
-    block:
-    - name: Create datastores
+  - block:
+    - name: Deploy HA infrastructure
       block:
-      - include_tasks:
+      - name: Create HA datastores
+        include_tasks:
           file: task_create_datastores.yml
           apply:
             vars:
@@ -16,29 +16,17 @@
         loop_control:
           loop_var: resource_item
           index_var: count_idx
-
-      - include_tasks:
-          file: task_create_datastores.yml
+      - name: Add HA vSwitches
+        include_tasks: 
+          file: task_add_vswitches.yml
           apply:
             vars:
-              resource: "{{ resources | last }}"
-              customer_prefix: "{{ customer.secondary.name_prefix }}"
-              count: 0
-        when: customer.disaster_recovery
-
-    - name: Add vSwitches
-      include_tasks: 
-        file: task_add_vswitches.yml
-        apply:
-          vars:
-            resource: "{{ resource_item }}"
-      loop: "{{ resources }}"
-      loop_control:
-        loop_var: resource_item
-
-    - name: Create portgroups
-      block:
-      - include_tasks:
+              resource: "{{ resource_item }}"
+        loop: "{{ resources[:2] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: Create HA portgroups
+        include_tasks:
           file: task_create_portgroups.yml
           apply:
             vars:
@@ -47,42 +35,128 @@
         loop: "{{ resources[:2] }}"
         loop_control:
           loop_var: resource_item
+      - name: "{{ auto_dir + '/roles/vm_creation' }}: create cluster"
+        include_role:
+          name: "{{ auto_dir + '/roles/vm_creation' }}"
+          tasks_from: task_create_cluster.yml
+      when:
+        - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
-      - include_tasks:
+    - name: Deploy DR infrastructure
+      block:
+      - name: Create DR datastores
+        include_tasks:
+            file: task_create_datastores.yml
+            apply:
+              vars:
+                resource: "{{ resource_item }}"
+                customer_prefix: "{{ customer.secondary.name_prefix }}"
+                count: 0
+        loop: "{{ resources[2:] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: Add DR vSwitches
+        include_tasks: 
+          file: task_add_vswitches.yml
+          apply:
+            vars:
+              resource: "{{ resource_item }}"
+        loop: "{{ resources[2:] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: Create DR portgroups
+        include_tasks:
           file: task_create_portgroups.yml
           apply:
             vars:
-              resource: "{{ resources | last }}"
+              resource: "{{ resource_item }}"
               customer_prefix: "{{ customer.secondary.name_prefix }}"
               count: 1
-        when: customer.disaster_recovery
-   
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: create cluster"
-      include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
-        tasks_from: task_create_cluster.yml
+        loop: "{{ resources[2:] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: "{{ auto_dir + '/roles/vm_creation' }}: create DR cluster"
+        include_role:
+          name: "{{ auto_dir + '/roles/vm_creation' }}"
+          tasks_from: task_create_drcluster.yml
+      when:
+        - customer.disaster_recovery
+        - ansible_play_batch | select('search', 'dr') | list | length >= 1
     when: configure_infra | default(false) | bool
 
   - block:
-    - name: Rollback infrastructure
-      include_tasks: task_rollback_infra.yml
-      loop:
-        - task_delete_datastores.yml
-        - task_remove_vswitches.yml
-        - task_delete_portgroups.yml
-      loop_control:
-        loop_var: rollback_task_item
+    - name: Rollback HA infrastructure
+      block:
+      - name: Delete HA datastores
+        include_tasks:
+          file: task_delete_datastores.yml
+          apply:
+            vars:
+              resource: "{{ resource_item }}"
+        loop: "{{ resources[:2] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: Delete HA vSwitches
+        include_tasks:
+          file: task_remove_vswitches.yml
+          apply:
+            vars:
+              resource: "{{ resource_item }}"
+        loop: "{{ resources[:2] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: Delete HA portgroups
+        include_tasks:
+          file: task_delete_portgroups.yml
+          apply:
+            vars:
+              resource: "{{ resource_item }}"
+        loop: "{{ resources[:2] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: "{{ auto_dir + '/roles/vm_creation' }}: delete cluster"
+        include_role:
+          name: "{{ auto_dir + '/roles/vm_creation' }}"
+          tasks_from: task_delete_cluster.yml
+      when:
+        - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: delete cluster"
-      include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
-        tasks_from: task_delete_cluster.yml
-
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: delete drcluster"
-      include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
-        tasks_from: task_delete_drcluster.yml
-      when: customer.disaster_recovery
+    - name: Rollback DR infrastructure
+      block:
+      - name: Delete DR datastores
+        include_tasks:
+          file: task_delete_datastores.yml
+          apply:
+            vars:
+              resource: "{{ resource_item }}"
+        loop: "{{ resources[2:] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: Delete DR vSwitches
+        include_tasks:
+          file: task_remove_vswitches.yml
+          apply:
+            vars:
+              resource: "{{ resource_item }}"
+        loop: "{{ resources[2:] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: Delete DR portgroups
+        include_tasks:
+          file: task_delete_portgroups.yml
+          apply:
+            vars:
+              resource: "{{ resource_item }}"
+        loop: "{{ resources[2:] }}"
+        loop_control:
+          loop_var: resource_item
+      - name: "{{ auto_dir + '/roles/vm_creation' }}: delete drcluster"
+        include_role:
+          name: "{{ auto_dir + '/roles/vm_creation' }}"
+          tasks_from: task_delete_drcluster.yml
+      when:
+        - customer.disaster_recovery
+        - ansible_play_batch | select('search', 'dr') | list | length >= 1
     when: rollback_infra | default(false) | bool
   tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]
   

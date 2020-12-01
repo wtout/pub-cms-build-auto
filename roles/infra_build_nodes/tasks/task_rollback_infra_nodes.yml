@@ -30,4 +30,5 @@
 
   - include_tasks: task_rollback_nexus_update.yml
     when: inventory_hostname is search('nexus')
-  tags: ['infra_build_nodes', 'never']
+  tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
+  

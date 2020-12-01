@@ -20,7 +20,9 @@
     loop: "{{ dns_records }}"
     loop_control:
       loop_var: list_item
-    when: add_dns_records | default(false) | bool
+    when:
+      - add_dns_records | default(false) | bool
+      - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
   
   - name: Add additional DR DNS records
     nsupdate:
@@ -35,6 +37,7 @@
     when:
       - add_dns_records | default(false) | bool
       - customer.disaster_recovery
+      - ansible_play_batch | select('search', 'dr') | list | length >= 1
 
   - name: Remove DNS records
     nsupdate:
@@ -55,7 +58,9 @@
     loop: "{{ dns_records }}"
     loop_control:
       loop_var: list_item
-    when: rollback_dns_records | default(false) | bool
+    when:
+      - rollback_dns_records | default(false) | bool
+      - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
   - name: Remove additional DR DNS records
     nsupdate:
@@ -70,5 +75,6 @@
     when:
       - rollback_dns_records | default(false) | bool
       - customer.disaster_recovery
+      - ansible_play_batch | select('search', 'dr') | list | length >= 1
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}" 
-  tags: [ 'infra_dns_records', 'infra_configure', 'never' ]
+  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
