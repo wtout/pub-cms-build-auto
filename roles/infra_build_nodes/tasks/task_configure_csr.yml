@@ -54,8 +54,8 @@
         validate_certs: no
       register: csr_info
       until: csr_info.instance.ipv4 != None
-      retries: 60
-      delay: 10
+      retries: 20
+      delay: 30
     - set_fact:
         ansible_host: "{{ csr_info.instance.ipv4 }}"
         dhcp_address: "{{ csr_info.instance.ipv4 }}"
