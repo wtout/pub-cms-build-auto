@@ -29,6 +29,8 @@
     when: inventory_hostname is search('nsvpx')
 
   - include_tasks: task_rollback_nexus_update.yml
-    when: inventory_hostname is search('nexus')
+    when:
+      - ansible_play_hosts | select('search', 'csr') | list | length >= 1
+      - inventory_hostname is search('nexus')
   tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
   
