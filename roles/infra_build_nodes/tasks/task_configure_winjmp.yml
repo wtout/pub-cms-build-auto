@@ -46,8 +46,12 @@
         ignore_errors: true
         retries: 30
         delay: 60
-      when: winjmp_poll_results_2 is failed
-    when: winjmp_poll_results_1 is failed
+      when:
+        - winjmp_poll_results_2 is failed
+        - winjmp_poll_results_2.msg is not search('already exists.')
+    when:
+      - winjmp_poll_results_1 is failed
+      - winjmp_poll_results_1.msg is not search('already exists.')
 
   - name: Power on VM
     vmware_guest_powerstate:
@@ -67,7 +71,7 @@
       datacenter: "{{ datacenter.name }}"
       cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if inventory_hostname is search('dr') else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       name: "{{ vm.name }}"
-      folder: "{{ datacenter.name }}/vm/{{ fldr_name }}"
+      folder: "{{ (datacenter.name + '/vm/' + fldr_name) if fldr_name != '' else '' }}"
       networks:
       - name: "{{ netconfig.network1 }}"
         start_connected: yes
@@ -76,11 +80,14 @@
         start_connected: yes
         wake_on_lan: yes
       validate_certs: no
+    register: set_interfaces
 
   - name: Wait for VM to boot
     pause:
       seconds: 400
-    when: power.changed
+    when:
+      - power.changed
+      - set_interfaces is changed
 
   - include_tasks:
       file:
