@@ -86,7 +86,7 @@
           timeout: 10
       - name: create datastores
         include_tasks:
-          file: new_task_create_host_datastores.yml
+          file: task_create_host_datastores.yml
           apply:
             vars:
               hostid: "{{ resource }}"
@@ -111,7 +111,7 @@
       when: (existing_datastores.datastores != [] and existing_datastores.datastores|length != canonical|length) or delete_default_datastore|default(false)
     - name: create datastores
       include_tasks:
-        file: new_task_create_host_datastores.yml
+        file: task_create_host_datastores.yml
         apply:
           vars:
             hostid: "{{ resource }}"
@@ -149,7 +149,7 @@
           timeout: 10
       - name: create datastores
         include_tasks:
-          file: new_task_create_host_datastores.yml
+          file: task_create_host_datastores.yml
           apply:
             vars:
               hostid: "{{ resource }}"
