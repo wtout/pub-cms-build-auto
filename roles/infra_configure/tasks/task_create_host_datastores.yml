@@ -1,0 +1,13 @@
+---
+# Tasks to create datastore
+- name: Create datastore on {{ hostid }}
+  vmware_host_datastore:
+    hostname: "{{ hostid }}"
+    username: "{{ information.hostuser }}"
+    password: "{{ information.hostpass }}"
+    datastore_name: "{{ dsname }}"
+    datastore_type: vmfs
+    vmfs_device_name: "{{ dvcname }}"
+    vmfs_version: 5
+    validate_certs: no
+  tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

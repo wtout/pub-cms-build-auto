@@ -3,10 +3,9 @@
 - block:
   - name: get list of network names from inventory
     shell: |
-      grep netname {{ inventory_dir }}/group_vars/all.yml  | awk -F 'netname: ' '{print $NF}' | sort -u | sed -e 's/"//g' -e '/^$/d'
+      echo {{ drvm_vars if customer_prefix == customer.secondary.name_prefix else vm_vars }} | sed -e 's/,/\n/g' | grep netname | awk -F 'netname: ' '{print $NF}' | sort -u | sed -e 's/"//g' -e '/^$/d'
     register: net_names
     check_mode: no
-    when: net_names is not defined
   - name: define network names to create on {{ resource }}
     set_fact:
       net1: "{{ mynet1 if mynet1 != '' else customer_prefix + '-Customer-Net-Internet' }}"
