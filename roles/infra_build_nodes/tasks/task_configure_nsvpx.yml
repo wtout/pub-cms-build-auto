@@ -100,6 +100,7 @@
       https_proxy: ""
     register: upload
     failed_when: upload.status != 201 and not upload.content is search('1642')
+    async: 120
     until: upload is succeeded
     retries: 5
     delay: 10
@@ -110,19 +111,37 @@
       state: absent
     when: upload is succeeded
 
-  - name: Apply Netscaler configuration
-    shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
-    register: config
-    no_log: yes
-    ignore_errors: true
-    failed_when: config.rc > 1
-    async: 300
-    poll: 10
-  - debug: var=config
-    when: config is failed
-  - assert:
-      that:
-        - not (config is failed)
+  - block:
+    - name: Apply Netscaler configuration
+      shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
+      register: config01
+      no_log: yes
+      ignore_errors: true
+      failed_when: config01.rc > 1
+      async: 600
+      poll: 10
+    - debug: var=config01
+      when: config01 is failed
+    - assert:
+        that:
+          - not (config01 is failed)
+    when: inventory_hostname is search('01')
+
+  - block:
+    - name: Apply Netscaler configuration
+      shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
+      register: config02
+      no_log: yes
+      ignore_errors: true
+      failed_when: config02.rc > 1
+      async: 600
+      poll: 10
+    - debug: var=config02
+      when: config02 is failed
+    - assert:
+        that:
+          - not (config02 is failed)
+    when: inventory_hostname is search('02')
 
   - name: Define Netscaler serial number
     block:
