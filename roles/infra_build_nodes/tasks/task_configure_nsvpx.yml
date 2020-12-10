@@ -101,6 +101,7 @@
     register: upload
     failed_when: upload.status != 201 and not upload.content is search('1642')
     until: upload is succeeded
+    retries: 5
     delay: 10
 
   - name: delete configuration file locally
@@ -111,20 +112,17 @@
 
   - name: Apply Netscaler configuration
     shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
-    register: config01
+    register: config
     no_log: yes
-    failed_when: config01.rc > 1
-    when: inventory_hostname is search('01')
+    ignore_errors: true
+    failed_when: config.rc > 1
     async: 300
     poll: 10
-
-  - name: Apply Netscaler configuration
-    shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
-    register: config02
-    no_log: yes
-    when: inventory_hostname is search('02')
-    async: 300
-    poll: 10
+  - debug: var=config
+    when: config is failed
+  - assert:
+      that:
+        - not (config is failed)
 
   - name: Define Netscaler serial number
     block:
