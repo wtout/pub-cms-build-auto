@@ -14,7 +14,7 @@
   - name: Get list of DRS rules to delete
     set_fact:
       drs_rules_list: "{{ drs_rules_list|default([]) | union(drs_rule_info['drs_rule_info'][hostvars[groups['vcenter'][0]]['information']['cluster']] | selectattr('rule_vms','search',hostvars[host_item]['vm']['name']) | map(attribute='rule_name') | list) }}"
-    loop: "{{ ansible_play_hosts | intersect(groups['stack']) | intersect(groups['dr']) if customer.disaster_recovery else ansible_play_hosts | intersect(groups['stack']) }}"
+    loop: "{{ ansible_play_hosts | intersect(groups['stack']) }}"
     loop_control:
       loop_var: host_item
   - name: Delete DRS anti-affinity rules

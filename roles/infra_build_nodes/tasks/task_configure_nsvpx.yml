@@ -14,8 +14,8 @@
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
-      datacenter: "{{ datacenter.name }}"
-      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if inventory_hostname is search('dr') else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       networks:
         - name: "{{ netconfig.network1 }}"
           device_type: e1000

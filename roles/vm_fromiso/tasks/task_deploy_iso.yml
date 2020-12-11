@@ -24,7 +24,7 @@
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
         datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
+        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         guest_id: centos64Guest
         name: "{{ vm.name }}"
         state: poweredon
@@ -74,7 +74,7 @@
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
         datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
+        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         guest_id: centos64Guest
         name: "{{ vm.name }}"
         state: poweredon

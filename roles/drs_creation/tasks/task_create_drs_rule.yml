@@ -18,7 +18,7 @@
       schema: "vsphere"
       properties: ["overallStatus"]
       validate_certs: no
-    loop: "{{ guest_list | intersect(groups['stack']) | intersect(groups['dr']) if customer.disaster_recovery else guest_list | intersect(groups['stack']) }}"
+    loop: "{{ guest_list | intersect(groups['stack']) }}"
     loop_control:
       loop_var: host_item
     check_mode: no
@@ -37,7 +37,7 @@
       pair_name: "{{ (hostvars[host_item]['vm']['name'] + '-' + hostvars[peer_name]['vm']['name']) if host_num|int < peer_num|int else (hostvars[peer_name]['vm']['name'] + '-' + hostvars[host_item]['vm']['name']) }}"
       host_status: "{{ vmguest_info.results | selectattr('host_item', 'equalto', host_item) | map(attribute='instance.overallStatus') | list | join is search('green') }}"
       peer_status: "{{ vmguest_info.results | selectattr('host_item', 'equalto', peer_name) | map(attribute='instance.overallStatus') | list | join is search('green') }}"
-    loop: "{{ guest_list | intersect(groups['stack']) | intersect(groups['dr']) if customer.disaster_recovery else guest_list | intersect(groups['stack']) }}"
+    loop: "{{ guest_list | intersect(groups['stack']) }}"
     loop_control:
       loop_var: host_item
     when:
