@@ -22,4 +22,4 @@
       vm_in_cluster: "{{ true if vmguest_info.instance.hw_cluster == clus_name else false }}"
   #    vm_on: "{{ true if vmguest_info.instance.hw_power_status|lower is search('poweredon') else false }}"
   when: cluster_empty | default(true)
-  tags: vm_creation
+  tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

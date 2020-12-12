@@ -33,16 +33,7 @@
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
 
-  - block:
-    - include_tasks: task_create_cluster.yml
-      when: ansible_play_hosts | reject('search', 'dr|bastion|puppet|vcenter|nexus') | list | length >= 1
-      run_once: true
-    - include_tasks: task_create_drcluster.yml
-      when:
-        - customer.disaster_recovery
-        - ansible_play_hosts | select('search', 'dr') | list | length >= 1
-      run_once: true
-    - include_tasks: task_create_configure_vms.yml
+  - include_tasks: task_create_configure_vms.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
 

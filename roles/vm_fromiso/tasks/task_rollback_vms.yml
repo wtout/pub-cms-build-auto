@@ -9,17 +9,4 @@
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
     run_once: true
-  - block:
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: delete cluster"
-      include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
-        tasks_from: task_delete_cluster.yml
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: delete DR cluster"
-      include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
-        tasks_from: task_delete_drcluster.yml
-      when: customer.disaster_recovery
-    when:
-      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
-    run_once: true
   tags: vm_creation

@@ -35,10 +35,8 @@
         loop: "{{ resources[:2] }}"
         loop_control:
           loop_var: resource_item
-      - name: "{{ auto_dir + '/roles/vm_creation' }}: create cluster"
-        include_role:
-          name: "{{ auto_dir + '/roles/vm_creation' }}"
-          tasks_from: task_create_cluster.yml
+
+      - include_tasks: task_create_cluster.yml
       when:
         - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
@@ -75,10 +73,7 @@
         loop: "{{ resources[2:] }}"
         loop_control:
           loop_var: resource_item
-      - name: "{{ auto_dir + '/roles/vm_creation' }}: create DR cluster"
-        include_role:
-          name: "{{ auto_dir + '/roles/vm_creation' }}"
-          tasks_from: task_create_drcluster.yml
+      - include_tasks: task_create_drcluster.yml
       when:
         - customer.disaster_recovery
         - ansible_play_batch | select('search', 'dr') | list | length >= 1
@@ -114,10 +109,8 @@
         loop: "{{ resources[:2] }}"
         loop_control:
           loop_var: resource_item
-      - name: "{{ auto_dir + '/roles/vm_creation' }}: delete cluster"
-        include_role:
-          name: "{{ auto_dir + '/roles/vm_creation' }}"
-          tasks_from: task_delete_cluster.yml
+
+      - include_tasks: task_delete_cluster.yml
       when:
         - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
@@ -150,10 +143,7 @@
         loop: "{{ resources[2:] }}"
         loop_control:
           loop_var: resource_item
-      - name: "{{ auto_dir + '/roles/vm_creation' }}: delete drcluster"
-        include_role:
-          name: "{{ auto_dir + '/roles/vm_creation' }}"
-          tasks_from: task_delete_drcluster.yml
+      - include_tasks: task_delete_drcluster.yml
       when:
         - customer.disaster_recovery
         - ansible_play_batch | select('search', 'dr') | list | length >= 1

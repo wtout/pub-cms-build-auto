@@ -123,4 +123,4 @@
       - drcluster_status is successful
       - hostvars[groups['vcenter'][0]]['information']['drcluster'] != ''
       - delete_drcluster|bool
-  tags: vm_creation
+  tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

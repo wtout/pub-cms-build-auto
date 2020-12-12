@@ -34,13 +34,7 @@
     when:
         - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
 
-  - block:
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: create cluster"
-      include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
-        tasks_from: task_create_cluster.yml
-      run_once: true
-    - include_tasks: task_create_configure_vms.yml
+  - include_tasks: task_create_configure_vms.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
 
