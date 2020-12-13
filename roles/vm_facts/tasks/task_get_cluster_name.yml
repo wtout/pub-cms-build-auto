@@ -28,4 +28,3 @@
 
   no_log: true
   tags: ['always', 'vm_facts', 'infra_build_nodes']
-
