@@ -548,4 +548,4 @@ get_credentials ${@}
 enable_logging ${@}
 run_playbook ${@}
 disable_logging
-#send_notification ${ORIG_ARGS}
+send_notification ${ORIG_ARGS}
