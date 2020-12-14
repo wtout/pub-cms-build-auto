@@ -196,7 +196,7 @@
   
   - name: define template variables
     set_fact:
-      use_bastion: "{{ true if localhost_ip is search('192.168.') else false }}"
+      use_bastion: "{{ true if localhost_ip.stdout is search('192.168.') else false }}"
       number_of_prts: "{{ environment_definition.customer.primary.number_of_prts }}"
       number_of_mcs: "{{ environment_definition.customer.primary.number_of_mcs }}"
       number_of_dcs: "{{ environment_definition.customer.primary.number_of_dcs }}"
