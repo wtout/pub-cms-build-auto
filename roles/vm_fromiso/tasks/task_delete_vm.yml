@@ -11,8 +11,8 @@
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
       datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-      folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
+      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
       state: absent
       force: yes
       validate_certs: no

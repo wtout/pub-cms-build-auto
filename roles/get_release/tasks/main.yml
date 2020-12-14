@@ -3,4 +3,4 @@
 - block:
   - include_tasks: task_download_package.yml
   when: get_release | default(false) | bool
-  tags: [ 'get_release', 'vm_creation' ]
+  tags: [ 'get_release', 'infra_build_nodes', 'vm_creation' ]

@@ -1,5 +1,12 @@
 ---
 # Variables for csr hosts
+ansible_user: 'admin'
+ansible_ssh_pass: "{{ CSR_PASS|default('') }}"
+ansible_become: yes
+ansible_become_method: enable
+ansible_network_os: ios
+ansible_connection: network_cli
+
 credentials:
   username: 'admin'
   password: "{{ CSR_PASS|default('') }}"
@@ -20,7 +27,7 @@ netconfig:
   gateway1: "{{ vm_vars.infra.csr.nic1.gtw if vm_vars.infra.csr.nic1.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic1.gtw_octet) if vm_vars.infra.csr.nic1.gtw_octet != '' else '' }}"
   netmask1: "{{ vm_vars.infra.csr.nic1.netmask }}"
   network1: "{{ vm_vars.infra.csr.nic1.netname if vm_vars.infra.csr.nic1.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic1.netbase) if vm_vars.infra.csr.nic1.netbase != '' else '' }}"
-
+  
   intname2: "{{ vm_vars.infra.csr.nic2.intname }}"
   ippool2: "{{ vm_vars.infra.csr.nic2.ip_pool | default([]) }}"
   octetpool2: "{{ vm_vars.infra.csr.nic2.ip_octetpool | default([]) }}"
@@ -28,21 +35,21 @@ netconfig:
   netmask2: "{{ vm_vars.infra.csr.nic2.netmask }}"
   network2: "{{ vm_vars.infra.csr.nic2.netname if vm_vars.infra.csr.nic2.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic2.netbase) if vm_vars.infra.csr.nic2.netbase != '' else '' }}"
 
-  netname3: "{{ vm_vars.infra.csr.nic3.intname }}"
+  intname3: "{{ vm_vars.infra.csr.nic3.intname }}"
   ippool3: "{{ vm_vars.infra.csr.nic3.ip_pool | default([]) }}"
   octetpool3: "{{ vm_vars.infra.csr.nic3.ip_octetpool | default([]) }}"
   gateway3: "{{ vm_vars.infra.csr.nic3.gtw if vm_vars.infra.csr.nic3.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic3.gtw_octet) if vm_vars.infra.csr.nic3.gtw_octet != '' else '' }}"
   netmask3: "{{ vm_vars.infra.csr.nic3.netmask }}"
   network3: "{{ vm_vars.infra.csr.nic3.netname if vm_vars.infra.csr.nic3.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic3.netbase) if vm_vars.infra.csr.nic3.netbase != '' else '' }}"
 
-  netname4: "{{ vm_vars.infra.csr.nic4.intname }}"
+  intname4: "{{ vm_vars.infra.csr.nic4.intname }}"
   ippool4: "{{ vm_vars.infra.csr.nic4.ip_pool | default([]) }}"
   octetpool4: "{{ vm_vars.infra.csr.nic4.ip_octetpool | default([]) }}"
   gateway4: "{{ vm_vars.infra.csr.nic4.gtw if vm_vars.infra.csr.nic4.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic4.gtw_octet) if vm_vars.infra.csr.nic4.gtw_octet != '' else '' }}"
   netmask4: "{{ vm_vars.infra.csr.nic4.netmask }}"
   network4: "{{ vm_vars.infra.csr.nic4.netname if vm_vars.infra.csr.nic4.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic4.netbase) if vm_vars.infra.csr.nic4.netbase != '' else '' }}"
 
-  netname5: "{{ vm_vars.infra.csr.nic5.intname }}"
+  intname5: "{{ vm_vars.infra.csr.nic5.intname }}"
   ippool5: "{{ vm_vars.infra.csr.nic5.ip_pool | default([]) }}"
   octetpool5: "{{ vm_vars.infra.csr.nic5.ip_octetpool | default([]) }}"
   gateway5: "{{ vm_vars.infra.csr.nic5.gtw if vm_vars.infra.csr.nic5.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic5.gtw_octet) if vm_vars.infra.csr.nic5.gtw_octet != '' else '' }}"

@@ -1,0 +1,63 @@
+---
+# Task file to update Nexus switch with CSR route
+- block:
+  - block:
+    - name: Define existing static IP routes
+      nxos_command:
+        commands: 'sh run | i route'
+      register: static_routes_list
+
+    - set_fact:
+        existing_route: "{{ static_routes_list.stdout_lines[0] | select('search', customer.primary.octets) | select('search', dhcp_address) | list | join }}"
+        dead_route: "{{ static_routes_list.stdout_lines[0] | select('search', customer.primary.octets) | reject('search', dhcp_address) | list }}"
+      when: static_routes_list.stdout_lines[0] | select('search', customer.primary.octets) | list != []
+
+    - name: Remove dead DHCP entry from nexus
+      nxos_command:
+        commands:
+          - configure terminal
+          - "no {{ route_item }}"
+      loop: "{{ dead_route }}"
+      loop_control:
+        loop_var: route_item
+      when:
+        - dead_route is defined
+
+    - name: Add new DHCP entry
+      nxos_command:
+        commands:
+          - configure terminal
+          - "ip route {{ customer.primary.octets }}.0/24 {{ dhcp_address }}"
+      when: existing_route is not defined or existing_route == ''
+    when: not dr_route
+
+  - block:
+    - name: Define existing DR static IP routes
+      nxos_command:
+        commands: 'sh run | i route'
+      register: static_routes_list
+
+    - set_fact:
+        existing_dr_route: "{{ static_routes_list.stdout_lines[0] | select('search', customer.secondary.octets) | select('search', dhcp_address) | list | join }}"
+        dead_dr_route: "{{ static_routes_list.stdout_lines[0] | select('search', customer.secondary.octets) | reject('search', dhcp_address) | list }}"
+      when: static_routes_list.stdout_lines[0] | select('search', customer.secondary.octets) | list != []
+
+    - name: Remove dead DR DHCP entry from nexus
+      nxos_command:
+        commands:
+          - configure terminal
+          - "no {{ route_item }}"
+      loop: "{{ dead_dr_route }}"
+      loop_control:
+        loop_var: route_item
+      when:
+        - dead_dr_route is defined
+
+    - name: Add new DR DHCP entry
+      nxos_command:
+        commands:
+          - configure terminal
+          - "ip route {{ customer.secondary.octets }}.0/24 {{ dhcp_address }}"
+      when: existing_dr_route is not defined or existing_dr_route == ''
+    when: dr_route
+  tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]

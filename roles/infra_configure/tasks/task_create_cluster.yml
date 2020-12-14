@@ -1,0 +1,41 @@
+---
+# Tasks to create the customer HA cluster
+- block:
+  - name: Create the '{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}' cluster
+    vmware_cluster:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      state: present
+      validate_certs: no
+    register: cust_cluster
+
+  - name: Check if hosts are in a different cluster
+    assert:
+      that:
+        - hostvars[groups['vcenter']|first]['host_cluster'][host_item] == none or (hostvars[groups['vcenter']|first]['host_cluster'][host_item] != none and hostvars[groups['vcenter']|first]['host_cluster'][host_item] == hostvars[groups['vcenter'][0]]['information']['cluster'])
+    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
+    loop_control:
+      loop_var: host_item
+
+  - name: Add hosts to the '{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}' cluster
+    vmware_host:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      esxi_hostname: "{{ host_item }}"
+      esxi_username: "{{ hostvars[groups['vcenter'][0]]['information']['hostuser'] }}"
+      esxi_password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
+      state: present
+      validate_certs: no
+    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
+    loop_control:
+      loop_var: host_item
+    register: move_hosts
+
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

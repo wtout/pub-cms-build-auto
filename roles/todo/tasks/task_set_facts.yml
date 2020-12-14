@@ -19,13 +19,77 @@
     - bastion.address != ['']
   tags: ssh_keys
 
+- name: define add_dns_records
+  set_fact:
+    add_dns_records: true
+  when: 
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
+
+- name: define rollback_dns_records
+  set_fact:
+    rollback_dns_records: true
+  when: 
+    - rollback | default(false) | bool
+    - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
+  tags: [ 'infra_dns_records', 'infra_configure', 'never' ]
+
+- name: define configure_infra
+  set_fact:
+    configure_infra: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['vcenter']
+  tags: [ 'infra_configure', 'infra_build_nodes', 'never' ]
+
+- name: define rollback_infra
+  set_fact:
+    rollback_infra: true
+  when:
+    - rollback | default(false) | bool
+    - inventory_hostname in groups['vcenter']
+  tags: [ 'infra_configure', 'never' ]
+
 - name: define capcheck
   set_fact:
     capcheck: true
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['vcenter']
-  tags: [ 'capcheck', 'vm_creation' ]
+  tags: [ 'capcheck', 'vm_creation', 'infra_build_nodes' ]
+  
+- name: define build_infra_nodes
+  set_fact:
+    build_infra_nodes: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['infra'] or inventory_hostname in groups['nexus'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra'])
+  tags: [ 'infra_build_nodes', 'never' ]
+
+- name: define rollback_infra_nodes
+  set_fact:
+    rollback_infra_nodes: true
+  when:
+    - rollback | default(false) | bool
+    - inventory_hostname in groups['infra'] or inventory_hostname in groups['nexus'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra'])
+  tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
+
+- name: define infra_license
+  set_fact:
+    infra_license: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra'])
+  tags: [ 'infra_license', 'never' ]
+
+- name: define check_csr_license
+  set_fact:
+    check_csr_license: true
+  when:
+    - deploy | default(false) | bool
+    - inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra'])
+  tags: [ 'infra_check_csr_license', 'vm_creation' ]
 
 - name: define get_release
   set_fact:
@@ -33,7 +97,7 @@
   when:
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
-  tags: [ 'get_release', 'vm_creation' ]
+  tags: [ 'get_release', 'infra_build_nodes', 'vm_creation' ]
 
 - name: define create_vms_iso
   set_fact:
@@ -42,6 +106,7 @@
     - deploy | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is search('mdr') or bfiso | default(false) | bool
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: vm_creation
 
 - name: define rollback_vms_iso
@@ -51,6 +116,7 @@
     - rollback | default(false) | bool
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is search('mdr') or bfiso | default(false) | bool
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: vm_creation
 
 - name: define harden_vms
@@ -79,6 +145,7 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: vm_creation
 
 - name: define rollback_vms_ova
@@ -89,6 +156,7 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: vm_creation
 
 - name: define deploy_drs
@@ -139,6 +207,7 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: [ 'vm_configuration' ]
 
 - name: define push_puppet
@@ -149,6 +218,7 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: puppet
 
 - name: define rollback_puppet
@@ -159,6 +229,7 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: puppet
 
 - name: define configure_ppp_vms
@@ -170,6 +241,7 @@
     - inventory_hostname in groups['stack'] or inventory_hostname in groups['dr']
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: vm_ppp_configuration
 
 - name: define splunk_mop_fix
@@ -180,7 +252,8 @@
     - inventory_hostname in groups['stack'] or (customer.disaster_recovery and inventory_hostname in groups['dr'])
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
-    - customer.release is not search('9.2')
+    - customer.release is search('9.1.3')
+    - not (inventory_hostname in groups['infra'] or (customer.disaster_recovery and inventory_hostname in groups['drinfra']))
   tags: splunk_mop
 
 #- name: define check_requiretty

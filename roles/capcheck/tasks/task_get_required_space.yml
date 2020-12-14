@@ -30,14 +30,14 @@
   - name: define stack01 SAS required space
     set_fact:
       stack01_sas_required_space: "{{ stack01_sas_required_space|default(0)|int + ((hostvars[task_item]['vm']['disk']|int - hostvars[task_item]['vm']['disk2']|int) if task_item is search('ind') else (hostvars[task_item]['vm']['disk']|int) + hostvars[task_item]['vm']['memory']|int) }}"
-    loop: "{{ ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | reject('match', '^.+[02468]$') | list }}"
+    loop: "{{ ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet|nexus') | reject('match', '^.+[02468]$') | list }}"
     loop_control:
       loop_var: task_item
 
   - name: define stack02 SAS required space
     set_fact:
       stack02_sas_required_space: "{{ stack02_sas_required_space|default(0)|int + ((hostvars[task_item]['vm']['disk']|int - hostvars[task_item]['vm']['disk2']|int) if task_item is search('ind') else (hostvars[task_item]['vm']['disk']|int) + hostvars[task_item]['vm']['memory']|int) }}"
-    loop: "{{ ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet') | select('match', '^.+[02468]$') | list }}"
+    loop: "{{ ansible_play_hosts | reject('search', 'dr|em7db|vcenter|bastion|puppet|nexus') | select('match', '^.+[02468]$') | list }}"
     loop_control:
       loop_var: task_item
 
@@ -71,4 +71,5 @@
         - "Total DR required storage space: {{ (dr_required_space|default(0)|float / 1024)|string + ' TiB' if (dr_required_space|default(0)|int)|string|length > 3 else dr_required_space|default(0)|string + ' GiB' }}"
     when:
       - customer.disaster_recovery
-  tags: ['capcheck', 'vm_creation']
+  tags: ['capcheck', 'vm_creation', 'infra_build_nodes']
+  

@@ -42,6 +42,6 @@
       include_tasks: task_relay_check.yml
       loop: "{{ ufwd }}"  
       loop_control:
-        loop_var: fwd
+        loop_var: fwd_item
     when: inventory_hostname is search('rly')
   tags: splunk_mop

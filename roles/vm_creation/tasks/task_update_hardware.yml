@@ -8,7 +8,7 @@
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
       datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       state: poweredoff
       validate_certs: no
   - name: Update VM hardware settings with one NIC
@@ -18,7 +18,7 @@
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
       datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       hardware:
         memory_mb: "{{ vm.memory|int * 1024 }}"
         num_cpus: "{{ vm.cpu|int }}"
@@ -49,7 +49,7 @@
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       name: "{{ vm.name }}"
       datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
       hardware:
         memory_mb: "{{ vm.memory|int * 1024 }}"
         num_cpus: "{{ vm.cpu|int }}"

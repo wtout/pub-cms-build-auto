@@ -24,6 +24,10 @@
       vm_shell: '/bin/sed'
       vm_shell_args: '-i "s/^\(PermitRootLogin.*\)$/#\1/" /etc/ssh/sshd_config'
       wait_for_process: true
+    register: enable_root
+    until: enable_root is succeeded
+    retries: 5
+    delay: 10
   - name: restart sshd on the non-EM7 VM
     vmware_vm_shell:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
@@ -37,6 +41,10 @@
       vm_shell: '/bin/systemctl'
       vm_shell_args: 'restart sshd'
       wait_for_process: true
+    register: sshd_restart
+    until: sshd_restart is succeeded
+    retries: 5
+    delay: 10
   when:
     - inventory_hostname is not search('em7')
     - customer.release is search('9.2')

@@ -24,7 +24,7 @@
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
         datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
+        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         guest_id: centos64Guest
         name: "{{ vm.name }}"
         state: poweredon
@@ -51,11 +51,11 @@
             device_type: vmxnet3
         cdrom:
           - type: iso
-            iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ iso_installer }}"
+            iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ iso_installer }}"
             controller_number: 0
             unit_number: 0
           - type: iso
-            iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+            iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ vm.name }}-kickstart.iso"
             controller_number: 1
             unit_number: 0
       register: deploy_iso1net
@@ -74,7 +74,7 @@
         password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
         datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
         cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}/vm/{{ fldr_name }}"
+        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         guest_id: centos64Guest
         name: "{{ vm.name }}"
         state: poweredon
@@ -106,11 +106,11 @@
             device_type: vmxnet3
         cdrom:
           - type: iso
-            iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+            iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ iso_installer }}"
             controller_number: 0
             unit_number: 0
           - type: iso
-            iso_path: "[{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+            iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ vm.name }}-kickstart.iso"
             controller_number: 1
             unit_number: 0
       register: deploy_iso2net

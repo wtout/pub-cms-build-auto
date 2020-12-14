@@ -27,10 +27,14 @@ function check_hosts_limit() {
 		local MYHOSTS=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
 		[[ "x$(echo ${@} | egrep -w '\-\-tags')" != "x" ]] && local MYTAGS=$(echo ${@} | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
 		[[ "x$(echo ${MYTAGS})" == "x" ]] && local update_args=1
-		[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation|capcheck')" != "x" ]] && local update_args=1
+		[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation|capcheck|infra_configure')" != "x" ]] && local update_args=1
+		[[ "x$(echo ${MYTAGS} | egrep -w 'infra_build_nodes')" != "x" ]] && local update_args=2
 		if [[ ${update_args} -eq 1 ]]
 		then
 			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},vcenter/")
+		elif [[ ${update_args} -eq 2 ]]
+		then
+			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},vcenter,nexus/")
 		else
 			local NEWARGS=${@}
 		fi
@@ -510,7 +514,7 @@ ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST="epel-release sshpass python3 libselinux-python3 python3-pip"
-ANSIBLE_VERSION='2.9.14'
+ANSIBLE_VERSION='2.10.3'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
 REPOVAULT="${PWD}/.repovault.yml"
@@ -544,4 +548,4 @@ get_credentials ${@}
 enable_logging ${@}
 run_playbook ${@}
 disable_logging
-send_notification ${ORIG_ARGS}
+#send_notification ${ORIG_ARGS}

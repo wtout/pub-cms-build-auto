@@ -17,6 +17,7 @@
       state: directory
       validate_certs: false
     register: ds_folder
+    throttle: 1
 
   - include_tasks: task_poweroff_vm.yml
     when: ds_folder is succeeded

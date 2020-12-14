@@ -1,0 +1,36 @@
+---
+# Task file to delete infra nodes
+- block:
+  - name: Delete VM
+    vmware_guest:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      state: absent
+      force: yes
+      validate_certs: no
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost' }}"
+    when: not inventory_hostname is search('nexus')
+
+  - block:
+    - set_fact:
+        ipaddress1: "{{ netconfig.ippool1[index|int - 1] if netconfig.ippool1 != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) else '' }}"
+      vars:
+        index: "{{ inventory_hostname[-2:] }}"
+
+    - name: Purge known hosts file
+      copy:
+        dest: ~/.ssh/known_hosts
+        content: ''
+      run_once: true
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    when: inventory_hostname is search('nsvpx')
+
+  - include_tasks: task_rollback_nexus_update.yml
+    when:
+      - ansible_play_batch | select('search', 'csr') | list | length >= 1
+      - inventory_hostname is search('nexus')
+  tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
+  

@@ -33,10 +33,7 @@
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
 
-  - block:
-    - include_tasks: task_create_cluster.yml
-      run_once: true
-    - include_tasks: task_create_configure_vms.yml
+  - include_tasks: task_create_configure_vms.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
 

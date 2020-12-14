@@ -1,0 +1,36 @@
+---
+# tasks file for infra_check_csr_license
+- block:
+  - name: check CSR reachable
+    shell: ping {{ ansible_host }} -c 3
+    check_mode: no
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+
+  - name: Define CSR key
+    shell: ssh-keyscan -t rsa {{ netconfig.ipaddress3 }}
+    register: host_key
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+
+  - name: Add CSR key to known_hosts
+    known_hosts:
+      name: "{{ netconfig.ipaddress3 }}"
+      key: "{{ host_key.stdout }}"
+      state: present
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+
+  - name: Check if CSR is licensed
+    ios_command:
+      commands: "show license detail"
+    register: lic_detail
+    ignore_errors: "{{ ignore | default(false) }}"
+
+  - set_fact:
+      is_licensed: "{{ false if lic_detail is failed else true }}"
+
+  - name: Purge known hosts file
+    copy:
+      dest: ~/.ssh/known_hosts
+      content: ''
+    run_once: true
+  when: inventory_hostname is search('csr')
+  tags: [ 'infra_check_csr_license', 'vm_creation' ]

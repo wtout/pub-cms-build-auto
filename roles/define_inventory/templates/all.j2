@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: False
 {% include environment_definition.customer.release_version[1:4].split('.')|join + '-all.yml.tmpl' %}
 {% if environment_definition.customer.deployment_model is search('aio') %}
 {% if environment_definition.customer.deployment_model[-1:] is search('a') %}
@@ -8,6 +9,9 @@
 {% else %}
 {% if environment_definition.customer.deployment_model is search('a') %}
 {% include 'templates/alla.yml.tmpl' %}
+{% if environment_definition.customer.disaster_recovery %}
+{% include 'templates/dralla.yml.tmpl' %}
+{% endif %}
 {% else %}
 {% include 'templates/allh.yml.tmpl' %}
 {% endif %}

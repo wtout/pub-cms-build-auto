@@ -1,8 +1,8 @@
 ---
 # Variables for winjmp hosts
 credentials:
-  username: 'root'
-  password: "{{ WINJMP_PASS|default('') }}"
+  username: 'administrator'
+  password: "{{ WINJS_PASS|default('') }}"
 
 vm:
   cpu: "{{ vm_vars.infra.winjmp.cpu }}"
@@ -14,6 +14,9 @@ vm:
   name: "{{ vm_vars.infra.winjmp.vmname if vm_vars.infra.winjmp.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + datacenters[datacenter.name]['deptype'] + inventory_hostname[-2:]) }}"
 
 netconfig:
+  static_route_ips: "{{ vm_vars.infra.winjmp.static_ips }}"
+
+  default_netname1: "{{ vm_vars.infra.winjmp.nic1.default_name }}"
   intname1: "{{ vm_vars.infra.winjmp.nic1.intname }}"
   ippool1: "{{ vm_vars.infra.winjmp.nic1.ip_pool | default([]) }}"
   octetpool1: "{{ vm_vars.infra.winjmp.nic1.ip_octetpool | default([]) }}"
@@ -21,6 +24,7 @@ netconfig:
   netmask1: "{{ vm_vars.infra.winjmp.nic1.netmask }}"
   network1: "{{ vm_vars.infra.winjmp.nic1.netname if vm_vars.infra.winjmp.nic1.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.winjmp.nic1.netbase) if vm_vars.infra.winjmp.nic1.netbase != '' else '' }}"
 
+  default_netname2: "{{ vm_vars.infra.winjmp.nic2.default_name }}"
   intname2: "{{ vm_vars.infra.winjmp.nic2.intname }}"
   ippool2: "{{ vm_vars.infra.winjmp.nic2.ip_pool | default([]) }}"
   octetpool2: "{{ vm_vars.infra.winjmp.nic2.ip_octetpool | default([]) }}"

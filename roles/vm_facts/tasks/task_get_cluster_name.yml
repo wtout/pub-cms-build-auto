@@ -27,5 +27,4 @@
       new_item: "{'cluster': '{{ cluster_name|first }}'}"
 
   no_log: true
-  tags: ['always', 'vm_facts']
-
+  tags: ['always', 'vm_facts', 'infra_build_nodes']
