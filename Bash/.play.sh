@@ -65,8 +65,8 @@ function clean_arguments() {
 function git_config() {
 	if [[ "x$(which git 2>/dev/null)" != "x" ]]
 	then
-		git config remote.origin.url | grep "\/\/.*@" || echo "You are not authorized to download this repository. Aborting!"
-		git config remote.origin.url | grep "\/\/.*@" || exit 1
+		git config remote.origin.url | grep "\/\/.*@" &>/dev/null || echo "You are not authorized to download this repository. Aborting!"
+		git config remote.origin.url | grep "\/\/.*@" &>/dev/null || exit 1
 		if [[ "x$(git config user.name)" == "x" ]]
 		then
 			if [[ "$(git config remote.origin.url)" == "" ]]
