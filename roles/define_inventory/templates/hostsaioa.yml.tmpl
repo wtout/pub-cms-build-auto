@@ -9,6 +9,9 @@ all:
     puppet:
       hosts:
         puppet[{{ environment_definition.puppet.server_name[-2:] }}:{{ environment_definition.puppet.server_name[-2:] }}]:
+    nexus:
+      hosts:
+        nexus[01:02]:
     stack:
       children:
         infra:

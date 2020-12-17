@@ -566,9 +566,22 @@ vm_vars:
 
       vmname: "{{ environment_definition.vm_setting.infra.winjmp.vmname if (environment_definition.vm_setting.infra.winjmp.vmname is defined and environment_definition.vm_setting.infra.winjmp.vmname != none) else '' }}"
 
+      # Static route IPs
+      static_ips:
+        - ip: 172.21.240.0
+          netmask: 255.255.240.0
+        - ip: 172.19.240.0
+          netmask: 255.255.240.0
+        - ip: 172.26.9.0
+          netmask: 255.255.255.0
+        - ip: 172.30.240.0
+          netmask: 255.255.255.0
+
       # Network interface 1
       ################
       nic1:
+
+        default_name: 'Ethernet0'
 
         # Interface name
         intname: "{{ environment_definition.vm_setting.infra.winjmp.nic1.intname if (environment_definition.vm_setting.infra.winjmp.nic1.intname is defined and environment_definition.vm_setting.infra.winjmp.nic1.intname != none) else 'ens160' }}"
@@ -597,6 +610,8 @@ vm_vars:
       # Network interface 2
       ################
       nic2:
+
+        default_name: 'Ethernet1'
 
         # Interface name
         intname: "{{ environment_definition.vm_setting.infra.winjmp.nic2.intname if (environment_definition.vm_setting.infra.winjmp.nic2.intname is defined and environment_definition.vm_setting.infra.winjmp.nic2.intname != none) else 'ens192' }}"

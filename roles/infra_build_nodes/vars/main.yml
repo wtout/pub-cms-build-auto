@@ -60,51 +60,51 @@ nsvpx:
 
     servers:
       - name: EM7App01
-        ipaddress: "{{ prt_ip2_list[0] }}"
+        ipaddress: "{{ prt_ip2_list[0] if prt_ip2_list is defined else em7_ip2_list[0] }}"
         comment: EM7App01
 
       - name: EM7App02
-        ipaddress: "{{ prt_ip2_list[1] }}"
+        ipaddress: "{{ prt_ip2_list[1] if prt_ip2_list is defined else '' }}"
         comment: EM7App02
 
       - name: EM7App01-INT
-        ipaddress: "{{ prt_ip1_list[0] }}"
+        ipaddress: "{{ prt_ip1_list[0] if prt_ip1_list is defined else em7_ip1_list[0] }}"
         comment: EM7App01-INT
 
       - name: EM7App02-INT
-        ipaddress: "{{ prt_ip1_list[1] }}"
+        ipaddress: "{{ prt_ip1_list[1] if prt_ip1_list is defined else '' }}"
         comment: EM7App02-INT
 
       - name: EM7MC01
-        ipaddress: "{{ mc_ip1_list[0] }}"
+        ipaddress: "{{ mc_ip1_list[0] if mc_ip1_list is defined else em7_ip1_list[0] }}"
         comment: EM7MC01
 
       - name: EM7MC02
-        ipaddress: "{{ mc_ip1_list[1] }}"
+        ipaddress: "{{ mc_ip1_list[1] if mc_ip1_list is defined else '' }}"
         comment: EM7MC02
 
       - name: Splunk-Search01
-        ipaddress: "{{ splsrc_ip1_list[0] }}"
+        ipaddress: "{{ splsrc_ip1_list[0] if splsrc_ip1_list is defined else spl_ip1_list[0] }}"
         comment: Splunk-Search01
 
       - name: Splunk-Search02
-        ipaddress: "{{ splsrc_ip1_list[1] }}"
+        ipaddress: "{{ splsrc_ip1_list[1] if splsrc_ip1_list is defined else '' }}"
         comment: Splunk-Search02
 
       - name: Net-SNMP-1
-        ipaddress: "{{ rly_ip2_list[0] }}"
+        ipaddress: "{{ rly_ip2_list[0] if rly_ip2_list is defined else rly_ip2_list[0] }}"
         comment: Net SNMP poller 1
 
       - name: Net-SNMP-2
-        ipaddress: "{{ rly_ip2_list[1] }}"
+        ipaddress: "{{ rly_ip2_list[1] if (rly_ip2_list is defined and rly_ip2_list|length > 1) else '' }}"
         comment: Net SNMP poller 2
 
       - name: Net-SNMP-3
-        ipaddress: "{{ rly_ip1_list[0] }}"
+        ipaddress: "{{ rly_ip1_list[0] if rly_ip1_list is defined else rly_ip1_list[0] }}"
         comment: Net SNMP poller 3
 
       - name: Net-SNMP-4
-        ipaddress: "{{ rly_ip1_list[1] }}"
+        ipaddress: "{{ rly_ip1_list[1] if (rly_ip1_list is defined and rly_ip1_list|length > 1) else '' }}"
         comment: Net SNMP poller 4
 
     services:

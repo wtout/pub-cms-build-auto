@@ -1,0 +1,42 @@
+ntp_server: 172.30.251.254
+ntp_source: GigabitEthernet1
+
+interfaces:
+  - name: interface GigabitEthernet1
+    properties:
+      - no shutdown
+
+  - name: interface GigabitEthernet3
+    properties:
+      - description ****Internal Net****
+      - ip address {{ netconfig.ipaddress3 }} {{ netconfig.netmask3 }}
+      - standby 3 ip {{ netconfig.gateway3 }}
+      - standby use-bia
+      - standby 3 priority 130
+      - standby 3 preempt
+      - negotiation auto
+      - cdp enable
+      - no shutdown
+
+  - name: interface GigabitEthernet4
+    properties: 
+      - description ***Customer Inside Net*** 
+      - ip address {{ netconfig.ipaddress4 }} {{ netconfig.netmask4 }}
+      - standby 4 ip {{ netconfig.gateway4 }}
+      - standby use-bia
+      - standby 4 priority 130
+      - standby 4 preempt
+      - negotiation auto
+      - cdp enable
+      - no shutdown
+
+  - name: interface GigabitEthernet5
+    properties:
+      - description ****Loadbalancer Net****
+      - ip address {{ netconfig.ipaddress5 }} {{ netconfig.netmask5 }}
+      - standby 5 ip {{ netconfig.gateway5 }}
+      - standby use-bia
+      - standby 5 priority 130
+      - standby 5 preempt
+      - negotiation auto
+      - no shutdown

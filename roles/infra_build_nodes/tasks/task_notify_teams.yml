@@ -11,9 +11,9 @@
       NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line_item] | list }}"
     loop:
       - "{{ ( customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] + '01: ' + hostvars['csr01']['ansible_net_serialnum'] ) if hostvars['csr01']['ansible_net_serialnum'] is defined else '' }}"
-      - "{{ ( customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] + '02: ' + hostvars['csr02']['ansible_net_serialnum'] ) if hostvars['csr01']['ansible_net_serialnum'] is defined else '' }}"
+      - "{{ ( customer.primary.name_prefix + 'csr' + datacenters[datacenter.name]['deptype'] + '02: ' + hostvars['csr02']['ansible_net_serialnum'] ) if hostvars['csr02']['ansible_net_serialnum'] is defined else '' }}"
       - "{{ ( customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] + '01: ' + hostvars['nsvpx01']['serial_number'] ) if hostvars['nsvpx01']['serial_number'] is defined else '' }}"
-      - "{{ ( customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] + '02: ' + hostvars['nsvpx02']['serial_number'] ) if hostvars['nsvpx01']['serial_number'] is defined else '' }}"
+      - "{{ ( customer.primary.name_prefix + 'nsvpx' + datacenters[datacenter.name]['deptype'] + '02: ' + hostvars['nsvpx02']['serial_number'] ) if hostvars['nsvpx02']['serial_number'] is defined else '' }}"
     loop_control:
       loop_var: line_item
     when: line_item != ''
