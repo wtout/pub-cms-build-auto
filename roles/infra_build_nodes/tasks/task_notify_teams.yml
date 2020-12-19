@@ -35,10 +35,10 @@
       url: "https://webexapis.com/v1/messages"
       method: POST
       headers:
-        Authorization: "Bearer MDZlM2NiNjktNTNjNi00ZDNiLWE5ZDYtMjRkZjk4NTljYTdmMzI5ZWU0YTUtZWY0_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
+        Authorization: "Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
       body_format: json
       body:
-        roomId: Y2lzY29zcGFyazovL3VzL1JPT00vMzI0ZWY3YTAtZjZhYS0xMWU5LWE3ZmItMTM1MzQ3ZWE1NjQ2
+        roomId: Y2lzY29zcGFyazovL3VzL1JPT00vYjRiMWM0MzAtMTg2My0xMWViLWE4OWQtNTNkMDRiZjUxMjMy
         markdown: "{{ '**Infra Serial Numbers**' + '\n' + NOTIF_MSG | join('  \n') }}"
     environment:
       http_proxy: "{{ proxy_string.stdout }}"
