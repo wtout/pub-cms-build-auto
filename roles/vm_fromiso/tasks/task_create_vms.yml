@@ -34,7 +34,14 @@
     when:
         - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
 
-  - include_tasks: task_create_configure_vms.yml
+  - block:
+    - name: "{{ auto_dir + '/roles/infra_configure' }}: create cluster"
+      include_role:
+        name: "{{ auto_dir + '/roles/infra_configure' }}"
+        tasks_from: task_create_cluster.yml
+      run_once: true
+      when: auto_dir is search('cdra')
+    - include_tasks: task_create_configure_vms.yml
     when:
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
 

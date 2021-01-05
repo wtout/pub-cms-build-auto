@@ -8,7 +8,7 @@
       apply:
         vars:
           pypkg: "{{ pkg_item }}"
-          proxy_address: "{{ proxy_address }}"
+          proxyaddress: "{{ proxy_address|default('') }}"
     loop: "{{ pypkg_list }}"
     loop_control:
       loop_var: pkg_item

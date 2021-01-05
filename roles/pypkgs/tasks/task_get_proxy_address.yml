@@ -42,6 +42,7 @@
     when:
       - validate_proxy1 is failed
 
+  when: auto_dir is not search('cdra')
   delegate_to: "{{ host_delegate|default('localhost') }}"
   run_once: true
   tags: [ 'always', 'pypkgs' ]

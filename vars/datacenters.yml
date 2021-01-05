@@ -24,6 +24,15 @@ datacenters:
     storage_datastore: 'HX-DS-02'
     storage_path: ''
 
+  Dev Engineering:
+    vsphere: 'paevcenter01.cisco-pae.com'
+    deptype: 'a'
+    folder: 'Deven'
+    cluster: 'CDRA-Integ'
+    datastore_cluster: ''
+    storage_datastore: 'deven-esxi-a-01-sas'
+    storage_path: ''
+
   cdra-Build-Development:
     vsphere: 'paevcenter03.cisco-pae.com'
     deptype: 'a'

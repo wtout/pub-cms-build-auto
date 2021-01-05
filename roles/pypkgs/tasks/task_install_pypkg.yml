@@ -3,8 +3,8 @@
 - name: Install Package {{ pypkg }}
   pip:
     name: "{{ pypkg }}"
-    state: latest
+    state: "{{ 'present' if auto_dir is search('cdra') else 'latest' }}"
     extra_args: --user
   environment:
-    http_proxy: "{{ proxy_address }}"
+    http_proxy: "{{ proxyaddress }}"
   tags: [ 'always', 'pypkgs' ]

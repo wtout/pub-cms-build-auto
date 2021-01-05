@@ -27,7 +27,7 @@ netconfig:
   gateway1: "{{ vm_vars.infra.csr.nic1.gtw if vm_vars.infra.csr.nic1.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic1.gtw_octet) if vm_vars.infra.csr.nic1.gtw_octet != '' else '' }}"
   netmask1: "{{ vm_vars.infra.csr.nic1.netmask }}"
   network1: "{{ vm_vars.infra.csr.nic1.netname if vm_vars.infra.csr.nic1.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic1.netbase) if vm_vars.infra.csr.nic1.netbase != '' else '' }}"
-  
+
   intname2: "{{ vm_vars.infra.csr.nic2.intname }}"
   ippool2: "{{ vm_vars.infra.csr.nic2.ip_pool | default([]) }}"
   octetpool2: "{{ vm_vars.infra.csr.nic2.ip_octetpool | default([]) }}"

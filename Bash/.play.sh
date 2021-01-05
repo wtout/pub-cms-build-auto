@@ -254,9 +254,12 @@ function remove_extra_vars_arg() {
 	echo ${NEWARGS}
 }
 
-function install_pypkgs() {
+function create_passfile() {
 	[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
-	[[ ${PV} == "ERROR" ]] && echo "Passwords.yml file is missing. Aborting!" && exit 1
+	[[ ${PV} == "ERROR" ]] && echo "${PASSVAULT} file is missing. Aborting!" && exit 1
+}
+
+function install_pypkgs() {
 	ansible-playbook playbooks/pypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh
 	INSTALL_PYPKGS_STATUS=${?}
 	[[ ${INSTALL_PYPKGS_STATUS} != 0 ]] && echo -e "\n${BOLD}Unable to install Python packages successfully. Aborting!${NORMAL}" && exit 1
@@ -264,7 +267,7 @@ function install_pypkgs() {
 
 function get_inventory() {
 	sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG}
-	if [[ ${INSTALL_PYPKGS_STATUS} == 0 ]]
+	if [[ ${INSTALL_PYPKGS_STATUS} == 0 || "x$(pwd | grep -i 'cdra')" != "x" ]]
 	then
 		if [[ -f ${SYS_DEF} ]]
 		then
@@ -287,9 +290,9 @@ function encrypt_vault() {
 }
 
 function view_vault() {
-	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && ansible-vault view --vault-password-file ${2} ${1} 2> /tmp/decrypt_error.${PID}
-	[[ $(grep "was not found" /tmp/decrypt_error.${PID}) != "" ]] && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && ansible-vault view --vault-password-file ${2} ${1} &>/dev/null
-	rm -f /tmp/decrypt_error.${PID}
+	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && ansible-vault view --vault-password-file ${2} ${1} 2> ${ANSIBLE_LOG_LOCATION}/decrypt_error.${PID}
+	[[ $(grep "was not found" ${ANSIBLE_LOG_LOCATION}/decrypt_error.${PID}) != "" ]] && sed -i "/^vault_password_file.*$/,+d" ${ANSIBLE_CFG} && ansible-vault view --vault-password-file ${2} ${1} &>/dev/null
+	rm -f ${ANSIBLE_LOG_LOCATION}/decrypt_error.${PID}
 }
 
 function check_updates() {
@@ -335,19 +338,21 @@ function check_updates() {
 			do
 				[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 				local REPOPWD=$(echo ${REPOPASS} | sed -e 's/@/%40/g')
-				local REMOTEID=$([[ ${RESET_PROXY} ]] && unset https_proxy || git config http.proxy ${PROXY_ADDRESS}; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>/tmp/${PID}-remoteid.stderr | cut -c1-7)
+				local REMOTEID=$([[ ${RESET_PROXY} ]] && unset https_proxy || git config http.proxy ${PROXY_ADDRESS}; git ls-remote $(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|") refs/heads/$(git branch | awk '{print $NF}') 2>${ANSIBLE_LOG_LOCATION}/${PID}-remoteid.stderr | cut -c1-7)
 				[[ ${debug} == 1 ]] && set -x
 				[[ ${REMOTEID} == "" ]] && sleep 3 || break
 			done
 			if [[ "${REMOTEID}" == "" ]]
 			then
-				local REPO_ERR=$(grep -i maintenance /tmp/${PID}-remoteid.stderr)
+				local REPO_ERR=$(grep -i maintenance ${ANSIBLE_LOG_LOCATION}/${PID}-remoteid.stderr)
 				if [[ "${REPO_ERR}" == "" ]]
 				then
-				 	printf "\nYour Repository credentials are invalid!\n\n" && rm -f ${1} && exit
+				 	printf "\nYour Repository credentials are invalid!\n\n" && rm -f ${1} && rm -f ${ANSIBLE_LOG_LOCATION}/${PID}-remoteid.stderr && exit
 				else
-				 	printf "\n${REPO_ERR}" && rm -f /tmp/${PID}-remoteid.stderr && exit
+				 	printf "\n${REPO_ERR}" && rm -f ${ANSIBLE_LOG_LOCATION}/${PID}-remoteid.stderr && exit
 				fi
+			else
+				rm -f ${ANSIBLE_LOG_LOCATION}/${PID}-remoteid.stderr
 			fi
 			if [[ "${LOCALID}" != "${REMOTEID}" ]]
 			then
@@ -411,23 +416,11 @@ function enable_logging() {
 	then
 		if [[ ! -d "${ANSIBLE_LOG_LOCATION}" ]]
 		then
-			if [[ "x${SUDO_PASS}" == "x" ]]
-			then
-				echo
-				SUDO_PASS=$(get_sudopass) || FS=${?}
-				[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
-			fi
-			sudo -S mkdir -m 777 -p ${ANSIBLE_LOG_LOCATION} <<< ${SUDO_PASS}
+			mkdir -m 775 -p ${ANSIBLE_LOG_LOCATION}
 		else
 			if [[ ! -w "${ANSIBLE_LOG_LOCATION}" ]]
 			then
-				if [[ "x${SUDO_PASS}" == "x" ]]
-				then
-					echo
-					SUDO_PASS=$(get_sudopass) || FS=${?}
-					[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
-				fi
-				sudo -S chmod 777 ${ANSIBLE_LOG_LOCATION} <<< ${SUDO_PASS}
+				chmod 775 ${ANSIBLE_LOG_LOCATION}
 			fi
  		fi
 		LOG_FILE="${ANSIBLE_LOG_LOCATION}/$(basename ${0} | awk -F '.' '{print $1}').${ENAME}.log"
@@ -438,7 +431,12 @@ function enable_logging() {
 		else
 			export ANSIBLE_LOG_PATH=${LOG_FILE}
 		fi
-		printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by $(git config user.name) ($(git config remote.origin.url | sed -e 's|.*\/\/\(.*\)@.*|\1|')) on $(date)\n############################################################\n\n" > ${LOG_FILE}
+		if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
+		then
+			printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by $(git config user.name) ($(git config remote.origin.url | sed -e 's|.*\/\/\(.*\)@.*|\1|')) on $(date)\n############################################################\n\n" > ${LOG_FILE}
+		else
+			printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by CDRA on $(date)\n############################################################\n\n" > ${LOG_FILE}
+		fi
 	fi
 }
 
@@ -481,10 +479,11 @@ function run_playbook() {
 			local BCV="-e @${CRVAULT} --vault-password-file Bash/get_creds_vault_pass.sh"
 		fi
 		### End
-		ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> /tmp/${PID}.stderr
-		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE}${NORMAL}" && EC=1
-		[[ $(grep "no vault secrets were found that could decrypt" /tmp/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
-		rm -f /tmp/${PID}.stderr
+		ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
+		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE}${NORMAL}" && EC=1
+		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
+		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr) == "" ]] && [[ ! -s ${ANSIBLE_LOG_LOCATION}/${PID}.stderr ]] && cat ${ANSIBLE_LOG_LOCATION}/${PID}.stderr && EC=1
+		rm -f ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
 		[[ ${EC} == 1 ]] && exit 1
 	fi
 }
@@ -511,8 +510,8 @@ function send_notification() {
 }
 
 # Parameters definition
-ANSIBLE_CFG="./ansible.cfg"
-ANSIBLE_LOG_LOCATION="/var/tmp/ansible"
+ANSIBLE_CFG="${PWD}/ansible.cfg"
+ANSIBLE_LOG_LOCATION="${PWD}/Logs"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST="epel-release sshpass python3 libselinux-python3 python3-pip"
@@ -524,6 +523,7 @@ SECON=true
 
 # Main
 PID=${$}
+mkdir -p ${ANSIBLE_LOG_LOCATION}
 check_arguments ${@}
 NEW_ARGS=$(check_hosts_limit "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
@@ -537,11 +537,15 @@ PASSFILE="${PASSVAULT}.${ENAME}"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
-git_config
-PROXY_ADDRESS=$(get_proxy) || PA=${?}
-[[ ${PA} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${PA}
-install_packages
-check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
+create_passfile
+if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
+then
+	git_config
+	PROXY_ADDRESS=$(get_proxy) || PA=${?}
+	[[ ${PA} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${PA}
+	install_packages
+	check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
+fi
 install_pypkgs ${@}
 get_inventory ${@}
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}

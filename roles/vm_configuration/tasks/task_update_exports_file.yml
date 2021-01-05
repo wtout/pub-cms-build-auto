@@ -1,14 +1,10 @@
 ---
 # tasks to update /etc/exports on VM
 - block:
-  - name: delete /etc/exports
-    file:
-      path: /etc/exports
-      state: absent
-  - name: create /etc/exports
-    file:
-      path: /etc/exports
-      state: touch
+  - name: purge /etc/exports file
+    copy:
+      content: ''
+      dest: /etc/exports
       mode: 0644
   - name: Add the lines to /etc/exports file
     lineinfile:
