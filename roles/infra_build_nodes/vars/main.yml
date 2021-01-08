@@ -3,8 +3,8 @@
 ova_dir: "{{ auto_dir }}/Packages"
 
 ova_names:
-  nsvpx: NSVPX-ESX-12.1-57.18_nc_64.ovf
-  csr: csr1000v-universalk9.16.09.02.ova
+  nsvpx: NSVPX/NSVPX-ESX-12.1-57.18_nc_64.ovf
+  csr: CSR/csr1000v-universalk9.16.09.02.ova
 
 winjmp:
   interface_configuration:

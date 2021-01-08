@@ -11,7 +11,7 @@
     folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
     name: "{{ vm.name }}"
     networks: {}
-    ova: "{{ ova_dir }}/{{ customer.release }}/{{ ova_names.csr }}"
+    ova: "{{ ova_dir }}/{{ ova_names.csr }}"
     power_on: no
     wait: yes
     allow_duplicates: no
