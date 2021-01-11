@@ -1,68 +1,84 @@
 ---
 # Tasks for notify
 - block:
-  - name: Get user's identity
-    shell: head -4 {{ LFILE }}
-    register: userid
-  - name: Check if user requested to abort
-    shell: grep "user requested abort!" {{ LFILE }}
-    register: user_abort
-    ignore_errors: true
   - name: Get playbook status from {{ LFILE }}
     shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ NHOSTS }};i++){print $0;getline}}' {{ LFILE }} | grep -v awk | egrep 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
     register: playbook_status
-  - name: Get playbook execution time from {{ LFILE }}
-    shell: |
-      grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ NHOSTS }}+2;i++){print $0;getline}}' {{ LFILE }} | egrep -v 'awk|RECAP|===' | egrep '.[1-9]{,3} \*{3,}' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
-    register: playbook_execution
-  - set_fact:
-      playbook_time: "{{ playbook_time|default('') + ' ' + time_item.0|regex_replace('^0*', '') + time_item.1 }}"
-    loop: "{{ playbook_execution.stdout.split(':')|zip([ 'h', 'm', 's' ])|list }}"
-    loop_control:
-      loop_var: time_item
-    when: time_item.0|int != 0
-  - set_fact:
-      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [item] | list }}"
-    vars:
-      fe: "{{ playbook_status.stdout | regex_search('(unreachable=|failed=)[1-9]+') }}"
-    with_items:
-      - '========================================================='
-      - ' '
-      - "{{ userid.stdout.split('\n') | join('<br/>') | replace ('This script was run', 'Job started') | replace ('#', '') | regex_replace ('(Machine )([a-z]+.[a-z]+)( [0-9])', '\\1**`\\2`**\\3') | replace('<br/>An', 'An') }}"
-      - "**`{{ playbook_dir.split('/')[-2] }}`** Script **`{{ SNAME }} {{ SARG | replace ('dash', '-') | replace ('*', '') }}`** completed {{ 'successfully' if (fe == '' and playbook_status.stdout != 'No Play Recap found') else 'with **`errors`**:' }}{{ ' in ' + '`' + playbook_time + '`' if playbook_execution.stdout is not search('found') else '' }}"
-      - "{{ user_abort.stdout if user_abort is succeeded else '' }}"
-      - "{{ playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else '' }}"
-      - ''
-      - "The log file is **`{{ LFILE }}`**"
-      - ' '
-      - '========================================================='
-  - include_role:
-      name: "{{ auto_dir + '/roles/pypkgs' }}"
-      tasks_from: task_get_proxy_address.yml
-# This module cannot be used currently due to a known bug. Will revisit in the future
-#  - name: Send notification via Webex Teams
-#    cisco_spark:
-#      recipient_type: roomId
-#      recipient_id: 'Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj'
-#      message_type: markdown
-#      message: "{{ NOTIF_MSG | join('\n') }}"
-#      personal_token: MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f
-# The below task implements the following curl command
-#  - name: Send notification via Webex Teams
-#    shell: >
-#      export https_proxy="{{ proxy_address }}";
-#      curl -v --request POST --header "Authorization: Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f" --header "Content-Type: application/json" --data '{"roomId":"Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj","markdown":"howdybot2"}' https://api.ciscospark.com/v1/messages
-  - name: Send notification via Webex Teams
-    uri:
-      url: "https://api.ciscospark.com/v1/messages"
-      method: POST
-      headers:
-        Authorization: "Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
-      body_format: form-urlencoded
-      body: 
-        roomId: Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj
-        markdown: "{{ NOTIF_MSG | join('\n') }}"
-    environment:
-      http_proxy: "{{ proxy_address|default('') }}"
-      https_proxy: "{{ proxy_address|default('') }}" # Ansible only supports http proxies currently
+  - block:
+    - set_fact:
+        NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [item] | list }}"
+      vars:
+        fe: "{{ playbook_status.stdout | regex_search('(unreachable=|failed=)[1-9]+') }}"
+      with_items:
+        - "{{ playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else '' }}"
+    - assert:
+        that: NOTIF_MSG == ['']
+        fail_msg:
+          - 'Failed Hosts Block'
+          - "{{ NOTIF_MSG|join('dashdash') }}"
+          - 'Failed Hosts Block'
+    when: auto_dir is search('cdra')
+  - block:
+    - name: Get user's identity
+      shell: head -4 {{ LFILE }}
+      register: userid
+    - name: Check if user requested to abort
+      shell: grep "user requested abort!" {{ LFILE }}
+      register: user_abort
+      ignore_errors: true
+    - name: Get playbook execution time from {{ LFILE }}
+      shell: |
+        grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ NHOSTS }}+2;i++){print $0;getline}}' {{ LFILE }} | egrep -v 'awk|RECAP|===' | egrep '.[1-9]{,3} \*{3,}' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
+      register: playbook_execution
+    - set_fact:
+        playbook_time: "{{ playbook_time|default('') + ' ' + time_item.0|regex_replace('^0*', '') + time_item.1 }}"
+      loop: "{{ playbook_execution.stdout.split(':')|zip([ 'h', 'm', 's' ])|list }}"
+      loop_control:
+        loop_var: time_item
+      when: time_item.0|int != 0
+    - set_fact:
+        NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [item] | list }}"
+      vars:
+        fe: "{{ playbook_status.stdout | regex_search('(unreachable=|failed=)[1-9]+') }}"
+      with_items:
+        - '========================================================='
+        - ' '
+        - "{{ userid.stdout.split('\n') | join('<br/>') | replace ('This script was run', 'Job started') | replace ('#', '') | regex_replace ('(Machine )([a-z]+.[a-z]+)( [0-9])', '\\1**`\\2`**\\3') | replace('<br/>An', 'An') }}"
+        - "**`{{ playbook_dir.split('/')[-2] }}`** Script **`{{ SNAME }} {{ SARG | replace ('dash', '-') | replace ('*', '') }}`** completed {{ 'successfully' if (fe == '' and playbook_status.stdout != 'No Play Recap found') else 'with **`errors`**:' }}{{ ' in ' + '`' + playbook_time + '`' if playbook_execution.stdout is not search('found') else '' }}"
+        - "{{ user_abort.stdout if user_abort is succeeded else '' }}"
+        - "{{ playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else '' }}"
+        - ''
+        - "The log file is **`{{ LFILE }}`**"
+        - ' '
+        - '========================================================='
+    - include_role:
+        name: "{{ auto_dir + '/roles/pypkgs' }}"
+        tasks_from: task_get_proxy_address.yml
+  # This module cannot be used currently due to a known bug. Will revisit in the future
+  #  - name: Send notification via Webex Teams
+  #    cisco_spark:
+  #      recipient_type: roomId
+  #      recipient_id: 'Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj'
+  #      message_type: markdown
+  #      message: "{{ NOTIF_MSG | join('\n') }}"
+  #      personal_token: MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f
+  # The below task implements the following curl command
+  #  - name: Send notification via Webex Teams
+  #    shell: >
+  #      export https_proxy="{{ proxy_address }}";
+  #      curl -v --request POST --header "Authorization: Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f" --header "Content-Type: application/json" --data '{"roomId":"Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj","markdown":"howdybot2"}' https://api.ciscospark.com/v1/messages
+    - name: Send notification via Webex Teams
+      uri:
+        url: "https://api.ciscospark.com/v1/messages"
+        method: POST
+        headers:
+          Authorization: "Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
+        body_format: form-urlencoded
+        body: 
+          roomId: Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj
+          markdown: "{{ NOTIF_MSG | join('\n') }}"
+      environment:
+        http_proxy: "{{ proxy_address|default('') }}"
+        https_proxy: "{{ proxy_address|default('') }}" # Ansible only supports http proxies currently
+    when: auto_dir is not search('cdra')
   tags: [ 'never', 'notify' ]

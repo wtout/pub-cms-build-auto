@@ -504,8 +504,14 @@ function send_notification() {
 		SCRIPT_ARG=$(echo ${@} | sed -e 's/-/dash/g')
 		[ $(echo ${HOST_LIST} | wc -w) -gt 1 ] && HL=$(echo ${HOST_LIST} | sed 's/ /,/g') || HL=${HOST_LIST}
 		NUM_HOSTS=$(wc -w <<< $(echo ${HL} | sed 's/,/ /g'))
-		# Send playbook status notification
-		ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @${ANSIBLE_VARS} -v &>/dev/null &
+        if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
+        then
+                # Send playbook status notification
+                ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @${ANSIBLE_VARS} -v &>/dev/null &
+        else
+                # Send playbook status notification
+                ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @${ANSIBLE_VARS} -v
+        fi
 	fi
 }
 
