@@ -213,7 +213,7 @@ function install_packages() {
 		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 		[[ ${debug} == 1 ]] && debug=0 && set -x
 	else
-		if [ "$(ansible --version | grep ^ansible | awk -F 'ansible ' '{print $NF}')" != "${ANSIBLE_VERSION}" ]
+		if [ "$(pip3 show ansible | grep ^Version | awk -F ': ' '{print $NF}')" != "${ANSIBLE_VERSION}" ]
 		then
 			pip3 uninstall -y ansible
 			find ~/.local -maxdepth 4 -name "ansible*" -exec rm -rf {} \;
