@@ -3,6 +3,6 @@
 pypkg_list:
   - netaddr
   - pyvmomi
-  - "{{ 'paramiko' if ansible_run_tags is search('infra') else '' }}"
+  - paramiko
   - "{{ 'dnspython' if ansible_run_tags is search('infra') else '' }}"
   - "{{ 'pycdlib' if (SYS_NAME|lower is search('mdr') or bfiso | default(false) | bool) else '' }}"
