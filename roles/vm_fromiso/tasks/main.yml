@@ -6,13 +6,11 @@
       stat:
         path: ~/.ssh
       register: ssh_dir
-      run_once: true
     - name: purge known hosts file
       copy:
         dest: ~/.ssh/known_hosts
         content: ''
       when: ssh_dir.stat.exists
-      run_once: true
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
   - block:

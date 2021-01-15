@@ -75,6 +75,13 @@ samba-common-tools
 krb5-workstation
 openldap-clients
 policycoreutils-python
+{% if auto_dir is search('cdra') %}
+{% block cdra_pkgs %}
+nss-pam-ldapd
+expect
+sssd-tools
+{% endblock cdra_pkgs %}
+{% endif %}
 %end
 
 %addon com_redhat_kdump --enable --reserve-mb='auto'

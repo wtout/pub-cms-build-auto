@@ -68,6 +68,7 @@
     when:
       - drs_rules_list is defined
       - drs_rules_list | length >= 1
+      - not ansible_check_mode
     async: 60
     poll: 0
   run_once: true
