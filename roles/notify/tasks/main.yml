@@ -11,12 +11,14 @@
         fe: "{{ playbook_status.stdout | regex_search('(unreachable=|failed=)[1-9]+') }}"
       loop:
         - "{{ playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else '' }}"
+    - name: write failed hosts list to {{ LFILE }}
+      blockinfile:
+        path: "{{ LFILE }}"
+        marker: 'Failed Hosts Block'
+        block: "{{ NOTIF_MSG|join('dashdash') }}"
+      when: NOTIF_MSG != ['']
     - assert:
         that: NOTIF_MSG == ['']
-        fail_msg:
-          - 'Failed Hosts Block'
-          - "{{ NOTIF_MSG|join('dashdash') }}"
-          - 'Failed Hosts Block'
     when: auto_dir is search('cdra')
   - block:
     - name: Get user's identity
