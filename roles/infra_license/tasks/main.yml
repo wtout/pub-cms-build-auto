@@ -36,9 +36,8 @@
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
     - name: Define CSR serial number
-      block:
-      - ios_facts:
-          gather_subset: min
+      ios_facts:
+        gather_subset: min
 
     - name: List Licenses directory
       shell: "ls {{ auto_dir }}/Packages/licenses"
@@ -53,7 +52,8 @@
       shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.ipaddress3 }}:/bootflash:{{ license_file_name }}"
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
-    - ios_command:
+    - name: install license
+      ios_command:
         commands:
           - command: "license install bootflash:{{ license_file_name }}"
             prompt: '[confirm]'

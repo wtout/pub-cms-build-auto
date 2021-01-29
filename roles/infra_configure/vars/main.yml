@@ -1,5 +1,5 @@
 ---
-# vars file for create_datastores
+# vars file for infra_configure
 resources: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
 
 portgroups:

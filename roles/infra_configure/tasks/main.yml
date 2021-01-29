@@ -1,5 +1,5 @@
 ---
-# tasks file for infra_build_nodes
+# tasks file for infra_configure
 - block:
   - block:
     - name: Deploy HA infrastructure
@@ -35,7 +35,6 @@
         loop: "{{ resources[:2] }}"
         loop_control:
           loop_var: resource_item
-
       - include_tasks: task_create_cluster.yml
       when:
         - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
@@ -109,7 +108,6 @@
         loop: "{{ resources[:2] }}"
         loop_control:
           loop_var: resource_item
-
       - include_tasks: task_delete_cluster.yml
       when:
         - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
