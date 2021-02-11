@@ -46,6 +46,25 @@
     retries: 7
     delay: 10
 
+  - block:
+    - name: check if known hosts file exists
+      stat:
+        path: ~/.ssh/known_hosts
+      register: kh_file
+
+    - name: create the .ssh directory and the known hosts file
+      file:
+        path: "{{ ssh_item.ssh_object }}"
+        state: "{{ ssh_item.ssh_state }}"
+      loop:
+        - { ssh_object: '~/.ssh', ssh_state: 'directory' }
+        - { ssh_object: '~/.ssh/known_hosts', ssh_state: 'touch' }
+      loop_control:
+        loop_var: ssh_item
+      when: not kh_file.stat.exists
+    delegate_to: localhost
+    run_once: true
+
   - name: Add Netscaler key to known_hosts
     known_hosts:
       name: "{{ netconfig.ipaddress1 }}"
