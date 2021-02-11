@@ -205,21 +205,33 @@ function install_packages() {
 			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed ${pkg} | tail -1 | awk '{print $2}')\n" || exit 1
 		fi
 	done
+	if [[ "$(python3 -m pip show pip | grep ^Version | awk -F ': ' '{print $NF}')" == "9.0.3" ]]
+	then
+		if [[ "x${SUDO_PASS}" == "x" ]]
+		then
+			echo
+			SUDO_PASS=$(get_sudopass) || FS=${?}
+			[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
+		fi
+		printf "\nUpgrading PIP to the latest version ..."
+		sudo -S python3 -m pip install -U pip --quiet --proxy="${PROXY_ADDRESS}" <<< ${SUDO_PASS}
+		[[ ${?} == 0 ]] && printf " Installed version $(python3 -m pip show pip | grep ^Version | awk -F ': ' '{print $NF}')\n" || exit 1
+	fi
 	if [ "x$(which ansible 2>/dev/null)" == "x" ]
 	then
 		printf "\nInstalling ansible on localhost ..."
 		[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-		pip3 install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
+		python3 -m pip install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
 		[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 		[[ ${debug} == 1 ]] && debug=0 && set -x
 	else
-		if [ "$(pip3 show ansible | grep ^Version | awk -F ': ' '{print $NF}')" != "${ANSIBLE_VERSION}" ]
+		if [ "$(python3 -m pip show ansible | grep ^Version | awk -F ': ' '{print $NF}')" != "${ANSIBLE_VERSION}" ]
 		then
-			pip3 uninstall -y ansible
+			python3 -m pip uninstall -y ansible
 			find ~/.local -maxdepth 4 -name "ansible*" -exec rm -rf {} \;
 			[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 			printf "\nInstalling Ansible ..."
-			pip3 install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
+			python3 -m pip install --user --no-cache-dir --quiet -I ansible==${ANSIBLE_VERSION} --proxy="${PROXY_ADDRESS}"
 			[[ ${?} == 0 ]] && printf " Installed version ${ANSIBLE_VERSION}\n" || exit 1
 			[[ ${debug} == 1 ]] && debug=0 && set -x
 		fi
