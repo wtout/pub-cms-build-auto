@@ -19,7 +19,7 @@
       when: NOTIF_MSG != ['']
     - assert:
         that: NOTIF_MSG == ['']
-    when: auto_dir is search('cdra')
+    when: INVOKED|default(false) or auto_dir is search('cdra')
   - block:
     - name: Get user's identity
       shell: head -4 {{ LFILE }}
@@ -82,5 +82,7 @@
       environment:
         http_proxy: "{{ proxy_address|default('') }}"
         https_proxy: "{{ proxy_address|default('') }}" # Ansible only supports http proxies currently
-    when: auto_dir is not search('cdra')
+    when:
+      - not INVOKED|default(false)
+      - auto_dir is not search('cdra')
   tags: [ 'never', 'notify' ]

@@ -1,5 +1,9 @@
 ---
 # Variables for em7 data collectors
+user:
+  name: "{{ drvm_vars.em7.em7dc.user.name if drvm_vars.em7.em7dc.user.name is defined else '' }}"
+  password: "{{ drvm_vars.em7.em7dc.user.password if drvm_vars.em7.em7dc.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ drvm_vars.em7.em7dc.cpu }}"
   memory: "{{ drvm_vars.em7.em7dc.memory }}"

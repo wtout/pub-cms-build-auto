@@ -1,10 +1,20 @@
 ---
 # Tasks to install Python Package
-- name: Install Package {{ pypkg }}
-  pip:
-    name: "{{ pypkg }}"
-    state: "{{ 'present' if auto_dir is search('cdra') else 'latest' }}"
-    extra_args: --user
+- block:
+  - name: Install Package {{ pypkg }}
+    pip:
+      name: "{{ pypkg }}"
+      state: "{{ 'present' if auto_dir is search('cdra') else 'latest' }}"
+      extra_args: --user
+    check_mode: yes
+    become: true
+    when: auto_dir is search('cdra')
+  - name: Install Package {{ pypkg }}
+    pip:
+      name: "{{ pypkg }}"
+      state: "{{ 'present' if auto_dir is search('cdra') else 'latest' }}"
+      extra_args: --user
+    when: auto_dir is not search('cdra')
   environment:
     http_proxy: "{{ proxyaddress }}"
   tags: [ 'always', 'pypkgs' ]

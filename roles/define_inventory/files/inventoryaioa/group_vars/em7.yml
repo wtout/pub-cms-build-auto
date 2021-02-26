@@ -4,6 +4,10 @@ credentials:
   username: 'em7release'
   password: "{{ EM7_PASS|default('') }}"
 
+user:
+  name: "{{ vm_vars.em7.user.name if vm_vars.em7.user.name is defined else '' }}"
+  password: "{{ vm_vars.em7.user.password if vm_vars.em7.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ vm_vars.em7.cpu }}"
   memory: "{{ vm_vars.em7.memory }}"

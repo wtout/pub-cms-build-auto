@@ -423,10 +423,13 @@ function enable_logging() {
 		if [[ ! -d "${ANSIBLE_LOG_LOCATION}" ]]
 		then
 			mkdir -m 775 -p ${ANSIBLE_LOG_LOCATION}
+			chown -R $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${ANSIBLE_LOG_LOCATION}
+
 		else
 			if [[ ! -w "${ANSIBLE_LOG_LOCATION}" ]]
 			then
 				chmod 775 ${ANSIBLE_LOG_LOCATION}
+				chown -R $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${ANSIBLE_LOG_LOCATION}
 			fi
  		fi
 		LOG_FILE="${ANSIBLE_LOG_LOCATION}/$(basename ${0} | awk -F '.' '{print $1}').${ENAME}.log"
@@ -436,12 +439,14 @@ function enable_logging() {
 			printf "\nRunning multiple instances of ${BOLD}$(basename ${0})${NORMAL} is prohibited. Aborting!\n\n" && exit 1
 		else
 			export ANSIBLE_LOG_PATH=${LOG_FILE}
+			touch ${LOG_FILE}
+			chown $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${LOG_FILE}
 		fi
 		if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
 		then
 			printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by $(git config user.name) ($(git config remote.origin.url | sed -e 's|.*\/\/\(.*\)@.*|\1|')) on $(date)\n############################################################\n\n" > ${LOG_FILE}
 		else
-			printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by CDRA on $(date)\n############################################################\n\n" > ${LOG_FILE}
+			printf "############################################################\nAnsible Control Machine $(hostname) $(ip a show $(ip link | grep 2: | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}')\nThis script was run$(check_mode ${@})by $([[ -n ${MYINVOKER+x} ]] && echo ${MYINVOKER} || whoami) on $(date)\n############################################################\n\n" > ${LOG_FILE}
 		fi
 	fi
 }
@@ -485,7 +490,7 @@ function run_playbook() {
 			local BCV="-e @${CRVAULT} --vault-password-file Bash/get_creds_vault_pass.sh"
 		fi
 		### End
-		if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
+		if [[ -z ${MYINVOKER+x} ]]
 		then
 			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
 		else
@@ -493,7 +498,7 @@ function run_playbook() {
 		fi
 		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
-		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr) == "" ]] && [[ ! -s ${ANSIBLE_LOG_LOCATION}/${PID}.stderr ]] && cat ${ANSIBLE_LOG_LOCATION}/${PID}.stderr && EC=1
+		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr) == "" ]] && [[ $(grep -iv warning ${ANSIBLE_LOG_LOCATION}/${PID}.stderr) != '' ]] && cat ${ANSIBLE_LOG_LOCATION}/${PID}.stderr && EC=1
 		rm -f ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
 		[[ ${EC} == 1 ]] && exit 1
 	fi
@@ -521,8 +526,9 @@ function send_notification() {
 			# Send playbook status notification
 			ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @${ANSIBLE_VARS} -v &>/dev/null &
 		else
+			[[ -z ${MYINVOKER+x} ]] && local INVOKED=false || local INVOKED=true
 			# Send playbook status notification
-			ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @${ANSIBLE_VARS} -v
+			ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}', INVOKED: ${INVOKED}}" --tags notify -e @${ANSIBLE_VARS} -v
 		fi
 	fi
 }
@@ -541,7 +547,6 @@ SECON=true
 
 # Main
 PID=${$}
-mkdir -p ${ANSIBLE_LOG_LOCATION}
 check_arguments ${@}
 NEW_ARGS=$(check_hosts_limit "${@}")
 set -- && set -- ${@} ${NEW_ARGS}

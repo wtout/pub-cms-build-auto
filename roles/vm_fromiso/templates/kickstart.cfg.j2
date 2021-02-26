@@ -170,15 +170,31 @@ echo 'SSHD: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
 echo 'snmpd: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
 
 # Add user
-useradd {{ vm_svc_user if customer.primary.name_prefix is search('mdr') else ansible_user }}
-echo '{{ vm_svc_user if customer.primary.name_prefix is search('mdr') else ansible_user }}:{{ vm_svc_pass if customer.primary.name_prefix is search('mdr') else ansible_ssh_pass }}' |chpasswd
-cat  << xxEOFxx >> /etc/sudoers.d/{{ vm_svc_user if customer.primary.name_prefix is search('mdr') else ansible_user }}
+{% if user.name != '' and user.password != '' %}
+{% block custom_user %}
+useradd {{ user.name }}
+echo '{{ user.name }}:{{ user.password }}' |chpasswd
+cat << xxEOFxx >> /etc/sudoers.d/{{ user.name }}
+Host_Alias  {{ user.name | upper }}_SUDO_HOSTS = ALL
+Runas_Alias {{ user.name | upper }}_SUDO_RUNAS = ALL
+Cmnd_Alias  {{ user.name | upper }}_SUDO_CMNDS = ALL
+Cmnd_Alias  {{ user.name | upper }}_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
+%{{ user.name }} {{ user.name | upper }}_SUDO_HOSTS = ({{ user.name | upper }}_SUDO_RUNAS) NOPASSWD: {{ user.name | upper }}_SUDO_CMNDS, !{{ user.name | upper }}_SHELLS
+xxEOFxx
+{% endblock custom_user %}
+{% else %}
+{% block build_user %}
+useradd {{ vm_svc_user }}
+echo '{{ vm_svc_user }}:{{ vm_svc_pass }}' |chpasswd
+cat  << xxEOFxx >> /etc/sudoers.d/{{ vm_svc_user }}
 Host_Alias  BUILDUSER_SUDO_HOSTS = ALL
 Runas_Alias BUILDUSER_SUDO_RUNAS = ALL
 Cmnd_Alias  BUILDUSER_SUDO_CMNDS = ALL
-Cmnd_Alias      BUILDUSER_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
-%{{ vm_svc_user if customer.primary.name_prefix is search('mdr') else ansible_user }} BUILDUSER_SUDO_HOSTS = (BUILDUSER_SUDO_RUNAS) NOPASSWD: BUILDUSER_SUDO_CMNDS, !BUILDUSER_SHELLS
+Cmnd_Alias  BUILDUSER_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
+%{{ vm_svc_user }} BUILDUSER_SUDO_HOSTS = (BUILDUSER_SUDO_RUNAS) NOPASSWD: BUILDUSER_SUDO_CMNDS, !BUILDUSER_SHELLS
 xxEOFxx
+{% endblock build_user %}
+{% endif %}
 %end
 
 %anaconda

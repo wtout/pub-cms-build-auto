@@ -756,7 +756,7 @@ cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
 rm /etc/ssh/sshd_config.new
 
 # 5.2.14 - Ensure SSH access is limited (Scored)
-sed -i  "/^UsePAM.*/a AllowGroups\ root\ cmsbuild" /etc/ssh/sshd_config
+sed -i  "/^UsePAM.*/a AllowGroups\ root\ {{ user.name if user.name != '' else vm_svc_user }}" /etc/ssh/sshd_config
 
 # 5.2.15 - Ensure SSH warning banner is configured
 cp -f /etc/issue /etc/issue_old && rm -f /etc/issue

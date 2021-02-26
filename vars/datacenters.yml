@@ -1,5 +1,5 @@
 ---
-auto_dir: "{{ playbook_dir.split('/')[:-1] | join('/') }}"
+auto_dir: "{{ lookup('env', 'PWD') }}"
 #bfiso: true
 
 ##########################################

@@ -1,5 +1,9 @@
 ---
 # Variables for splunk indexers
+user:
+  name: "{{ vm_vars.spl.splind.user.name if vm_vars.spl.splind.user.name is defined else '' }}"
+  password: "{{ vm_vars.spl.splind.user.password if vm_vars.spl.splind.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ vm_vars.spl.splind.cpu }}"
   memory: "{{ vm_vars.spl.splind.memory }}"

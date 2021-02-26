@@ -4,6 +4,10 @@ credentials:
   username: 'root'
   password: "{{ NONEM7_PASS|default('') }}"
 
+user:
+  name: "{{ vm_vars.rly.user.name if vm_vars.rly.user.name is defined else '' }}"
+  password: "{{ vm_vars.rly.user.password if vm_vars.rly.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ vm_vars.rly.cpu }}"
   memory: "{{ vm_vars.rly.memory }}"

@@ -1,5 +1,9 @@
 ---
 # Variables for em7 message collectors
+user:
+  name: "{{ vm_vars.em7.em7mc.user.name if vm_vars.em7.em7mc.user.name is defined else '' }}"
+  password: "{{ vm_vars.em7.em7mc.user.password if vm_vars.em7.em7mc.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ vm_vars.em7.em7mc.cpu }}"
   memory: "{{ vm_vars.em7.em7mc.memory }}"

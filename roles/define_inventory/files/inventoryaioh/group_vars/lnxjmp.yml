@@ -4,6 +4,10 @@ credentials:
   username: 'root'
   password: "{{ NONEM7_PASS|default('') }}"
 
+user:
+  name: "{{ vm_vars.lnxjmp.user.name if vm_vars.lnxjmp.user.name is defined else '' }}"
+  password: "{{ vm_vars.lnxjmp.user.password if vm_vars.lnxjmp.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ vm_vars.lnxjmp.cpu }}"
   memory: "{{ vm_vars.lnxjmp.memory }}"

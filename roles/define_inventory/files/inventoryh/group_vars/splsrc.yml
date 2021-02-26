@@ -1,5 +1,9 @@
 ---
 # Variables for splunk search heads
+user:
+  name: "{{ vm_vars.spl.splsrc.user.name if vm_vars.spl.splsrc.user.name is defined else '' }}"
+  password: "{{ vm_vars.spl.splsrc.user.password if vm_vars.spl.splsrc.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ vm_vars.spl.splsrc.cpu }}"
   memory: "{{ vm_vars.spl.splsrc.memory }}"

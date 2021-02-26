@@ -10,6 +10,7 @@
 - block:
   - debug:
       msg: 'Procedure to enable hardening is starting'
+  - include_tasks: task_create_hardening_script.yml
   - name: copy hardening package files to VM
     copy:
       src: '{{ role_path }}/files/{{ file_item }}'
@@ -17,32 +18,35 @@
       owner: root
       group: root
     loop:
-      - hardening.sh
+      - "{{ vm.name + '-hardening.sh' }}"
       - login.defs
       - password-auth-ac
       - system-auth-ac
     loop_control:
       loop_var: file_item
-  - name: switch user
+  - include_tasks: task_delete_hardening_script.yml
+  - name: switch to cmsbuild user
     set_fact:
       ansible_user: "{{ vm_svc_user }}"
+    when: user.name == ''
+  - name: switch to custom user account
+    set_fact:
+      ansible_user: "{{ user.name }}"
+      ansible_ssh_pass: "{{ user.password }}"
+    when: user.name != ''
   - name: run hardening script
-    command: sh hardening.sh
+    command: sh {{ vm.name }}-hardening.sh
     register: hard_script
     become: true
     args:
       chdir: "/home/{{ vm_svc_user }}/hardening"
-  - name: switch back to root user
-    set_fact:
-      ansible_user: '{{ credentials.username }}'
   - name: check if hardening is enabled
-    wait_for_connection:
-      timeout: 10
+    ansible.builtin.shell: grep 'Cisco Acceptable Use Policy' /etc/issue
     register: harden2
     ignore_errors: true
   - assert:
       that:
-        - harden2 is failed
+        - harden2 is succeeded
       fail_msg: 'Hardening is not enabled'
       success_msg: 'Hardening is enabled'
   when: harden1 is succeeded

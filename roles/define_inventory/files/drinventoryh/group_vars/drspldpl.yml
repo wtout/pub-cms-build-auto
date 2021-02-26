@@ -1,5 +1,9 @@
 ---
 # Variables for splunk deployers
+user:
+  name: "{{ drvm_vars.spl.spldpl.user.name if drvm_vars.spl.spldpl.user.name is defined else '' }}"
+  password: "{{ drvm_vars.spl.spldpl.user.password if drvm_vars.spl.spldpl.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ drvm_vars.spl.spldpl.cpu }}"
   memory: "{{ drvm_vars.spl.spldpl.memory }}"

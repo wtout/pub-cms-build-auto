@@ -1,5 +1,9 @@
 ---
 # Variables for splunk cluster masters
+user:
+  name: "{{ vm_vars.spl.splmas.user.name if vm_vars.spl.splmas.user.name is defined else '' }}"
+  password: "{{ vm_vars.spl.splmas.user.password if vm_vars.spl.splmas.user.password is defined else '' }}"
+
 vm:
   cpu: "{{ vm_vars.spl.splmas.cpu }}"
   memory: "{{ vm_vars.spl.splmas.memory }}"

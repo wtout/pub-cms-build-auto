@@ -13,6 +13,15 @@ vm_vars:
     ################
     em7db:
 
+{%- if environment_definition.vm_setting.em7.em7db.user.name is defined and environment_definition.vm_setting.em7.em7db.user.name != none and environment_definition.vm_setting.em7.em7db.user.name != '' and environment_definition.vm_setting.em7.em7db.user.password is defined and environment_definition.vm_setting.em7.em7db.user.password != none and environment_definition.vm_setting.em7.em7db.user.password != '' %}
+{% block em7dbusers %}
+      # User credentials
+      user:
+        name: "{{ environment_definition.vm_setting.em7.em7db.user.name }}"
+        password: "{{ environment_definition.vm_setting.em7.em7db.user.password }}"
+{%- endblock em7dbusers %}
+{%- endif %}
+
       # number of CPUs
       cpu: "{{ environment_definition.vm_setting.em7.em7db.cpu if (environment_definition.vm_setting.em7.em7db.cpu is defined and environment_definition.vm_setting.em7.em7db.cpu != none) else '12' }}"
 
@@ -88,6 +97,15 @@ vm_vars:
     # EM7 Data collectors
     ################
     em7dc:
+
+{%- if environment_definition.vm_setting.em7.em7dc.user.name is defined and environment_definition.vm_setting.em7.em7dc.user.name != none and environment_definition.vm_setting.em7.em7dc.user.name != '' and environment_definition.vm_setting.em7.em7dc.user.password is defined and environment_definition.vm_setting.em7.em7dc.user.password != none and environment_definition.vm_setting.em7.em7dc.user.password != '' %}
+{% block em7dcusers %}
+      # User credentials
+      user:
+        name: "{{ environment_definition.vm_setting.em7.em7dc.user.name }}"
+        password: "{{ environment_definition.vm_setting.em7.em7dc.user.password }}"
+{%- endblock em7dcusers %}
+{%- endif %}
 
       # number of CPUs
       cpu: "{{ environment_definition.vm_setting.em7.em7dc.cpu if (environment_definition.vm_setting.em7.em7dc.cpu is defined and environment_definition.vm_setting.em7.em7dc.cpu != none) else '4' }}"
@@ -165,6 +183,15 @@ vm_vars:
     ################
     em7mc:
 
+{%- if environment_definition.vm_setting.em7.em7mc.user.name is defined and environment_definition.vm_setting.em7.em7mc.user.name != none and environment_definition.vm_setting.em7.em7mc.user.name != '' and environment_definition.vm_setting.em7.em7mc.user.password is defined and environment_definition.vm_setting.em7.em7mc.user.password != none and environment_definition.vm_setting.em7.em7mc.user.password != '' %}
+{% block em7mcusers %}
+      # User credentials
+      user:
+        name: "{{ environment_definition.vm_setting.em7.em7mc.user.name }}"
+        password: "{{ environment_definition.vm_setting.em7.em7mc.user.password }}"
+{%- endblock em7mcusers %}
+{%- endif %}
+
       # number of CPUs
       cpu: "{{ environment_definition.vm_setting.em7.em7mc.cpu if (environment_definition.vm_setting.em7.em7mc.cpu is defined and environment_definition.vm_setting.em7.em7mc.cpu != none) else '2' }}"
 
@@ -240,6 +267,15 @@ vm_vars:
     # EM7 portals
     ################
     em7prt:
+
+{%- if environment_definition.vm_setting.em7.em7prt.user.name is defined and environment_definition.vm_setting.em7.em7prt.user.name != none and environment_definition.vm_setting.em7.em7prt.user.name != '' and environment_definition.vm_setting.em7.em7prt.user.password is defined and environment_definition.vm_setting.em7.em7prt.user.password != none and environment_definition.vm_setting.em7.em7prt.user.password != '' %}
+{% block em7prtusers %}
+      # User credentials
+      user:
+        name: "{{ environment_definition.vm_setting.em7.em7prt.user.name }}"
+        password: "{{ environment_definition.vm_setting.em7.em7prt.user.password }}"
+{%- endblock em7prtusers %}
+{%- endif %}
 
       # number of CPUs
       cpu: "{{ environment_definition.vm_setting.em7.em7prt.cpu if (environment_definition.vm_setting.em7.em7prt.cpu is defined and environment_definition.vm_setting.em7.em7prt.cpu != none) else '8' }}"
@@ -322,6 +358,15 @@ vm_vars:
     ################
     spldpl:
 
+{%- if environment_definition.vm_setting.spl.spldpl.user.name is defined and environment_definition.vm_setting.spl.spldpl.user.name != none and environment_definition.vm_setting.spl.spldpl.user.name != '' and environment_definition.vm_setting.spl.spldpl.user.password is defined and environment_definition.vm_setting.spl.spldpl.user.password != none and environment_definition.vm_setting.spl.spldpl.user.password != '' %}
+{% block spldplusers %}
+      # User credentials
+      user:
+        name: "{{ environment_definition.vm_setting.spl.spldpl.user.name }}"
+        password: "{{ environment_definition.vm_setting.spl.spldpl.user.password }}"
+{%- endblock spldplusers %}
+{%- endif %}
+
       # number of CPUs
       cpu: "{{ environment_definition.vm_setting.spl.spldpl.cpu if (environment_definition.vm_setting.spl.spldpl.cpu is defined and environment_definition.vm_setting.spl.spldpl.cpu != none) else '2' }}"
 
@@ -397,6 +442,15 @@ vm_vars:
     # Splunk indexers
     ################
     splind:
+
+{%- if environment_definition.vm_setting.spl.splind.user.name is defined and environment_definition.vm_setting.spl.splind.user.name != none and environment_definition.vm_setting.spl.splind.user.name != '' and environment_definition.vm_setting.spl.splind.user.password is defined and environment_definition.vm_setting.spl.splind.user.password != none and environment_definition.vm_setting.spl.splind.user.password != '' %}
+{% block splindusers %}
+      # User credentials
+      user:
+        name: "{{ environment_definition.vm_setting.spl.splind.user.name }}"
+        password: "{{ environment_definition.vm_setting.spl.splind.user.password }}"
+{%- endblock splindusers %}
+{%- endif %}
 
       # number of CPUs
       cpu: "{{ environment_definition.vm_setting.spl.splind.cpu if (environment_definition.vm_setting.spl.splind.cpu is defined and environment_definition.vm_setting.spl.splind.cpu != none) else '4' }}"
@@ -474,6 +528,15 @@ vm_vars:
     ################
     splmas:
 
+{%- if environment_definition.vm_setting.spl.splmas.user.name is defined and environment_definition.vm_setting.spl.splmas.user.name != none and environment_definition.vm_setting.spl.splmas.user.name != '' and environment_definition.vm_setting.spl.splmas.user.password is defined and environment_definition.vm_setting.spl.splmas.user.password != none and environment_definition.vm_setting.spl.splmas.user.password != '' %}
+{% block splmasusers %}
+      # User credentials
+      user:
+        name: "{{ environment_definition.vm_setting.spl.splmas.user.name }}"
+        password: "{{ environment_definition.vm_setting.spl.splmas.user.password }}"
+{%- endblock splmasusers %}
+{%- endif %}
+
       # number of CPUs
       cpu: "{{ environment_definition.vm_setting.spl.splmas.cpu if (environment_definition.vm_setting.spl.splmas.cpu is defined and environment_definition.vm_setting.spl.splmas.cpu != none) else '2' }}"
 
@@ -549,6 +612,15 @@ vm_vars:
     # Splunk search heads
     ################
     splsrc:
+
+{%- if environment_definition.vm_setting.spl.splsrc.user.name is defined and environment_definition.vm_setting.spl.splsrc.user.name != none and environment_definition.vm_setting.spl.splsrc.user.name != '' and environment_definition.vm_setting.spl.splsrc.user.password is defined and environment_definition.vm_setting.spl.splsrc.user.password != none and environment_definition.vm_setting.spl.splsrc.user.password != '' %}
+{% block splsrcusers %}
+      # User credentials
+      user:
+        name: "{{ environment_definition.vm_setting.spl.splsrc.user.name }}"
+        password: "{{ environment_definition.vm_setting.spl.splsrc.user.password }}"
+{%- endblock splsrcusers %}
+{%- endif %}
 
       # number of CPUs
       cpu: "{{ environment_definition.vm_setting.spl.splsrc.cpu if (environment_definition.vm_setting.spl.splsrc.cpu is defined and environment_definition.vm_setting.spl.splsrc.cpu != none) else '8' }}"
@@ -626,6 +698,15 @@ vm_vars:
   ################
   lnxjmp:
 
+{%- if environment_definition.vm_setting.lnxjmp.user.name is defined and environment_definition.vm_setting.lnxjmp.user.name != none and environment_definition.vm_setting.lnxjmp.user.name != '' and environment_definition.vm_setting.lnxjmp.user.password is defined and environment_definition.vm_setting.lnxjmp.user.password != none and environment_definition.vm_setting.lnxjmp.user.password != '' %}
+{% block lnxjmpusers %}
+    # User credentials
+    user:
+      name: "{{ environment_definition.vm_setting.lnxjmp.user.name }}"
+      password: "{{ environment_definition.vm_setting.lnxjmp.user.password }}"
+{%- endblock lnxjmpusers %}
+{%- endif %}
+
     # number of CPUs
     cpu: "{{ environment_definition.vm_setting.lnxjmp.cpu if (environment_definition.vm_setting.lnxjmp.cpu is defined and environment_definition.vm_setting.lnxjmp.cpu != none) else '2' }}"
 
@@ -702,6 +783,15 @@ vm_vars:
   ################
   rly:
 
+{%- if environment_definition.vm_setting.rly.user.name is defined and environment_definition.vm_setting.rly.user.name != none and environment_definition.vm_setting.rly.user.name != '' and environment_definition.vm_setting.rly.user.password is defined and environment_definition.vm_setting.rly.user.password != none and environment_definition.vm_setting.rly.user.password != '' %}
+{% block rlyusers %}
+    # User credentials
+    user:
+      name: "{{ environment_definition.vm_setting.rly.user.name }}"
+      password: "{{ environment_definition.vm_setting.rly.user.password }}"
+{%- endblock rlyusers %}
+{%- endif %}
+
     # number of CPUs
     cpu: "{{ environment_definition.vm_setting.rly.cpu if (environment_definition.vm_setting.rly.cpu is defined and environment_definition.vm_setting.rly.cpu != none) else '4' }}"
 
@@ -773,12 +863,21 @@ vm_vars:
       netbase: '{{ environment_definition.vm_setting.rly.nic2.network if (environment_definition.vm_setting.rly.nic2.network is defined and environment_definition.vm_setting.rly.nic2.network != none) else "-96-27-lbnet" }}'
 
 
-{% if environment_definition.customer.ata %}
+{%- if environment_definition.customer.ata %}
 {% block ata %}
   ################
   # ATA Relay servers
   ################
   atarly:
+
+{%- if environment_definition.vm_setting.atarly.user.name is defined and environment_definition.vm_setting.atarly.user.name != none and environment_definition.vm_setting.atarly.user.name != '' and environment_definition.vm_setting.atarly.user.password is defined and environment_definition.vm_setting.atarly.user.password != none and environment_definition.vm_setting.atarly.user.password != '' %}
+{% block atarlyusers %}
+    # User credentials
+    user:
+      name: "{{ environment_definition.vm_setting.atarly.user.name }}"
+      password: "{{ environment_definition.vm_setting.atarly.user.password }}"
+{%- endblock atarlyusers %}
+{%- endif %}
 
     # number of CPUs
     cpu: "{{ environment_definition.vm_setting.atarly.cpu if (environment_definition.vm_setting.atarly.cpu is defined and environment_definition.vm_setting.atarly.cpu != none) else '8' }}"
@@ -849,5 +948,5 @@ vm_vars:
 
       # Net Base
       netbase: '{{ environment_definition.vm_setting.atarly.nic2.network if (environment_definition.vm_setting.atarly.nic2.network is defined and environment_definition.vm_setting.atarly.nic2.network != none) else "-96-27-lbnet" }}'
-{% endblock ata %}
-{% endif %}
+{%- endblock ata %}
+{%- endif %}
