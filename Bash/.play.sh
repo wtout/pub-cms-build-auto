@@ -571,15 +571,15 @@ then
 	git_config
 	PROXY_ADDRESS=$(get_proxy) || PA=${?}
 	[[ ${PA} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${PA}
-#	install_packages
+	install_packages
 	check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
 fi
-#install_pypkgs ${@}
-#get_inventory ${@}
-#[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
-#get_hosts ${@}
-#get_credentials ${@}
-#enable_logging ${@}
-#run_playbook ${@}
-#disable_logging
-#send_notification ${ORIG_ARGS}
+install_pypkgs ${@}
+get_inventory ${@}
+[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
+get_hosts ${@}
+get_credentials ${@}
+enable_logging ${@}
+run_playbook ${@}
+disable_logging
+send_notification ${ORIG_ARGS}
