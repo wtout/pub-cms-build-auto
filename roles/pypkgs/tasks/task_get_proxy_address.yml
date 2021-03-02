@@ -14,7 +14,7 @@
 
   - name: validate detected proxy setting
     uri:
-      url: "https://www.cisco.com"
+      url: "https://ntppool.org"
     register: validate_proxy1
     ignore_errors: "{{ true if proxy_address != '' else false }}"
     environment:
@@ -28,7 +28,7 @@
       no_log: true
     - name: validate updated proxy setting
       uri:
-        url: "https://www.cisco.com"
+        url: "https://ntppool.org"
       register: validate_proxy2
       ignore_errors: true
       environment:

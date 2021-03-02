@@ -120,7 +120,7 @@ function get_proxy() {
 	chmod +x Bash/get*
 	grep '^proxy.*:.*@' /etc/environment /etc/profile ~/.bashrc ~/.bash_profile &>/dev/null && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 	local MYPROXY=$(grep -r "^proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
-	local PUBLIC_ADDRESS="https://www.cisco.com"
+	local PUBLIC_ADDRESS="https://ntppool.org"
 	if [[ ${MYPROXY} == '' ]]
 	then
 		curl ${PUBLIC_ADDRESS} &>/dev/null
