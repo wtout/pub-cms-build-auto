@@ -65,11 +65,11 @@ function clean_arguments() {
 function git_config() {
 	if [[ "x$(which git 2>/dev/null)" != "x" ]]
 	then
-		git config remote.origin.url | grep "\/\/.*@" &>/dev/null || echo "You are not authorized to download this repository. Aborting!"
-		git config remote.origin.url | grep "\/\/.*@" &>/dev/null || exit 1
+		git config remote.origin.url &>/dev/null || echo "You are not authorized to download this repository. Aborting!"
+		git config remote.origin.url &>/dev/null || exit 1
 		if [[ "x$(git config user.name)" == "x" ]]
 		then
-			if [[ "$(git config remote.origin.url)" == "" ]]
+			if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]]
 			then
 				read -p "Enter your full name [ENTER]: " NAME SURNAME && git config user.name "${NAME} ${SURNAME}" || EC=1
 			else
@@ -81,11 +81,16 @@ function git_config() {
 		then
 			NAME=$(git config user.name | awk '{print $1}' | tr '[A-Z]' '[a-z]')
 			SURNAME=$(git config user.name | awk '{print $NF}' | tr '[A-Z]' '[a-z]')
-			if [[ "$(git config remote.origin.url)" == "" ]]
+			if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]]
 			then
-				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) ]] && git config user.email ${GIT_EMAIL_ADDRESS} || EC=1
+				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) ]] && git config user.email ${GIT_EMAIL_ADDRESS} && git config remote.origin.url $(git config remote.origin.url | sed -e "s|//\(\w\)|//$(echo ${GIT_EMAIL_ADDRESS} | cut -d '@' -f1)@\1|") || EC=1
 			else
-				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) && "$(git config remote.origin.url)" == *$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/^.*@\(.*\)\..*$/\1/')* ]] && git config user.email ${GIT_EMAIL_ADDRESS} || EC=1
+				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) && "$(git config remote.origin.url)" == *$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/^.*@\(.*\)\..*$/\1/')* ]] && git config user.email ${GIT_EMAIL_ADDRESS} && git config remote.origin.url $(git config remote.origin.url | sed -e "s|//\(\w\)|//$(echo ${GIT_EMAIL_ADDRESS} | cut -d '@' -f1)@\1|") || EC=1
+			fi
+		else
+			if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]]
+			then
+				git config remote.origin.url $(git config remote.origin.url | sed -e "s|//\(\w\)|//$(git config user.email | cut -d '@' -f1)@\1|")
 			fi
 		fi
 		[[ ${EC} -eq 1 ]] && echo "Invalid email address. Aborting!" && exit ${EC}
@@ -566,15 +571,15 @@ then
 	git_config
 	PROXY_ADDRESS=$(get_proxy) || PA=${?}
 	[[ ${PA} -eq 1 ]] && echo -e "\n${PROXY_ADDRESS}\n" && exit ${PA}
-	install_packages
+#	install_packages
 	check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
 fi
-install_pypkgs ${@}
-get_inventory ${@}
-[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
-get_hosts ${@}
-get_credentials ${@}
-enable_logging ${@}
-run_playbook ${@}
-disable_logging
-send_notification ${ORIG_ARGS}
+#install_pypkgs ${@}
+#get_inventory ${@}
+#[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
+#get_hosts ${@}
+#get_credentials ${@}
+#enable_logging ${@}
+#run_playbook ${@}
+#disable_logging
+#send_notification ${ORIG_ARGS}
