@@ -421,22 +421,24 @@ function check_mode() {
 	[[ "$(echo ${@} | egrep -w '\-\-check')" != "" ]] && echo " in check mode " || echo " "
 }
 
+function create_log_dir() {
+	if [[ ! -d "${ANSIBLE_LOG_LOCATION}" ]]
+	then
+		mkdir -m 775 -p ${ANSIBLE_LOG_LOCATION}
+		chown -R $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${ANSIBLE_LOG_LOCATION}
+	else
+		if [[ ! -w "${ANSIBLE_LOG_LOCATION}" ]]
+		then
+			chmod 775 ${ANSIBLE_LOG_LOCATION}
+			chown -R $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${ANSIBLE_LOG_LOCATION}
+		fi
+	fi
+}
+
 function enable_logging() {
 	LOG=true
 	if [ "${LOG}" == "true" ]
 	then
-		if [[ ! -d "${ANSIBLE_LOG_LOCATION}" ]]
-		then
-			mkdir -m 775 -p ${ANSIBLE_LOG_LOCATION}
-			chown -R $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${ANSIBLE_LOG_LOCATION}
-
-		else
-			if [[ ! -w "${ANSIBLE_LOG_LOCATION}" ]]
-			then
-				chmod 775 ${ANSIBLE_LOG_LOCATION}
-				chown -R $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${ANSIBLE_LOG_LOCATION}
-			fi
- 		fi
 		LOG_FILE="${ANSIBLE_LOG_LOCATION}/$(basename ${0} | awk -F '.' '{print $1}').${ENAME}.log"
 		[[ "$( grep ^log_path ${ANSIBLE_CFG} )" != "" ]] && sed -i '/^log_path = .*\$/d' ${ANSIBLE_CFG}
 		if [[ -f ${LOG_FILE} ]] && [[ "${repeat_job}" != "" ]]
@@ -551,6 +553,7 @@ REPOVAULT="${PWD}/.repovault.yml"
 SECON=true
 
 # Main
+create_log_dir
 PID=${$}
 check_arguments ${@}
 NEW_ARGS=$(check_hosts_limit "${@}")
