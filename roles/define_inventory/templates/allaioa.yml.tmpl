@@ -149,7 +149,7 @@ vm_vars:
     nic2:
 
       # Interface name
-      intname: "{{ environment_definition.vm_setting.spl.nic2.intname if (environment_definition.vm_setting.spl.nic1.intname is defined and environment_definition.vm_setting.spl.nic1.intname != none) else '' }}"
+      intname: "{{ environment_definition.vm_setting.spl.nic2.intname if (environment_definition.vm_setting.spl.nic2.intname is defined and environment_definition.vm_setting.spl.nic2.intname != none) else '' }}"
 
       # IP pool
       ip_pool: "{{ environment_definition.vm_setting.spl.nic2.ip_pool if (environment_definition.vm_setting.spl.nic2.ip_pool is defined and environment_definition.vm_setting.spl.nic2.ip_pool != none) else [] }}"

@@ -414,7 +414,7 @@ drvm_vars:
       nic2:
 
         # Interface name
-        intname: "{{ environment_definition.drvm_setting.spl.spldpl.nic2.intname if (environment_definition.drvm_setting.spl.spldpl.nic1.intname is defined and environment_definition.drvm_setting.spl.spldpl.nic1.intname != none) else '' }}"
+        intname: "{{ environment_definition.drvm_setting.spl.spldpl.nic2.intname if (environment_definition.drvm_setting.spl.spldpl.nic2.intname is defined and environment_definition.drvm_setting.spl.spldpl.nic2.intname != none) else '' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.drvm_setting.spl.spldpl.nic2.ip_pool if (environment_definition.drvm_setting.spl.spldpl.nic2.ip_pool is defined and environment_definition.drvm_setting.spl.spldpl.nic2.ip_pool != none) else [] }}"
