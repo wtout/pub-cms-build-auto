@@ -2,7 +2,7 @@
 # Variables for em7 application servers
 user:
   name: "{{ vm_vars.em7.em7prt.user.name if vm_vars.em7.em7prt.user.name is defined else '' }}"
-  password: "{{ vm_vars.em7.em7prt.user.passwordvm_vars.em7.em7prt.user.password is defined else '' }}"
+  password: "{{ vm_vars.em7.em7prt.user.password if vm_vars.em7.em7prt.user.password is defined else '' }}"
 
 vm:
   cpu: "{{ vm_vars.em7.em7prt.cpu }}"

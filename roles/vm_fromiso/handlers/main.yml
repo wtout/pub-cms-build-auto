@@ -17,6 +17,7 @@
   register: parted_info
   changed_when: parted_info is succeeded
   notify: define parted_start
+  when: vm.name is search('mdr')
   tags: vm_creation
 
 - name: define parted_start
@@ -65,6 +66,7 @@
     lvcreate -l100%FREE -n opt /dev/vgroup2
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: create disk1 filesystem
+  when: vm.name is search('mdr')
   tags: vm_creation
 
 - name: create disk1 filesystem
@@ -106,6 +108,7 @@
     lvcreate -l100%FREE -n data01 /dev/vgroup3
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: create disk2 filesystem
+  when: vm.name is search('mdr')
   tags: vm_creation
 
 - name: create disk2 filesystem
@@ -147,6 +150,7 @@
     lvcreate -l100%FREE -n data02 /dev/vgroup4
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   notify: create disk3 filesystem
+  when: vm.name is search('mdr')
   tags: vm_creation
 
 - name: create disk3 filesystem
