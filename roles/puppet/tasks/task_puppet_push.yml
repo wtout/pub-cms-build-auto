@@ -51,4 +51,4 @@
       - puppet_push.stdout_lines is defined
       - puppet_push.stdout_lines != []
       - puppet_push.stdout_lines|last is search('Applied catalog')
-  tags: vm_ppp_configuration
+  tags: puppet

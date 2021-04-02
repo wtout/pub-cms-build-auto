@@ -203,8 +203,7 @@ function install_packages() {
 			fi
 			add_proxy_yum ${PROXY_ADDRESS} ${SUDO_PASS}
 			PKG_ARR=(${PKG_LIST})
-			[[ ${pkg} == ${PKG_ARR[0]} ]] && printf "\n\nInstalling ${pkg} on localhost ..." || \
-			printf "\nInstalling ${pkg} on localhost ..."
+			[[ ${pkg} == ${PKG_ARR[0]} ]] && printf "\n\nInstalling ${pkg} on localhost ..." || printf "\nInstalling ${pkg} on localhost ..."
 			sudo -S yum install -y ${pkg} --quiet <<< ${SUDO_PASS} 2>/dev/null
 			remove_proxy_yum ${SUDO_PASS}
 			[[ ${?} == 0 ]] && printf " Installed version $(yum list installed ${pkg} | tail -1 | awk '{print $2}')\n" || exit 1
@@ -216,7 +215,7 @@ function install_packages() {
 		python3 -m pip install --user --no-cache-dir --quiet -U pip --proxy="${PROXY_ADDRESS}"
 		[[ ${?} == 0 ]] && printf " Installed version $(python3 -m pip show pip | grep ^Version | awk -F ': ' '{print $NF}')\n" || exit 1
 	fi
-	if [ "x$(which ansible 2>/dev/null)" == "x" ]
+	if [[ "x$(ansible --version &>/dev/null; echo ${?})" == "x1" ]]
 	then
 		printf "\nInstalling Ansible on localhost ..."
 		[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
@@ -527,7 +526,7 @@ function send_notification() {
 	then
 		SCRIPT_ARG=$(echo ${@} | sed -e 's/-/dash/g')
 		[ $(echo ${HOST_LIST} | wc -w) -gt 1 ] && HL=$(echo ${HOST_LIST} | sed 's/ /,/g') || HL=${HOST_LIST}
-		NUM_HOSTS=$(wc -w <<< $(echo ${HL} | sed 's/,/ /g'))
+		NUM_HOSTS=$(ansible ${HL} -i ${INVENTORY_PATH} -m debug -a 'msg="{{ ansible_play_hosts }}"' | egrep -v "\[|\]|\{|\}" | sort -u | wc -l)
 		if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
 		then
 			# Send playbook status notification

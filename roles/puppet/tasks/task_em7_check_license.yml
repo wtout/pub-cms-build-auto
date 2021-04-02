@@ -1,0 +1,38 @@
+---
+# tasks to get the license status for the EM7 VM
+- block:
+  - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      tasks_from: task_make_db01_primary.yml
+  - name: check licenses status in DB
+    ansible.builtin.shell:
+      cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
+    register: licenses_status
+    delegate_to: "{{ groups['em7db']|first }}"
+    run_once: true
+  - ansible.builtin.debug:
+      msg: "{{ licenses_status.stdout_lines }}"
+    run_once: true
+  - name: define lic_status
+    set_fact:
+      lic_status: "{{ (licenses_status.stdout_lines|default([]) | select('search', vm.name) | list | join).split('\t') }}"
+  - ansible.builtin.assert:
+      that:
+        - lic_status != []
+        - lic_status[1] == '1'
+      fail_msg: 'This EM7 host is not licensed. Please ensure it is licensed before proceeding further with the Build process'
+  - block:
+    - name: get date from host
+      ansible.builtin.shell:
+        cmd: date +"%Y-%m-%d %H:%M:%S"
+      register: curr_date
+      check_mode: no
+    - ansible.builtin.assert:
+        that:
+          - lic_status|last > curr_date.stdout
+        fail_msg: 'This EM7 host has an expired license. Please renew the license before proceeding further with the Build process'
+    when: lic_status|last != 'NULL'
+  when:
+    - inventory_hostname is search('em7')
+  tags: puppet

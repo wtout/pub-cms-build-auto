@@ -1,17 +1,8 @@
 ---
 # tasks file for vm_creation
 - block:
-  - block:
-    - name: check if known hosts file exists
-      stat:
-        path: ~/.ssh
-      register: ssh_dir
-    - name: purge known hosts file
-      copy:
-        dest: ~/.ssh/known_hosts
-        content: ''
-      when: ssh_dir.stat.exists
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - include_tasks: task_purge_known_hosts.yml
+    when: "'stack' in group_names or 'dr' in group_names"
 
   - block:
     - block:

@@ -26,6 +26,8 @@
       when:
         - ansible_ssh_pass != postppp
         - inventory_hostname is not search('em7') or customer.release is search('9.2')
+    - include_tasks: task_em7_check_license.yml
+      when: group_names | select('regex', 'stack|dr') | list | length >=1
     - block:
       - include_tasks: task_delete_certificates.yml
       - include_tasks: task_add_vm_to_class.yml

@@ -1,18 +1,15 @@
 ---
-# tasks to reboot the EM7 DB VMs
+# tasks to reboot the EM7 DB02 VM
 - block:
-  - name: reboot the EM7 DBs
+  - name: reboot the EM7 DB02
     vmware_guest_powerstate:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       validate_certs: false
-      name: "{{ hostvars[db_item]['vm']['name'] }}"
+      name: "{{ hostvars[groups['em7db']|last]['vm']['name'] }}"
       state: restarted
       state_change_timeout: 60
-    loop: "{{ groups['em7db'] }}"
-    loop_control:
-      loop_var: db_item
   - name: wait until db vip is reachable
     shell: ping {{ vip.db }} -c 1
     retries: 30

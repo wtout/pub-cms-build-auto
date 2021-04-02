@@ -23,10 +23,5 @@
   - include_tasks: task_update_exports_file.yml
   - include_tasks: task_update_dbconns_file.yml
   - include_tasks: task_restore_silo_dr_file.yml
-  - include_tasks: task_em7_license_get_info.yml
-  - include_tasks: task_em7_license_request.yml
-  - include_tasks: task_em7_license_save.yml
-  - include_tasks: task_em7_license_apply.yml
-  - include_tasks: task_em7_license_reboot.yml
   - include_tasks: task_update_silo_dr_file.yml
   tags: vm_configuration
