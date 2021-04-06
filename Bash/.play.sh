@@ -215,7 +215,7 @@ function install_packages() {
 		python3 -m pip install --user --no-cache-dir --quiet -U pip --proxy="${PROXY_ADDRESS}"
 		[[ ${?} == 0 ]] && printf " Installed version $(python3 -m pip show pip | grep ^Version | awk -F ': ' '{print $NF}')\n" || exit 1
 	fi
-	if [[ "x$(ansible --version &>/dev/null; echo ${?})" == "x1" ]]
+	if [[ "x$(ansible --version &>/dev/null; echo ${?})" != "x1" ]]
 	then
 		printf "\nInstalling Ansible on localhost ..."
 		[[ "$(echo ${PROXY_ADDRESS} | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
