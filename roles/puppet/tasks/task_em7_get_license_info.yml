@@ -1,0 +1,24 @@
+---
+# tasks to get the license status for the EM7 VM
+- block:
+  - name: check licenses status in DB
+    ansible.builtin.shell:
+      cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
+    register: licenses_status1
+    delegate_to: "{{ groups['em7db']|first }}"
+  - ansible.builtin.debug:
+      msg:
+        - "{{ licenses_status1.stdout_lines }}"
+  - block:
+    - name: check licenses status in DB
+      ansible.builtin.shell:
+        cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
+      register: licenses_status2
+      delegate_to: "{{ groups['drem7db']|first }}"
+    - ansible.builtin.debug:
+        msg: "{{ licenses_status2.stdout_lines }}"
+    when:
+      - inventory_hostname is search('drem7db')
+      - licenses_status1.stdout_lines|default([]) | select('search', vm.name) | length < 1
+  run_once: true
+  tags: puppet

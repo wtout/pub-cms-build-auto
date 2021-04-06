@@ -5,18 +5,10 @@
     include_role:
       name: "{{ auto_dir + '/roles/vm_configuration' }}"
       tasks_from: task_make_db01_primary.yml
-  - name: check licenses status in DB
-    ansible.builtin.shell:
-      cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
-    register: licenses_status
-    delegate_to: "{{ groups['em7db']|first }}"
-    run_once: true
-  - ansible.builtin.debug:
-      msg: "{{ licenses_status.stdout_lines }}"
-    run_once: true
+  - include_tasks: task_em7_get_license_info.yml
   - name: define lic_status
     set_fact:
-      lic_status: "{{ (licenses_status.stdout_lines|default([]) | select('search', vm.name) | list | join).split('\t') }}"
+      lic_status: "{{ (licenses_status1.stdout_lines|default([]) | select('search', hostvars[groups['em7db']|first]['vm']['name']) | list | join).split('\t') if inventory_hostname is regex('em7(dc|mc)') else (licenses_status1.stdout_lines|default([]) | select('search', vm.name) | list | join).split('\t') if licenses_status1.stdout_lines|default([]) | select('search', vm.name) | length == 1 else (licenses_status2.stdout_lines|default([]) | select('search', vm.name) | list | join).split('\t') }}"
   - ansible.builtin.assert:
       that:
         - lic_status != []
