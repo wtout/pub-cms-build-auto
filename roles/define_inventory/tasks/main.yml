@@ -206,19 +206,23 @@
     shell: stat -c '%U' {{ auto_dir }}/Bash
     register: dir_owner
 
+  - name: detect directory group
+    shell: stat -c '%G' {{ auto_dir }}/Bash
+    register: dir_group
+
   - name: generate customer inventory
     copy:
       src: "files/inventory{{ environment_definition.customer.deployment_model }}/"
       dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower }}"
       owner: "{{ dir_owner.stdout }}"
-      group: "{{ dir_owner.stdout }}"
+      group: "{{ dir_group.stdout }}"
 
   - name: add disaster recovery to customer inventory
     copy:
       src: "files/drinventory{{ environment_definition.customer.deployment_model }}/"
       dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower }}"
       owner: "{{ dir_owner.stdout }}"
-      group: "{{ dir_owner.stdout }}"
+      group: "{{ dir_group.stdout }}"
     when: environment_definition.customer.disaster_recovery
 
   - name: customize inventory
@@ -226,7 +230,7 @@
       src: "{{ tmpl_item.name }}"
       dest: "{{ tmpl_item.dest }}"
       owner: "{{ dir_owner.stdout }}"
-      group: "{{ dir_owner.stdout }}"
+      group: "{{ dir_group.stdout }}"
     loop:
       - { name: 'templates/all.j2', dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower + '/group_vars/all.yml' }}" }
       - { name: 'templates/hosts.j2', dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower + '/hosts.yml' }}" }

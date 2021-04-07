@@ -5,12 +5,12 @@
     shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ NHOSTS }};i++){print $0;getline}}' {{ LFILE }} | grep -v awk | egrep 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
     register: playbook_status
   - block:
-    - set_fact:
-        NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [item.split(' : ')|first] | list }}"
-      vars:
-        fe: "{{ playbook_status.stdout | regex_search('(unreachable=|failed=)[1-9]+') }}"
-      loop:
-        - "{{ playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else '' }}"
+    - name: define notifcation message
+      set_fact:
+        NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [((line_item | regex_replace ('^.*[\\|] ', '')).split(' : ')|first).strip()] }}"
+      loop: "{{ playbook_status.stdout_lines | select('regex', '(unreachable=|failed=)[1-9]+') }}"
+      loop_control:
+        loop_var: line_item
     - name: write failed hosts list to {{ LFILE }}
       blockinfile:
         path: "{{ LFILE }}"

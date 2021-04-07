@@ -424,12 +424,12 @@ function create_log_dir() {
 	if [[ ! -d "${ANSIBLE_LOG_LOCATION}" ]]
 	then
 		mkdir -m 775 -p ${ANSIBLE_LOG_LOCATION}
-		chown -R $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${ANSIBLE_LOG_LOCATION}
+		chown -R $(stat -c '%U' $(pwd)):$(stat -c '%G' $(pwd)) ${ANSIBLE_LOG_LOCATION}
 	else
 		if [[ ! -w "${ANSIBLE_LOG_LOCATION}" ]]
 		then
 			chmod 775 ${ANSIBLE_LOG_LOCATION}
-			chown -R $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${ANSIBLE_LOG_LOCATION}
+			chown -R $(stat -c '%U' $(pwd)):$(stat -c '%G' $(pwd)) ${ANSIBLE_LOG_LOCATION}
 		fi
 	fi
 }
