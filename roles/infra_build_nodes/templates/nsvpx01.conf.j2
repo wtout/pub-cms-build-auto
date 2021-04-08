@@ -54,6 +54,8 @@ bind ssl service {{ ssl_server_bind.name }} -eccCurveName {{ ssl_server_bind.ecc
 bind lb vserver {{ lb_server_bind.name }} {{ lb_server_bind.service }}
 {% endfor %}
 
+add ssl profile cmsp-mgmt-ssl-frontend -eRSA DISABLED -sessReuse ENABLED -sessTimeout 300 -tls1 DISABLED -tls11 DISABLED -pushEncTrigger Ignore -sendCloseNotify NO -denySSLReneg NO
+
 add snmp community Ir0nh0rs3 ALL
 add snmp trap specific {{ splunk.mom_rly_vip }}-communityName Ir0nh0rs3
 
