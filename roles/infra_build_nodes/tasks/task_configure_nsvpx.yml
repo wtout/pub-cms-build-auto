@@ -130,6 +130,34 @@
       state: absent
     when: upload is succeeded
 
+  - name: read sshd process ID
+    ansible.builtin.shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell cat /var/run/sshd.pid 2>/dev/null" | tail -n 2
+    register: sshd_pid
+    check_mode: no
+    no_log: yes
+
+  - debug:
+      msg: "{{ sshd_pid | replace(password, 'obfuscated') }}"
+    when: sshd_pid is failed
+
+  - name: Apply ssh configuration
+    shell: |
+      sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell \"grep '# SSH Hardending' /etc/sshd_config &>/dev/null || echo -e '\n\n# SSH Hardending' >> /etc/sshd_config; grep 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' /etc/sshd_config &>/dev/null || echo -e 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' >> /etc/sshd_config; grep 'MACs hmac-sha2-256,hmac-sha2-512' /etc/sshd_config &>/dev/null || echo -e 'MACs hmac-sha2-256,hmac-sha2-512' >> /etc/sshd_config; grep 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' /etc/sshd_config &>/dev/null || echo -e 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' >> /etc/sshd_config\""
+      sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell \"cp -f /etc/sshd_config /nsconfig/; kill -1 {{ sshd_pid.stdout_lines|first }}\""
+    register: ssh_config
+    no_log: yes
+    ignore_errors: true
+    async: 60
+    poll: 10
+
+  - debug:
+      msg: "{{ ssh_config | replace(password, 'obfuscated') }}"
+    when: ssh_config is failed
+
+  - assert:
+      that:
+        - ssh_config is succeeded 
+
   - block:
     - name: Apply Netscaler configuration
       shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
@@ -161,32 +189,6 @@
         that:
           - not (config02 is failed)
     when: inventory_hostname is search('02')
-
-  - name: read sshd process ID
-    ansible.builtin.shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell cat /var/run/sshd.pid 2>/dev/null" | tail -n 2
-    register: sshd_pid
-    check_mode: no
-    no_log: yes
-
-  - debug:
-      msg: "{{ sshd_pid | replace(password, 'obfuscated') }}"
-    when: sshd_pid is failed
-
-  - name: Apply ssh configuration
-    shell: |
-      sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell \"grep '# SSH Hardending' /etc/sshd_config &>/dev/null || echo -e '\n\n# SSH Hardending' >> /etc/sshd_config; grep 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' /etc/sshd_config &>/dev/null || echo -e 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' >> /etc/sshd_config; grep 'MACs hmac-sha2-256,hmac-sha2-512' /etc/sshd_config &>/dev/null || echo -e 'MACs hmac-sha2-256,hmac-sha2-512' >> /etc/sshd_config; grep 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' /etc/sshd_config &>/dev/null || echo -e 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' >> /etc/sshd_config\""
-      sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell \"cp -f /etc/sshd_config /nsconfig/; kill -1 {{ sshd_pid.stdout_lines|first }}\""
-    register: ssh_config
-    no_log: yes
-    ignore_errors: true
-    async: 60
-    poll: 10
-  - debug:
-      msg: "{{ ssh_config | replace(password, 'obfuscated') }}"
-    when: ssh_config is failed
-  - assert:
-      that:
-        - ssh_config is succeeded 
 
   - name: Define Netscaler serial number
     block:
