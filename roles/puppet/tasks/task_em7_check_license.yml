@@ -12,6 +12,7 @@
   - ansible.builtin.assert:
       that:
         - lic_status != []
+        - lic_status != ['']
         - lic_status[1] == '1'
       fail_msg: 'This EM7 host is not licensed. Please ensure it is licensed before proceeding further with the Build process'
   - block:

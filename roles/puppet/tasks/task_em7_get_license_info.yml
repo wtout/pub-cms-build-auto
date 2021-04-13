@@ -6,11 +6,14 @@
       cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
     register: licenses_status1
     delegate_to: "{{ groups['em7db']|first }}"
+    run_once: true
   - ansible.builtin.debug:
       msg:
         - "{{ licenses_status1.stdout_lines }}"
+        - "{{ licenses_status1.stdout_lines|default([]) | select('search', vm.name) }}"
+    run_once: true
   - block:
-    - name: check licenses status in DB
+    - name: check licenses status in DR DB
       ansible.builtin.shell:
         cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
       register: licenses_status2
@@ -18,7 +21,6 @@
     - ansible.builtin.debug:
         msg: "{{ licenses_status2.stdout_lines }}"
     when:
-      - inventory_hostname is search('drem7db')
+      - inventory_hostname is search('dr')
       - licenses_status1.stdout_lines|default([]) | select('search', vm.name) | length < 1
-  run_once: true
   tags: puppet
