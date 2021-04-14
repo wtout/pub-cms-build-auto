@@ -76,8 +76,8 @@
 
   - name: define em7prt lists
     set_fact:
-      prt_ip1_list: "{{ prt_ip1_list | default([]) + ipvar1 if (prt_ip1_list is defined and prt_ip1_list != '') else ipvar1 }}"
-      prt_ip2_list: "{{ prt_ip2_list | default([]) + ipvar2 if (prt_ip2_list is defined and prt_ip2_list != '') else ipvar2 }}"
+      em7prt_ip1_list: "{{ em7prt_ip1_list | default([]) + ipvar1 if (em7prt_ip1_list is defined and em7prt_ip1_list != '') else ipvar1 }}"
+      em7prt_ip2_list: "{{ em7prt_ip2_list | default([]) + ipvar2 if (em7prt_ip2_list is defined and em7prt_ip2_list != '') else ipvar2 }}"
     vars:
       ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
       ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"
@@ -88,10 +88,10 @@
       - groups['em7prt'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
-  - name: define em7 mc lists
+  - name: define em7mc lists
     set_fact:
-      mc_ip1_list: "{{ mc_ip1_list | default([]) + ipvar1 if (mc_ip1_list is defined and mc_ip1_list != '') else ipvar1 }}"
-      mc_ip2_list: "{{ mc_ip2_list | default([]) + ipvar2 if (mc_ip2_list is defined and mc_ip2_list != '') else ipvar2 }}"
+      em7mc_ip1_list: "{{ em7mc_ip1_list | default([]) + ipvar1 if (em7mc_ip1_list is defined and em7mc_ip1_list != '') else ipvar1 }}"
+      em7mc_ip2_list: "{{ em7mc_ip2_list | default([]) + ipvar2 if (em7mc_ip2_list is defined and em7mc_ip2_list != '') else ipvar2 }}"
     vars:
       ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
       ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"

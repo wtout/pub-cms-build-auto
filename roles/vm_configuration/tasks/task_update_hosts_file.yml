@@ -1,15 +1,45 @@
 ---
 # tasks to update /etc/hosts on VM
 - block:
+  - name: render hosts file
+    ansible.builtin.template:
+      src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}hosts.tmpl"
+      dest: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-hosts"
+    loop: "{{ data_conf_hosts }}"
+    loop_control:
+      loop_var: host_item
+    delegate_to: localhost
+    run_once: true
+
   - name: Copy hosts file to VM
     template:
-      src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}hosts.tmpl"
+      src: "{{ role_path }}/files/{{ vm.name }}-hosts"
       dest: '/etc/hosts'
-  - name: remove empty lines
-    replace:
-      path: /etc/hosts
-      after: '#### Host Names ####'
-      regexp: '^\s*$'
-      replace: ''
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+    become: "{{ true if inventory_hostname is search('em7') else false }}"
+
+  - block:
+    - name: copy HA hosts files to DR lnxjmp
+      ansible.builtin.copy:
+        dest: '/home/ciscosupporttier4/HAfiles/'
+        src: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-hosts"
+      loop: "{{ data_conf_hosts | difference(groups['dr']) }}"
+      loop_control:
+        loop_var: host_item
+    delegate_to: "{{ groups['drlnxjmp']|first }}"
+    run_once: true
+    when:
+      - customer.disaster_recovery
+      - hosts_in_play | difference(groups['dr']) | length == 0
+    vars:
+      hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) }}"
+
+  - name: delete local file
+    ansible.builtin.file:
+      path: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-hosts"
+      state: absent
+    loop: "{{ data_conf_hosts }}"
+    loop_control:
+      loop_var: host_item
+    delegate_to: localhost
+    run_once: true
   tags: vm_configuration

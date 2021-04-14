@@ -1,18 +1,64 @@
 ---
 # tasks to update data.conf on VM
 - block:
-  - name: Create the puppet directory
-    file:
-      path: /opt/puppet/var
-      state: directory
-  - name: Copy data.conf file to VM
-    template:
-      src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}data.conf.tmpl"
-      dest: '/opt/puppet/var/data.conf'
-  - name: remove empty lines
-    lineinfile:
-      path: '/opt/puppet/var/data.conf'
+  - block:
+    - name: define list of hosts that need data.conf
+      ansible.builtin.set_fact:
+        data_conf_hosts: "{{ (groups['stack'] | difference(groups['infra']) if groups['infra'] is defined else groups['stack']) if hostvars[groups['vcenter']|first]['information']['deptype'] == 'h' else ((groups['stack'] | union(groups['dr']) | difference(groups['infra'] | union(groups['drinfra'])) if (hosts_in_play|length >= groups['dr']|length and hosts_in_play | difference(groups['dr']) | length == 0) else hosts_in_play | difference(groups['infra'] | union(groups['drinfra']))) if customer.disaster_recovery else groups['stack'] | difference(groups['infra'])) }}"
+      vars:
+        hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) }}"
+    - name: create the files directory
+      ansible.builtin.file:
+        path: "{{ role_path }}/files"
+        state: directory
+    - name: render data.conf file
+      ansible.builtin.template:
+        src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if host_item is search('dr') else '' }}data.conf.tmpl"
+        dest: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
+      loop: "{{ data_conf_hosts }}"
+      loop_control:
+        loop_var: host_item
+    delegate_to: localhost
+    run_once: true
+
+  - block:
+    - name: Create the puppet directory
+      ansible.builtin.file:
+        path: /opt/puppet/var
+        state: directory
+    - name: copy data.conf to VM
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/{{ vm.name }}-data.conf"
+        dest: '/opt/puppet/var/data.conf'
+    become: "{{ true if inventory_hostname is search('em7') else false }}"
+
+  - block:
+    - name: create directory to store HA files on DR lnxjmp
+      ansible.builtin.file:
+        path: '/home/ciscosupporttier4/HAfiles'
+        state: directory
+    - name: copy HA data.conf files to DR lnxjmp
+      ansible.builtin.copy:
+        dest: '/home/ciscosupporttier4/HAfiles/'
+        src: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
+      loop: "{{ data_conf_hosts | difference(groups['dr']) }}"
+      loop_control:
+        loop_var: host_item
+    delegate_to: "{{ groups['drlnxjmp']|first }}"
+    run_once: true
+    when:
+      - customer.disaster_recovery
+      - hosts_in_play | difference(groups['dr']) | length == 0
+    vars:
+      hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) }}"
+
+  - name: delete local file
+    ansible.builtin.file:
+      path: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
       state: absent
-      line: ''
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+    loop: "{{ data_conf_hosts }}"
+    loop_control:
+      loop_var: host_item
+    delegate_to: localhost
+    run_once: true
   tags: vm_configuration

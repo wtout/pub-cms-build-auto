@@ -60,27 +60,27 @@ nsvpx:
 
     servers:
       - name: EM7App01
-        ipaddress: "{{ prt_ip2_list[0] if prt_ip2_list is defined else em7_ip2_list[0] }}"
+        ipaddress: "{{ em7prt_ip2_list[0] if em7prt_ip2_list is defined else em7_ip2_list[0] }}"
         comment: EM7App01
 
       - name: EM7App02
-        ipaddress: "{{ prt_ip2_list[1] if prt_ip2_list is defined else '' }}"
+        ipaddress: "{{ em7prt_ip2_list[1] if em7prt_ip2_list is defined else '' }}"
         comment: EM7App02
 
       - name: EM7App01-INT
-        ipaddress: "{{ prt_ip1_list[0] if prt_ip1_list is defined else em7_ip1_list[0] }}"
+        ipaddress: "{{ em7prt_ip1_list[0] if em7prt_ip1_list is defined else em7_ip1_list[0] }}"
         comment: EM7App01-INT
 
       - name: EM7App02-INT
-        ipaddress: "{{ prt_ip1_list[1] if prt_ip1_list is defined else '' }}"
+        ipaddress: "{{ em7prt_ip1_list[1] if em7prt_ip1_list is defined else '' }}"
         comment: EM7App02-INT
 
       - name: EM7MC01
-        ipaddress: "{{ mc_ip1_list[0] if mc_ip1_list is defined else em7_ip1_list[0] }}"
+        ipaddress: "{{ em7mc_ip1_list[0] if em7mc_ip1_list is defined else em7_ip1_list[0] }}"
         comment: EM7MC01
 
       - name: EM7MC02
-        ipaddress: "{{ mc_ip1_list[1] if mc_ip1_list is defined else '' }}"
+        ipaddress: "{{ em7mc_ip1_list[1] if em7mc_ip1_list is defined else '' }}"
         comment: EM7MC02
 
       - name: Splunk-Search01
@@ -539,15 +539,15 @@ drnsvpx:
   configuration:
     servers:
       - name: EM7App01
-        ipaddress: "{{ drprt_ip2_list[0] }}"
+        ipaddress: "{{ drem7prt_ip2_list[0] }}"
         comment: EM7App01
 
       - name: EM7App01-INT
-        ipaddress: "{{ drprt_ip1_list[0] }}"
+        ipaddress: "{{ drem7prt_ip1_list[0] }}"
         comment: EM7App01-INT
 
       - name: EM7MC01
-        ipaddress: "{{ drmc_ip1_list[0] }}"
+        ipaddress: "{{ drem7mc_ip1_list[0] }}"
         comment: EM7MC01
 
       - name: Splunk-Search01

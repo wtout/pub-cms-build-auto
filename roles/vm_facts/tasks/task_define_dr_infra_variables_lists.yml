@@ -46,8 +46,8 @@
 
   - name: define drem7prt lists
     set_fact:
-      drprt_ip1_list: "{{ drprt_ip1_list | default([]) + ipvar1 if (drprt_ip1_list is defined and drprt_ip1_list != '') else ipvar1 }}"
-      drprt_ip2_list: "{{ drprt_ip2_list | default([]) + ipvar2 if (drprt_ip2_list is defined and drprt_ip2_list != '') else ipvar2 }}"
+      drem7prt_ip1_list: "{{ drem7prt_ip1_list | default([]) + ipvar1 if (drem7prt_ip1_list is defined and drem7prt_ip1_list != '') else ipvar1 }}"
+      drem7prt_ip2_list: "{{ drem7prt_ip2_list | default([]) + ipvar2 if (drem7prt_ip2_list is defined and drem7prt_ip2_list != '') else ipvar2 }}"
     vars:
       ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
       ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"
@@ -58,10 +58,10 @@
       - groups['drem7prt'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
-  - name: define drem7 mc lists
+  - name: define drem7mc lists
     set_fact:
-      drmc_ip1_list: "{{ drmc_ip1_list | default([]) + ipvar1 if (drmc_ip1_list is defined and drmc_ip1_list != '') else ipvar1 }}"
-      drmc_ip2_list: "{{ drmc_ip2_list | default([]) + ipvar2 if (drmc_ip2_list is defined and drmc_ip2_list != '') else ipvar2 }}"
+      drem7mc_ip1_list: "{{ drem7mc_ip1_list | default([]) + ipvar1 if (drem7mc_ip1_list is defined and drem7mc_ip1_list != '') else ipvar1 }}"
+      drem7mc_ip2_list: "{{ drem7mc_ip2_list | default([]) + ipvar2 if (drem7mc_ip2_list is defined and drem7mc_ip2_list != '') else ipvar2 }}"
     vars:
       ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
       ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"

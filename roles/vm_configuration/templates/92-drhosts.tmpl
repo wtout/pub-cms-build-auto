@@ -30,47 +30,82 @@
 {{ puppet.ipaddress + "\t" + puppet.vmname + "\t" + puppet.fqdn }}
 {{ yum.ipaddress + "\t" + yum.vmname + "\t" + yum.fqdn }}
 
-{{ drlnxjmp_ip1_list[0] + "\t" + drlnxjmp_hst_list[0] + "\t" + drlnxjmp_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drlnxjmp_ip1_list[1] + "\t" + drlnxjmp_hst_list[1] + "\t" + drlnxjmp_hst_list[1] + '.' + sysconfig.domain_name if drlnxjmp_ip1_list|length >= 2 else '' }}
+{% if drlnxjmp_ip1_list is defined -%}
+{% block lnxjmp_ip1 %}
+{% for item in drlnxjmp_ip1_list %}
+{{ item + "\t" + drlnxjmp_hst_list[loop.index0] + "\t" + drlnxjmp_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock lnxjmp_ip1 %}
+{% endif %}
 
-{{ drrly_ip1_list[0] + "\t" + drrly_hst_list[0] + "\t" + drrly_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drrly_ip1_list[1] + "\t" + drrly_hst_list[1] + "\t" + drrly_hst_list[1] + '.' + sysconfig.domain_name if drrly_ip1_list|length >= 2 else '' }}
+{%- if drrly_ip1_list is defined -%}
+{% block rly_ip1 %}
+{% for item in drrly_ip1_list %}
+{{ item + "\t" + drrly_hst_list[loop.index0] + "\t" + drrly_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock rly_ip1 %}
+{% endif %}
 
-{{ drsplsrc_ip1_list[0] + "\t" + drsplsrc_hst_list[0] + "\t" + drsplsrc_hst_list[0] + '.' + sysconfig.domain_name if drsplsrc_ip1_list is defined else '' }}
-{{ drsplsrc_ip1_list[1] + "\t" + drsplsrc_hst_list[1] + "\t" + drsplsrc_hst_list[1] + '.' + sysconfig.domain_name if drsplsrc_ip1_list|default([])|length >= 2 else '' }}
-{{ drsplind_ip1_list[0] + "\t" + drsplind_hst_list[0] + "\t" + drsplind_hst_list[0] + '.' + sysconfig.domain_name if drsplind_ip1_list is defined else '' }}
-{{ drsplind_ip1_list[1] + "\t" + drsplind_hst_list[1] + "\t" + drsplind_hst_list[1] + '.' + sysconfig.domain_name if drsplind_ip1_list|default([])|length >= 2 else '' }}
-{{ drsplmas_ip1_list[0] + "\t" + drsplmas_hst_list[0] + "\t" + drsplmas_hst_list[0] + '.' + sysconfig.domain_name if drsplmas_ip1_list is defined else '' }}
-{{ drsplmas_ip1_list[1] + "\t" + drsplmas_hst_list[1] + "\t" + drsplmas_hst_list[1] + '.' + sysconfig.domain_name if drsplmas_ip1_list|default([])|length >= 2 else '' }}
-{{ drspldpl_ip1_list[0] + "\t" + drspldpl_hst_list[0] + "\t" + drspldpl_hst_list[0] + '.' + sysconfig.domain_name if drspldpl_ip1_list is defined else '' }}
-{{ drspldpl_ip1_list[1] + "\t" + drspldpl_hst_list[1] + "\t" + drspldpl_hst_list[1] + '.' + sysconfig.domain_name if drspldpl_ip1_list|default([])|length >= 2 else '' }}
+{%- if drsplsrc_ip1_list is defined -%}
+{% block splsrc_ip1 %}
+{% for item in drsplsrc_ip1_list %}
+{{ item + "\t" + drsplsrc_hst_list[loop.index0] + "\t" + drsplsrc_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock splsrc_ip1 %}
+{% endif %}
 
-{{ db_ip1_list[0] + "\t" + db_hst_list[0] + "\t" + db_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ db_ip1_list[1] + "\t" + db_hst_list[1] + "\t" + db_hst_list[1] + '.' + sysconfig.domain_name if db_ip1_list|length >= 2 else '' }}
-{{ drdb_ip1_list[0] + "\t" + drdb_hst_list[0] + "\t" + drdb_hst_list[0] + '.' + sysconfig.domain_name }}
-{{ drdb_ip1_list[0] + "\t" + drdb_hst_list[0] + "\t" + drdb_hst_list[0] + '.' + sysconfig.domain_name if drdb_ip1_list|length >= 2 else '' }}
+{%- if drsplind_ip1_list is defined -%}
+{% block splind_ip1 %}
+{% for item in drsplind_ip1_list %}
+{{ item + "\t" + drsplind_hst_list[loop.index0] + "\t" + drsplind_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock splind_ip1 %}
+{% endif %}
 
-{{ drprt_ip1_list[0] + "\t" + drprt_hst_list[0] + "\t" + drprt_hst_list[0] + '.' + sysconfig.domain_name if drprt_ip1_list is defined else '' }}
-{{ drprt_ip1_list[1] + "\t" + drprt_hst_list[1] + "\t" + drprt_hst_list[1] + '.' + sysconfig.domain_name if drprt_ip1_list|default([])|length >= 2 else '' }}
-{{ drprt_ip1_list[2] + "\t" + drprt_hst_list[2] + "\t" + drprt_hst_list[2] + '.' + sysconfig.domain_name if drprt_ip1_list|default([])|length >= 3 else '' }}
-{{ drprt_ip1_list[3] + "\t" + drprt_hst_list[3] + "\t" + drprt_hst_list[3] + '.' + sysconfig.domain_name if drprt_ip1_list|default([])|length >= 4 else '' }}
+{%- if drsplmas_ip1_list is defined -%}
+{% block splmas_ip1 %}
+{% for item in drsplmas_ip1_list %}
+{{ item + "\t" + drsplmas_hst_list[loop.index0] + "\t" + drsplmas_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock splmas_ip1 %}
+{% endif %}
 
-{{ drmc_ip1_list[0] + "\t" + drmc_hst_list[0] + "\t" + drmc_hst_list[0] + '.' + sysconfig.domain_name if drmc_ip1_list is defined else '' }}
-{{ drmc_ip1_list[1] + "\t" + drmc_hst_list[1] + "\t" + drmc_hst_list[1] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 2 else '' }}
-{{ drmc_ip1_list[2] + "\t" + drmc_hst_list[2] + "\t" + drmc_hst_list[2] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 3 else '' }}
-{{ drmc_ip1_list[3] + "\t" + drmc_hst_list[3] + "\t" + drmc_hst_list[3] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 4 else '' }}
-{{ drmc_ip1_list[4] + "\t" + drmc_hst_list[4] + "\t" + drmc_hst_list[4] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 5 else '' }}
-{{ drmc_ip1_list[5] + "\t" + drmc_hst_list[5] + "\t" + drmc_hst_list[5] + '.' + sysconfig.domain_name if drmc_ip1_list|default([])|length >= 6 else '' }}
+{%- if drspldpl_ip1_list is defined -%}
+{% block spldpl_ip1 %}
+{% for item in drspldpl_ip1_list %}
+{{ item + "\t" + drspldpl_hst_list[loop.index0] + "\t" + drspldpl_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock spldpl_ip1 %}
+{% endif %}
 
-{{ drdc_ip1_list[0] + "\t" + drdc_hst_list[0] + "\t" + drdc_hst_list[0] + '.' + sysconfig.domain_name if drdc_ip1_list is defined else '' }}
-{{ drdc_ip1_list[1] + "\t" + drdc_hst_list[1] + "\t" + drdc_hst_list[1] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 2 else '' }}
-{{ drdc_ip1_list[2] + "\t" + drdc_hst_list[2] + "\t" + drdc_hst_list[2] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 3 else '' }}
-{{ drdc_ip1_list[3] + "\t" + drdc_hst_list[3] + "\t" + drdc_hst_list[3] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 4 else '' }}
-{{ drdc_ip1_list[4] + "\t" + drdc_hst_list[4] + "\t" + drdc_hst_list[4] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 5 else '' }}
-{{ drdc_ip1_list[5] + "\t" + drdc_hst_list[5] + "\t" + drdc_hst_list[5] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 6 else '' }}
-{{ drdc_ip1_list[6] + "\t" + drdc_hst_list[6] + "\t" + drdc_hst_list[6] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 7 else '' }}
-{{ drdc_ip1_list[7] + "\t" + drdc_hst_list[7] + "\t" + drdc_hst_list[7] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 8 else '' }}
-{{ drdc_ip1_list[8] + "\t" + drdc_hst_list[8] + "\t" + drdc_hst_list[8] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 9 else '' }}
-{{ drdc_ip1_list[9] + "\t" + drdc_hst_list[9] + "\t" + drdc_hst_list[9] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 10 else '' }}
-{{ drdc_ip1_list[10] + "\t" + drdc_hst_list[10] + "\t" + drdc_hst_list[10] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 11 else '' }}
-{{ drdc_ip1_list[11] + "\t" + drdc_hst_list[11] + "\t" + drdc_hst_list[11] + '.' + sysconfig.domain_name if drdc_ip1_list|default([])|length >= 12 else '' }}
+{%- if drem7db_ip1_list is defined -%}
+{% block db_ip1 %}
+{% for item in drem7db_ip1_list %}
+{{ item + "\t" + drem7db_hst_list[loop.index0] + "\t" + drem7db_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock db_ip1 %}
+{% endif %}
+
+{%- if drem7prt_ip1_list is defined -%}
+{% block prt_ip1 %}
+{% for item in drem7prt_ip1_list %}
+{{ item + "\t" + drem7prt_hst_list[loop.index0] + "\t" + drem7prt_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock prt_ip1 %}
+{% endif %}
+
+{%- if drem7mc_ip1_list is defined -%}
+{% block mc_ip1 %}
+{% for item in drem7mc_ip1_list %}
+{{ item + "\t" + drem7mc_hst_list[loop.index0] + "\t" + drem7mc_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock mc_ip1 %}
+{% endif %}
+
+{%- if drem7dc_ip1_list is defined -%}
+{% block dc_ip1 %}
+{% for item in drem7dc_ip1_list %}
+{{ item + "\t" + drem7dc_hst_list[loop.index0] + "\t" + drem7dc_hst_list[loop.index0] + '.' + sysconfig.domain_name }}
+{% endfor %}
+{% endblock dc_ip1 %}
+{% endif %}
