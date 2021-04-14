@@ -1,25 +1,18 @@
 ---
 # tasks to get the license status for the EM7 VM
 - block:
-  - name: check licenses status in DB
-    ansible.builtin.shell:
-      cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
-    register: licenses_status1
-    delegate_to: "{{ groups['em7db']|first }}"
-    run_once: true
-  - ansible.builtin.debug:
-      msg:
-        - "{{ licenses_status1.stdout_lines }}"
-        - "{{ licenses_status1.stdout_lines|default([]) | select('search', vm.name) }}"
-    run_once: true
-  - block:
-    - name: check licenses status in DR DB
-      ansible.builtin.shell:
-        cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
-      register: licenses_status2
-      delegate_to: "{{ groups['drem7db']|first }}"
-    - ansible.builtin.debug:
-        msg: "{{ licenses_status2.stdout_lines }}"
+  - include_tasks:
+      file: task_em7_check_db_entries.yml
+      apply:
+        vars:
+          em7_host_delegate: "{{ groups['em7db']|first }}"
+          status_var: 'licenses_status1'
+  - include_tasks:
+      file: task_em7_check_db_entries.yml
+      apply:
+        vars:
+          em7_host_delegate: "{{ groups['drem7db']|first }}"
+          status_var: 'licenses_status2'
     when:
       - inventory_hostname is search('dr')
       - licenses_status1.stdout_lines|default([]) | select('search', vm.name) | length < 1
