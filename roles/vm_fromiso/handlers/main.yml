@@ -60,6 +60,15 @@
 
 - name: expand disk1
   shell: |
+    pvcreate /dev/sdb
+    vgcreate vgroup2 /dev/sdb
+    lvcreate -l100%FREE -n opt /dev/vgroup2
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  when: vm.name is not search('mdr')
+  tags: vm_creation
+
+- name: expand disk1
+  shell: |
     parted --script /dev/sdb mklabel gpt mkpart vgroup2 0% 100% set 1 lvm on
     pvcreate /dev/sdb1
     vgcreate vgroup2 /dev/sdb1

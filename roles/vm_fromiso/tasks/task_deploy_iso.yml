@@ -62,6 +62,7 @@
       environment:
         http_proxy: ''
         https_proxy: ''
+      throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
       when:
         - netconfig.network2 == ''
       until: deploy_iso1net is succeeded
@@ -117,6 +118,7 @@
       environment:
         http_proxy: ''
         https_proxy: ''
+      throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
       when:
         - netconfig.network2 != ''
       until: deploy_iso2net is succeeded
