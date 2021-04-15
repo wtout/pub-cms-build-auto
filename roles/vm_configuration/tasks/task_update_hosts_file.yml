@@ -3,9 +3,11 @@
 - block:
   - name: render hosts file
     ansible.builtin.template:
-      src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}hosts.tmpl"
-      dest: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-hosts"
-    loop: "{{ data_conf_hosts }}"
+      src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if host_item is search('dr') else '' }}hosts.tmpl"
+      dest: "{{ role_path }}/files/{{ 'dr' if host_item is search('dr') else '' }}hosts"
+    loop:
+      - "{{ data_conf_hosts | intersect(groups['stack']) | first }}"
+      - "{{ data_conf_hosts | intersect(groups['dr']) | first }}"
     loop_control:
       loop_var: host_item
     delegate_to: localhost
@@ -13,31 +15,31 @@
 
   - name: Copy hosts file to VM
     template:
-      src: "{{ role_path }}/files/{{ vm.name }}-hosts"
+      src: "{{ role_path }}/files/{{ 'dr' if inventory_hostname is search('dr') else '' }}hosts"
       dest: '/etc/hosts'
     become: "{{ true if inventory_hostname is search('em7') else false }}"
 
   - block:
-    - name: copy HA hosts files to DR lnxjmp
+    - name: copy HA hosts file to DR lnxjmp
       ansible.builtin.copy:
-        dest: '/home/ciscosupporttier4/HAfiles/'
-        src: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-hosts"
-      loop: "{{ data_conf_hosts | difference(groups['dr']) }}"
-      loop_control:
-        loop_var: host_item
+        dest: "{{ hafiles_storage}}/hosts"
+        src: "{{ role_path }}/files/hosts"
     delegate_to: "{{ groups['drlnxjmp']|first }}"
     run_once: true
     when:
       - customer.disaster_recovery
       - hosts_in_play | difference(groups['dr']) | length == 0
+      - hosts_in_play | select('search', 'drlnxjmp') | length >= 1
     vars:
       hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) }}"
 
   - name: delete local file
     ansible.builtin.file:
-      path: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-hosts"
+      path: "{{ role_path }}/files/{{ 'dr' if host_item is search('dr') else '' }}hosts"
       state: absent
-    loop: "{{ data_conf_hosts }}"
+    loop:
+      - "{{ data_conf_hosts | intersect(groups['stack']) | first }}"
+      - "{{ data_conf_hosts | intersect(groups['dr']) | first }}"
     loop_control:
       loop_var: host_item
     delegate_to: localhost

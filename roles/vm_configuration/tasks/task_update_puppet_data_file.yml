@@ -33,13 +33,16 @@
     become: "{{ true if inventory_hostname is search('em7') else false }}"
 
   - block:
+    - name: define location to store HA files on DR lnxjmp
+      set_fact:
+        hafiles_storage: '/opt/HAfiles'
     - name: create directory to store HA files on DR lnxjmp
       ansible.builtin.file:
-        path: '/home/ciscosupporttier4/HAfiles'
+        path: "{{ hafiles_storage }}"
         state: directory
     - name: copy HA data.conf files to DR lnxjmp
       ansible.builtin.copy:
-        dest: '/home/ciscosupporttier4/HAfiles/'
+        dest: "{{ hafiles_storage }}"
         src: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
       loop: "{{ data_conf_hosts | difference(groups['dr']) }}"
       loop_control:
@@ -49,6 +52,7 @@
     when:
       - customer.disaster_recovery
       - hosts_in_play | difference(groups['dr']) | length == 0
+      - hosts_in_play | select('search', 'drlnxjmp') | length >= 1
     vars:
       hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) }}"
 
