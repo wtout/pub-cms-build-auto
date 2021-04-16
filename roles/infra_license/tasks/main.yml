@@ -61,6 +61,11 @@
       register: csr_license_details_1
       failed_when: csr_license_details_1 is search('1/1 licenses were failed to install')
 
+    - name: disable scp server
+      ios_config:
+        lines:
+          - no ip scp server enable
+
     - name: Remove CSR key from known_hosts
       known_hosts:
         name: "{{ netconfig.ipaddress3 }}"
