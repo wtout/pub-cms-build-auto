@@ -5,8 +5,6 @@
     - name: define list of hosts that need data.conf
       ansible.builtin.set_fact:
         data_conf_hosts: "{{ (groups['stack'] | difference(groups['infra']) if groups['infra'] is defined else groups['stack']) if hostvars[groups['vcenter']|first]['information']['deptype'] == 'h' else ((groups['stack'] | union(groups['dr']) | difference(groups['infra'] | union(groups['drinfra'])) if (hosts_in_play|length >= groups['dr']|length and hosts_in_play | difference(groups['dr']) | length == 0) else hosts_in_play | difference(groups['infra'] | union(groups['drinfra']))) if customer.disaster_recovery else groups['stack'] | difference(groups['infra'])) }}"
-      vars:
-        hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a' else ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet']) }}"
     - name: create the files directory
       ansible.builtin.file:
         path: "{{ role_path }}/files"
@@ -53,8 +51,6 @@
       - customer.disaster_recovery
       - hosts_in_play | difference(groups['dr']) | length == 0
       - hosts_in_play | select('search', 'drlnxjmp') | length >= 1
-    vars:
-      hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a' else ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet']) }}"
 
   - name: delete local file
     ansible.builtin.file:
@@ -65,4 +61,6 @@
       loop_var: host_item
     delegate_to: localhost
     run_once: true
+  vars:
+    hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a' else ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet']) }}"
   tags: vm_configuration
