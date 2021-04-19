@@ -446,7 +446,7 @@ function enable_logging() {
 		else
 			export ANSIBLE_LOG_PATH=${LOG_FILE}
 			touch ${LOG_FILE}
-			chown $(stat -c '%U' $(pwd)):$(stat -c '%U' $(pwd)) ${LOG_FILE}
+			chown $(stat -c '%U' $(pwd)):$(stat -c '%G' $(pwd)) ${LOG_FILE}
 		fi
 		if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
 		then

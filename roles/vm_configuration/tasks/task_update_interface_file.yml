@@ -1,0 +1,25 @@
+---
+# tasks to update /etc/sysconfig/network-scripts/ifcfg-<intname> on EM7 VM
+- block:
+  - name: Update IPV6INIT in interfacte file
+    ansible.builtin.replace:
+      path: "{{ file_item }}"
+      regexp: '^(IPV6INIT=).*$'
+      replace: '\g<1>no'
+    loop: "{{ file_path }}"
+    loop_control:
+      loop_var: file_item
+  - name: Delete lines from interface file
+    ansible.builtin.replace:
+      path: "{{ file_item }}"
+      regexp: '^.*$'
+      replace: ''
+      after: '^IPV6INIT=.*$'
+    loop: "{{ file_path }}"
+    loop_control:
+      loop_var: file_item
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  when: inventory_hostname is search('em7')
+  vars:
+    file_path: "{{ ['/etc/sysconfig/network-scripts/ifcfg-ens160'] + ['/etc/sysconfig/network-scripts/ifcfg-ens192'] if netconfig.ipaddress2 != '' else ['/etc/sysconfig/network-scripts/ifcfg-ens160'] }}"
+  tags: vm_configuration

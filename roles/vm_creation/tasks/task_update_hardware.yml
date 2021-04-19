@@ -38,7 +38,7 @@
       wait_for_customization: true
     register: vmguest_1net
     ignore_errors: true
-    throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 0 }}"
+    throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
     when:
       - ova_nets.stdout_lines|length == 1
       - inventory_hostname is not regex('rly|lnxjmp')
@@ -76,7 +76,7 @@
       wait_for_customization: true
     register: vmguest_2net
     ignore_errors: true
-    throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 0 }}"
+    throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
     when:
       - ova_nets.stdout_lines|length == 2 or inventory_hostname is regex('rly|lnxjmp')
   - fail:

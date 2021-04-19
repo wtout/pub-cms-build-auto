@@ -1,0 +1,13 @@
+---
+# tasks to update /etc/sysconfig/network on dual interface VM
+- block:
+  - name: Update {{ file_path }} on VM
+    replace:
+      path: "{{ file_path }}"
+      regexp: '^GATEWAY.*$'
+      replace: ''
+  when: netconfig.ipaddress2 != ''
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  vars:
+    file_path: '/etc/sysconfig/network'
+  tags: vm_configuration

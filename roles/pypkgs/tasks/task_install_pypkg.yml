@@ -15,6 +15,6 @@
       state: 'latest'
       extra_args: --user
     when: auto_dir is not search('cdra')
-  environment:
-    http_proxy: "{{ proxyaddress }}"
+    environment:
+      http_proxy: "{{ proxyaddress }}"
   tags: [ 'always', 'pypkgs' ]
