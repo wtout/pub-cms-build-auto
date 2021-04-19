@@ -54,7 +54,7 @@
       - hosts_in_play | difference(groups['dr']) | length == 0
       - hosts_in_play | select('search', 'drlnxjmp') | length >= 1
     vars:
-      hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) }}"
+      hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a' else ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet']) }}"
 
   - name: delete local file
     ansible.builtin.file:
