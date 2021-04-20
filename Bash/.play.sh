@@ -85,7 +85,7 @@ function git_config() {
 			then
 				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) ]] && git config user.email ${GIT_EMAIL_ADDRESS} && git config remote.origin.url $(git config remote.origin.url | sed -e "s|//\(\w\)|//$(echo ${GIT_EMAIL_ADDRESS} | cut -d '@' -f1)@\1|") || EC=1
 			else
-				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) && "$(git config remote.origin.url)" == *$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/^.*@\(.*\)\..*$/\1/')* ]] && git config user.email ${GIT_EMAIL_ADDRESS} && git config remote.origin.url $(git config remote.origin.url | sed -e "s|//\(\w\)|//$(echo ${GIT_EMAIL_ADDRESS} | cut -d '@' -f1)@\1|") || EC=1
+				read -p "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" && ("$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${NAME:0:2}* && "$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/.*= \(.*\)@.*/\1/')" == *${SURNAME:0:5}*) && "$(git config remote.origin.url)" == *$(echo ${GIT_EMAIL_ADDRESS} | sed -e 's/^.*@\(.*\)\..*$/\1/')* ]] && git config user.email ${GIT_EMAIL_ADDRESS} || EC=1
 			fi
 		else
 			if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]]
@@ -119,7 +119,8 @@ function get_centos_release() {
 function get_proxy() {
 	chmod +x Bash/get*
 	grep '^proxy.*:.*@*' /etc/environment /etc/profile ~/.bashrc ~/.bash_profile &>/dev/null && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-	local MYPROXY=$(grep -r "^proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
+	local MYPROXY=$(grep -r "^proxy.*=.*" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
+	[[ "x$(echo ${MYPROXY} | grep http)" == "x" ]] && local MYPROXY=http://${MYPROXY}
 	local PUBLIC_ADDRESS="https://ntppool.org"
 	if [[ ${MYPROXY} == '' ]]
 	then
@@ -424,12 +425,12 @@ function create_log_dir() {
 	if [[ ! -d "${ANSIBLE_LOG_LOCATION}" ]]
 	then
 		mkdir -m 775 -p ${ANSIBLE_LOG_LOCATION}
-		chown -R $(stat -c '%U' $(pwd)):$(stat -c '%G' $(pwd)) ${ANSIBLE_LOG_LOCATION}
+		chown -R "$(stat -c '%U' $(pwd))":"$(stat -c '%G' $(pwd))" ${ANSIBLE_LOG_LOCATION}
 	else
 		if [[ ! -w "${ANSIBLE_LOG_LOCATION}" ]]
 		then
 			chmod 775 ${ANSIBLE_LOG_LOCATION}
-			chown -R $(stat -c '%U' $(pwd)):$(stat -c '%G' $(pwd)) ${ANSIBLE_LOG_LOCATION}
+			chown -R "$(stat -c '%U' $(pwd))":"$(stat -c '%G' $(pwd))" ${ANSIBLE_LOG_LOCATION}
 		fi
 	fi
 }
@@ -446,7 +447,7 @@ function enable_logging() {
 		else
 			export ANSIBLE_LOG_PATH=${LOG_FILE}
 			touch ${LOG_FILE}
-			chown $(stat -c '%U' $(pwd)):$(stat -c '%G' $(pwd)) ${LOG_FILE}
+			chown "$(stat -c '%U' $(pwd))":"$(stat -c '%G' $(pwd))" ${LOG_FILE}
 		fi
 		if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
 		then

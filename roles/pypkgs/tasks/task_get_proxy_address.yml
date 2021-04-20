@@ -2,14 +2,14 @@
 # Tasks to define the proxy address
 - block:
   - name: get proxy setting
-    shell: grep -r "^proxy.*=.*ht" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
+    shell: grep -r "^proxy.*=.*" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
     register: proxy_string
     no_log: true
     check_mode: no
 
   - name: define proxy_address
     set_fact:
-      proxy_address: "{{ proxy_string.stdout }}"
+      proxy_address: "{{ 'http://' + proxy_string.stdout if proxy_string.stdout is not search('http') else proxy_string.stdout }}"
     no_log: "{{ true if proxy_string.stdout is regex(':.*@') else false }}"
 
   - name: validate detected proxy setting

@@ -6,6 +6,15 @@ auto_dir: "{{ lookup('env', 'PWD') }}"
 # Do not modify anything below this line
 ##########################################
 datacenters:
+  RTP-Staging:
+    vsphere: 'sastgvcap01.staging.cisco-cms.com'
+    deptype: 'h'
+    folder: 'Hosted Customers'
+    cluster: 'Staging'
+    datastore_cluster: 'Staging-DS'
+    storage_datastore: 'stg-ds-01'
+    storage_path: ''
+
   PAE-HX-DC-1:
     vsphere: 'paevcenter01.cisco-pae.com'
     deptype: 'h'

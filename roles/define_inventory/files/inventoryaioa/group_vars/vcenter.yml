@@ -6,7 +6,7 @@ ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ ssh_username }}@{{ ssh_address }}"
 ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else '' }}"
 
 credentials:
-  username: "{{ datacenters[datacenter.name]['vsphere'].split('.')[-2].split('-')|last }}\\{{ SVC_USER | default('') }}"
+  username: "{{ datacenters[datacenter.name]['vsphere'].split('.')[-3] if datacenters[datacenter.name]['vsphere']|lower is search('staging') else datacenters[datacenter.name]['vsphere'].split('.')[-2].split('-')|last }}\\{{ SVC_USER | default('') }}"
   password: "{{ SVC_PASS | default('') }}"
 
 pcluster_name: "{{ (datacenter.resources[0].split('.')|last if datacenter.resources|length == 1 else (datacenter.resources[0].split('.')|last + '-' + datacenter.resources[1].split('.')|last) if datacenter.resources[0].split('.')|last|int < datacenter.resources[1].split('.')|last|int else (datacenter.resources[1].split('.')|last + '-' + datacenter.resources[0].split('.')|last)) if datacenter.resources != [] and datacenter.resources != [''] else '' }}"
