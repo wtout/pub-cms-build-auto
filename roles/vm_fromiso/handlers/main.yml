@@ -64,6 +64,7 @@
     vgcreate vgroup2 /dev/sdb
     lvcreate -l100%FREE -n opt /dev/vgroup2
   become: "{{ true if inventory_hostname is search('em7') else false }}"
+  notify: create disk1 filesystem
   when: vm.name is not search('mdr')
   tags: vm_creation
 
