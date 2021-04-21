@@ -24,5 +24,4 @@
     meta: flush_handlers
   - include_tasks: task_update_exports_file.yml
   - include_tasks: task_update_dbconns_file.yml
-  - include_tasks: task_update_silo_dr_file.yml
   tags: vm_configuration

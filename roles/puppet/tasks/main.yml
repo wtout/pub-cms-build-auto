@@ -15,11 +15,17 @@
         register: pp_vm_creds1
         ignore_errors: true
         check_mode: no
-      - name: Update SSH password
-        set_fact:
-          ansible_ssh_pass: "{{ postppp }}"
-          ansible_become_pass: "{{ postppp }}"
-        no_log: true
+      - block:
+        - name: Update SSH password
+          set_fact:
+            ansible_ssh_pass: "{{ postppp }}"
+            ansible_become_pass: "{{ postppp }}"
+          no_log: true
+        - name: check updated VM credentials
+          wait_for_connection:
+            timeout: 3
+          register: pp_vm_creds2
+          check_mode: no
         when:
           - pp_vm_creds1 is failed
           - pp_vm_creds1.msg is search('Invalid/incorrect username/password')
@@ -27,7 +33,10 @@
         - ansible_ssh_pass != postppp
         - inventory_hostname is not search('em7') or customer.release is search('9.2')
     - include_tasks: task_em7_check_license.yml
-      when: group_names | select('regex', 'stack|dr') | list | length >=1
+      when:
+        - ansible_ssh_pass != postppp
+        - group_names | select('regex', 'stack|dr') | list | length >=1
+    - include_tasks: task_update_silo_dr_file.yml
     - block:
       - include_tasks: task_delete_certificates.yml
       - include_tasks: task_add_vm_to_class.yml

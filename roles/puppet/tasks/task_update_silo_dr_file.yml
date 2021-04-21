@@ -1,0 +1,17 @@
+---
+# tasks to update /etc/silo.conf on EM7 VM
+- block:
+  - name: Update dbpasswd in silo.conf on DR VM
+    replace:
+      path: /etc/silo.conf
+      regexp: '^({{ task_item.param }}) (.*)$'
+      replace: '\g<1> {{ task_item.value }}'
+    loop:
+      - { param: 'dbpasswd =', value: '{{ EM7DBPPP_PASS }}' }
+    loop_control:
+      loop_var: task_item
+    no_log: true
+  when:
+    - (inventory_hostname is regex('drem7(prt|db)') and customer.release is search('9.2')) or (inventory_hostname is search('drem7prt') and customer.release is not search('9.2'))
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  tags: puppet

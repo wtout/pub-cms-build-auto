@@ -39,5 +39,5 @@
     - inventory_hostname == em7_play_hosts_list|first
     - groups['em7db'] is defined
   vars:
-    em7_play_hosts_list: "{{ ansible_play_hosts | select('match', 'em7.*') | list }}"
+    em7_play_hosts_list: "{{ ansible_play_hosts | select('search', 'em7.*') | list }}"
   tags: vm_configuration
