@@ -33,6 +33,15 @@ datacenters:
     storage_datastore: 'HX-DS-02'
     storage_path: ''
 
+  PAE-HX-DC-3:
+    vsphere: 'paevcenter01.cisco-pae.com'
+    deptype: 'h'
+    folder: 'HX Plat-Ops'
+    cluster: 'PAE-RTP-HX'
+    datastore_cluster: 'HX-Datastore-Cluster'
+    storage_datastore: 'HX-DS-02'
+    storage_path: ''
+
   Plat-Ops:
     vsphere: 'paevcenter01.cisco-pae.com'
     deptype: 'a'
