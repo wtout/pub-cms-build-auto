@@ -36,7 +36,6 @@
       when:
         - ansible_ssh_pass != postppp
         - group_names | select('regex', 'stack|dr') | list | length >=1
-    - include_tasks: task_update_silo_dr_file.yml
     - block:
       - include_tasks: task_delete_certificates.yml
       - include_tasks: task_add_vm_to_class.yml
