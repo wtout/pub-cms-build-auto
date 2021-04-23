@@ -9,15 +9,17 @@
     loop: "{{ file_path }}"
     loop_control:
       loop_var: file_item
+    notify: restart network
   - name: Delete lines from interface file
     ansible.builtin.replace:
       path: "{{ file_item }}"
       regexp: '^.*$'
       replace: ''
-      after: '^IPV6INIT=.*$'
+      after: 'IPV6INIT=no'
     loop: "{{ file_path }}"
     loop_control:
       loop_var: file_item
+    notify: restart network
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   when: inventory_hostname is search('em7')
   vars:

@@ -3,7 +3,8 @@
 - block:
   - name: define loop list
     ansible.builtin.set_fact:
-      loop_list: "{{ [data_conf_hosts | intersect(groups['stack']) | first] + [data_conf_hosts | intersect(groups['dr']) | first] if customer.disaster_recovery else [data_conf_hosts | intersect(groups['stack']) | first] }}"
+      loop_list: "{{ [data_conf_hosts | intersect(groups['stack']) | first] + [data_conf_hosts | intersect(groups['dr']) | first] if customer.disaster_recovery and data_conf_hosts | intersect(groups['dr'])|length >= 1 else [data_conf_hosts | intersect(groups['stack']) | first] }}"
+
   - name: render hosts file
     ansible.builtin.template:
       src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if host_item is search('dr') else '' }}hosts.tmpl"

@@ -5,14 +5,14 @@
     name: chronyd
     state: restarted
     daemon_reload: yes
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration
 
 - name: yum clean all
   command: yum clean all
   args:
     warn: no
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration
 
 - name: restart snmpd service
@@ -20,7 +20,7 @@
     name: snmpd
     state: restarted
     daemon_reload: yes
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration
 
 - name: restart drbd
@@ -28,7 +28,7 @@
     name: drbd
     state: restarted
     daemon_reload: yes
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify:
     - mount drbd1
     - start mysql
@@ -43,7 +43,7 @@
     {{ 'drbd-overview | grep -i secondary/secondary' if customer.release is not search('9.2') else '/sbin/drbdadm status | grep -i r0 | cut -d ":" -f2 | grep -i secondary && /sbin/drbdadm status | grep -i "peer " | cut -d ":" -f2 | grep -i secondary' }} && /sbin/drbdadm primary r0
     mount /dev/drbd1 /data.local/db
     df | grep /drbd1
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   register: drbd1_status
   until: drbd1_status.stdout is regex('drbd1|Secondary')
   failed_when: drbd1_status.stdout is not regex('drbd1|Secondary')
@@ -57,7 +57,7 @@
   systemd:
     name: mysql
     state: started
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   when:
     - inventory_hostname is search('01')
     - drbd1_status.stdout is not search('Secondary')
@@ -67,7 +67,7 @@
   systemd:
     name: em7
     state: started
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   when: inventory_hostname is search('01')
   tags: vm_configuration
 
@@ -76,7 +76,7 @@
     name: pacemaker
     state: restarted
     daemon_reload: yes
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   register: pacemaker_status
   until: pacemaker_status is succeeded
   tags: vm_configuration
@@ -86,13 +86,28 @@
     name: corosync
     state: restarted
     daemon_reload: yes
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration
 
 - name: start nfs
   systemd:
     name: nfs
     state: started
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration
 
+- name: restart network
+  systemd:
+    name: network
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_configuration
+
+- name: restart firewalld
+  systemd:
+    name: firewalld
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_configuration

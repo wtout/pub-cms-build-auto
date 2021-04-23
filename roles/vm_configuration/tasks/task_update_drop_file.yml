@@ -10,6 +10,7 @@
       - { param: 'source address=', value: "{{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}" }
     loop_control:
       loop_var: task_item
+    notify: restart firewalld
   - name: check if ipv4 block exists
     ansible.builtin.replace:
       path: /etc/firewalld/zones/drop.xml
