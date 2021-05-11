@@ -551,7 +551,7 @@ ANSIBLE_VERSION='2.10.7'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
 REPOVAULT="${PWD}/.repovault.yml"
-SECON=false
+SECON=true
 
 # Main
 create_log_dir
