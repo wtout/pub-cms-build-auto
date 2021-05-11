@@ -532,7 +532,7 @@ vm_vars:
       nic1:
 
         # Interface name
-        intname: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.intname if (environment_definition.vm_setting.infra.nsvpx.nic1.intname is defined and environment_definition.vm_setting.infra.nsvpx.nic1.intname != none) else 'ens160' }}"
+        intname: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.intname if (environment_definition.vm_setting.infra.nsvpx.nic1.intname is defined and environment_definition.vm_setting.infra.nsvpx.nic1.intname != none) else '0/1' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool if (environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool != none) else [] }}"
@@ -560,7 +560,7 @@ vm_vars:
       nic2:
 
         # Interface name
-        intname: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.intname if (environment_definition.vm_setting.infra.nsvpx.nic2.intname is defined and environment_definition.vm_setting.infra.nsvpx.nic2.intname != none) else '' }}"
+        intname: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.intname if (environment_definition.vm_setting.infra.nsvpx.nic2.intname is defined and environment_definition.vm_setting.infra.nsvpx.nic2.intname != none) else '1/1' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool if (environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool != none) else [] }}"
@@ -581,7 +581,7 @@ vm_vars:
         netname: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.netname if (environment_definition.vm_setting.infra.nsvpx.nic2.netname is defined and environment_definition.vm_setting.infra.nsvpx.nic2.netname != none) else '' }}"
 
         # Net Base
-        netbase: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.network if (environment_definition.vm_setting.infra.nsvpx.nic2.network is defined and environment_definition.vm_setting.infra.nsvpx.nic2.network != none) else '' }}"
+        netbase: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.network if (environment_definition.vm_setting.infra.nsvpx.nic2.network is defined and environment_definition.vm_setting.infra.nsvpx.nic2.network != none) else 'Loadbalancer-Net' }}"
 
 
     ################
@@ -620,7 +620,7 @@ vm_vars:
         default_name: 'Ethernet0'
 
         # Interface name
-        intname: "{{ environment_definition.vm_setting.infra.winjmp.nic1.intname if (environment_definition.vm_setting.infra.winjmp.nic1.intname is defined and environment_definition.vm_setting.infra.winjmp.nic1.intname != none) else 'ens160' }}"
+        intname: "{{ environment_definition.vm_setting.infra.winjmp.nic1.intname if (environment_definition.vm_setting.infra.winjmp.nic1.intname is defined and environment_definition.vm_setting.infra.winjmp.nic1.intname != none) else 'QS Head-end' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.winjmp.nic1.ip_pool if (environment_definition.vm_setting.infra.winjmp.nic1.ip_pool is defined and environment_definition.vm_setting.infra.winjmp.nic1.ip_pool != none) else [] }}"
@@ -650,7 +650,7 @@ vm_vars:
         default_name: 'Ethernet1'
 
         # Interface name
-        intname: "{{ environment_definition.vm_setting.infra.winjmp.nic2.intname if (environment_definition.vm_setting.infra.winjmp.nic2.intname is defined and environment_definition.vm_setting.infra.winjmp.nic2.intname != none) else 'ens192' }}"
+        intname: "{{ environment_definition.vm_setting.infra.winjmp.nic2.intname if (environment_definition.vm_setting.infra.winjmp.nic2.intname is defined and environment_definition.vm_setting.infra.winjmp.nic2.intname != none) else 'Customer Inner-net' }}"
 
         # IP pool
         ip_pool: "{{ environment_definition.vm_setting.infra.winjmp.nic2.ip_pool if (environment_definition.vm_setting.infra.winjmp.nic2.ip_pool is defined and environment_definition.vm_setting.infra.winjmp.nic2.ip_pool != none) else [] }}"
