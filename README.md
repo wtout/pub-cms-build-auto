@@ -52,10 +52,16 @@ The system definition file name **must match the customer name** as defined in t
   - **customer.primary.octets** (_String_): Required. First three octets for primary stack
   - **customer.secondary.name_prefix** (_String_): Required when disaster_recovery is “yes”. Name prefix for secondary stack
   - **customer.secondary.octets** (_String_): Required when disaster_recovery is “yes”. First three octets for secondary stack
-  - **datacenter.name** (_String_): Required. Datacenter name
-  - **datacenter.resources** (_String_): Required for on-prem deployments. List of ESXI hosts
-  - **puppet.server_name** (_String_): Required. Valid values for Puppet server name are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
-  - **yum.server_name** (_String_): Required. Valid values for Yum server name are: **alln1qsyumrpp01** and **alln1qsyumrpp02**
+  - **datacenter.primary.name** (_String_): Required. Primary Datacenter name
+  - **datacenter.primary.cluster** (_String_): The cluster to host the customer's primary stack
+  - **datacenter.primary.resources** (_String_): Required for on-prem deployments. List of ESXI hosts
+  - **datacenter.secondary.name** (_String_): Required. Secondary Datacenter name
+  - **datacenter.secondary.cluster** (_String_): The cluster to host the customer's secondary (DR) stack
+  - **datacenter.secondary.resources** (_String_): Required for on-prem deployments. List of ESXI hosts
+  - **puppet.primary.server_name** (_String_): Required. Valid values for Puppet server name are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
+  - **puppet.secondary.server_name** (_String_): Required. Valid values for Puppet server name are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
+  - **yum.primary.server_name** (_String_): Required. Valid values for Yum server name are: **alln1qsyumrpp01** and **alln1qsyumrpp02**
+  - **yum.secondary.server_name** (_String_): Required. Valid values for Yum server name are: **alln1qsyumrpp01** and **alln1qsyumrpp02**
 
 Non-standard host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file must match the name of the host as defined in the hosts.yml file. This can only be done after the system inventory has been created.
 
@@ -87,7 +93,7 @@ with the system-name being the name of the system definition file from "Configur
 
 - ``play_rollback.sh``
 
-  Script output is automatically saved to a log file. The file is saved under _``/var/tmp/ansible/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
+  Script output is automatically saved to a log file. The file is saved under _``Logs/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
 
 ***Note**: Running multiple instances of the same script for a given customer simultaneously is prohibited*
 
@@ -103,15 +109,20 @@ The list of roles used in the playbooks:
   - **collect_info**: prompts the user for required information
   - **check_creds**: validates the user's credentials
   - **todo**: determines what roles and/or tasks to execute
+  - **vm_facts**: defines the individual VM facts required in the playbook
   - **ssh_keys**: creates and deploys SSH keys to the bastion server(s) if applicable
+  - **infra_configure**: creates clusters and deploys datastores, network portgroups and vSwitches
   - **capcheck**: performs a capacity check of the infrastructure
   - **get_release**: downloads the release package from the repository
-  - **vm_facts**: defines the individual VM facts required in the playbook
-  - **vm_creation**: deploys the stack's VMs from OVA
-  - **drs_creation**: creates the DRS rules
+  - **infra_dns_records**: creates all required DNS records for a given stack
+  - **infra_build_nodes**: deploys and configures CSRs, Netscalers, and Windows Jump Servers
+  - **infra_license**: retrieves licenses from Packages/licenses and applies them to CSRs
+  - **infra_check_csr_license**: verifies that CSRs licenses are active
   - **vm_fromiso**: deploys the stack's VMs from ISO
   - **vm_hardening**: enables hardening on the VMS created from ISO
   - **integ_splunk**: Downloads, configures and runs the MDR-Splunk automation package to install the core and the customer forwarder
+  - **vm_creation**: deploys the stack's VMs from OVA
+  - **drs_creation**: creates the DRS rules
   - **vm_configuration**: configures the stack's VMs
   - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
   - **vm_ppp_configuration**: configures the stack's VMs post initial puppet push
