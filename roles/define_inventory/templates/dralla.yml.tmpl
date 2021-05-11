@@ -1105,7 +1105,7 @@ drvm_vars:
         gtw: "{{ environment_definition.drvm_setting.infra.csr.nic5.gtw if (environment_definition.drvm_setting.infra.csr.nic5.gtw is defined and environment_definition.drvm_setting.infra.csr.nic5.gtw != none) else '' }}"
 
         # Gateway fourth octet
-        gtw_octet: "{{ environment_definition.drvm_setting.infra.csr.nic5.gtw_octet if (environment_definition.drvm_setting.infra.csr.nic5.gtw_octet is defined and environment_definition.drvm_setting.infra.csr.nic5.gtw_octet != none) else '126' }}"
+        gtw_octet: "{{ environment_definition.drvm_setting.infra.csr.nic5.gtw_octet if (environment_definition.drvm_setting.infra.csr.nic5.gtw_octet is defined and environment_definition.drvm_setting.infra.csr.nic5.gtw_octet != none) else '123' }}"
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.infra.csr.nic5.netmask if (environment_definition.drvm_setting.infra.csr.nic5.netmask is defined and environment_definition.drvm_setting.infra.csr.nic5.netmask != none) else '255.255.255.224' }}"
