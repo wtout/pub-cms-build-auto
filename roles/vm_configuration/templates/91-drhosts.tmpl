@@ -1,8 +1,8 @@
 127.0.0.1 localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1 localhost localhost.localdomain localhost6 localhost6.localdomain6
 
-{{ puppet.ipaddress }} {{ puppet.vmname }} {{ puppet.fqdn }}
-{{ yum.ipaddress }} {{ yum.vmname }} {{ yum.fqdn }}
+{{ puppet.secondary.ipaddress }} {{ puppet.secondary.vmname }} {{ puppet.secondary.fqdn }}
+{{ yum.secondary.ipaddress }} {{ yum.secondary.vmname }} {{ yum.secondary.fqdn }}
 {{ splunk.he_deployment_server_ip }} splunk-head-deployment-server splunk-head-deployment-server
 {{ splunk.license_master_ip }} splunk-license-master splunk-license-master
 {{ splunk.mom_indexer1_ip }} splunk-momidx-01 splunk-momidx-01

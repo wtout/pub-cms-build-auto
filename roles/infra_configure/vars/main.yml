@@ -1,7 +1,5 @@
 ---
 # vars file for infra_configure
-resources: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
-
 portgroups:
   - name: "{{ customer_prefix }}-Customer-Net-Internet"
     switch: 'vSwitch0'

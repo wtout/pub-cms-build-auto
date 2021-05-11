@@ -29,44 +29,49 @@
     loop_control:
       loop_var: host_item
 
-  - name: define host cluster
+  - name: define AIO host cluster
     set_fact:
       cluster_host1: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first }}"
-    when: information.resources|length == 1
-
-  - name: define HA hosts clusters
-    set_fact:
-      cluster_host1: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first }}"
-      cluster_host2: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[1])|map(attribute='value')|list|first }}"
-    when: information.resources|length > 1
-
-  - name: define DR host cluster
-    set_fact:
-      cluster_host3: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[2])|map(attribute='value')|list|first }}"
-    when: customer.disaster_recovery
-
-  - name: verify that HA hosts are in the same cluster
-    assert:
-      that:
-        - "cluster_host1 == cluster_host2"
-      fail_msg: "HA hosts cannot be in different clusters. Aborting"
     when:
-      - information.resources|length > 1
-      - cluster_host1 != ''
-      - cluster_host2 != ''
+      - "'vcenter' in group_names"
+      - information.resources|length == 1
 
-  - name: verify that DR host is not in the same cluster as HA hosts
-    assert:
-      that:
-        - "cluster_host3 != cluster_host1"
-      fail_msg: "DR host cannot be in the same cluster as the HA hosts. Aborting"
+  - block:
+    - name: define HA hosts clusters
+      set_fact:
+        cluster_host1: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first }}"
+        cluster_host2: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[1])|map(attribute='value')|list|first }}"
+      when: information.resources|length > 1
+    - name: verify that HA hosts are in the same cluster
+      assert:
+        that:
+          - "cluster_host1 == cluster_host2"
+        fail_msg: "HA hosts cannot be in different clusters. Aborting"
+      when:
+        - information.resources|length > 1
+        - cluster_host1 != ''
+        - cluster_host2 != ''
+    when: "'vcenter' in group_names"
+
+  - block:
+    - name: define DR host cluster
+      set_fact:
+        cluster_host3: "{{ host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first }}"
+    - name: verify that DR host is not in the same cluster as HA hosts
+      assert:
+        that:
+          - "cluster_host3 != hostvars['vcenter01']['cluster_host1']"
+        fail_msg: "DR host cannot be in the same cluster as the HA hosts. Aborting"
+      when:
+        - cluster_host3 != ''
     when:
       - customer.disaster_recovery
-      - cluster_host3 != ''
+      - "'drvcenter' in group_names"
 
   - debug:
       msg: "{{ 'HA hosts are' if information.resources|length > 1 else 'Host is' }} already in the '{{ cluster_host1 }}' cluster. Primary cluster name spcified in definition file will be ignored"
     when:
+      - "'vcenter' in group_names"
       - information.resources|length > 1
       - cluster_host1 != ''
       - cluster_host1 != information.cluster
@@ -75,8 +80,9 @@
       msg: "DR host is already in the '{{ cluster_host3 }}' cluster. Secondary cluster name spcified in definition file will be ignored"
     when:
       - customer.disaster_recovery
+      - "'drvcenter' in group_names"
       - cluster_host3 != ''
-      - cluster_host3 != information.drcluster
+      - cluster_host3 != information.cluster
 
   - name: update vcenter's information with cluster names
     set_fact:
@@ -84,8 +90,7 @@
     vars:
       new_item: "{'{{ task_item.key }}': '{{ task_item.value }}'}"
     loop:
-      - { key: 'cluster', value: '{{ cluster_host1 }}' }
-      - { key: 'drcluster', value: '{{ cluster_host3|default("") }}' }
+      - { key: 'cluster', value: "{{ cluster_host3 if customer.disaster_recovery and 'drvcenter' in group_names else cluster_host1 }}" }
     loop_control:
       loop_var: task_item
       label: "{{ task_item }}"

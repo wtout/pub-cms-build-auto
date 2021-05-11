@@ -7,13 +7,13 @@
     become: true
     ignore_errors: true
     register: certs_on_puppet1
-    delegate_to: "{{ groups['puppet']|first }}"
+    delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
     run_once: true
   - debug:
       msg:
         - "{{ certs_on_puppet1.stdout_lines }}"
     run_once: true
-  - name: check if certificate is created on {{ puppet.vmname }}
+  - name: check if certificate is created on {{ puppet.secondary.vmname if 'dr' in group_names else puppet.primary.vmname }}
     set_fact:
       cert_exists1: "{{ certs_on_puppet1.stdout_lines|default([]) | select('search', host_cert_name) | list | length == 1 }}"
   - name: initialize hosts count
@@ -47,7 +47,7 @@
       become: true
       ignore_errors: true
       register: certs_on_puppet2
-      delegate_to: "{{ groups['puppet']|first }}"
+      delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
       run_once: "{{ true if hosts_count|int > 1 else false }}"
     - name: look for certificate on server
       set_fact:
@@ -67,6 +67,6 @@
     delay: 10
     become: true
     ignore_errors: true
-    delegate_to: "{{ groups['puppet']|first }}"
+    delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
     when: cert_exists1|default(false) or cert_exists2|default(false)
   tags: puppet

@@ -11,7 +11,7 @@ vm:
   disk1: "{{ vm_vars.infra.winjmp.disk1 | default(0) }}"
   disk2: "{{ vm_vars.infra.winjmp.disk2 | default(0) }}"
   disk3: "{{ vm_vars.infra.winjmp.disk3 | default(0) }}"
-  name: "{{ vm_vars.infra.winjmp.vmname if vm_vars.infra.winjmp.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + datacenters[datacenter.name]['deptype'] + inventory_hostname[-2:]) }}"
+  name: "{{ vm_vars.infra.winjmp.vmname if vm_vars.infra.winjmp.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + datacenters[datacenter.primary.name]['deptype'] + inventory_hostname[-2:]) }}"
 
 netconfig:
   static_route_ips: "{{ vm_vars.infra.winjmp.static_ips }}"

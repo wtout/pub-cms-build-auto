@@ -2,13 +2,13 @@
 # Task file to deploy CSR from ova
 - name: Deploy CSRs from OVA
   vmware_deploy_ovf:
-    hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-    username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-    password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-    datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-    cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-    datastore: "{{ hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
-    folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+    hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+    username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+    password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+    datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+    cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+    datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
+    folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
     name: "{{ vm.name }}"
     networks: {}
     ova: "{{ ova_dir }}/{{ ova_names.csr }}"
@@ -25,7 +25,7 @@
       com.cisco.csr1000v.mgmt-ipv4-gateway.1: "dhcp"
       com.cisco.csr1000v.privilege-password.1 : "{{ credentials.password }}"
       com.cisco.csr1000v.hostname.1 : "{{ vm.name }}"
-      com.cisco.csr1000v.domain-name.1 : "{{ sysconfig.domain_name }}"
+      com.cisco.csr1000v.domain-name.1 : "{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"
   environment:
     http_proxy: ''
     https_proxy: ''

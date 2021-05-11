@@ -11,7 +11,7 @@
       name: "{{ auto_dir + '/roles/vm_configuration' }}"
       tasks_from: task_make_db01_primary.yml
   - name: "relaunch puppet push #1"
-    shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+    shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
     register: puppet_agent2
     async: 2700
     poll: 10
@@ -53,7 +53,7 @@
         name: "{{ auto_dir + '/roles/vm_configuration' }}"
         tasks_from: task_make_db01_primary.yml
     - name: "relaunch puppet push #2"
-      shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+      shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
       register: puppet_agent3
       async: 2700
       poll: 10
@@ -96,7 +96,7 @@
           name: "{{ auto_dir + '/roles/vm_configuration' }}"
           tasks_from: task_make_db01_primary.yml
       - name: "relaunch puppet push #3"
-        shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+        shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
         register: puppet_agent4
         async: 2700
         poll: 10

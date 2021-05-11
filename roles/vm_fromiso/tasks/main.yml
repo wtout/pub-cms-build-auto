@@ -12,6 +12,9 @@
     - include_tasks: task_create_vms.yml
     when: create_vms_iso | default(false) | bool
 
-  - include_tasks: task_rollback_vms.yml
+  - name: "{{ auto_dir + '/roles/vm_creation' }}: Rollback VMs"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      tasks_from: task_rollback_vms.yml
     when: rollback_vms_iso | default(false) | bool
   tags: vm_creation

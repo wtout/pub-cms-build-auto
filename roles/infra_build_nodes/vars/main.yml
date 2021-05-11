@@ -19,12 +19,12 @@ winjmp:
       ignore_errors: no
 
     - name: Set primary DNS entry for interface 1
-      command: interface ip set dns "{{ netconfig.intname1 }}" static {{ sysconfig.dns_servers[0] }} primary
+      command: interface ip set dns "{{ netconfig.intname1 }}" static {{ sysconfig.secondary.dns_servers[0] if 'dr' in group_names else sysconfig.primary.dns_servers[0] }} primary
       shell: c:\windows\system32\netsh.exe
       ignore_errors: no
 
     - name: Add secondary DNS entry for interface 1
-      command: interface ip add dns "{{ netconfig.intname1 }}" {{ sysconfig.dns_servers[1] }} index=2
+      command: interface ip add dns "{{ netconfig.intname1 }}" {{ sysconfig.secondary.dns_servers[1] if 'dr' in group_names else sysconfig.primary.dns_servers[1] }} index=2
       shell: c:\windows\system32\netsh.exe
       ignore_errors: yes
 

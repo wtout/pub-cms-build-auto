@@ -4,12 +4,12 @@
   - include_tasks:
       file: task_get_hosted_datastore.yml
     when:
-      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
-      - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] == ''
+      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h'
+      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == ''
 
   - include_tasks:
       file: task_get_onprem_datastore.yml
     when:
-      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
+      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
 
   tags: vm_creation

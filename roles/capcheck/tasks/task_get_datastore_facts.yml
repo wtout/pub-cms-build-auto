@@ -12,42 +12,92 @@
     register: datastore_info
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
-  - name: define lists of datastores to host the VMs
-    include_tasks:
-      file:
-        task_define_datastores_list.yml
-      apply:
-        vars:
-          - vm_group: "{{ group_item }}"
-          - ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
-    loop: "{{ play_stack_group_list }}"
-    loop_control:
-      loop_var: group_item
+  - block:
+    - name: define lists of datastores to host the VMs
+      include_tasks:
+        file:
+          task_define_datastores_list.yml
+        apply:
+          vars:
+            - vm_group: "{{ group_item }}"
+            - ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
+      loop: "{{ play_stack_group_list }}"
+      loop_control:
+        loop_var: group_item
+    - name: define list of usable datastores
+      set_fact:
+        usable_ds_list: "{{ usable_ds_list|default([]) | union(vars[group_item + '_ds_names']) }}" 
+      loop: "{{ play_stack_group_list|default([]) }}"
+      loop_control:
+        loop_var: group_item
+    - name: define total free space on usable datastores
+      set_fact:
+        total_fs: "{{ total_fs|default(0)|int + myvar[0] }}"
+      vars:
+        myvar: "{{ datastore_info.datastores|selectattr('name', 'equalto', loop_item)|map(attribute='freeSpace')|list }}"
+      loop: "{{ usable_ds_list }}"
+      loop_control:
+        loop_var: loop_item
+    when:
+      - play_stack_group_list is defined
+      - "'vcenter' in group_names"
 
-  - name: define list of usable datastores
-    set_fact:
-      usable_ds_list: "{{ usable_ds_list|default([]) | union(vars[group_item + '_ds_names']) }}" 
-    loop: "{{ play_stack_group_list }}"
-    loop_control:
-      loop_var: group_item
-
-  - name: define total free space on usable datastores
-    set_fact:
-      total_fs: "{{ total_fs|default(0)|int + myvar[0] }}"
-    vars:
-      myvar: "{{ datastore_info.datastores|selectattr('name', 'equalto', loop_item)|map(attribute='freeSpace')|list }}"
-    loop: "{{ usable_ds_list|default([]) }}"
-    loop_control:
-      loop_var: loop_item
+  - block:
+    - name: define lists of datastores to host the DR VMs
+      include_tasks:
+        file:
+          task_define_datastores_list.yml
+        apply:
+          vars:
+            - vm_group: "{{ group_item }}"
+            - ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
+      loop: "{{ play_dr_group_list }}"
+      loop_control:
+        loop_var: group_item
+    - name: define list of usable datastores
+      set_fact:
+        usable_ds_list: "{{ usable_ds_list|default([]) | union(vars[group_item + '_ds_names']) }}" 
+      loop: "{{ play_dr_group_list }}"
+      loop_control:
+        loop_var: group_item
+    - name: define total free space on usable datastores
+      set_fact:
+        total_fs: "{{ total_fs|default(0)|int + myvar[0] }}"
+      vars:
+        myvar: "{{ datastore_info.datastores|selectattr('name', 'equalto', loop_item)|map(attribute='freeSpace')|list }}"
+      loop: "{{ usable_ds_list }}"
+      loop_control:
+        loop_var: loop_item
+    when:
+      - customer.disaster_recovery
+      - play_dr_group_list is defined
+      - "'drvcenter' in group_names"
 
   - debug:
       msg:
         - "{{ usable_ds_list }}"
-        - "Total system available storage space: {{ (total_fs|float / 1024|pow(4))|string + ' TiB' if (total_fs|int)|string|length > 12 else (total_fs|float / 1024|pow(3))|string + ' GiB' }}"
+        - "Total {{ 'dr' if 'drvcenter' in group_names else 'stack' }} available storage space: {{ (total_fs|float / 1024|pow(4))|string + ' TiB' if (total_fs|int)|string|length > 12 else (total_fs|float / 1024|pow(3))|string + ' GiB' }}"
+    when:
+      - usable_ds_list is defined
+      - total_fs is defined
 
-  - assert:
+  - name: verify that there is enough space to deploy the VMs
+    assert:
       that:
-        - "(total_fs|float / 1024|pow(3)) >= stack_required_space|float"
-      fail_msg: "Not enough storage space to deploy all the VMs"
+        - "(total_fs|float / 1024|pow(3)) >= vars[('dr' if 'drvcenter' in group_names else 'stack') + '_required_space']|float"
+      fail_msg: "Not enough storage space to deploy all the {{ 'dr' if 'drvcenter' in group_names else 'stack' }} VMs"
+    when:
+      - total_fs is defined
+
+  - name: verify thay there is enough space to deploy HA + DR VMs
+    assert:
+      that:
+        - "((hostvars['vcenter01']['total_fs']|float + hostvars['drvcenter01']['total_fs']|float) / 1024|pow(3)) >= (hostvars['vcenter01']['stack_required_space']|float + hostvars['drvcenter01']['dr_required_space']|float)"
+      fail_msg: "Not enough storage space to deploy all the HA + DR VMs"
+    when:
+      - customer.disaster_recovery
+      - datacenter.primary.name == datacenter.secondary.name
+      - hostvars['vcenter01']['total_fs'] is defined
+      - hostvars['drvcenter01']['total_fs'] is defined
+    run_once: true
   tags: ['capcheck', 'vm_creation', 'infra_build_nodes']
-  

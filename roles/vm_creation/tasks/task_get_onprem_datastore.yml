@@ -2,7 +2,7 @@
 # tasks to define the on-prem datastore for each host
 - name: define on-prem datastores list for each host group
   set_fact:
-    vm_ds_names: "{{ hostvars[groups['vcenter']|first][inventory_hostname[:-2] + '_ds_names'] }}"
+    vm_ds_names: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first][inventory_hostname[:-2] + '_ds_names'] }}"
   tags: vm_creation
 
 - block:

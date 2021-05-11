@@ -3,15 +3,15 @@
 - block:
   - name: define iso_datastore and iso_path
     set_fact:
-      iso_datastore: "{{ hostvars[groups['vcenter'][0]]['information']['storage_datastore'] if hostvars[groups['vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}"
-      iso_path: "ISO{{ '/' + hostvars[groups['vcenter'][0]]['information']['storage_path'] if hostvars[groups['vcenter'][0]]['information']['storage_path'] != '' else '' }}"
+      iso_datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}"
+      iso_path: "ISO{{ '/' + hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else '' }}"
 
   - name: create a directory on the datastore
     vsphere_file:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
       datastore: "{{ iso_datastore }}"
       path: "{{ iso_path }}"
       state: directory
@@ -24,10 +24,10 @@
 
   - name: copy kickstart ISO file to vsphere
     vsphere_copy:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
       datastore: "{{ iso_datastore }}"
       src: "{{ role_path }}/files/{{ vm.name }}-kickstart.iso"
       path: "{{ iso_path }}/{{ vm.name }}-kickstart.iso"
@@ -36,10 +36,10 @@
 
   - name: check if the installer ISO is on the datastore
     vsphere_file:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
       datastore: "{{ iso_datastore }}"
       path: "{{ iso_path }}/{{ iso_installer }}"
       state: file
@@ -47,21 +47,21 @@
     register: iso_present
     ignore_errors: true
     when: ds_folder is succeeded
-    run_once: "{{ true if hostvars[groups['vcenter'][0]]['information']['deptype'] is search('h') else false }}"
+    run_once: "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else false }}"
 
   - name: copy installer ISO file to vsphere
     vsphere_copy:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
       datastore: "{{ iso_datastore }}"
       src: "{{ auto_dir }}/Packages/ISO/{{ iso_installer }}"
       dest: "{{ iso_path }}/{{ iso_installer }}"
       validate_certs: false
     async: 7200
     poll: 30
-    run_once: "{{ true if hostvars[groups['vcenter'][0]]['information']['deptype'] is search('h') else false }}"
+    run_once: "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else false }}"
     when:
       - iso_present is failed
       - not ansible_check_mode

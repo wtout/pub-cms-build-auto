@@ -19,8 +19,8 @@
   - name: Add the local time server to the chrony config file
     lineinfile:
       path: "{{ chrony_file }}"
-      line: "server {{ sysconfig.secondary_ntp_server if 'dr' in group_names else sysconfig.primary_ntp_server }} iburst"
+      line: "server {{ sysconfig.secondary.ntp_server if 'dr' in group_names else sysconfig.primary.ntp_server }} iburst"
       insertafter: '^# Please consider.*$'
     notify: restart chrony
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration

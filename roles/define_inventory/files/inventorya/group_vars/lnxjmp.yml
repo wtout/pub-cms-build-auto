@@ -15,7 +15,7 @@ vm:
   disk1: "{{ vm_vars.lnxjmp.disk1 | default(0) }}"
   disk2: "{{ vm_vars.lnxjmp.disk2 | default(0) }}"
   disk3: "{{ vm_vars.lnxjmp.disk3 | default(0) }}"
-  name: "{{ vm_vars.lnxjmp.vmname if vm_vars.lnxjmp.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + datacenters[datacenter.name]['deptype'] + inventory_hostname[-2:]) }}"
+  name: "{{ vm_vars.lnxjmp.vmname if vm_vars.lnxjmp.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + datacenters[datacenter.primary.name]['deptype'] + inventory_hostname[-2:]) }}"
 
 netconfig:
   intname1: "{{ vm_vars.lnxjmp.nic1.intname }}"

@@ -1,7 +1,7 @@
 ---
 # tasks file to delete portgroups
 - block:
-  - name: Define existing portgroups
+  - name: Define existing {{ 'DR ' if inventory_hostname is search('dr') else '' }}portgroups
     vmware_portgroup_info:
       hostname: "{{ information.address }}"
       username: "{{ credentials.username }}"

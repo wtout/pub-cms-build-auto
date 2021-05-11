@@ -8,7 +8,7 @@
       password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
       vm_type: vm
       validate_certs: no
-    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
+    loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
     loop_control:
       loop_var: host_item
       label: "{{ host_item }}"
@@ -68,7 +68,7 @@
         timeout: 3600
         state: present
         validate_certs: no
-      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
+      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
       loop_control:
         loop_var: host_item
         label: "{{ host_item }}"
@@ -86,7 +86,7 @@
         esxi_password: "{{ hostvars[groups['vcenter'][0]]['information']['hostpass'] }}"
         state: present
         validate_certs: no
-      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
+      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
       loop_control:
         loop_var: host_item
         label: "{{ host_item }}"
@@ -101,7 +101,7 @@
         timeout: 3600
         state: absent
         validate_certs: no
-      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'][:2] }}"
+      loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
       loop_control:
         loop_var: host_item
         label: "{{ host_item }}"

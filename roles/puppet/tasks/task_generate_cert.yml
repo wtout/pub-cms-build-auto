@@ -10,17 +10,17 @@
   - block:
     - name: Download Puppet to VM
       get_url:
-        url: "https://{{ puppet.fqdn }}:8140/packages/current/install.bash"
+        url: "https://{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}:8140/packages/current/install.bash"
         dest: /tmp
-        url_username: "{{ hostvars[groups['puppet']|first]['ansible_user'] }}"
-        url_password: "{{ hostvars[groups['puppet']|first]['ansible_ssh_pass'] }}"
+        url_username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'puppet']|first]['ansible_user'] }}"
+        url_password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'puppet']|first]['ansible_ssh_pass'] }}"
         validate_certs: no
       register: download_action
       until: download_action is succeeded
       retries: 7
     - name: Install Puppet on VM
       command: bash /tmp/install.bash
-      become: "{{ true if inventory_hostname is search('em7') else false }}"
+      become: "{{ true if ansible_user != 'root' else false }}"
       register: puppet_install
       until: puppet_install is succeeded
       retries: 5

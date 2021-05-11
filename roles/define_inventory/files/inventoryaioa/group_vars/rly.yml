@@ -15,7 +15,7 @@ vm:
   disk1: "{{ vm_vars.rly.disk1 | default(0) }}"
   disk2: "{{ vm_vars.rly.disk2 | default(0) }}"
   disk3: "{{ vm_vars.rly.disk3 | default(0) }}"
-  name: "{{ vm_vars.rly.vmname if vm_vars.rly.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + 'aio' + datacenters[datacenter.name]['deptype'] + inventory_hostname[-2:]) }}"
+  name: "{{ vm_vars.rly.vmname if vm_vars.rly.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + 'aio' + datacenters[datacenter.primary.name]['deptype'] + inventory_hostname[-2:]) }}"
 
 netconfig:
   intname1: "{{ vm_vars.rly.nic1.intname }}"

@@ -15,8 +15,8 @@
     copy:
       src: '{{ role_path }}/files/{{ file_item }}'
       dest: '/home/{{ vm_svc_user }}/hardening/'
-      owner: root
-      group: root
+      owner: "{{ vm_svc_user if inventory_hostname is search('em7') else 'root' }}"
+      group: "{{ vm_svc_user if inventory_hostname is search('em7') else 'root' }}"
     loop:
       - "{{ vm.name + '-hardening.sh' }}"
       - login.defs
@@ -24,16 +24,13 @@
       - system-auth-ac
     loop_control:
       loop_var: file_item
+    when: not ansible_check_mode
   - include_tasks: task_delete_hardening_script.yml
-  - name: switch to cmsbuild user
+  - name: switch to vm_svc_user user
     set_fact:
       ansible_user: "{{ vm_svc_user }}"
-    when: user.name == ''
-  - name: switch to custom user account
-    set_fact:
-      ansible_user: "{{ user.name }}"
-      ansible_ssh_pass: "{{ user.password }}"
-    when: user.name != ''
+      ansible_ssh_pass: "{{ vm_svc_pass }}"
+    no_log: true
   - name: run hardening script
     command: sh {{ vm.name }}-hardening.sh
     register: hard_script

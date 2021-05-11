@@ -62,14 +62,14 @@
         owner: em7release
       loop:
         - '[agent]'
-        - 'certname = em7release.{{ vm.name }}.{{ sysconfig.domain_name }}'
-        - 'server = {{ puppet.fqdn }}'
+        - "certname = em7release.{{ vm.name }}.{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"
+        - "server = {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}"
       loop_control:
         loop_var: line_item
     when: script2_stat.stat.exists
-    become: "{{ true if inventory_hostname is search('em7') else false }}"
+    become: "{{ true if ansible_user != 'root' else false }}"
   - name: create em7 certificate
-    shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+    shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
     register: puppet_agent_cmd
     failed_when: puppet_agent_cmd.stdout is not search('Creating a new SSL key for')
   when: inventory_hostname is search('em7')

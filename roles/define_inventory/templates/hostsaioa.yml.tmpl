@@ -8,7 +8,7 @@ all:
         vcenter[01:01]:
     puppet:
       hosts:
-        puppet[{{ environment_definition.puppet.server_name[-2:] }}:{{ environment_definition.puppet.server_name[-2:] }}]:
+        puppet[{{ environment_definition.puppet.primary.server_name[-2:] }}:{{ environment_definition.puppet.primary.server_name[-2:] }}]:
     nexus:
       hosts:
         nexus[01:02]:

@@ -1,4 +1,10 @@
 
+    drvcenter:
+      hosts:
+        drvcenter[01:01]:
+    drpuppet:
+      hosts:
+        drpuppet[{{ environment_definition.puppet.secondary.server_name[-2:] }}:{{ environment_definition.puppet.secondary.server_name[-2:] }}]:
     dr:
       children:
         drem7:

@@ -12,7 +12,7 @@ vm:
   disk1: "{{ drvm_vars.infra.nsvpx.disk1 | default(0) }}"
   disk2: "{{ drvm_vars.infra.nsvpx.disk2 | default(0) }}"
   disk3: "{{ drvm_vars.infra.nsvpx.disk3 | default(0) }}"
-  name: "{{ drvm_vars.infra.nsvpx.vmname if drvm_vars.infra.nsvpx.vmname != '' else (customer.secondary.name_prefix + inventory_hostname[2:-2] + datacenters[datacenter.name]['deptype'] + inventory_hostname[-2:]) }}"
+  name: "{{ drvm_vars.infra.nsvpx.vmname if drvm_vars.infra.nsvpx.vmname != '' else (customer.secondary.name_prefix + inventory_hostname[2:-2] + datacenters[datacenter.secondary.name]['deptype'] + inventory_hostname[-2:]) }}"
 
 netconfig:
   intname1: "{{ drvm_vars.infra.nsvpx.nic1.intname }}"

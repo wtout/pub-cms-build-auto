@@ -29,12 +29,13 @@ function check_hosts_limit() {
 		[[ "x$(echo ${MYTAGS})" == "x" ]] && local update_args=1
 		[[ "x$(echo ${MYTAGS} | egrep -w 'vm_creation|capcheck|infra_configure')" != "x" ]] && local update_args=1
 		[[ "x$(echo ${MYTAGS} | egrep -w 'infra_build_nodes')" != "x" ]] && local update_args=2
+		[[ "x$(echo ${MYHOSTS} | grep 'dr')" != "x" ]] && VCENTERS='vcenter,drvcenter' || VCENTERS='vcenter'
 		if [[ ${update_args} -eq 1 ]]
 		then
-			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},vcenter/")
+			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},${VCENTERS}/")
 		elif [[ ${update_args} -eq 2 ]]
 		then
-			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},vcenter,nexus/")
+			local NEWARGS=$(echo ${@} | sed "s/${MYHOSTS}/${MYHOSTS},${VCENTERS},nexus/")
 		else
 			local NEWARGS=${@}
 		fi
@@ -121,7 +122,7 @@ function get_proxy() {
 	grep '^proxy.*:.*@*' /etc/environment /etc/profile ~/.bashrc ~/.bash_profile &>/dev/null && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 	local MYPROXY=$(grep -r "^proxy.*=.*" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
 	[[ "x$(echo ${MYPROXY} | grep http)" == "x" ]] && local MYPROXY=http://${MYPROXY}
-	local PUBLIC_ADDRESS="https://ntppool.org"
+	local PUBLIC_ADDRESS="https://time.google.com"
 	if [[ ${MYPROXY} == '' ]]
 	then
 		curl ${PUBLIC_ADDRESS} &>/dev/null
@@ -546,11 +547,11 @@ ANSIBLE_LOG_LOCATION="${PWD}/Logs"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
 PKG_LIST="epel-release sshpass python3 libselinux-python3 python3-pip"
-ANSIBLE_VERSION='2.10.3'
+ANSIBLE_VERSION='2.10.7'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"
 REPOVAULT="${PWD}/.repovault.yml"
-SECON=true
+SECON=false
 
 # Main
 create_log_dir

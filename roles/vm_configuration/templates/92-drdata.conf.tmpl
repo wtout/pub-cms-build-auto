@@ -24,10 +24,10 @@ custNamePrefix={{ customer.secondary.name_prefix }}
 em7_db_vip={{ customer.secondary.octets + '.40' }}
 em7_AdminPortalVIP={{ customer.secondary.octets + '.49' }}
 em7_AdminPortalVIPHostName={{ drem7prt_hst_list[0] | regex_replace('[a-z]01', 'v01') }}
-em7_AdminPortalVIPFQDN={{ drem7prt_hst_list[0] | regex_replace('[a-z]01', 'v01') }}.{{ sysconfig.domain_name }}
+em7_AdminPortalVIPFQDN={{ drem7prt_hst_list[0] | regex_replace('[a-z]01', 'v01') }}.{{ sysconfig.secondary.domain_name }}
 living_objects_ip=
 splunk_search_head_vip={{ customer.secondary.octets + '.41' }}
-splunk_search_head_vip_FQDN={{ drsplsrc_hst_list[0] | regex_replace('[a-z]01', 'hv01') + '.' + sysconfig.domain_name }}
+splunk_search_head_vip_FQDN={{ drsplsrc_hst_list[0] | regex_replace('[a-z]01', 'hv01') + '.' + sysconfig.secondary.domain_name }}
 relay_server_vip={{ customer.secondary.octets + '.52' }}
 relayServerDBVIP={{ customer.secondary.octets + '.1' }}
 relay_ip_list={{ drrly_ip1_list|join(',') }}
@@ -46,9 +46,9 @@ em7_user_name=em7admin
 splunk_user_name=admin
 em7_access_portal_cpu_core_count={{ drem7prt_cpu_list[0] }}
 em7_access_portal_ram_gb={{ drem7prt_mem_list[0] }}
-ntp_source_ip={{ sysconfig.secondary_ntp_server }}
-domain_name={{ sysconfig.domain_name }}
-installed_on_appliance={{ 'ESXiResource1' if (host_item[:-2]|int % 2 != 0 or hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h') else 'ESXiResource2' }}
+ntp_source_ip={{ sysconfig.secondary.ntp_server }}
+domain_name={{ sysconfig.secondary.domain_name }}
+installed_on_appliance={{ 'ESXiResource1' if (host_item[:-2]|int % 2 != 0 or hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h') else 'ESXiResource2' }}
 [headend]
 indexer01_ip={{ splunk.he_indexer01_ip }}
 indexer02_ip=None
@@ -67,11 +67,11 @@ dc_ip_list={{ drem7dc_ip1_list|join(',') }}
 mc_ip_list={{ drem7mc_ip1_list|join(',') }}
 all_dc_ip_list={{ drem7dc_ip1_list|join(',') }}
 all_mc_ip_list={{ drem7mc_ip1_list|join(',') }}
-splunk_proxy={{ customer.secondary.name_prefix }}mapprtv01.{{ sysconfig.domain_name }}
-beta_proxy={{ customer.secondary.name_prefix }}betaprtv01.{{ sysconfig.domain_name }}
-ondemand_proxy={{ customer.secondary.name_prefix }}odrprtv01.{{ sysconfig.domain_name }}
-lo_proxy={{ customer.secondary.name_prefix }}prtv01.{{ sysconfig.domain_name }}
-pure_proxy={{ customer.secondary.name_prefix }}dashprtv01.{{ sysconfig.domain_name }}
+splunk_proxy={{ customer.secondary.name_prefix }}mapprtv01.{{ sysconfig.secondary.domain_name }}
+beta_proxy={{ customer.secondary.name_prefix }}betaprtv01.{{ sysconfig.secondary.domain_name }}
+ondemand_proxy={{ customer.secondary.name_prefix }}odrprtv01.{{ sysconfig.secondary.domain_name }}
+lo_proxy={{ customer.secondary.name_prefix }}prtv01.{{ sysconfig.secondary.domain_name }}
+pure_proxy={{ customer.secondary.name_prefix }}dashprtv01.{{ sysconfig.secondary.domain_name }}
 [is4]
 is4_region=IS4_{{ customer.secondary.name_prefix }}
 [telemetry]

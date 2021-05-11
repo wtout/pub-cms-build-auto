@@ -32,7 +32,7 @@
     ignore_errors: true
     when: ppr1 is search('not running')
   - name: Start puppet push {{ push_num|int + 1 }}
-    shell: /usr/local/bin/puppet agent --server {{ puppet.fqdn }} --test
+    shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
     register: puppet_push
     no_log: true
     failed_when:

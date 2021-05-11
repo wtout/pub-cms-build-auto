@@ -19,25 +19,34 @@
       nd: "{{ 'Primary number of Data Collectors is not defined' if (environment_definition.customer.primary.number_of_dcs is not defined or environment_definition.customer.primary.number_of_dcs == none) else '' }}"
       pn: "{{ 'Primary name_prefix is not defined' if (environment_definition.customer.primary.name_prefix is not defined or  environment_definition.customer.primary.name_prefix == none) else '' }}"
       po: "{{ 'Primary octets is not defined' if (environment_definition.customer.primary.octets is not defined or environment_definition.customer.primary.octets == none) else '' }}"
-      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.name_prefix is not defined or environment_definition.customer.secondary.name_prefix == none) and datacenters[environment_definition.datacenter.name]['deptype'] is search('a')) else '' }}"
-      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.octets is not defined or environment_definition.customer.secondary.octets == none) and datacenters[environment_definition.datacenter.name]['deptype'] is search('a')) else '' }}"
+      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.name_prefix is not defined or environment_definition.customer.secondary.name_prefix == none) and datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search('a')) else '' }}"
+      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.octets is not defined or environment_definition.customer.secondary.octets == none) and datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search('a')) else '' }}"
       rv: "{{ 'Release version is not defined' if (environment_definition.customer.release_version is not defined or environment_definition.customer.release_version == none) else '' }}"
-      dn: "{{ 'Datacenter name is not defined' if (environment_definition.datacenter.name is not defined or environment_definition.datacenter.name == none) else '' }}"
-      dh: "{{ 'Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and datacenters[environment_definition.datacenter.name]['deptype'] is search('a') and (environment_definition.datacenter.resources is not defined or environment_definition.datacenter.resources == none)) else '' }}"
-      dc: "{{ 'Datacenter cluster is not defined. Will use esxi hosts IPs to define the cluster name' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
-      ps: "{{ 'Puppet server_name is not defined' if (environment_definition.puppet is not defined or environment_definition.puppet.server_name is not defined or environment_definition.puppet.server_name == none) else '' }}"
-      ys: "{{ 'Yum server_name is not defined' if (environment_definition.yum is not defined or environment_definition.yum.server_name is not defined or environment_definition.yum.server_name == none) else '' }}"
+      pdn: "{{ 'Datacenter name is not defined' if (environment_definition.datacenter.primary.name is not defined or environment_definition.datacenter.primary.name == none) else '' }}"
+      pdh: "{{ 'Primary Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and datacenters[environment_definition.datacenter.primary.name]['deptype'] is search('a') and (environment_definition.datacenter.primary.resources is not defined or environment_definition.datacenter.primary.resources == none)) else '' }}"
+      pdc: "{{ 'Primary Datacenter cluster is not defined. Will use esxi hosts IPs to define the primary cluster name' if (environment_definition.datacenter.primary.cluster == none and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
+      sdn: "{{ 'Secondary Datacenter name is not defined' if environment_definition.customer.disaster_recovery and (environment_definition.datacenter.secondary.name is not defined or environment_definition.datacenter.secondary.name == none) else '' }}"
+      sdh: "{{ 'Secondary Datacenter resources is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search('a') and (environment_definition.datacenter.secondary.resources is not defined or environment_definition.datacenter.secondary.resources == none)) else '' }}"
+      sdc: "{{ 'Secondary Datacenter cluster is not defined. Will use esxi hosts IPs to define the secondary cluster name' if (environment_definition.customer.disaster_recovery and environment_definition.datacenter.secondary.cluster == none and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
+      pps: "{{ 'Primary Puppet server_name is not defined' if (environment_definition.puppet is not defined or environment_definition.puppet.primary.server_name is not defined or environment_definition.puppet.primary.server_name == none) else '' }}"
+      pys: "{{ 'Primary Yum server_name is not defined' if (environment_definition.yum is not defined or environment_definition.yum.primary.server_name is not defined or environment_definition.yum.primary.server_name == none) else '' }}"
+      sps: "{{ 'Secondary Puppet server_name is not defined' if environment_definition.customer.disaster_recovery and (environment_definition.puppet is not defined or environment_definition.puppet.secondary.server_name is not defined or environment_definition.puppet.secondary.server_name == none) else '' }}"
+      sys: "{{ 'Secondary Yum server_name is not defined' if environment_definition.customer.disaster_recovery and (environment_definition.yum is not defined or environment_definition.yum.secondary.server_name is not defined or environment_definition.yum.secondary.server_name == none) else '' }}"
 
   - debug:
-      msg: "{{ dc }}"
-    when: dc != ''
+      msg: "{{ pdc }}"
+    when: pdc != ''
+
+  - debug:
+      msg: "{{ sdc }}"
+    when: sdc != ''
 
   - name: verify that all variables are defined
     assert:
       that:
         - vars[item] == ''
       fail_msg: "{{ vars[item] }}"
-    loop: [ cn, dm, ar, dr, np, nm, nd, pn, po, sn, so, rv, dn, dh, ps, ys ]
+    loop: [ cn, dm, ar, dr, np, nm, nd, pn, po, sn, so, rv, pdn, pdh, sdn, sdh, pps, pys, sps, sys ]
 
   - name: check if deployment model value is valid
     assert:
@@ -105,23 +114,47 @@
         - not environment_definition.customer.release_version | upper | regex_search('R\d+') == none
       fail_msg: "release_version is not valid. Only R followed by version number (Ex. R9.1.3) format is valid"
 
-  - name: check if puppet server name value is valid
+  - name: check if primary puppet server name value is valid
     assert:
       that:
-        - not environment_definition.puppet.server_name | lower | regex_search('alln1qspupp0[1-4]') == none
-      fail_msg: "Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
+        - not environment_definition.puppet.primary.server_name | lower | regex_search('alln1qspupp0[1-4]') == none
+      fail_msg: "Primary Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
 
-  - name: check if yum server name value is valid
+  - name: check if secondary puppet server name value is valid
     assert:
       that:
-        - not environment_definition.yum.server_name | lower | regex_search('alln1qsyumrpp0[1-2]') == none
-      fail_msg: "Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
+        - not environment_definition.puppet.secondary.server_name | lower | regex_search('alln1qspupp0[1-4]') == none
+      fail_msg: "Secondary Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
+    when:
+      - environment_definition.customer.disaster_recovery
 
-  - name: verify if selected datacenter supports deployment model
+  - name: check if primary yum server name value is valid
     assert:
       that:
-        - "datacenters[environment_definition.datacenter.name]['deptype'] is search(environment_definition.customer.deployment_model[-1:])"
-      fail_msg: "The datacenter selected, {{ environment_definition.datacenter.name }}, only supports the {{ 'on-prem' if datacenters[environment_definition.datacenter.name]['deptype'] is search('a') else 'hosted' }} deployment model. Aborting!"
+        - not environment_definition.yum.primary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]') == none
+      fail_msg: "Primary Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
+
+  - name: check if secondary yum server name value is valid
+    assert:
+      that:
+        - not environment_definition.yum.secondary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]') == none
+      fail_msg: "Secondary Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
+    when:
+      - environment_definition.customer.disaster_recovery
+
+  - name: verify if selected primary datacenter supports deployment model
+    assert:
+      that:
+        - "datacenters[environment_definition.datacenter.primary.name]['deptype'] is search(environment_definition.customer.deployment_model[-1:])"
+      fail_msg: "The datacenter selected, {{ environment_definition.datacenter.primary.name }}, only supports the {{ 'on-prem' if datacenters[environment_definition.datacenter.primary.name]['deptype'] is search('a') else 'hosted' }} deployment model. Aborting!"
+
+  - name: verify if selected secondary datacenter supports deployment model
+    assert:
+      that:
+        - "datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search(environment_definition.customer.deployment_model[-1:])"
+      fail_msg: "The datacenter selected, {{ environment_definition.datacenter.secondary.name }}, only supports the {{ 'on-prem' if datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search('a') else 'hosted' }} deployment model. Aborting!"
+    when:
+      - environment_definition.customer.disaster_recovery
 
   - name: verify if selected deployment model supports ATA relay
     assert:
@@ -129,13 +162,6 @@
         - "environment_definition.customer.deployment_model | lower is not search('aio')"
       fail_msg: "The ATA relay is only supported with the non-AIO on-prem or hosted deployment model. Aborting!"
     when: environment_definition.customer.ata
-
-  - name: verify if selected deployment model supports disaster recovery
-    assert:
-      that:
-        - "environment_definition.customer.deployment_model == 'a'"
-      fail_msg: "The disaster recovery is only supported with the non-AIO on-prem or ucm deployment model. Aborting!"
-    when: environment_definition.customer.disaster_recovery
 
   - name: check if ata and disaster_recovery values are in conflict
     assert:
@@ -147,47 +173,68 @@
       - environment_definition.customer.ata or environment_definition.customer.disaster_recovery
 
   - block:
-    - name: verify if resources are separated
+    - name: verify that primary resources are separated
       assert:
         that:
-          - environment_definition.datacenter.resources | regex_search('\d{1,3}[,|;|\s]\s?\d{1,3}')
-        fail_msg: "The resources list {{ environment_definition.datacenter.resources }} is not a valid IP address list. Aborting!"
+          - environment_definition.datacenter.primary.resources | regex_search('\d{1,3}[,|;|\s]\s?\d{1,3}')
+        fail_msg: "The primary resources list {{ environment_definition.datacenter.primary.resources }} is not a valid IP address list. Aborting!"
       when:
-        - environment_definition.datacenter.resources | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*\d{1,3}\.')
-    - name: define the resources list separator
+        - environment_definition.datacenter.primary.resources | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*\d{1,3}\.')
+    - name: define the primary resources list separator
       set_fact:
-        separator: "{{ ', ' if environment_definition.datacenter.resources is search(', ') else ',' if environment_definition.datacenter.resources is search(',') else '; ' if environment_definition.datacenter.resources is search('; ') else ';' if environment_definition.datacenter.resources is search(';') else ' ' }}"
-    - name: verify that resources are valid
+        separator: "{{ ', ' if environment_definition.datacenter.primary.resources is search(', ') else ',' if environment_definition.datacenter.primary.resources is search(',') else '; ' if environment_definition.datacenter.primary.resources is search('; ') else ';' if environment_definition.datacenter.primary.resources is search(';') else ' ' }}"
+    - name: verify that primary resources are valid
       assert:
         that:
           - ip_item | ipaddr
-        fail_msg: "The resources list {{ environment_definition.datacenter.resources }} is not a valid IP address list. Aborting!"
-      loop: "{{ environment_definition.datacenter.resources.split(separator) }}"
+        fail_msg: "The primary resources list {{ environment_definition.datacenter.primary.resources }} is not a valid IP address list. Aborting!"
+      loop: "{{ environment_definition.datacenter.primary.resources.split(separator) }}"
       loop_control:
         loop_var: ip_item
       when: ip_item | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
-    - name: verify that there are enough resources
+
+    - name: verify that secondary resources are valid
       assert:
         that:
-          - environment_definition.datacenter.resources.split(separator) | length == required_number_resources|int
-        fail_msg: "The resources list contains {{ environment_definition.datacenter.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
+          - ip_item | ipaddr
+        fail_msg: "The secondary resources list {{ environment_definition.datacenter.secondary.resources }} is not a valid IP address list. Aborting!"
+      loop: "{{ [environment_definition.datacenter.secondary.resources] }}"
+      loop_control:
+        loop_var: ip_item
+      when: ip_item | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
+
+    - name: verify that there are enough primary resources
+      assert:
+        that:
+          - environment_definition.datacenter.primary.resources.split(separator) | length == required_number_resources|int
+        fail_msg: "The resources list contains {{ environment_definition.datacenter.primary.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
       vars:
-        required_number_resources: "{{ 1 if environment_definition.customer.deployment_model | lower is search('aio') else 3 if environment_definition.customer.disaster_recovery else 2 }}"
-    - name: reformat resources list
+        required_number_resources: "{{ 1 if environment_definition.customer.deployment_model | lower is search('aio') else 2 }}"
+    - name: verify that there are enough secondary resources
+      assert:
+        that:
+          - environment_definition.datacenter.secondary.resources.split(separator) | length == required_number_resources|int
+        fail_msg: "The resources list contains {{ environment_definition.datacenter.secondary.resources | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
+      vars:
+        required_number_resources: '1'
+      when:
+        - environment_definition.customer.disaster_recovery
+
+    - name: reformat primary resources list
       set_fact:
-        resources: "{{ resources|default([]) + [ip_item] }}"
-      loop: "{{ environment_definition.datacenter.resources.split(separator) }}"
+        primary_resources: "{{ primary_resources|default([]) + [ip_item] }}"
+      loop: "{{ environment_definition.datacenter.primary.resources.split(separator) }}"
       loop_control:
         loop_var: ip_item
     when:
       - environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')
 
   - block:
-    - name: verify if resources are provided
+    - name: verify that primary resources are not provided
       assert:
         that:
-          - environment_definition.datacenter.resources == none
-        fail_msg: "The resources list {{ environment_definition.datacenter.resources }} is not valid for a hosted deployment. Aborting!"
+          - environment_definition.datacenter.primary.resources == none
+        fail_msg: "The resources list {{ environment_definition.datacenter.primary.resources }} is not valid for a hosted deployment. Aborting!"
     when:
       - environment_definition.customer.deployment_model is search('h')
 

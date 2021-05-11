@@ -1,37 +1,18 @@
 ---
 # Tasks to power-on the VM
-- block:
-  - name: Power-on VM
-    vmware_guest:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      name: "{{ vm.name }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-      state: poweredon
-      validate_certs: no
-    ignore_errors: true
-    environment:
-      http_proxy: ''
-      https_proxy: ''
-  - name: check existing VM reachable
-    command: ping {{ ansible_host }} -c 1
-    register: vcr_vm_reachable2
-    ignore_errors: true
-    check_mode: no
-    until: vcr_vm_reachable2 is succeeded
-    retries: 6
-    delay: 10
-    when: vcr_vm_reachable is succeeded
-  - name: check created VM reachable
-    command: ping {{ netconfig.ipaddress1 if netconfig.gateway1 != '' else netconfig.ipaddress2 }} -c 1
-    register: vcr_vm_reachable2
-    ignore_errors: true
-    check_mode: no
-    until: vcr_vm_reachable2 is succeeded
-    retries: 6
-    delay: 10
-    when: vcr_vm_reachable is failed
+- name: Power-on VM
+  vmware_guest:
+    hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+    username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+    password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+    datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+    cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+    name: "{{ vm.name }}"
+    state: poweredon
+    validate_certs: no
+  ignore_errors: true
+  environment:
+    http_proxy: ''
+    https_proxy: ''
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_creation

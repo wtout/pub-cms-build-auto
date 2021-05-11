@@ -8,11 +8,11 @@
 
 - name: Get datastore info
   vmware_datastore_info:
-    hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-    username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-    password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-    datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-    cluster: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+    hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+    username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+    password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+    datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+    cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
     validate_certs: no
   register: datastore_info
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
@@ -31,7 +31,7 @@
 
   - name: define hosted datastores list for each host group
     set_fact:
-      vm_ds_names: "{{ ds_names | intersect(hostvars[groups['vcenter']|first][vm_group + '_ds_names']) }}"
+      vm_ds_names: "{{ ds_names | intersect(hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first][vm_group + '_ds_names']) }}"
   - name: assert 1
     assert:
       that:

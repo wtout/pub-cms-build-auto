@@ -4,7 +4,7 @@
   - block:
     - name: define list of hosts that need data.conf
       ansible.builtin.set_fact:
-        data_conf_hosts: "{{ (groups['stack'] | difference(groups['infra']) if groups['infra'] is defined else groups['stack']) if hostvars[groups['vcenter']|first]['information']['deptype'] == 'h' else ((groups['stack'] | union(groups['dr']) | difference(groups['infra'] | union(groups['drinfra'])) if (hosts_in_play|length >= groups['dr']|length and hosts_in_play | difference(groups['dr']) | length == 0) else hosts_in_play | difference(groups['infra'] | union(groups['drinfra']))) if customer.disaster_recovery else groups['stack'] | difference(groups['infra'])) }}"
+        data_conf_hosts: "{{ (groups['rly']  + groups['lnxjmp'] + groups['em7'] + groups['spl'] + (groups['drrly'] + groups['drlnxjmp'] + groups['drem7'] + groups['drspl'] if customer.disaster_recovery else [])) | intersect(ansible_play_hosts) }}"
     - name: create the files directory
       ansible.builtin.file:
         path: "{{ role_path }}/files"
@@ -28,6 +28,7 @@
       ansible.builtin.copy:
         src: "{{ role_path }}/files/{{ vm.name }}-data.conf"
         dest: '/opt/puppet/var/data.conf'
+      when: not ansible_check_mode
     become: "{{ true if inventory_hostname is search('em7') else false }}"
 
   - block:
@@ -45,6 +46,7 @@
       loop: "{{ data_conf_hosts | difference(groups['dr']) }}"
       loop_control:
         loop_var: host_item
+      when: not ansible_check_mode
     delegate_to: "{{ groups['drlnxjmp']|first }}"
     run_once: true
     when:
@@ -62,5 +64,5 @@
     delegate_to: localhost
     run_once: true
   vars:
-    hosts_in_play: "{{ ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet'] + groups['nexus']) if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a' else ansible_play_hosts | difference(groups['bastion'] + groups['vcenter'] + groups['puppet']) }}"
+    hosts_in_play: "{{ ansible_play_hosts | reject('search', 'bastion|vcenter|puppet|nexus') }}"
   tags: vm_configuration

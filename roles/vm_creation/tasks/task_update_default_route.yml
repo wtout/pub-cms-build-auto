@@ -1,104 +1,62 @@
 ---
 # Tasks to configure the default route on the VM
 - block:
-  - name: Wait on VMware Tools to become available
-    vmware_guest_tools_wait:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      validate_certs: false
-      name: "{{ vm.name }}"
-  - name: Pause for 60 seconds to ensure VM finished booting
-    wait_for:
-      timeout: 60
-    when: deploy_ovf is not changed
-  - name: copy default route file locally
-    template:
-      src: "templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}route-ens160.tmpl"
-      dest: "/var/tmp/{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}-{{ inventory_hostname }}-route-ens160"
   - block:
-    - name: copy default route file to EM7 VM
-      vmware_guest_file_operation:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-        validate_certs: false
-        vm_id: "{{ vm.name }}"
-        vm_username: "{{ ansible_user }}"
-        vm_password: "{{ ansible_ssh_pass }}"
-        copy:
-            src: "/var/tmp/{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}-{{ inventory_hostname }}-route-ens160"
-            dest: "/tmp/route-ens160"
-            overwrite: false
-      register: copy_em7file
-      until: copy_em7file is succeeded
-      retries: 3
-      environment:
-        http_proxy: ''
-        https_proxy: ''
-    - name: restart the network on the EM7 VM
-      vmware_vm_shell:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-        validate_certs: false
-        vm_id: "{{ vm.name }}"
-        vm_username: "{{ ansible_user }}"
-        vm_password: "{{ ansible_ssh_pass }}"
-        vm_shell: '/usr/bin/sudo'
-        vm_shell_args: '-S sh -c "/usr/bin/cp /tmp/route-ens160 /etc/sysconfig/network-scripts/; /bin/systemctl restart network" <<< {{ ansible_ssh_pass }}'
-        wait_for_process: true
-      when: copy_em7file is changed
-    when: inventory_hostname is search('em7')
-  - block:
-    - name: copy default route file to non-EM7 VM
-      vmware_guest_file_operation:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter']}}"
-        validate_certs: false
-        vm_id: "{{ vm.name}}"
-        vm_username: "{{ ansible_user }}"
-        vm_password: "{{ ansible_ssh_pass }}"
-        copy:
-            src: "/var/tmp/{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}-{{ inventory_hostname }}-route-ens160"
-            dest: "/etc/sysconfig/network-scripts/route-ens160"
-            overwrite: false
-      register: copy_file
-      until: copy_file is succeeded
-      retries: 3
-      environment:
-        http_proxy: ''
-        https_proxy: ''
-    - name: restart the network on the non-EM7 VM
-      vmware_vm_shell:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-        validate_certs: false
-        vm_id: "{{ vm.name }}"
-        vm_username: "{{ ansible_user }}"
-        vm_password: "{{ ansible_ssh_pass }}"
-        vm_shell: '/bin/systemctl'
-        vm_shell_args: 'restart network'
-        wait_for_process: true
-      when: copy_file is changed
-    when:
-      - inventory_hostname is not search('em7')
-  - name: delete default route file locally
-    file:
-      path: "/var/tmp/{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}-{{ inventory_hostname }}-route-ens160"
-      state: absent
-  when:
-    - netconfig.gateway1 == ''
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation
-
-- name: wait 600 seconds for VM to become reachable
-  wait_for_connection:
-    timeout: 600
+    - name: update ansible_host to point to ipaddress2
+      set_fact:
+        ansible_host: "{{ netconfig.ipaddress2 }}"
+    - name: Wait for port 22 to become open and contain "OpenSSH"
+      wait_for:
+        port: 22
+        host: "{{ ansible_host }}"
+        search_regex: OpenSSH
+        delay: 10
+        timeout: 900
+        sleep: 10
+    - include_tasks:
+        file: task_copy_route_file.yml
+        apply:
+          vars:
+            try_num: "{{ loop_item }}"
+      loop: "{{ range(1, 2 + 1)|list }}"
+      loop_control:
+        loop_var: loop_item
+    - assert:
+        that: copy_file_status is succeeded
+        fail_msg: "Route file couldn't be copied to host successfully"
+    - name: ping gateway1
+      shell: |
+        sleep 10
+        ping {{ (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62' }} -c 1
+      register: gtw_ping
+      async: 120
+      poll: 10
+      when: copy_file_status is succeeded
+    - name: restart the network on the VM
+      systemd:
+        name: network
+        state: restarted
+      become: "{{ true if ansible_user != 'root' else false }}"
+      async: 30
+      poll: 0
+      when: copy_file_status is succeeded
+      register: restart_net
+    - name: revert ansible_host to ipaddress1
+      set_fact:
+        ansible_host: "{{ netconfig.ipaddress1 }}"
+      when:
+        - restart_net is succeeded
+    - name: wait on gateway ping
+      async_status:
+        jid: "{{ gtw_ping.ansible_job_id }}"
+      register: ping_result
+      until: ping_result.finished
+      when:
+        - copy_file_status is succeeded
+        - not ansible_check_mode
+    - name: wait 120 seconds for VM to become reachable
+      wait_for_connection:
+        timeout: 120
+    when: vcr_vm_reachable is failed
+  when: netconfig.gateway1 == ''
   tags: vm_creation

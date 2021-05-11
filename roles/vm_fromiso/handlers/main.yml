@@ -13,7 +13,7 @@
     device: /dev/sda
     unit: MiB
     number: 2
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   register: parted_info
   changed_when: parted_info is succeeded
   notify: define parted_start
@@ -36,7 +36,7 @@
     device: /dev/sda
     number: 2
     state: absent
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: create new disk0 partition
   tags: vm_creation
 
@@ -47,7 +47,7 @@
     flags: [ lvm ]
     part_start: "{{ parted_start }}MiB"
     state: present
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: reboot vm
   tags: vm_creation
 
@@ -55,7 +55,7 @@
   reboot:
     post_reboot_delay: 10
     reboot_timeout: 60
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation
 
 - name: expand disk1
@@ -63,7 +63,7 @@
     pvcreate /dev/sdb
     vgcreate vgroup2 /dev/sdb
     lvcreate -l100%FREE -n opt /dev/vgroup2
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: create disk1 filesystem
   when: vm.name is not search('mdr')
   tags: vm_creation
@@ -74,7 +74,7 @@
     pvcreate /dev/sdb1
     vgcreate vgroup2 /dev/sdb1
     lvcreate -l100%FREE -n opt /dev/vgroup2
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: create disk1 filesystem
   when: vm.name is search('mdr')
   tags: vm_creation
@@ -83,7 +83,7 @@
   filesystem:
     fstype: ext4
     device: /dev/vgroup2/opt
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: set opt mount points
   tags: vm_creation
 
@@ -96,7 +96,7 @@
     state: mounted
     dump: '1'
     passno: '2'
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: set permissions and ownership of /opt
   tags: vm_creation
 
@@ -107,7 +107,7 @@
     mode: 0755
     owner: root
     group: root
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation
 
 - name: expand disk2
@@ -116,7 +116,7 @@
     pvcreate /dev/sdc1
     vgcreate vgroup3 /dev/sdc1
     lvcreate -l100%FREE -n data01 /dev/vgroup3
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: create disk2 filesystem
   when: vm.name is search('mdr')
   tags: vm_creation
@@ -125,7 +125,7 @@
   filesystem:
     fstype: ext4
     device: /dev/vgroup3/data01
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: set data01 mount points
   tags: vm_creation
 
@@ -138,7 +138,7 @@
     state: mounted
     dump: '1'
     passno: '2'
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: set permissions and ownership of /data01
   tags: vm_creation
 
@@ -149,7 +149,7 @@
     mode: 0755
     owner: root
     group: root
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation
 
 - name: expand disk3
@@ -158,7 +158,7 @@
     pvcreate /dev/sdd1
     vgcreate vgroup4 /dev/sdd1
     lvcreate -l100%FREE -n data02 /dev/vgroup4
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: create disk3 filesystem
   when: vm.name is search('mdr')
   tags: vm_creation
@@ -167,7 +167,7 @@
   filesystem:
     fstype: ext4
     device: /dev/vgroup4/data02
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: set data02 mount points
   tags: vm_creation
 
@@ -180,7 +180,7 @@
     state: mounted
     dump: '1'
     passno: '2'
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   notify: set permissions and ownership of /data02
   tags: vm_creation
 
@@ -191,5 +191,5 @@
     mode: 0755
     owner: root
     group: root
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_creation

@@ -59,7 +59,6 @@ vm_vars:
       # Net Base
       netbase: '{{ environment_definition.vm_setting.em7.nic1.network if (environment_definition.vm_setting.em7.nic1.network is defined and environment_definition.vm_setting.em7.nic1.network != none) else "-0-26-int" }}'
 
-
     # Network interface 2
     ################
     nic2:

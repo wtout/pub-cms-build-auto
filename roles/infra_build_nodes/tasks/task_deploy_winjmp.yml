@@ -2,13 +2,13 @@
 # Task file to deploy Windows Jump Server from template
 - name: Deploy Windows Jump Servers from OVA
   vmware_guest:
-    hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-    username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-    password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-    datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"      
-    cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-    datastore: "{{ hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
-    folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+    hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+    username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+    password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+    datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"      
+    cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+    datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
+    folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
     name: "{{ vm.name }}"
     template: cms-win-js-v01
     customization_spec: cms-win-js-v01

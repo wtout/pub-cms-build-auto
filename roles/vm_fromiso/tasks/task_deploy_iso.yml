@@ -3,52 +3,71 @@
 - block:
   - name: Define folder name
     set_fact:
-      fldr_name: "{{ hostvars[groups['vcenter'][0]]['information']['folder'] + '/' + customer.name if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups['vcenter'][0]]['information']['folder'] }}"
+      fldr_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] + '/' + (customer.name if customer.name|lower is search('mdr') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}"
   - name: Get VM info
     vmware_guest_info:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
       name: "{{ vm.name }}"
       validate_certs: no
     check_mode: no
     ignore_errors: true
     register: vmguest_info
 
+  - name: define nics_list
+    ansible.builtin.set_fact:
+      nics_list:
+        - name: "{{ netconfig.network1 }}"
+          ip: "{{ netconfig.ipaddress1 }}"
+          netmask: "{{ netconfig.netmask1 }}"
+          gateway: "{{ netconfig.gateway1 }}"
+          device_type: vmxnet3
+    when:
+      - netconfig.network2 == ''
+  - name: define nics_list
+    ansible.builtin.set_fact:
+      nics_list:
+        - name: "{{ netconfig.network1 }}"
+          ip: "{{ netconfig.ipaddress1 }}"
+          netmask: "{{ netconfig.netmask1 }}"
+          gateway: "{{ netconfig.gateway1 }}"
+          device_type: vmxnet3
+        - name: "{{ netconfig.network2 }}"
+          ip: "{{ netconfig.ipaddress2 }}"
+          netmask: "{{ netconfig.netmask2 }}"
+          gateway: "{{ netconfig.gateway2 }}"
+          device_type: vmxnet3
+    when:
+      - netconfig.network2 != ''
+
   - block:
-    - name: Deploy VM from ISO with 1 NIC
+    - name: Deploy VM from ISO
       vmware_guest:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-        cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        guest_id: centos64Guest
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+        guest_id: centos7_64Guest
         name: "{{ vm.name }}"
         state: poweredon
         validate_certs: no
         disk:
           - size_gb: "{{ vm.disk0 }}"
-            type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
-            datastore: "{{ hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
-            state: present
+            type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+            datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
             controller_number: 0
-            controller_type: lsilogic
+            controller_type: 'lsilogic'
             unit_number: 0
         hardware:
           memory_mb: "{{ vm.memory|int * 1024 }}"
           num_cpus: "{{ vm.cpu|int }}"
-          scsi: lsilogic
           boot_firmware: "bios"
-          version: 11
-        networks:
-          - name: "{{ netconfig.network1 }}"
-            ip: "{{ netconfig.ipaddress1 }}"
-            netmask: "{{ netconfig.netmask1 }}"
-            gateway: "{{ netconfig.gateway1 }}"
-            device_type: vmxnet3
+          version: 'latest'
+        networks: "{{ nics_list }}"
         cdrom:
           - type: iso
             iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ iso_installer }}"
@@ -58,70 +77,12 @@
             iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ vm.name }}-kickstart.iso"
             controller_number: 1
             unit_number: 0
-      register: deploy_iso1net
+      register: deploy_iso
       environment:
         http_proxy: ''
         https_proxy: ''
-      throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
-      when:
-        - netconfig.network2 == ''
-      until: deploy_iso1net is succeeded
-      retries: 5
-      delay: 10
-    - name: Deploy VM from ISO with 2 NICs
-      vmware_guest:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-        cluster: "{{ hostvars[groups['vcenter'][0]]['information']['drcluster'] if 'dr' in group_names else hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        guest_id: centos64Guest
-        name: "{{ vm.name }}"
-        state: poweredon
-        validate_certs: no
-        disk:
-          - size_gb: "{{ vm.disk0 }}"
-            type: "{{ 'thin' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
-            datastore: "{{ hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
-            state: present
-            controller_number: 0
-            controller_type: lsilogic
-            unit_number: 0
-        hardware:
-          memory_mb: "{{ vm.memory|int * 1024 }}"
-          num_cpus: "{{ vm.cpu|int }}"
-          scsi: lsilogic
-          boot_firmware: "bios"
-          version: 11
-        networks:
-          - name: "{{ netconfig.network1 }}"
-            ip: "{{ netconfig.ipaddress1 }}"
-            netmask: "{{ netconfig.netmask1 }}"
-            gateway: "{{ netconfig.gateway1 }}"
-            device_type: vmxnet3
-          - name: "{{ netconfig.network2 }}"
-            ip: "{{ netconfig.ipaddress2 }}"
-            netmask: "{{ netconfig.netmask2 }}"
-            gateway: "{{ netconfig.gateway2 }}"
-            device_type: vmxnet3
-        cdrom:
-          - type: iso
-            iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ iso_installer }}"
-            controller_number: 0
-            unit_number: 0
-          - type: iso
-            iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ vm.name }}-kickstart.iso"
-            controller_number: 1
-            unit_number: 0
-      register: deploy_iso2net
-      environment:
-        http_proxy: ''
-        https_proxy: ''
-      throttle: "{{ 5 if hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
-      when:
-        - netconfig.network2 != ''
-      until: deploy_iso2net is succeeded
+      throttle: "{{ 5 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
+      until: deploy_iso is succeeded
       retries: 5
       delay: 10
     - name: Wait for port 22 to become open and contain "OpenSSH"
@@ -130,10 +91,10 @@
         host: "{{ netconfig.ipaddress1 if netconfig.gateway1 != '' else netconfig.ipaddress2 }}"
         search_regex: OpenSSH
         delay: 10
-        timeout: 900
+        timeout: 1200
         sleep: 10
       when:
-      - deploy_iso2net is succeeded or deploy_iso1net is succeeded
+      - deploy_iso is succeeded
       - vmguest_info is failed
 
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

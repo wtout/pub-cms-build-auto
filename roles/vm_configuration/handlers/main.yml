@@ -35,7 +35,6 @@
     - start em7
     - restart pacemaker
     - restart corosync
-  when: "'dr' not in group_names"
   tags: vm_configuration
 
 - name: mount drbd1

@@ -56,13 +56,13 @@
       no_log: true
     - name: Update puppet class rules
       uri:
-        url: "https://{{ puppet.fqdn }}:4433/classifier-api/v1/groups/{{ class_key.stdout }}"
+        url: "https://{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}:4433/classifier-api/v1/groups/{{ class_key.stdout }}"
         method: POST
         headers:
           Content-Type: "application/json"
         body_format: json
-        client_cert: /etc/puppetlabs/puppet/ssl/certs/{{ puppet.fqdn }}.pem
-        client_key: /etc/puppetlabs/puppet/ssl/private_keys/{{ puppet.fqdn }}.pem
+        client_cert: /etc/puppetlabs/puppet/ssl/certs/{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}.pem
+        client_key: /etc/puppetlabs/puppet/ssl/private_keys/{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}.pem
         validate_certs: no
         body: "{\"rule\":[\"or\",{{ class_hostnames_list | join(',') }}]}"
       register: puppet_class
@@ -73,9 +73,9 @@
       failed_when: puppet_class is failed
       when:
         - not ansible_check_mode
-      no_log: true
+#      no_log: true
       run_once: true
     when:
       - hostnames_list.stdout_lines | length >= 1
-  delegate_to: "{{ groups['puppet']|first }}"
+  delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
   tags: puppet

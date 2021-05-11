@@ -5,14 +5,35 @@
   - include_tasks: task_disconnect_cdrom.yml
   - include_tasks: task_poweron_vm.yml
 
+  - block:
+    - name: check existing VM reachable
+      command: ping {{ ansible_host }} -c 1
+      register: vcr_vm_reachable2
+      ignore_errors: true
+      check_mode: no
+      until: vcr_vm_reachable2 is succeeded
+      retries: 6
+      delay: 10
+      when: vcr_vm_reachable is succeeded
+    - name: check created VM reachable
+      command: ping {{ netconfig.ipaddress1 if netconfig.gateway1 != '' else netconfig.ipaddress2 }} -c 1
+      register: vcr_vm_reachable2
+      ignore_errors: true
+      check_mode: no
+      until: vcr_vm_reachable2 is succeeded
+      retries: 6
+      delay: 10
+      when: vcr_vm_reachable is failed
+    when: not ansible_check_mode
+
   - name: delete kickstart ISO file from vsphere
     vsphere_file:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      datastore: "{{ 'HX-DS-02' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
-      path: "{{ 'ISO/Linux' if hostvars[groups['vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      datastore: "{{ 'HX-DS-02' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}"
+      path: "{{ 'ISO/Linux' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
       state: absent
       validate_certs: false
     environment:
@@ -21,6 +42,7 @@
     async: 30
     poll: 0
     ignore_errors: true
+    when: not ansible_check_mode
   - name: delete kickstart files locally
     file:
       path: "{{ role_path }}/files/{{ file_item }}"

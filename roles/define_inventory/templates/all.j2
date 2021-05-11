@@ -12,7 +12,11 @@
 {% if environment_definition.customer.disaster_recovery %}
 {% include 'templates/dralla.yml.tmpl' %}
 {% endif %}
-{% else %}
+{% endif %}
+{% if environment_definition.customer.deployment_model is search('h') %}
 {% include 'templates/allh.yml.tmpl' %}
+{% if environment_definition.customer.disaster_recovery %}
+{% include 'templates/drallh.yml.tmpl' %}
+{% endif %}
 {% endif %}
 {% endif %}

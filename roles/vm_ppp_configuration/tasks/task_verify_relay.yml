@@ -26,7 +26,23 @@
     register: grastate_file1
 
   - block:
-    - include_tasks: task_puppet_push.yml
+    - name: "{{ auto_dir + '/roles/puppet' }}: disable puppet sync"
+      include_role:
+        name: "{{ auto_dir + '/roles/puppet' }}"
+        tasks_from: task_disable_puppet_sync.yml
+    - name: "{{ auto_dir + '/roles/puppet' }}: puppet push"
+      include_role:
+        name: "{{ auto_dir + '/roles/puppet' }}"
+        tasks_from: task_puppet_push.yml
+      vars:
+        push_num: "{{ loop_item }}"
+      loop: "{{ range(1, 2 + 1)|list }}"
+      loop_control:
+        loop_var: loop_item
+    - name: "{{ auto_dir + '/roles/puppet' }}: enable puppet sync"
+      include_role:
+        name: "{{ auto_dir + '/roles/puppet' }}"
+        tasks_from: task_enable_puppet_sync.yml
 
     - name: check if /data01/mysql_data/mysql/grastate.dat is created on the relay
       stat:
@@ -56,7 +72,24 @@
     register: dbcon1
     ignore_errors: yes
 
-  - include_tasks: task_puppet_push.yml
+  - block:
+    - name: "{{ auto_dir + '/roles/puppet' }}: disable puppet sync"
+      include_role:
+        name: "{{ auto_dir + '/roles/puppet' }}"
+        tasks_from: task_disable_puppet_sync.yml
+    - name: "{{ auto_dir + '/roles/puppet' }}: puppet push"
+      include_role:
+        name: "{{ auto_dir + '/roles/puppet' }}"
+        tasks_from: task_puppet_push.yml
+      vars:
+        push_num: "{{ loop_item }}"
+      loop: "{{ range(1, 2 + 1)|list }}"
+      loop_control:
+        loop_var: loop_item
+    - name: "{{ auto_dir + '/roles/puppet' }}: enable puppet sync"
+      include_role:
+        name: "{{ auto_dir + '/roles/puppet' }}"
+        tasks_from: task_enable_puppet_sync.yml
     when: dbcon1 is failed
 
   - name: check if mariadb is started

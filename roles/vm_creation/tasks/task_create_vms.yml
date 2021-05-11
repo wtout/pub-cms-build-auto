@@ -3,9 +3,17 @@
 - block:
   - include_tasks: task_get_ova_name.yml
 
-  - block:
+  - name: create Hosted VMs
+    block:
     - include_tasks: task_create_folder.yml
-      run_once: true
+      when:
+        - "'stack' in group_names"
+        - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
+    - include_tasks: task_create_folder.yml
+      when:
+        - customer.disaster_recovery
+        - "'dr' in group_names"
+        - inventory_hostname == ansible_play_hosts | intersect(groups['dr']) | first
     - block:
       - name: get list of groups in play
         set_fact:
@@ -26,18 +34,33 @@
           label: "{{ group_item }}"
         when: inventory_hostname in groups[group_item]
       when:
-        - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] == ''
+        - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == ''
     - include_tasks: task_create_configure_vms.yml
       when:
-        - hostvars[groups['vcenter'][0]]['information']['datastore_cluster'] != ''
+        - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != ''
     when:
-      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
+      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h'
 
-  - include_tasks: task_create_configure_vms.yml
+  - name: create On-prem VMs
+    block:
+    - name: "{{ auto_dir + '/roles/infra_configure' }}: create primary cluster"
+      include_role:
+        name: "{{ auto_dir + '/roles/infra_configure' }}"
+        tasks_from: task_create_cluster.yml
+      run_once: true
+      when:
+        - hostvars[groups['vcenter'][0]]['cluster_host1'] == ''
+    - name: "{{ auto_dir + '/roles/infra_configure' }}: create DR cluster"
+      include_role:
+        name: "{{ auto_dir + '/roles/infra_configure' }}"
+        tasks_from: task_create_drcluster.yml
+      run_once: true
+      when:
+        - customer.disaster_recovery
+        - ansible_play_hosts | select('search', 'dr') | length >= 1
+        - hostvars[groups['drvcenter'][0]]['cluster_host3'] == ''
+    - include_tasks: task_create_configure_vms.yml
     when:
-      - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'a'
-
-  - name: flush handlers
-    meta: flush_handlers
+      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
 
   tags: vm_creation

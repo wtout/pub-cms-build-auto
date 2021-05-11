@@ -33,23 +33,36 @@ customer:
 
 
 ##################################################################################
-# Datacenter where the stack is to be built in
+# Datacenter where the stack is to be built
 ##################################################################################
 datacenter:
 
-  # Available datacenters: RTP5, PAE-Customer-Build, cdra-Build-Development, PAE-HX-DC
-  name: '{{ environment_definition.datacenter.name }}'
+  primary:
 
-  # Mandatory for UCM type of deployments
-  # The primary stack cluster name
-  pcluster: '{{ environment_definition.datacenter.pcluster if environment_definition.datacenter.pcluster != none else "" }}'
+    # Available datacenters: RTP-Staging, PAE-HX-DC-1, PAE-HX-DC-2, PAE-HX-DC-3, Plat-Ops, Dev Engineering, cdra-Build-Development, PAE-Customer-Build, RTP5, Alln1 (string)
+    name: '{{ environment_definition.datacenter.primary.name }}'
 
-  # The secondary stack cluster name
-  scluster: '{{ environment_definition.datacenter.scluster if (environment_definition.customer.disaster_recovery and environment_definition.datacenter.scluster != none) else "" }}'
+    # Required if a custom cluster name is to be used
+    # The primary cluster to host the customer's primary stack
+    cluster: '{{ environment_definition.datacenter.primary.cluster if environment_definition.datacenter.primary.cluster != none else "" }}'
 
-  # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use
-  # For hosted deployments DO NOT TOUCH
-  resources: [ '{{ resources|join(',')|replace(",", "', '") if (environment_definition.customer.deployment_model is regex('a|u') and environment_definition.customer.deployment_model is not search('h')) else "" }}' ]
+    # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
+    # For hosted deployments DO NOT TOUCH
+    # Use ',', ';' or space as separator when you have more than one host
+    resources: [ '{{ primary_resources|join(',')|replace(",", "', '") if (environment_definition.customer.deployment_model is regex('a|u') and environment_definition.customer.deployment_model is not search('h')) else "" }}' ]
+
+  secondary:
+
+    # Available datacenters: RTP-Staging, PAE-HX-DC-1, PAE-HX-DC-2, PAE-HX-DC-3, Plat-Ops, Dev Engineering, cdra-Build-Development, PAE-Customer-Build, RTP5, Alln1 (string)
+    name: '{{ environment_definition.datacenter.secondary.name }}'
+
+    # Required if a custom cluster name is to be used
+    # The secondary cluster to host the customer's secondary stack
+    cluster: '{{ environment_definition.datacenter.secondary.cluster if environment_definition.datacenter.secondary.cluster != none else "" }}'
+
+    # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
+    # For hosted deployments DO NOT TOUCH
+    resources: [ '{{ environment_definition.datacenter.secondary.resources if (environment_definition.customer.deployment_model is regex('a|u') and environment_definition.customer.deployment_model is not search('h')) else "" }}' ]
 
 
 ##################################################################################
@@ -71,15 +84,27 @@ bastion:
 ##################################################################################
 sysconfig:
 
-  # DNS servers list
-  dns_servers: {{ ['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.name is regex('PAE-HX-DC-2|Dev Engineering') else ['172.19.251.21', '172.19.251.22'] }}
+  primary:
 
-  # Domain name to use
-  domain_name: 'cisco-{{ "pae" if environment_definition.datacenter.name is regex('PAE-HX-DC-2|Dev Engineering') else "cms" }}.com'
+    # DNS servers list
+    dns_servers: {{ ['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else ['172.19.251.21', '172.19.251.22'] }}
 
-  # NTP server
-  primary_ntp_server: "{{ '{{ customer.primary.octets }}' + '.62' }}"
-  secondary_ntp_server: "{{ '{{ customer.secondary.octets }}' + '.62' if environment_definition.customer.disaster_recovery else '' }}"
+    # Domain name to use
+    domain_name: "{{ 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com' }}"
+
+    # NTP server
+    ntp_server: "{{ '{{ customer.primary.octets }}' + '.62' }}"
+
+  secondary:
+  
+    # DNS servers list
+    dns_servers: {{ (['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else ['172.19.251.21', '172.19.251.22']) if environment_definition.customer.disaster_recovery else ''  }}
+
+    # Domain name to use
+    domain_name: "{{ ('cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else '' }}"
+
+    # NTP server
+    ntp_server: "{{ '{{ customer.secondary.octets }}' + '.62' if environment_definition.customer.disaster_recovery else '' }}"
 
 
 ##################################################################################
@@ -87,14 +112,27 @@ sysconfig:
 ##################################################################################
 puppet:
 
-  # VM name
-  vmname: '{{ environment_definition.puppet.server_name }}'
+  primary:
 
-  # FQDN
-  fqdn: '{{ environment_definition.puppet.server_name }}.cisco-cms.com'
+    # VM name
+    vmname: '{{ environment_definition.puppet.primary.server_name }}'
 
-  # ip address
-  ipaddress: '{{ [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.server_name[-1:]|int-1] }}'
+    # FQDN
+    fqdn: '{{ environment_definition.puppet.primary.server_name }}.cisco-cms.com'
+
+    # ip address
+    ipaddress: '{{ [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.primary.server_name[-1:]|int-1] }}'
+
+  secondary:
+
+    # VM name
+    vmname: '{{ environment_definition.puppet.secondary.server_name if environment_definition.customer.disaster_recovery else "" }}'
+
+    # FQDN
+    fqdn: '{{ environment_definition.puppet.secondary.server_name + '.cisco-cms.com' if environment_definition.customer.disaster_recovery else "" }}'
+
+    # ip address
+    ipaddress: '{{ [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.secondary.server_name[-1:]|int-1] if environment_definition.customer.disaster_recovery else "" }}'
 
 
 ##################################################################################
@@ -111,17 +149,33 @@ artifactory:
 ##################################################################################
 yum:
 
-  # baseurl
-  baseurl: 'https://{{ environment_definition.yum.server_name }}.cisco-{{ "pae" if environment_definition.datacenter.name is regex('PAE-HX-DC-2|Dev Engineering') else "cms" }}.com'
+  primary:
 
-  # VM name
-  vmname: '{{ environment_definition.yum.server_name }}'
+    # baseurl
+    baseurl: 'https://{{ environment_definition.yum.primary.server_name }}.{{ 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
 
-  # FQDN
-  fqdn: '{{ environment_definition.yum.server_name }}.cisco-{{ "pae" if environment_definition.datacenter.name is regex('PAE-HX-DC-2|Dev Engineering') else "cms" }}.com'
+    # VM name
+    vmname: '{{ environment_definition.yum.primary.server_name }}'
 
-  # ip address
-  ipaddress: '{{ [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.server_name[-1:]|int-1] }}'
+    # FQDN
+    fqdn: '{{ environment_definition.yum.primary.server_name + '.cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
+
+    # ip address
+    ipaddress: '{{ [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.primary.server_name[-1:]|int-1] }}'
+
+  secondary:
+
+    # baseurl
+    baseurl: 'https://{{ environment_definition.yum.secondary.server_name }}.{{ 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
+
+    # VM name
+    vmname: '{{ environment_definition.yum.secondary.server_name if environment_definition.customer.disaster_recovery else "" }}'
+
+    # FQDN
+    fqdn: '{{ (environment_definition.yum.secondary.server_name + '.cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else "" }}'
+
+    # ip address
+    ipaddress: '{{ [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.secondary.server_name[-1:]|int-1] if environment_definition.customer.disaster_recovery else "" }}'
 
 
 ##################################################################################

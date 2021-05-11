@@ -2,7 +2,7 @@
 # tasks to update em7vg files on EM7 VM
 - block:
   - name: find default_host
-    shell: grep creation_host /etc/lvm/backup/em7vg | grep -v {{ sysconfig.domain_name }}
+    shell: grep creation_host /etc/lvm/backup/em7vg | grep -v {{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}
     check_mode: no
     register: default_host
   - name: define string to replace
@@ -23,5 +23,5 @@
     loop_control:
       loop_var: task_item
   when: inventory_hostname is search('em7')
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration

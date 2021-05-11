@@ -1,11 +1,11 @@
 ---
 # tasks to validate vcenter credentials
 - block:
-  - name: Validate vcenter credentials
+  - name: Validate {{ 'secondary' if vcenter_host is search('dr') else 'primary' }} vcenter credentials
     vmware_about_info:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      hostname: "{{ hostvars[vcenter_host]['information']['address'] }}"
+      username: "{{ hostvars[vcenter_host]['credentials']['username'] }}"
+      password: "{{ hostvars[vcenter_host]['credentials']['password'] }}"
       validate_certs: no
     register: vcenter_creds
     ignore_errors: true

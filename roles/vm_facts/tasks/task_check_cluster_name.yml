@@ -8,5 +8,5 @@
     when:
       - information.cluster is not defined or information.cluster == ''
   when:
-    - inventory_hostname in groups['vcenter']
+    - "'vcenter' in group_names or (customer.disaster_recovery and 'drvcenter' in group_names)"
   tags: ['always', 'vm_facts']

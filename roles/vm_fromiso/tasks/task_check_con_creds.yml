@@ -8,16 +8,11 @@
     check_mode: no
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
-    - name: switch to cmsbuild user
+    - name: switch to vm_svc_user user
       set_fact:
         ansible_user: "{{ vm_svc_user }}"
-      when: user.name == ''
-    - name: switch to {{ user.name }} account
-      set_fact:
-        ansible_user: "{{ user.name }}"
-        ansible_ssh_pass: "{{ user.password }}"
+        ansible_ssh_pass: "{{ vm_svc_pass }}"
       no_log: true
-      when: user.name != ''
     - name: check connection
       wait_for:
         host: "{{ ansible_host }}"

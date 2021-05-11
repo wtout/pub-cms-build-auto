@@ -427,7 +427,7 @@ vm_vars:
     ################
       nic3:
 
-       # Interface name
+        # Interface name
         intname: "{{ environment_definition.vm_setting.infra.csr.nic3.intname if (environment_definition.vm_setting.infra.csr.nic3.intname is defined and environment_definition.vm_setting.infra.csr.nic3.intname != none) else 'ens160' }}"
 
         # IP pool
@@ -455,7 +455,7 @@ vm_vars:
     ################
       nic4:
 
-       # Interface name
+        # Interface name
         intname: "{{ environment_definition.vm_setting.infra.csr.nic4.intname if (environment_definition.vm_setting.infra.csr.nic4.intname is defined and environment_definition.vm_setting.infra.csr.nic4.intname != none) else 'ens192' }}"
 
         # IP pool
@@ -483,7 +483,7 @@ vm_vars:
     ################
       nic5:
 
-       # Interface name
+        # Interface name
         intname: "{{ environment_definition.vm_setting.infra.csr.nic5.intname if (environment_definition.vm_setting.infra.csr.nic5.intname is defined and environment_definition.vm_setting.infra.csr.nic5.intname != none) else 'ens224' }}"
 
         # IP pool
@@ -496,7 +496,7 @@ vm_vars:
         gtw: "{{ environment_definition.vm_setting.infra.csr.nic5.gtw if (environment_definition.vm_setting.infra.csr.nic5.gtw is defined and environment_definition.vm_setting.infra.csr.nic5.gtw != none) else '' }}"
 
         # Gateway fourth octet
-        gtw_octet: "{{ environment_definition.vm_setting.infra.csr.nic5.gtw_octet if (environment_definition.vm_setting.infra.csr.nic5.gtw_octet is defined and environment_definition.vm_setting.infra.csr.nic5.gtw_octet != none) else '126' }}"
+        gtw_octet: "{{ environment_definition.vm_setting.infra.csr.nic5.gtw_octet if (environment_definition.vm_setting.infra.csr.nic5.gtw_octet is defined and environment_definition.vm_setting.infra.csr.nic5.gtw_octet != none) else '123' }}"
 
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.csr.nic5.netmask if (environment_definition.vm_setting.infra.csr.nic5.netmask is defined and environment_definition.vm_setting.infra.csr.nic5.netmask != none) else '255.255.255.224' }}"

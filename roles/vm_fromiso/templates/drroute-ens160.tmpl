@@ -16,7 +16,7 @@ GATEWAY4={{ customer.secondary.octets }}.62
 ADDRESS5=172.30.251.0
 NETMASK5=255.255.255.0
 GATEWAY5={{ customer.secondary.octets }}.62
-{% if hostvars[groups['vcenter'][0]]['information']['datacenter'] is regex('RTP5|Alln1') %}
+{% if hostvars[groups['drvcenter'][0]]['information']['datacenter'] is regex('RTP5|Alln1') %}
 {% block prod %}
 {% if customer.disaster_recovery and inventory_hostname is regex('em7mc|em7dc|em7prt|rly') %}
 ADDRESS6={{ customer.primary.octets }}.0

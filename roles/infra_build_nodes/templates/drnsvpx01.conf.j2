@@ -62,8 +62,8 @@ add snmp trap specific {{ splunk.mom_rly_vip }} -communityName Ir0nh0rs3
 add ntp server {{ customer.secondary.octets }}.62
 enable ntp sync
 
-add dns nameServer {{ sysconfig.dns_servers[0] }}
-add dns nameServer {{ sysconfig.dns_servers[1] }}
+add dns nameServer {{ sysconfig.secondary.dns_servers[0] }}
+add dns nameServer {{ sysconfig.secondary.dns_servers[1] }}
 rm route 0.0.0.0 0.0.0.0 {{ customer.secondary.octets }}.62
 
 set system user nsroot {{ credentials.password }}

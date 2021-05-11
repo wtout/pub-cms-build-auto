@@ -15,8 +15,8 @@ keyboard --vckeymap=us --xlayouts='us'
 lang en_US.UTF-8
 
 # Network information
-network --bootproto=static --device={{ netconfig.intname1 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway1 }} --ip={{ netconfig.ipaddress1 }} --nameserver={{ sysconfig.dns_servers|join(',') }} --netmask={{ netconfig.netmask1 }} --noipv6 --activate
-network --bootproto=static --device={{ netconfig.intname2 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway2 }} --ip={{ netconfig.ipaddress2 }} --nameserver={{ sysconfig.dns_servers|join(',') }} --netmask={{ netconfig.netmask2 }} --noipv6 --activate
+network --bootproto=static --device={{ netconfig.intname1 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway1 }} --ip={{ netconfig.ipaddress1 }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.netmask1 }} --noipv6 --activate
+network --bootproto=static --device={{ netconfig.intname2 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway2 }} --ip={{ netconfig.ipaddress2 }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.netmask2 }} --noipv6 --activate
 network --hostname={{ vm.name }}
 
 # Root password
@@ -89,10 +89,10 @@ sssd-tools
 
 %post
 # Add search domain
-echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname1 }}
+echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname1 }}
 {% if netconfig.intname2 != '' %}
 {% block nic2_domain %}
-echo 'DOMAIN="{{ sysconfig.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname2 }}
+echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname2 }}
 {% endblock nic2_domain %}
 {% endif %}
 
@@ -101,11 +101,11 @@ rm -f /etc/yum.repos.d/*
 cat <<EOF > /etc/yum.repos.d/QS.repo
 [QS-PROD]
 Name=QS-PROD
-baseurl={{ yum.baseurl + '/QS' }}
+baseurl={{ (yum.secondary.baseurl if 'dr' in group_names else yum.primary.baseurl) + '/QS' }}
 enabled=1
 gpgcheck=0
 sslverify=False
-{% if datacenter.name == 'PAE-HX-DC-2' %}
+{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) == 'PAE-HX-DC-2' %}
 {% block yum_proxy %}
 proxy=_none_
 {% endblock yum_proxy %}
@@ -155,7 +155,7 @@ grep proxy /etc/yum.conf || sed -i 's|^\(\[main\]\)$|\1\nproxy={{ proxy_address 
 
 # Configure Chrony
 sed -i '/^server.*iburst$/d' /etc/chrony.conf
-sed -i 's/^\(# Please consider.*\)$/\1\nserver {{ netconfig.ipaddress1.split('.')[:-1] | join('.') + '.254' if customer.name|lower is search('mdr') else sysconfig.secondary_ntp_server if inventory_hostname is search('dr') else sysconfig.primary_ntp_server }} iburst/' /etc/chrony.conf
+sed -i 's/^\(# Please consider.*\)$/\1\nserver {{ netconfig.ipaddress1.split('.')[:-1] | join('.') + '.254' if customer.name|lower is search('mdr') else sysconfig.secondary.ntp_server if 'dr' in group_names else sysconfig.primary.ntp_server }} iburst/' /etc/chrony.conf
 
 # Configure SNMP
 /usr/bin/net-snmp-create-v3-user -ro -A "C1s20A798hPwec" -X "m91K0sl1ux9bsp" -a MD5 -x DES cmsmomuser
@@ -170,31 +170,15 @@ echo 'SSHD: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
 echo 'snmpd: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
 
 # Add user
-{% if user.name != '' and user.password != '' %}
-{% block custom_user %}
-useradd {{ user.name }}
-echo '{{ user.name }}:{{ user.password }}' |chpasswd
-cat << xxEOFxx >> /etc/sudoers.d/{{ user.name }}
-Host_Alias  {{ user.name | upper }}_SUDO_HOSTS = ALL
-Runas_Alias {{ user.name | upper }}_SUDO_RUNAS = ALL
-Cmnd_Alias  {{ user.name | upper }}_SUDO_CMNDS = ALL
-Cmnd_Alias  {{ user.name | upper }}_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
-%{{ user.name }} {{ user.name | upper }}_SUDO_HOSTS = ({{ user.name | upper }}_SUDO_RUNAS) NOPASSWD: {{ user.name | upper }}_SUDO_CMNDS, !{{ user.name | upper }}_SHELLS
-xxEOFxx
-{% endblock custom_user %}
-{% else %}
-{% block build_user %}
 useradd {{ vm_svc_user }}
 echo '{{ vm_svc_user }}:{{ vm_svc_pass }}' |chpasswd
-cat  << xxEOFxx >> /etc/sudoers.d/{{ vm_svc_user }}
-Host_Alias  BUILDUSER_SUDO_HOSTS = ALL
-Runas_Alias BUILDUSER_SUDO_RUNAS = ALL
-Cmnd_Alias  BUILDUSER_SUDO_CMNDS = ALL
-Cmnd_Alias  BUILDUSER_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
-%{{ vm_svc_user }} BUILDUSER_SUDO_HOSTS = (BUILDUSER_SUDO_RUNAS) NOPASSWD: BUILDUSER_SUDO_CMNDS, !BUILDUSER_SHELLS
+cat << xxEOFxx >> /etc/sudoers.d/{{ vm_svc_user }}
+Host_Alias  {{ vm_svc_user | upper }}_SUDO_HOSTS = ALL
+Runas_Alias {{ vm_svc_user | upper }}_SUDO_RUNAS = ALL
+Cmnd_Alias  {{ vm_svc_user | upper }}_SUDO_CMNDS = ALL
+Cmnd_Alias  {{ vm_svc_user | upper }}_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
+%{{ vm_svc_user }} {{ vm_svc_user | upper }}_SUDO_HOSTS = ({{ vm_svc_user | upper }}_SUDO_RUNAS) NOPASSWD: {{ vm_svc_user | upper }}_SUDO_CMNDS, !{{ vm_svc_user | upper }}_SHELLS
 xxEOFxx
-{% endblock build_user %}
-{% endif %}
 %end
 
 %anaconda

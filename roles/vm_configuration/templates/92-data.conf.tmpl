@@ -26,10 +26,10 @@ custNamePrefix={{ customer.primary.name_prefix }}
 em7_db_vip={{ vip.db if hostvars[host_item]['vm']['name'] is not search('aio') else em7_ip1_list[0] }}
 em7_AdminPortalVIP={{ vip.prt if hostvars[host_item]['vm']['name'] is not search('aio') else em7_ip1_list[0] }}
 em7_AdminPortalVIPHostName={{ em7prt_hst_list[0] | regex_replace('[a-z]01', 'v01') if em7prt_hst_list is defined else customer.primary.name_prefix + 'em7prtv01' }}
-em7_AdminPortalVIPFQDN={{ (em7prt_hst_list[0] | regex_replace('[a-z]01', 'v01') if em7prt_hst_list is defined else customer.primary.name_prefix + 'em7prtv01') + '.' + sysconfig.domain_name }}
+em7_AdminPortalVIPFQDN={{ (em7prt_hst_list[0] | regex_replace('[a-z]01', 'v01') if em7prt_hst_list is defined else customer.primary.name_prefix + 'em7prtv01') + '.' + sysconfig.primary.domain_name }}
 living_objects_ip=
 splunk_search_head_vip={{ vip.src if hostvars[host_item]['vm']['name'] is not search('aio') else spl_ip1_list[0] }}
-splunk_search_head_vip_FQDN={{ (splsrc_hst_list[0] | regex_replace('[a-z]01', 'hv01') if splsrc_hst_list is defined else customer.primary.name_prefix + 'splsrchv01') + '.' + sysconfig.domain_name }}
+splunk_search_head_vip_FQDN={{ (splsrc_hst_list[0] | regex_replace('[a-z]01', 'hv01') if splsrc_hst_list is defined else customer.primary.name_prefix + 'splsrchv01') + '.' + sysconfig.primary.domain_name }}
 relay_server_vip={{ vip.rly if hostvars[host_item]['vm']['name'] is not search('aio') else vip.rly_db }}
 relayServerDBVIP={{ vip.rly_db }}
 relay_ip_list={{ rly_ip1_list|join(',') }}
@@ -52,8 +52,8 @@ em7_user_name=em7admin
 splunk_user_name=admin
 em7_access_portal_cpu_core_count={{ prt_cpu_list[0] if prt_cpu_list is defined else 2 }}
 em7_access_portal_ram_gb={{ em7prt_mem_list[0] if em7prt_mem_list is defined else em7_mem_list[0] }}
-ntp_source_ip={{ sysconfig.primary_ntp_server }}
-domain_name={{ sysconfig.domain_name }}
+ntp_source_ip={{ sysconfig.primary.ntp_server }}
+domain_name={{ sysconfig.primary.domain_name }}
 installed_on_appliance={{ 'ESXiResource1' if (host_item[:-2]|int % 2 != 0 or hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h') else 'ESXiResource2' }}
 [headend]
 indexer01_ip={{ splunk.he_indexer01_ip }}
@@ -73,11 +73,11 @@ dc_ip_list={{ em7dc_ip1_list|join(',') if em7dc_ip1_list is defined else em7_ip1
 mc_ip_list={{ em7mc_ip1_list|join(',') if em7mc_ip1_list is defined else em7_ip1_list[0] }}
 all_dc_ip_list={{ em7dc_ip1_list|join(',') if em7dc_ip1_list is defined else em7_ip1_list[0] }}
 all_mc_ip_list={{ em7mc_ip1_list|join(',') if em7mc_ip1_list is defined else em7_ip1_list[0] }}
-splunk_proxy={{ customer.primary.name_prefix }}mapprtv01.{{ sysconfig.domain_name }}
-beta_proxy={{ customer.primary.name_prefix }}betaprtv01.{{ sysconfig.domain_name }}
-ondemand_proxy={{ customer.primary.name_prefix }}odrprtv01.{{ sysconfig.domain_name }}
-lo_proxy={{ customer.primary.name_prefix }}prtv01.{{ sysconfig.domain_name }}
-pure_proxy={{ customer.primary.name_prefix }}dashprtv01.{{ sysconfig.domain_name }}
+splunk_proxy={{ customer.primary.name_prefix }}mapprtv01.{{ sysconfig.primary.domain_name }}
+beta_proxy={{ customer.primary.name_prefix }}betaprtv01.{{ sysconfig.primary.domain_name }}
+ondemand_proxy={{ customer.primary.name_prefix }}odrprtv01.{{ sysconfig.primary.domain_name }}
+lo_proxy={{ customer.primary.name_prefix }}prtv01.{{ sysconfig.primary.domain_name }}
+pure_proxy={{ customer.primary.name_prefix }}dashprtv01.{{ sysconfig.primary.domain_name }}
 [is4]
 is4_region=IS4_{{ customer.primary.name_prefix }}
 [telemetry]

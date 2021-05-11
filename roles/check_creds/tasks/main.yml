@@ -29,11 +29,11 @@
       apply:
         vars:
           vcenter_host: "{{ task_item }}"
-    loop: "{{ groups['vcenter'] }}"
+    loop: "{{ groups['vcenter'] | union(groups['drvcenter']) if customer.disaster_recovery else groups['vcenter'] }}"
     loop_control:
       loop_var: task_item
     when:
-      - groups['vcenter'] | length >= 1
+      - (groups['vcenter'] | union(groups['drvcenter']) if customer.disaster_recovery else groups['vcenter']) | length >= 1
       - (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion_creds is succeeded) or (bastion.address == [] or bastion.address == [''])
       - not abort_play | default(false) | bool
 

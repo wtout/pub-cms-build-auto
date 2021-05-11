@@ -15,4 +15,5 @@
       - save iptables
       - restart iptables
   become: "{{ true if ansible_user != 'root' else false }}"
+  when: not ansible_check_mode
   tags: vm_hardening

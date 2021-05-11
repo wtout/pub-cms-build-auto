@@ -4,6 +4,13 @@
   - include_tasks: task_delete_vm.yml
   - include_tasks: task_delete_folder.yml
     when:
+      - "'stack' in group_names"
+      - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
       - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h'
-    run_once: true
+  - include_tasks: task_delete_folder.yml
+    when:
+      - customer.disaster_recovery
+      - "'dr' in group_names"
+      - inventory_hostname == ansible_play_hosts | intersect(groups['dr']) | first
+      - hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h'
   tags: vm_creation

@@ -2,6 +2,6 @@
 # vars file for vm_fromiso
 iso_dir: 'Packages/ISO'
 iso_installer: 'CentOS-7-x86_64-DVD-1908.iso'
-vm_svc_user: "{{ SVC_USER }}"
-vm_svc_pass: "{{ credentials.password }}"
+vm_svc_user: "{{ user.name if user.name != '' else SVC_USER if credentials.username == 'root' else credentials.username }}"
+vm_svc_pass: "{{ user.password if user.name != '' else credentials.password }}"
 chrony_file: '/etc/chrony.conf'

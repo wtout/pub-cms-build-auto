@@ -1,7 +1,7 @@
 ---
 # tasks file to remove vswitches
 - block:
-  - name: Define existing vSwitches
+  - name: Define existing {{ 'DR ' if inventory_hostname is search('dr') else '' }}vSwitches
     vmware_vswitch_info:
       hostname: "{{ information.address }}"
       username: "{{ credentials.username }}"
@@ -10,15 +10,12 @@
       validate_certs: no
     register: existing_vswitches
 
-  - name: Remove vSwitches
-    vmware_vswitch:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      esxi_hostname: "{{ resource }}"
-      validate_certs: no
-      switch: "{{ vswitch_item }}"
-      state: absent
+  - include_tasks:
+      file: task_delete_vswitch.yml
+      apply:
+        vars:
+          vswitch: "{{ vswitch_item }}"
+          resource: "{{ resource }}"
     loop: "{{ (existing_vswitches.hosts_vswitch_info|dict2items|first).value|difference('vSwitch0') }}"
     loop_control:
       loop_var: vswitch_item
