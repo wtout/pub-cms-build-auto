@@ -4,7 +4,7 @@
   - block:
     - name: define list of hosts that need data.conf
       ansible.builtin.set_fact:
-        data_conf_hosts: "{{ (groups['rly']  + groups['lnxjmp'] + groups['em7'] + groups['spl'] + (groups['drrly'] + groups['drlnxjmp'] + groups['drem7'] + groups['drspl'] if customer.disaster_recovery else [])) | intersect(ansible_play_hosts) }}"
+        data_conf_hosts: "{{ (groups['stack']  | difference(groups['infra']) if groups['infra'] is defined else groups['stack']) + (groups['dr'] | difference(groups['drinfra']) if groups['drinfra'] is defined else groups['dr']) if customer.disaster_recovery and ansible_play_hosts | reject('search', 'vcenter|nexus') == groups['dr'] else ((groups['stack']  | difference(groups['infra']) if groups['infra'] is defined else groups['stack']) + ((groups['dr'] | difference(groups['drinfra']) if groups['drinfra'] is defined else groups['dr']) if customer.disaster_recovery else [])) | intersect(ansible_play_hosts) }}"
     - name: create the files directory
       ansible.builtin.file:
         path: "{{ role_path }}/files"

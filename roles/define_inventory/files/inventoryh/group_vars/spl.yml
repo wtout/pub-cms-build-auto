@@ -1,5 +1,5 @@
 ---
 # Variables for splunk hosts
 credentials:
-  username: 'root'
+  username: "{{ NONEM7_PASS|default('') }}"
   password: "{{ NONEM7_PASS|default('') }}"

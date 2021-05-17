@@ -2,23 +2,30 @@
 # Tasks to ensure EM7 DB01 is primary
 - block:
   - block:
-    - name: check VM credentials
-      wait_for_connection:
-        timeout: 3
-      register: vm_creds
-      ignore_errors: true
+    - name: check VM reachable
+      shell: ping {{ hostvars[groups['em7db']|first]['ansible_host'] }} -c 1
+      register: db01_vm_reachable
       check_mode: no
-    - name: Update SSH password
-      set_fact:
-        ansible_ssh_pass: "{{ postppp }}"
-        ansible_become_pass: "{{ postppp }}"
-      no_log: true
-      when:
-        - vm_creds is failed
-        - vm_creds.msg is search('Invalid/incorrect username/password')
-    delegate_to: "{{ groups['em7db']|first }}"
-    delegate_facts: yes
-    run_once: true
+      ignore_errors: true
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - block:
+      - name: check VM credentials
+        wait_for_connection:
+          timeout: 3
+        register: vm_creds
+        ignore_errors: true
+        check_mode: no
+      - name: Update SSH password
+        set_fact:
+          ansible_ssh_pass: "{{ postppp }}"
+          ansible_become_pass: "{{ postppp }}"
+        no_log: true
+        when:
+          - vm_creds is failed
+          - vm_creds.msg is search('Invalid/incorrect username/password')
+      delegate_to: "{{ groups['em7db']|first }}"
+      delegate_facts: yes
+      when: db01_vm_reachable is succeeded
   - name: check if db vip is reachable
     command: ping {{ vip.db }} -c 1
     retries: 3
@@ -31,9 +38,20 @@
     check_mode: no
     ignore_errors: true
     delegate_to: "{{ groups['em7db']|first }}"
-  - include_tasks: task_reboot_em7dbs.yml
+    when: db01_vm_reachable is succeeded
+  - include_tasks:
+      file: task_reboot_em7dbs.yml
+      apply:
+        vars:
+          db_element: 'first'
+    when: db01_vm_reachable is failed
+  - include_tasks:
+      file: task_reboot_em7dbs.yml
+      apply:
+        vars:
+          db_element: 'last'
     when:
-      - db_vip_reachable1 is failed or (mysql_service_check.stdout is not regex('Permission denied, please try again') and mysql_service_check.stdout is regex('dead|failed'))
+      - db01_vm_reachable is failed or db_vip_reachable1 is failed or (mysql_service_check.stdout is not regex('Permission denied, please try again') and mysql_service_check.stdout is regex('dead|failed'))
   when:
     - em7_play_hosts_list | length > 0
     - inventory_hostname == em7_play_hosts_list|first

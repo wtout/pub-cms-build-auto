@@ -1,6 +1,6 @@
 ---
 # Variables for csr hosts
-ansible_user: 'admin'
+ansible_user: "{{ CSR_USER|default('') }}"
 ansible_ssh_pass: "{{ CSR_PASS|default('') }}"
 ansible_become: yes
 ansible_become_method: enable
@@ -8,7 +8,7 @@ ansible_network_os: ios
 ansible_connection: network_cli
 
 credentials:
-  username: 'admin'
+  username: "{{ CSR_USER|default('') }}"
   password: "{{ CSR_PASS|default('') }}"
 
 vm:

@@ -1,7 +1,7 @@
 ---
 # Variables for netscaler hosts
 credentials:
-  username: 'nsroot'
+  username: "{{ NSVPX_USER|default('') }}"
   default_password: "{{ DEFAULT_NSVPX_PASS|default('') }}"
   password: "{{ NSVPX_PASS|default('') }}"
 

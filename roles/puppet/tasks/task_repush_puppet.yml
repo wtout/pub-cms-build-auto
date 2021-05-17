@@ -123,7 +123,9 @@
           that:
             - repush3_status is succeeded
           fail_msg: "Puppet could not be pushed succesfully on {{ inventory_hostname }}"
-      when: repush2_status is failed
+      when:
+        - inventory_hostname is not search('em7')
+        - repush2_status is failed
     when: repush1_status is failed
   - name: define repush_status
     set_fact:

@@ -25,6 +25,9 @@
         vm_shell: '/usr/bin/sudo'
         vm_shell_args: '-S sh -c "/bin/sed -i \"/^GATEWAY.*$/,+d\" /etc/sysconfig/network" <<< {{ ansible_ssh_pass }}'
         wait_for_process: true
+      register: delete_gtw
+      until: delete_gtw is succeeded
+      delay: 10
     - name: restart the network on the EM7 VM
       vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
@@ -53,6 +56,9 @@
         vm_shell: '/bin/sed'
         vm_shell_args: '-i "/^GATEWAY.*$/,+d" /etc/sysconfig/network'
         wait_for_process: true
+      register: delete_gtw
+      until: delete_gtw is succeeded
+      delay: 10
     - name: restart the network on the non-EM7 VM
       vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"

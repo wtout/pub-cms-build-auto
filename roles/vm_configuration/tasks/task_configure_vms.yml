@@ -11,7 +11,6 @@
   - include_tasks: task_update_password_silo_file.yml
   - include_tasks: task_update_siloconf_file.yml
   - include_tasks: task_update_drop_file.yml
-  - include_tasks: task_update_network_file.yml
   - include_tasks: task_update_interface_file.yml
   - include_tasks: task_update_em7vg_files.yml
   - include_tasks: task_update_drbd_res_file.yml

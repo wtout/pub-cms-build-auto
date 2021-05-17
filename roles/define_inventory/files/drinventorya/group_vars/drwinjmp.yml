@@ -1,7 +1,7 @@
 ---
 # Variables for winjmp hosts
 credentials:
-  username: 'administrator'
+  username: "{{ WINJS_USER|default('') }}"
   password: "{{ WINJS_PASS|default('') }}"
 
 vm:

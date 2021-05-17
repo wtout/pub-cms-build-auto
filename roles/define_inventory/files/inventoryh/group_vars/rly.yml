@@ -1,7 +1,7 @@
 ---
 # Variables for relay hosts
 credentials:
-  username: 'root'
+  username: "{{ NONEM7_PASS|default('') }}"
   password: "{{ NONEM7_PASS|default('') }}"
 
 user:

@@ -4,7 +4,7 @@
   - block:
     - name: define list of hosts that need /etc/hosts file
       ansible.builtin.set_fact:
-        etc_hosts_hosts: "{{ (groups['rly']  + groups['lnxjmp'] + groups['em7'] + groups['spl'] + (groups['drrly'] + groups['drlnxjmp'] + groups['drem7'] + groups['drspl'] if customer.disaster_recovery else [])) | intersect(ansible_play_hosts) }}"
+        etc_hosts_hosts: "{{ (groups['stack']  | difference(groups['infra']) if groups['infra'] is defined else groups['stack']) + (groups['dr'] | difference(groups['drinfra']) if groups['drinfra'] is defined else groups['dr']) if customer.disaster_recovery and ansible_play_hosts | reject('search', 'vcenter|nexus') == groups['dr'] else ((groups['stack']  | difference(groups['infra']) if groups['infra'] is defined else groups['stack']) + ((groups['dr'] | difference(groups['drinfra']) if groups['drinfra'] is defined else groups['dr']) if customer.disaster_recovery else [])) | intersect(ansible_play_hosts) }}"
     - name: define loop list
       ansible.builtin.set_fact:
         loop_list: "{{ ([etc_hosts_hosts|intersect(groups['stack'])|first] if etc_hosts_hosts|intersect(groups['stack'])|length > 0 else []) | union([etc_hosts_hosts|intersect(groups['dr'])|first] if customer.disaster_recovery and etc_hosts_hosts|intersect(groups['dr'])|length > 0 else []) }}"
@@ -15,7 +15,7 @@
       loop: "{{ loop_list }}"
       loop_control:
         loop_var: host_item
-    delegate_to: localhost
+      delegate_to: localhost
     run_once: true
 
   - name: Copy hosts file to VM

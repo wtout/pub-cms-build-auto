@@ -57,7 +57,9 @@
         that:
           - cert_exists2
         fail_msg: "Certificate could not be created for host. Aborting!"
-    when: not cert_exists1|default(false)
+    when:
+      - inventory_hostname is not search('em7')
+      - not cert_exists1|default(false)
   - name: puppet sign certs
     shell: >
       /usr/local/bin/puppet cert sign {{ host_cert_name }}

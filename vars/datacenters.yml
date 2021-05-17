@@ -48,7 +48,7 @@ datacenters:
     folder: 'Deven'
     cluster: 'CDRA-Integ'
     datastore_cluster: ''
-    storage_datastore: 'deven-esxi-a-01-sas'
+    storage_datastore: ''
     storage_path: ''
 
   cdra-Build-Development:

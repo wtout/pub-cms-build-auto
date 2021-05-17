@@ -117,13 +117,13 @@
   - name: check if primary puppet server name value is valid
     assert:
       that:
-        - not environment_definition.puppet.primary.server_name | lower | regex_search('alln1qspupp0[1-4]') == none
+        - not environment_definition.puppet.primary.server_name | lower | regex_search('alln1qspupp0[1-4]|sastgpupp01') == none
       fail_msg: "Primary Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
 
   - name: check if secondary puppet server name value is valid
     assert:
       that:
-        - not environment_definition.puppet.secondary.server_name | lower | regex_search('alln1qspupp0[1-4]') == none
+        - not environment_definition.puppet.secondary.server_name | lower | regex_search('alln1qspupp0[1-4]|sastgpupp01') == none
       fail_msg: "Secondary Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
     when:
       - environment_definition.customer.disaster_recovery
@@ -131,13 +131,13 @@
   - name: check if primary yum server name value is valid
     assert:
       that:
-        - not environment_definition.yum.primary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]') == none
+        - not environment_definition.yum.primary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]|sastgyrep01') == none
       fail_msg: "Primary Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
 
   - name: check if secondary yum server name value is valid
     assert:
       that:
-        - not environment_definition.yum.secondary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]') == none
+        - not environment_definition.yum.secondary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]|sastgyrep01') == none
       fail_msg: "Secondary Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
     when:
       - environment_definition.customer.disaster_recovery

@@ -10,4 +10,4 @@ ansible_ssh_pass: "{{ credentials.password }}"
 ansible_become_pass: "{{ credentials.password }}"
 
 preppp: "{{ credentials.password }}"
-postppp: "{{ vars[customer.release[1:4].split('.')|join + 'EM7PPP_PASS'] if inventory_hostname is search('em7') else POSTPP_PASS }}"
+postppp: "{{ vars[('STG' if datacenter.primary.name == 'RTP-Staging' else '') + customer.release[1:4].split('.')|join + 'EM7PPP_PASS'] if inventory_hostname is search('em7') else vars[('STG' if datacenter.primary.name == 'RTP-Staging' else '') + 'POSTPP_PASS'] }}"

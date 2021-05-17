@@ -87,10 +87,10 @@ sysconfig:
   primary:
 
     # DNS servers list
-    dns_servers: {{ ['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else ['172.19.251.21', '172.19.251.22'] }}
+    dns_servers: {{ [ '172.23.251.21', '172.23.251.22' ] if environment_definition.datacenter.primary.name == 'RTP-Staging' else ['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else ['172.19.251.21', '172.19.251.22'] }}
 
     # Domain name to use
-    domain_name: "{{ 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com' }}"
+    domain_name: "{{ ('staging.' if environment_definition.datacenter.primary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com' }}"
 
     # NTP server
     ntp_server: "{{ '{{ customer.primary.octets }}' + '.62' }}"
@@ -98,10 +98,10 @@ sysconfig:
   secondary:
   
     # DNS servers list
-    dns_servers: {{ (['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else ['172.19.251.21', '172.19.251.22']) if environment_definition.customer.disaster_recovery else ''  }}
+    dns_servers: {{ ([ '172.23.251.21', '172.23.251.22' ] if environment_definition.datacenter.secondary.name == 'RTP-Staging' else ['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else ['172.19.251.21', '172.19.251.22']) if environment_definition.customer.disaster_recovery else ''  }}
 
     # Domain name to use
-    domain_name: "{{ ('cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else '' }}"
+    domain_name: "{{ (('staging.' if environment_definition.datacenter.secondary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else '' }}"
 
     # NTP server
     ntp_server: "{{ '{{ customer.secondary.octets }}' + '.62' if environment_definition.customer.disaster_recovery else '' }}"
@@ -118,10 +118,10 @@ puppet:
     vmname: '{{ environment_definition.puppet.primary.server_name }}'
 
     # FQDN
-    fqdn: '{{ environment_definition.puppet.primary.server_name }}.cisco-cms.com'
+    fqdn: '{{ environment_definition.puppet.primary.server_name + '.' + ('staging.' if environment_definition.datacenter.primary.name == 'RTP-Staging' else '') + "cisco-cms.com" }}'
 
     # ip address
-    ipaddress: '{{ [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.primary.server_name[-1:]|int-1] }}'
+    ipaddress: '{{ "172.23.251.38" if environment_definition.datacenter.primary.name == 'RTP-Staging' else [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.primary.server_name[-1:]|int-1] }}'
 
   secondary:
 
@@ -129,10 +129,10 @@ puppet:
     vmname: '{{ environment_definition.puppet.secondary.server_name if environment_definition.customer.disaster_recovery else "" }}'
 
     # FQDN
-    fqdn: '{{ environment_definition.puppet.secondary.server_name + '.cisco-cms.com' if environment_definition.customer.disaster_recovery else "" }}'
+    fqdn: '{{ (environment_definition.puppet.secondary.server_name + '.' + ('staging.' if environment_definition.datacenter.secondary.name == 'RTP-Staging' else '') + "cisco-cms.com") if environment_definition.customer.disaster_recovery else "" }}'
 
     # ip address
-    ipaddress: '{{ [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.secondary.server_name[-1:]|int-1] if environment_definition.customer.disaster_recovery else "" }}'
+    ipaddress: '{{ ("172.23.251.38" if environment_definition.datacenter.secondary.name == 'RTP-Staging' else [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.secondary.server_name[-1:]|int-1]) if environment_definition.customer.disaster_recovery else "" }}'
 
 
 ##################################################################################
@@ -152,30 +152,30 @@ yum:
   primary:
 
     # baseurl
-    baseurl: 'https://{{ environment_definition.yum.primary.server_name }}.{{ 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
+    baseurl: 'https://{{ environment_definition.yum.primary.server_name + '.' + ('staging.' if environment_definition.datacenter.primary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
 
     # VM name
     vmname: '{{ environment_definition.yum.primary.server_name }}'
 
     # FQDN
-    fqdn: '{{ environment_definition.yum.primary.server_name + '.cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
+    fqdn: '{{ environment_definition.yum.primary.server_name + '.' + ('staging.' if environment_definition.datacenter.primary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
 
     # ip address
-    ipaddress: '{{ [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.primary.server_name[-1:]|int-1] }}'
+    ipaddress: '{{ "172.23.251.39" if environment_definition.datacenter.primary.name == 'RTP-Staging' else [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.primary.server_name[-1:]|int-1] }}'
 
   secondary:
 
     # baseurl
-    baseurl: 'https://{{ environment_definition.yum.secondary.server_name }}.{{ 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
+    baseurl: '{{ ('https://' + environment_definition.yum.secondary.server_name + '.' + ('staging.' if environment_definition.datacenter.secondary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else '' }}'
 
     # VM name
     vmname: '{{ environment_definition.yum.secondary.server_name if environment_definition.customer.disaster_recovery else "" }}'
 
     # FQDN
-    fqdn: '{{ (environment_definition.yum.secondary.server_name + '.cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else "" }}'
+    fqdn: '{{ (environment_definition.yum.secondary.server_name + '.' + ('staging.' if environment_definition.datacenter.secondary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else "" }}'
 
     # ip address
-    ipaddress: '{{ [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.secondary.server_name[-1:]|int-1] if environment_definition.customer.disaster_recovery else "" }}'
+    ipaddress: '{{ ("172.23.251.39" if environment_definition.datacenter.secondary.name == 'RTP-Staging' else [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.secondary.server_name[-1:]|int-1]) if environment_definition.customer.disaster_recovery else "" }}'
 
 
 ##################################################################################

@@ -1,6 +1,32 @@
 ---
 # tasks to define vm ips
 - block:
+  - name: define ansible_host for HA DBs
+    set_fact:
+      ansible_host: "{{ em7db_ip1_list[db_item[-2:]|int - 1] }}"
+    delegate_to: "{{ db_item }}"
+    delegate_facts: yes
+    loop: "{{ groups['em7db'] }}"
+    loop_control:
+      loop_var: db_item
+    when:
+      - ansible_run_tags is search('puppet|vm_ppp_configuration')
+      - groups['em7db'] is defined
+      - ansible_play_hosts | select('regex','em7db0[1-2]') | length < 2
+    run_once: true
+  - name: define ansible_host for DR DB
+    set_fact:
+      ansible_host: "{{ drem7db_ip1_list[db_item[-2:]|int - 1] }}"
+    delegate_to: "{{ db_item }}"
+    delegate_facts: yes
+    loop: "{{ groups['drem7db'] }}"
+    loop_control:
+      loop_var: db_item
+    when:
+      - customer.disaster_recovery
+      - ansible_play_hosts | select('regex','drem7db01') | length < 1
+    run_once: true
+
   - name: define IP addresses
     set_fact:
       ipaddress1: "{{ netconfig.ippool1[index|int - 1] if netconfig.ippool1 != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) else '' }}"

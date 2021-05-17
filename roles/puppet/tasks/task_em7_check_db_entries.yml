@@ -1,7 +1,7 @@
 ---
 # tasks to check the db entries
 - block:
-  - name: check licenses status in{{ ' DR ' if em7_host_delegate == groups['drem7db']|first else ' ' }}DB
+  - name: check licenses status in{{ ' DR ' if em7_host_delegate is search('drem7') else ' ' }}DB
     ansible.builtin.shell:
       cmd: silo_mysql master -e "select name,lic_status,expiration from system_settings_licenses where name regexp '{{ customer.primary.name_prefix + '|' + customer.secondary.name_prefix if customer.disaster_recovery else customer.primary.name_prefix }}';"
     register: ls

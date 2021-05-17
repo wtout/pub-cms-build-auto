@@ -26,7 +26,6 @@
     run_once: true
   - include_tasks: task_check_cluster_name.yml
   - block:
-    - include_tasks: task_define_vm_ip.yml
     - block:
       - include_tasks: task_define_vm_disk_size.yml
       - include_tasks: task_define_groups_list.yml
@@ -36,6 +35,7 @@
         when: configure_vms | default(false) | bool or push_puppet | default(false) | bool or configure_ppp_vms | default(false) | bool
       when:
         - deploy | default(false) | bool
+    - include_tasks: task_define_vm_ip.yml
     when:
       - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
   tags: ['always', 'vm_facts']
