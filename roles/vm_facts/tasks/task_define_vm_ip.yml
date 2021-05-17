@@ -23,6 +23,7 @@
     loop_control:
       loop_var: db_item
     when:
+      - ansible_run_tags is search('puppet|vm_ppp_configuration')
       - customer.disaster_recovery
       - ansible_play_hosts | select('regex','drem7db01') | length < 1
     run_once: true
