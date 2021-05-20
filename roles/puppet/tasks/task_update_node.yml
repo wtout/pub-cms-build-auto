@@ -73,7 +73,7 @@
       failed_when: puppet_class is failed
       when:
         - not ansible_check_mode
-#      no_log: true
+      no_log: true
       run_once: true
     when:
       - hostnames_list.stdout_lines | length >= 1

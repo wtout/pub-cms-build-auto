@@ -1,7 +1,5 @@
 ---
 # Variables for csr hosts
-ansible_user: "{{ CSR_USER|default('') }}"
-ansible_ssh_pass: "{{ CSR_PASS|default('') }}"
 ansible_become: yes
 ansible_become_method: enable
 ansible_network_os: ios

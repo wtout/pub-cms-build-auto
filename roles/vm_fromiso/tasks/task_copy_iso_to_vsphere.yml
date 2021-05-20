@@ -1,0 +1,39 @@
+---
+# Tasks to copy the ISO file to datastore
+- block:
+  - name: check if the installer ISO is on the datastore
+    vsphere_file:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      datastore: "{{ iso_datastore }}"
+      path: "{{ iso_path }}/{{ iso_installer }}"
+      state: file
+      validate_certs: false
+    register: iso_present
+    ignore_errors: true
+    when: ds_folder is succeeded
+    run_once: "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else false }}"
+
+  - name: copy installer ISO file to vsphere
+    vsphere_copy:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      datastore: "{{ iso_datastore }}"
+      src: "{{ auto_dir }}/{{ iso_dir }}/{{ iso_installer }}"
+      dest: "{{ iso_path }}/{{ iso_installer }}"
+      validate_certs: false
+    async: 7200
+    poll: 30
+    run_once: "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else false }}"
+    when:
+      - iso_present is failed
+      - not ansible_check_mode
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  environment:
+    http_proxy: ''
+    https_proxy: ''
+  tags: vm_creation
