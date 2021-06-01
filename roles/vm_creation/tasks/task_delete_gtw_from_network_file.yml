@@ -25,9 +25,10 @@
         vm_shell: '/usr/bin/sudo'
         vm_shell_args: '-S sh -c "/bin/sed -i \"/^GATEWAY.*$/,+d\" /etc/sysconfig/network" <<< {{ ansible_ssh_pass }}'
         wait_for_process: true
-      register: delete_gtw
-      until: delete_gtw is succeeded
+      register: delete_em7gtw
+      until: delete_em7gtw is succeeded
       delay: 10
+      ignore_errors: true
     - name: restart the network on the EM7 VM
       vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
@@ -41,6 +42,7 @@
         vm_shell: '/usr/bin/sudo'
         vm_shell_args: '-S sh -c "/bin/systemctl restart network" <<< {{ ansible_ssh_pass }}'
         wait_for_process: true
+      when: delete_em7gtw is succeeded
     when: inventory_hostname is search('em7')
   - block:
     - name: delete gateway from network file on the non-EM7 VM
@@ -59,6 +61,7 @@
       register: delete_gtw
       until: delete_gtw is succeeded
       delay: 10
+      ignore_errors: true
     - name: restart the network on the non-EM7 VM
       vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
@@ -72,7 +75,11 @@
         vm_shell: '/bin/systemctl'
         vm_shell_args: 'restart network'
         wait_for_process: true
+      when: delete_gtw is succeeded
     when: inventory_hostname is not search('em7')
+  - name: Check if rebuild is required
+    set_fact:
+      gtw_rebuild: "{{ delete_em7gtw|default({'failed': false}) is failed or delete_gtw|default({'failed': false}) is failed }}"
   when:
     - netconfig.ipaddress2 != ''
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

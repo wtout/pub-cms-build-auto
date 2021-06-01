@@ -71,7 +71,7 @@
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      name: "{{ vm.name}}"
+      name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk0_size_kb }}"
           type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
@@ -92,7 +92,7 @@
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      name: "{{ vm.name}}"
+      name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk1_size_kb }}"
           type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"

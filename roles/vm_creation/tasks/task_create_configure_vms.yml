@@ -8,10 +8,16 @@
   - include_tasks: task_deploy_ova.yml
   - include_tasks: task_update_disks.yml
   - include_tasks: task_recreate_vm.yml
-    when: vmguest_disk is failed
+    when: disk_rebuild|default(false)
   - include_tasks: task_update_hardware.yml
   - include_tasks: task_enable_root_login.yml
   - include_tasks: task_delete_gtw_from_network_file.yml
+  - block:
+    - include_tasks: task_recreate_vm.yml
+    - include_tasks: task_update_hardware.yml
+    - include_tasks: task_enable_root_login.yml
+    - include_tasks: task_delete_gtw_from_network_file.yml
+    when: gtw_rebuild|default(false)
   - include_tasks: task_update_default_route.yml
   - include_tasks: task_rename_interface.yml
   - include_tasks: task_update_vmwaretools.yml
