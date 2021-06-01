@@ -11,7 +11,14 @@
       validate_certs: no
     register: csr_info
     until: csr_info.instance.ipv4 != None
+    ignore_errors: true
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+
+  - assert:
+      that:
+        - csr_info is succeeded
+      fail_msg: 'The CSR VM is not found. Aborting playbook execution!'
+      
   - set_fact:
       ansible_host: "{{ csr_info.instance.ipv4 }}"
       dhcp_address: "{{ csr_info.instance.ipv4 }}"
@@ -46,7 +53,12 @@
 
     - name: Define CSR license file name
       set_fact:
-        license_file_name: "{{ license_file_names.stdout_lines | select('search', ansible_net_serialnum) | list | first }}"
+        license_file_name: "{{ license_file_names.stdout_lines | select('search', ansible_net_serialnum) | list | first if license_file_names.stdout_lines | select('search', ansible_net_serialnum) | list | length >= 1 else '' }}"
+
+    - assert:
+        that:
+          - license_file_name != ''
+        fail_msg: 'CSR license file not found. Aborting playbook execution!'
 
     - name: Transfer license from Packages to CSR
       shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.ipaddress3 }}:/bootflash:{{ license_file_name }}"

@@ -53,7 +53,7 @@
       int_vlan_id: "{{ exs_int_vlan_id if exs_int_vlan_id != '' else exs_int_vlan_id_list|sort|last|int + 1 if exs_int_vlan_id_list != [] else '100' }}"
       lb_vlan_id: "{{ exs_lb_vlan_id if exs_lb_vlan_id != '' else exs_lb_vlan_id_list|sort|last|int + 1 if exs_lb_vlan_id_list != [] else '120' }}"
       custin_vlan_id: "{{ exs_custin_vlan_id if exs_custin_vlan_id != '' else exs_custin_vlan_id_list|sort|last|int + 1 if exs_custin_vlan_id_list != [] else '200' }}"
-      hbl_vlan_id_list: "{{ exs_hbl_vlan_id if exs_hbl_vlan_id != '' else exs_hbl_vlan_id_list|sort|last|int + 1 if exs_hbl_vlan_id_list != [] else '300' }}"
+      hbl_vlan_id: "{{ exs_hbl_vlan_id if exs_hbl_vlan_id != '' else exs_hbl_vlan_id_list|sort|last|int + 1 if exs_hbl_vlan_id_list != [] else '300' }}"
 
   - name: Create port groups on {{ resource }}
     vmware_portgroup:
@@ -73,7 +73,7 @@
       - { name: "{{ net3 }}", switch: 'vSwitch2', active_adapter: 'vmnic2', vlan_id: "{{ int_vlan_id }}" }
       - { name: "{{ net4 }}", switch: 'vSwitch2', active_adapter: 'vmnic2', vlan_id: "{{ lb_vlan_id }}" }
       - { name: "{{ net5 }}", switch: 'vSwitch3', active_adapter: 'vmnic3', vlan_id: "{{ custin_vlan_id }}" }
-      - { name: "{{ net6 }}", switch: 'vSwitch4', active_adapter: 'vmnic4' }
+      - { name: "{{ net6 }}", switch: 'vSwitch4', active_adapter: 'vmnic4', vlan_id: "{{ hbl_vlan_id }}" }
     loop_control:
       loop_var: portgroup_item
   run_once: true

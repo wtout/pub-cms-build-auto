@@ -11,7 +11,7 @@
         src: '/etc/sysconfig/network-scripts/ifcfg-ens224'
         dest: '/etc/sysconfig/network-scripts/ifcfg-ens192'
         remote_src: yes
-    - name: rename the name in the interface file on the VM
+    - name: rename the nic2 in the interface file on the VM
       ansible.builtin.replace:
         path: '/etc/sysconfig/network-scripts/ifcfg-ens192'
         regexp: '^(.*)ens224'
