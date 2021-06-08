@@ -15,6 +15,9 @@
       - { regexp_string: '^(.* name: ).*(\d{2})$', replace_string: '\g<1>{{ vm.name[:-2] }}\g<2>' }
     loop_control:
       loop_var: task_item
+    notify:
+      - restart pacemaker
+      - restart corosync
   when: inventory_hostname is search('em7db')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   tags: vm_configuration

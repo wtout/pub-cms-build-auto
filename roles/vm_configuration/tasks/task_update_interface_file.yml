@@ -1,7 +1,7 @@
 ---
 # tasks to update /etc/sysconfig/network-scripts/ifcfg-<intname> on EM7 VM
 - block:
-  - name: Check if IPV6INIT is in interfacte file
+  - name: Check if IPV6INIT is in interface file
     ansible.builtin.replace:
       path: "{{ file_item }}"
       regexp: '^IPV6INIT=.*$'
@@ -12,7 +12,7 @@
     loop: "{{ file_path }}"
     loop_control:
       loop_var: file_item
-  - name: Add IPV6INIT to interfacte file
+  - name: Add IPV6INIT to interface file
     ansible.builtin.lineinfile:
       path: "{{ file_item }}"
       line: 'IPV6INIT=no'
@@ -21,7 +21,7 @@
     loop_control:
       loop_var: file_item
     when: str_exists.results | selectattr('file_item', 'equalto', file_item) | map(attribute='failed') | list | first
-  - name: Update IPV6INIT in interfacte file
+  - name: Update IPV6INIT in interface file
     ansible.builtin.replace:
       path: "{{ file_item }}"
       regexp: '^(IPV6INIT=).*$'
