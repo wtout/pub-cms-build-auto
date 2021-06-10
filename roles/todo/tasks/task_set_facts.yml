@@ -260,7 +260,7 @@
     - customer.name | lower is not search('mdr')
     - not bfiso | default(false) | bool
     - auto_dir is not search('cdra')
-    - customer.release is search('9.1.3')
+    - customer.version.release is search('9.1.3')
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: splunk_mop
 

@@ -9,11 +9,19 @@ customer:
   # Official build name
   name: '{{ environment_definition.customer.name }}'
 
-  # Release version
-  release: '{{ environment_definition.customer.release_version }}'
-
   # Disaster recovery (boolean yes/no)
   disaster_recovery: {{ environment_definition.customer.disaster_recovery }}
+
+  version:
+
+    # Platform Release version (string)
+    release: '{{ environment_definition.customer.version.release }}'
+
+    # EM7 ISO (string)
+    em7_iso: '{{ environment_definition.customer.version.em7_iso if environment_definition.customer.version.em7_iso != none else 'em7_x86_64_8.12.0-1191.iso' }}'
+
+    # CentOS ISO (string)
+    centos_iso: '{{ environment_definition.customer.version.centos_iso if environment_definition.customer.version.centos_iso != none else 'CentOS-7-x86_64-DVD-1908.iso' }}'
 
   primary:
 

@@ -39,7 +39,7 @@
 
 - name: mount drbd1
   shell: |
-    {{ 'drbd-overview | grep -i secondary/secondary' if customer.release is not search('9.2') else '/sbin/drbdadm status | grep -i r0 | cut -d ":" -f2 | grep -i secondary && /sbin/drbdadm status | grep -i "peer " | cut -d ":" -f2 | grep -i secondary' }} && /sbin/drbdadm primary r0
+    {{ 'drbd-overview | grep -i secondary/secondary' if customer.version.release is not search('9.2') else '/sbin/drbdadm status | grep -i r0 | cut -d ":" -f2 | grep -i secondary && /sbin/drbdadm status | grep -i "peer " | cut -d ":" -f2 | grep -i secondary' }} && /sbin/drbdadm primary r0
     mount /dev/drbd1 /data.local/db
     df | grep /drbd1
   become: "{{ true if ansible_user != 'root' else false }}"

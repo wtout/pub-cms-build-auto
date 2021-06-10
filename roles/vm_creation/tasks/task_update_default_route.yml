@@ -14,7 +14,7 @@
     when: deploy_ovf is not changed
   - name: copy default route file locally
     template:
-      src: "templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}route-ens160.tmpl"
+      src: "templates/{{ customer.version.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}route-ens160.tmpl"
       dest: "/var/tmp/{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}-{{ inventory_hostname }}-route-ens160"
   - block:
     - name: copy default route file to EM7 VM

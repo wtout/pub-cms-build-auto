@@ -162,7 +162,7 @@
     loop_control:
       loop_var: loop_item
     when:
-       - inventory_hostname is not search('em7') or (inventory_hostname is search('em7') and customer.release is search('9.2'))
+       - inventory_hostname is not search('em7') or (inventory_hostname is search('em7') and customer.version.release is search('9.2'))
 
   - include_tasks: task_enable_puppet_sync.yml
   tags: puppet

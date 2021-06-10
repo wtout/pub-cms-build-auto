@@ -41,7 +41,9 @@ Create your own system definition file under the _``Definitions``_ folder to con
 The system definition file name **must match the customer name** as defined in the system definition file. The system definition file consists of the following variables:
 
   - **customer.name** (_String_): Customer Name. Required
-  - **customer.release_version** (_String_): Required. Must start with **R** to match the naming convention in Maven
+  - **customer.version.release** (_String_): Required. Must start with **R** to match the naming convention in Maven
+  - **customer.version.centos_iso** (_String_): CentOS ISO file name
+  - **customer.version.em7_iso** (_String_): EM7 ISO file name
   - **customer.deployment_model** (_String_): Required. Valid values are: **a** and **h**, where **a** represents “**a**ppliance” and **h** represents “**h**osted”
   - **customer.ata** (_Boolean_ **yes**/**no**): Required. Indicates whether or not to build an ATA relay
   - **customer.disaster_recovery** (_Boolean_ **yes**/**no**): Required. Indicates whether or not to build a geo-redundant stack

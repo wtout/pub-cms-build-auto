@@ -16,7 +16,7 @@
       when: script1_stat.stat.exists
       become: "{{ true if inventory_hostname is search('em7') else false }}"
     when:
-      - customer.release is search('9.2')
+      - customer.version.release is search('9.2')
       - inventory_hostname is regex('mc|dc')
 
   - name: check if generate-ngx-cert.sh exists

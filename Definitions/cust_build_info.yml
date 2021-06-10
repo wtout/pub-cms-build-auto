@@ -5,8 +5,16 @@ customer:
   # Official customer name (string)
   name: cust_name
 
-  # Release version (string)
-  release_version: R9.2.17
+  version:
+
+    # Platform Release version (string)
+    release: R9.2.17
+
+    # EM7 ISO (string)
+    em7_iso: 
+
+    # CentOS ISO (string)
+    centos_iso: 
 
   # ATA relay (boolean yes/no)
   ata: no

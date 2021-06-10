@@ -1,6 +1,6 @@
 [common]
-CurrentVersion={{ customer.release|replace('R', '') }}
-TargetVersion={{ customer.release|replace('R', '') }}
+CurrentVersion={{ customer.version.release|replace('R', '') }}
+TargetVersion={{ customer.version.release|replace('R', '') }}
 primary_relay_server_IP={{ drrly_ip1_list[0] }}
 secondary_relay_server_IP={{ drrly_ip1_list[1] if drrly_ip1_list|length >= 2 else '' }}
 mcIP={{ vars[host_item[:-2] + '_ip1_list'][host_item[-2:]|int - 1] }}

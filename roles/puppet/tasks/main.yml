@@ -31,7 +31,7 @@
           - pp_vm_creds1.msg is search('Invalid/incorrect username/password')
       when:
         - ansible_ssh_pass != postppp
-        - inventory_hostname is not search('em7') or customer.release is search('9.2')
+        - inventory_hostname is not search('em7') or customer.version.release is search('9.2')
     - include_tasks: task_em7_check_license.yml
       when:
         - ansible_ssh_pass != postppp
@@ -47,7 +47,7 @@
           - delete_client_cert_on_vm | default(false) | bool
       - include_tasks: task_puppet_agent_test.yml
         when:
-          - inventory_hostname is not search('em7') or customer.release is search('9.2')
+          - inventory_hostname is not search('em7') or customer.version.release is search('9.2')
       when: "'stack' in group_names"
     - block:
       - include_tasks: task_delete_certificates.yml
@@ -60,7 +60,7 @@
           - delete_client_cert_on_vm | default(false) | bool
       - include_tasks: task_puppet_agent_test.yml
         when:
-          - inventory_hostname is not search('em7') or customer.release is search('9.2')
+          - inventory_hostname is not search('em7') or customer.version.release is search('9.2')
       when: "'dr' in group_names"
     when: pp_vm_reachable is succeeded
   when:

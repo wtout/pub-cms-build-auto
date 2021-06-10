@@ -11,9 +11,18 @@
       name: "{{ vm.name }}"
       state: poweredoff
       validate_certs: no
-  - name: define nics_list
+  - name: get VM NIC information
+    community.vmware.vmware_guest_info:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      name: "{{ vm.name }}"
+      validate_certs: no
+    register: vm_nics
+  - name: define nic1
     ansible.builtin.set_fact:
-      nics_list:
+      nic1:
         - name: "{{ netconfig.network1 }}"
           ip: "{{ netconfig.ipaddress1 }}"
           netmask: "{{ netconfig.netmask1 }}"
@@ -22,18 +31,10 @@
           start_connected: true
           allow_guest_control: true
     when:
-      - ova_nets.stdout_lines|length == 1
-      - inventory_hostname is not regex('rly|lnxjmp')
-  - name: define nics_list
+      - netconfig.intname1 != ''
+  - name: define nic2
     ansible.builtin.set_fact:
-      nics_list:
-        - name: "{{ netconfig.network1 }}"
-          ip: "{{ netconfig.ipaddress1 }}"
-          netmask: "{{ netconfig.netmask1 }}"
-          gateway: "{{ netconfig.gateway1 }}"
-          device_type: vmxnet3
-          start_connected: true
-          allow_guest_control: true
+      nic2:
         - name: "{{ netconfig.network2 }}"
           ip: "{{ netconfig.ipaddress2 }}"
           netmask: "{{ netconfig.netmask2 }}"
@@ -42,7 +43,24 @@
           start_connected: true
           allow_guest_control: true
     when:
-      - ova_nets.stdout_lines|length == 2 or inventory_hostname is regex('rly|lnxjmp')
+      - netconfig.intname2 != ''
+  - name: define list of nics
+    ansible.builtin.set_fact:
+      nics_list: "{{ nic1 + nic2|default([]) }}"
+  - name: remove NIC2
+    community.vmware.vmware_guest_network:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      name: "{{ vm.name }}"
+      mac_address: "{{ vm_nics.instance.hw_eth1.macaddress }}"
+      label: "Network adapter 2"
+      state: absent
+      validate_certs: no
+    when:
+      - vm_nics.instance.hw_interfaces|length >= 2
+      - netconfig.intname2 == ''
 
   - name: Update VM hardware settings
     community.vmware.vmware_guest:
@@ -70,5 +88,56 @@
       msg: "{{ vmguest_net.msg }}"
     when:
       - vmguest_net is failed
+  - block:
+    - name: Wait on VMware Tools to become available
+      vmware_guest_tools_wait:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        validate_certs: false
+        name: "{{ vm.name }}"
+    - name: Pause for {{ 30 if deploy_ovf is changed else 60 }} seconds to ensure VM finished booting
+      wait_for:
+        timeout: "{{ 30 if deploy_ovf is changed else 60 }}"
+    - name: delete nic2 interface file on EM7 VM
+      vmware_vm_shell:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/usr/bin/sudo'
+        vm_shell_args: '-S sh -c "/bin/rm -f /etc/sysconfig/network-scripts/ifcfg-ens192 /etc/sysconfig/network-scripts/ifcfg-ens224" <<< {{ ansible_ssh_pass }}'
+        wait_for_process: true
+      register: delete_em7nic2
+      until: delete_em7nic2 is succeeded
+      delay: 10
+      ignore_errors: true
+      when: inventory_hostname is search('em7')
+    - name: delete nic2 interface file on non-EM7 VM
+      vmware_vm_shell:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/bin/sh'
+        vm_shell_args: '-c "/bin/rm -f /etc/sysconfig/network-scripts/ifcfg-ens192 /etc/sysconfig/network-scripts/ifcfg-ens224"'
+        wait_for_process: true
+      register: delete_nic2
+      until: delete_nic2 is succeeded
+      delay: 10
+      ignore_errors: true
+      when: inventory_hostname is not search('em7')
+    when:
+      - vm_nics.instance.hw_interfaces|length >= 2
+      - netconfig.intname2 == ''
+      - vmguest_net is succeeded
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_creation

@@ -1,5 +1,5 @@
 #jinja2: trim_blocks: False
-{% include environment_definition.customer.release_version[1:4].split('.')|join + '-all.yml.tmpl' %}
+{% include environment_definition.customer.version.release[1:4].split('.')|join + '-all.yml.tmpl' %}
 {% if environment_definition.customer.deployment_model is search('aio') %}
 {% if environment_definition.customer.deployment_model[-1:] is search('a') %}
 {% include 'templates/allaioa.yml.tmpl' %}

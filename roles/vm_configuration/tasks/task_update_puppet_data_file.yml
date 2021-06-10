@@ -11,7 +11,7 @@
         state: directory
     - name: render data.conf file
       ansible.builtin.template:
-        src: "{{ role_path }}/templates/{{ customer.release[1:4].split('.')|join }}-{{ 'dr' if host_item is search('dr') else '' }}data.conf.tmpl"
+        src: "{{ role_path }}/templates/{{ customer.version.release[1:4].split('.')|join }}-{{ 'dr' if host_item is search('dr') else '' }}data.conf.tmpl"
         dest: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
       loop: "{{ data_conf_hosts }}"
       loop_control:
