@@ -7,7 +7,7 @@
     register: winjmp_poll_results_1
     until: winjmp_poll_results_1.finished
     ignore_errors: true
-    retries: 30
+    retries: 60
     delay: 60
 
   - block:
@@ -20,7 +20,7 @@
       register: winjmp_poll_results_2
       until: winjmp_poll_results_2.finished
       ignore_errors: true
-      retries: 30
+      retries: 60
       delay: 60
 
     - block:
@@ -44,7 +44,7 @@
         register: winjmp_poll_results_3
         until: winjmp_poll_results_3.finished
         ignore_errors: true
-        retries: 30
+        retries: 60
         delay: 60
       when:
         - winjmp_poll_results_2 is failed

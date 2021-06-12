@@ -2,7 +2,7 @@
 # Tasks for notify
 - block:
   - name: Get playbook status from {{ LFILE }}
-    shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ NHOSTS }};i++){print $0;getline}}' {{ LFILE }} | grep -v awk | egrep 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
+    ansible.builtin.shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP/,+{{ NHOSTS }}p' {{ LFILE }} | grep -v awk | egrep 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
     register: playbook_status
   - block:
     - name: define notifcation message
@@ -29,8 +29,8 @@
       register: user_abort
       ignore_errors: true
     - name: Get playbook execution time from {{ LFILE }}
-      shell: |
-        grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && awk '/PLAY RECAP/{st=NR;for(i=st;i<=st+{{ NHOSTS }}+2;i++){print $0;getline}}' {{ LFILE }} | egrep -v 'awk|RECAP|===' | egrep '.[1-9]{,3} \*{3,}' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
+      ansible.builtin.shell: |
+        grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP/,+{{ NHOSTS|int + 2 }}p' {{ LFILE }} | egrep -v 'awk|RECAP|===' | grep '*' &>/dev/null && sed -n '/PLAY RECAP/,+{{ NHOSTS|int + 2 }}p' {{ LFILE }} | egrep -v 'awk|RECAP|===' | egrep '.[1-9]{,3} \*{3,}' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
       register: playbook_execution
     - set_fact:
         playbook_time: "{{ playbook_time|default('') + ' ' + time_item.0|regex_replace('^0*', '') + time_item.1 }}"
