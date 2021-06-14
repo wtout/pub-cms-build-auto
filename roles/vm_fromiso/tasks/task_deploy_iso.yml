@@ -16,31 +16,29 @@
     ignore_errors: true
     register: vmguest_info
 
-  - name: define nics_list
+  - name: define nic1
     ansible.builtin.set_fact:
-      nics_list:
+      nic1:
         - name: "{{ netconfig.network1 }}"
           ip: "{{ netconfig.ipaddress1 }}"
           netmask: "{{ netconfig.netmask1 }}"
           gateway: "{{ netconfig.gateway1 }}"
           device_type: vmxnet3
     when:
-      - netconfig.network2 == ''
-  - name: define nics_list
+      - netconfig.intname1 != ''
+  - name: define nic2
     ansible.builtin.set_fact:
-      nics_list:
-        - name: "{{ netconfig.network1 }}"
-          ip: "{{ netconfig.ipaddress1 }}"
-          netmask: "{{ netconfig.netmask1 }}"
-          gateway: "{{ netconfig.gateway1 }}"
-          device_type: vmxnet3
+      nic2:
         - name: "{{ netconfig.network2 }}"
           ip: "{{ netconfig.ipaddress2 }}"
           netmask: "{{ netconfig.netmask2 }}"
           gateway: "{{ netconfig.gateway2 }}"
           device_type: vmxnet3
     when:
-      - netconfig.network2 != ''
+      - netconfig.intname2 != ''
+  - name: define list of nics
+    ansible.builtin.set_fact:
+      nics_list: "{{ nic1 + nic2|default([]) }}"
 
   - block:
     - name: Deploy VM from ISO
