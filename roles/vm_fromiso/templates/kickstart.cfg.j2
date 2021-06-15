@@ -15,7 +15,7 @@ keyboard --vckeymap=us --xlayouts='us'
 lang en_US.UTF-8
 
 # Network information
-network --bootproto=static --device={{ netconfig.intname1 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway1 }} --ip={{ netconfig.ipaddress1 }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.netmask1 }} --noipv6 --activate
+network --bootproto=static --device={{ netconfig.intname1 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway1 if netconfig.gateway1 != '' else (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62' }} --ip={{ netconfig.ipaddress1 }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.netmask1 }} --noipv6 --activate
 network --bootproto=static --device={{ netconfig.intname2 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway2 }} --ip={{ netconfig.ipaddress2 }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.netmask2 }} --noipv6 --activate
 network --hostname={{ vm.name }}
 

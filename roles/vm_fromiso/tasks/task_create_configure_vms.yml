@@ -10,6 +10,7 @@
   - include_tasks: task_create_kickstart_iso.yml
   - include_tasks: task_copy_kickstart_iso_to_vsphere.yml
   - include_tasks: task_deploy_iso.yml
+  - include_tasks: task_delete_gtw_nic1.yml
   - include_tasks: task_update_disks.yml
   - include_tasks: task_delete_kickstart_files.yml
   - include_tasks: task_update_default_route.yml

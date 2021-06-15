@@ -8,7 +8,7 @@
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
       validate_certs: false
       name: "{{ vm.name }}"
-  - name: copy default route file locally
+  - name: render default route file locally
     template:
       src: "templates/{{ 'dr' if 'dr' in group_names else '' }}route-ens160.tmpl"
       dest: "/var/tmp/{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}-{{ inventory_hostname }}-route-ens160"
@@ -97,4 +97,6 @@
 - name: wait 600 seconds for VM to become reachable
   wait_for_connection:
     timeout: 600
+  when:
+    - netconfig.gateway1 == ''
   tags: vm_creation
