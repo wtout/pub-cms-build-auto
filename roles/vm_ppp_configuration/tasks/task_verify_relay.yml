@@ -7,7 +7,10 @@
     register: prop_file1
 
   - block:
-    - include_tasks: task_puppet_push.yml
+    - name: "{{ auto_dir + '/roles/puppet' }}: puppet push"
+      include_role:
+        name: "{{ auto_dir + '/roles/puppet' }}"
+        tasks_from: task_puppet_push.yml
 
     - name: check if /opt/CSCO-CMS/relayweb/conf/common.properties is created on the relay
       stat:
