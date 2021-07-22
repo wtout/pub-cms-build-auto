@@ -74,7 +74,7 @@ phantom:
   #centos7_yum_prerequisites: "htop"
 
   # DNS server that Phantom will use
-  internal_dns_server: "{{ sysconfig.dns_servers|first }}"
+  internal_dns_server: "{{ sysconfig.secondary.dns_servers|first if 'dr' in group_names else sysconfig.primary.dns_servers|first }}"
 
   # For offline installs
   #offline_tar: "phantom_offline_setup_centos7-4.8.24304.tgz"

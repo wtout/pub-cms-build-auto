@@ -96,6 +96,9 @@ echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sys
 {% endblock nic2_domain %}
 {% endif %}
 
+# Set root account and password to never expire
+chage -d $(date +%Y-%m-%d) -E -1 -I -1 -M -1  root
+
 # Yum repos
 rm -f /etc/yum.repos.d/*
 cat <<EOF > /etc/yum.repos.d/QS.repo

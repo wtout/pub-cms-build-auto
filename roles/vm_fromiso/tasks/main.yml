@@ -3,12 +3,14 @@
 - block:
   - include_tasks: task_purge_known_hosts.yml
     when: "'stack' in group_names or 'dr' in group_names"
+  - name: Define folder name
+    set_fact:
+      fldr_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] + '/' + (customer.name if customer.name|lower is search('mdr') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}"
 
   - block:
     - include_tasks: task_check_con_creds.yml
       when:
         - ansible_ssh_pass != postppp
-
     - include_tasks: task_create_vms.yml
     when: create_vms_iso | default(false) | bool
 

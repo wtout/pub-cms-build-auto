@@ -156,13 +156,6 @@
     when:
       - environment_definition.customer.disaster_recovery
 
-  - name: verify if selected deployment model supports ATA relay
-    assert:
-      that:
-        - "environment_definition.customer.deployment_model | lower is not search('aio')"
-      fail_msg: "The ATA relay is only supported with the non-AIO on-prem or hosted deployment model. Aborting!"
-    when: environment_definition.customer.ata
-
   - name: check if ata and disaster_recovery values are in conflict
     assert:
       that:
