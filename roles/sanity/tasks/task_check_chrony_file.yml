@@ -1,0 +1,15 @@
+---
+# Tasks to check the NTP server address
+- block:
+  - name: Check NTP server address
+    ansible.builtin.lineinfile:
+      path: "{{ chrony_file }}"
+      line: "server {{ sysconfig.secondary.ntp_server if 'dr' in group_names else sysconfig.primary.ntp_server }} iburst"
+      insertafter: '^# Please consider.*$'
+    check_mode: yes
+    register: ntp_srvr_addr
+  - name: define chrony status
+    ansible.builtin.set_fact:
+      chrony_status: 'NTP server address is not configured'
+    when: ntp_srvr_addr is changed
+  tags: sanity

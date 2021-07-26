@@ -1,0 +1,41 @@
+---
+# Tasks to check coral services status
+- block:
+  - name: check if coral container is up
+    ansible.builtin.shell: |
+      $(which docker) ps
+    register: reg_docker_ps
+    check_mode: no
+  - name: define rly_coral_container_status
+    ansible.builtin.set_fact:
+      rly_coral_container_status: 'Coral container is not up'
+    when: ((reg_docker_ps.stdout.split('\n')|last).split('   ') | select())[-3] is not search('^Up ')
+  - block:
+    - name: check coral services on the container
+      ansible.builtin.shell: |
+        docker exec {{ (reg_docker_ps.stdout.split('\n')|last).split('   ') | select() | last }} supervisorctl status | awk '{print $1" "$2}'
+      register: reg_coral_services
+      check_mode: no
+    - block:
+      - name: get the faulty services list
+        ansible.builtin.set_fact:
+          flty_svc_list: "{{ flty_svc_list|default([]) | union([svc_item.split(' ')|first]) }}"
+        loop: "{{ reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) }}"
+        loop_control:
+          loop_var: svc_item
+      - include_tasks:
+          file: task_check_service_state.yml
+          apply:
+            vars:
+              svc_name: "{{ svc_item }}"
+              reg_svc_list: "{{ reg_coral_services.stdout_lines }}"
+              def_svc_list: "{{ rly_coral_services }}"
+        loop: "{{ flty_svc_list }}"
+        loop_control:
+          loop_var: svc_item
+      when: reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) | length >= 1
+    when:
+      - ((reg_docker_ps.stdout.split('\n')|last).split('   ') | select())[-3] is search('^Up ')
+  when:
+    - service_status|default({})|select('search', 'docker is not found')|length == 0
+  tags: sanity

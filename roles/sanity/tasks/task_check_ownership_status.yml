@@ -1,0 +1,23 @@
+---
+# Tasks to check ownership status
+- block:
+  - name: check ownership status of {{ dirid }}
+    ansible.builtin.shell: |
+      stat -L -c "%U %G %n" {{ dirid }}
+    check_mode: no
+    register: dir_status
+    ignore_errors: true
+  - name: define ownership status
+    ansible.builtin.set_fact:
+      ownership_status: ["{{ dirid | replace('*', '') }} is empty"]
+    when: dir_status.stderr is search('No such file or directory')
+  - name: define ownership status
+    ansible.builtin.set_fact:
+      ownership_status: "{{ ownership_status|default([]) + [loop_item] }}"
+    loop: "{{ dir_status.stdout_lines }}"
+    loop_control:
+      loop_var: loop_item
+    when:
+      - dir_status.stderr is not search('No such file or directory')
+      - loop_item is not search(userid + ' ' + groupid)
+  tags: sanity

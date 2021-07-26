@@ -1,0 +1,28 @@
+---
+# Tasks to check DB sanity
+- block:
+  - include_tasks: task_check_puppet_push_status.yml
+  - block:
+    - include_tasks: task_check_primary_db.yml
+      when:
+        - groups['em7'] | length > 1
+    - name: define list of services
+      ansible.builtin.set_fact:
+        svc_list: "{{ ['chronyd', 'em7', 'nginx'] | union(['mariadb', 'em7_automation'] if primary_db|default(false) else []) }}"
+    - name: check status of services
+      include_tasks:
+        file: task_check_service_status.yml
+        apply:
+          vars:
+            svc_name: "{{ svc_item }}"
+      loop: "{{ svc_list }}"
+      loop_control:
+        loop_var: svc_item
+    - include_tasks: task_check_chrony_file.yml
+    - include_tasks: task_check_db_connected_status.yml
+    - include_tasks: task_check_r0_res_file.yml
+    - include_tasks: task_check_cmsp_em7_file.yml
+    - include_tasks: task_check_licensed_state.yml
+    when: puppet_push_status is not defined
+  when: inventory_hostname is search('em7db')
+  tags: sanity

@@ -1,0 +1,22 @@
+---
+# Tasks to check service status
+- block:
+  - name: check status of {{ svc_name}}
+    ansible.builtin.systemd:
+      name: "{{ svc_name }}"
+      state: started
+    register: svc_status
+    check_mode: yes
+    ignore_errors: true
+    no_log: true
+  - name: define service_status
+    ansible.builtin.set_fact:
+      service_status: "{{ service_status|default([]) + ['Service ' + svc_name + ' is not found'] }}"
+    when:
+      - svc_status is failed
+      - svc_status.msg is search('Could not find the requested service')
+  - name: define service_status
+    ansible.builtin.set_fact:
+      service_status: "{{ service_status|default([]) + [ svc_name + ' is not active'] }}"
+    when: svc_status is changed
+  tags: sanity

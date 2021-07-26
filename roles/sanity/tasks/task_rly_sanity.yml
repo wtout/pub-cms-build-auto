@@ -1,0 +1,117 @@
+---
+# Tasks to check RLY sanity
+- block:
+  - include_tasks: task_check_puppet_push_status.yml
+  - block:
+    - include_tasks: task_check_rly_current_version.yml
+    - include_tasks: task_check_rly_rpms_status.yml
+    - name: define list of services
+      ansible.builtin.set_fact:
+        svc_list: ['nfs', 'chronyd', 'relayweb', 'syslog-ng', 'trapprocessor', 'mariadb', 'docker']
+    - name: check status of services
+      include_tasks:
+        file: task_check_service_status.yml
+        apply:
+          vars:
+            svc_name: "{{ svc_item }}"
+      loop: "{{ svc_list }}"
+      loop_control:
+        loop_var: svc_item
+    - name: check for errors in log files
+      include_tasks:
+        file: task_check_rly_logged_errors_status.yml
+        apply:
+          vars:
+            fileid: "{{ file_item }}"
+      loop:
+        - /var/log/mysql/messages
+        - /opt/CSCO-CMS/relayweb/log/relayweb.log
+        - /opt/CSCO-CMS/relaysnmp/log/trapprocessor.log
+        - /var/log/mysql/mysql.error.log
+      loop_control:
+        loop_var: file_item
+    - name: check rules
+      include_tasks:
+        file: task_check_rly_rules_status.yml
+        apply:
+          vars:
+            fileid: "{{ file_item.name }}"
+            rulesnum: "{{ file_item.number }}"
+      loop:
+        - { name: '/etc/syslog-ng/conf.d/priority_em7-message-collector-vip_WL.conf', number: "{{ 1185 if groups['rly']|length == 1 else 1273 }}" }
+        - { name: '/etc/syslog-ng/conf.d/priority_em7-message-collector-vip_BL.conf', number: "{{ 91 if groups['rly']|length == 1 else 115 }}" }
+      loop_control:
+        loop_var: file_item
+    - include_tasks: task_check_rly_dbs.yml
+    - include_tasks: task_check_rly_db_cluster_status.yml
+    - include_tasks: task_check_rly_db_grants_status.yml
+    - name: check ReportStore
+      include_tasks:
+        file: task_check_reportstore_status.yml
+        apply:
+          vars:
+            prt_designation: "{{ prt_item }}"
+      loop:
+        - primary
+        - "{{ 'secondary' if groups['em7']|length > 1 else '' }}"
+      loop_control:
+        loop_var: prt_item
+      when: prt_item != ''
+    - include_tasks: task_check_coral_services_status.yml
+    - include_tasks: task_check_searchhead_vip_status.yml
+    - include_tasks: task_check_de_config_status.yml
+    - include_tasks: task_check_relayweb_port_status.yml
+    - include_tasks: task_check_chrony_server_status.yml
+    - name: check status of service processes
+      include_tasks:
+        file: task_check_process_status.yml
+        apply:
+          vars:
+            svc_name: "{{ svc_item.name }}"
+            nm_instances: "{{ svc_item.instances }}"
+      loop:
+        - { name: 'snmpd', instances: 1 }
+        - { name: 'crond', instances: 1 }
+      loop_control:
+        loop_var: svc_item
+    - include_tasks: task_check_rly_splunk_status.yml
+    - include_tasks: task_check_relayweb_conf_file.yml
+    - include_tasks: task_check_hosts_file.yml
+    - include_tasks: task_check_chrony_file.yml
+    - include_tasks: task_check_splunk_cronjob_status.yml
+    - include_tasks: task_check_backup_dir_status.yml
+    - include_tasks: task_check_data01_dir_status.yml
+    - include_tasks: task_check_swap_status.yml
+    - include_tasks: task_check_application_properties_status.yml
+    - include_tasks: task_check_configfile_properties_status.yml
+    - include_tasks: task_check_backup_cronjob_status.yml
+    - name: check rstore user expiry
+      include_tasks:
+        file: task_check_user_expiry_status.yml
+        apply:
+          vars:
+            userid: 'rstore'
+    - name: check file ownership
+      include_tasks:
+        file: task_check_ownership_status.yml
+        apply:
+          vars:
+            dirid: "{{ dir_item.name }}"
+            userid: "{{ dir_item.user }}"
+            groupid: "{{ dir_item.group }}"
+      loop:
+        - { name: '/opt/splunk/*', user: 'splunk', group: 'splunk' }
+        - { name: '/opt/trapserverlogs/', user: 'root', group: 'root' }
+        - { name: '/opt/trapserverlogs/*', user: 'root', group: 'root' }
+        - { name: '/data01/cms-seed/*', user: 'cms_user', group: 'cms_user' }
+        - { name: '/data01/CMSData/*', user: 'splunk', group: 'splunk' }
+        - { name: '/data01/syslogs/', user: 'splunk', group: 'splunk' }
+        - { name: '/data01/commands/', user: 'commands', group: 'commands' }
+        - { name: '/data01/commands/*', user: 'commands', group: 'commands' }
+      loop_control:
+        loop_var: dir_item
+    when: puppet_push_status is not defined
+  when:
+    - inventory_hostname is search('rly')
+    - inventory_hostname is not search('atarly')
+  tags: sanity

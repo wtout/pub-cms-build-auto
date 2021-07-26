@@ -1,0 +1,16 @@
+---
+# Tasks to check the cronjobs
+- block:
+  - name: check if there is a backup cronjob
+    ansible.builtin.shell: |
+      crontab -l | grep qs
+    register: reg_bk_cronjob
+    check_mode: no
+    ignore_errors: true
+  - name: define rly_backup_cronjob_status
+    ansible.builtin.set_fact:
+      rly_backup_cronjob_status: 'No backup cronjob found'
+    when:
+      - reg_bk_cronjob.stdout|int == 0
+  tags: sanity
+  

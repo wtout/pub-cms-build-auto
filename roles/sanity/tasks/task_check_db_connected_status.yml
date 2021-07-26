@@ -1,0 +1,14 @@
+---
+# Tasks to check DB connected status
+- block:
+  - name: check DB connected status
+    ansible.builtin.shell: |
+      cat /proc/drbd | grep cs | awk '{print $2}' | awk -F ':' '{print $2}'
+    check_mode: no
+    register: cs_check
+  - name: define connected_status
+    ansible.builtin.set_fact:
+      connected_status: "{{ cs_check.stdout }}"
+    when: (cs_check.stdout is not search('Connected') and 'em7db' in group_names) or (cs_check.stdout is not search('WFConnection') and 'drem7db' in group_names)
+  when: groups['em7'] | length > 1
+  tags: sanity

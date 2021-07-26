@@ -1,0 +1,23 @@
+---
+# Tasks to check user account expiry status
+- block:
+  - name: check status of {{ userid }} user account
+    ansible.builtin.shell: |
+      chage -l {{ userid }} | egrep -i '^(password|account)'
+    check_mode: no
+    register: acc_status
+    ignore_errors: true
+  - name: define user_expiry_status
+    ansible.builtin.set_fact:
+      user_expiry_status: "{{ acc_status.stderr }}"
+    when: acc_status.stderr is search('does not exist in /etc/passwd')
+  - name: define user_expiry_status
+    ansible.builtin.set_fact:
+      user_expiry_status: "{{ user_expiry_status|default([]) + [loop_item] }}"
+    loop: "{{ acc_status.stdout_lines | reject('search', 'never') }}"
+    loop_control:
+      loop_var: loop_item
+    when:
+      - acc_status.stderr is not search('does not exist in /etc/passwd')
+      - acc_status.stdout_lines | reject('search', 'never') | length >= 1
+  tags: sanity

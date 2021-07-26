@@ -1,0 +1,20 @@
+---
+# Tasks to check service process status
+- block:
+  - name: check status of {{ svc_name}} processes
+    ansible.builtin.shell: |
+      ps -aef | grep {{ svc_name }} | grep -v grep | wc -l
+    register: prc_status
+    check_mode: no
+    ignore_errors: true
+  - name: define processes_status
+    ansible.builtin.set_fact:
+      processes_status: "{{ processes_status|default([]) + [svc_name + ' is not running'] }}"
+    when: prc_status.stdout|int == 0
+  - name: define processes_status
+    ansible.builtin.set_fact:
+      processes_status: "{{ processes_status|default([]) + ['Number of instances of ' + svc_name + ' is not ' + nm_instances] }}"
+    when:
+      - prc_status.stdout|int != 0
+      - prc_status.stdout|int != nm_instances|int
+  tags: sanity

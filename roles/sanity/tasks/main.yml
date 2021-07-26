@@ -1,0 +1,49 @@
+---
+# tasks file for roles/sanity
+- block:
+  - name: check VM reachable
+    shell: ping {{ ansible_host }} -c 1
+    register: sc_vm_reachable
+    check_mode: no
+    ignore_errors: true
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - block:
+    - name: check VM credentials
+      wait_for_connection:
+        timeout: 3
+      register: sc_vm_creds1
+      ignore_errors: true
+      check_mode: no
+    - block:
+      - name: Update SSH password
+        set_fact:
+          ansible_ssh_pass: "{{ postppp }}"
+          ansible_become_pass: "{{ postppp }}"
+        no_log: true
+      - name: check updated VM credentials
+        wait_for_connection:
+          timeout: 3
+        register: sc_vm_creds2
+        check_mode: no
+      when:
+        - sc_vm_creds1 is failed
+        - sc_vm_creds1.msg is search('Invalid/incorrect username/password')
+
+    - include_tasks: task_em7_sanity.yml
+    - include_tasks: task_em7db_sanity.yml
+    - include_tasks: task_em7prt_sanity.yml
+    - include_tasks: task_em7dc_sanity.yml
+    - include_tasks: task_em7mc_sanity.yml
+    - include_tasks: task_spl_sanity.yml
+    - include_tasks: task_spldpl_sanity.yml
+    - include_tasks: task_splmas_sanity.yml
+    - include_tasks: task_splsrc_sanity.yml
+    - include_tasks: task_splind_sanity.yml
+    - include_tasks: task_rly_sanity.yml
+    - include_tasks: task_atarly_sanity.yml
+    - include_tasks: task_lnxjmp_sanity.yml
+    - include_tasks: task_print_report.yml
+    when: sc_vm_reachable is succeeded
+  when:
+    - sanity_check | default(false) | bool
+  tags: sanity

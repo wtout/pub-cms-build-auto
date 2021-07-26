@@ -1,0 +1,37 @@
+---
+# Tasks to produce the sanity test report
+- block:
+  - name: define list of services
+    ansible.builtin.set_fact:
+      svc_list: "{{ svc_list|default([]) | union(vars[inventory_hostname[:-2]|replace('dr', '') + '_svc_list']) }}"
+    loop: "{{ ansible_play_hosts | reject('search', 'bastion|vcenter|nexus|puppet|csr|nsvpx|winjmp') }}"
+    loop_control:
+      loop_var: host_item
+    when: vars[inventory_hostname[:-2]|replace('dr', '') + '_svc_list'] is defined
+  - name: Sanity test report message
+    ansible.builtin.set_fact:
+      report_message: "{{ report_message|default([]) | union([svc_item + '_status'] | product([vars[svc_item + '_status']]) | map('join', ': ')) | flatten }}"
+#      report_message: "{{ report_message|default([]) | union([svc_item + '_status'] | product([vars[svc_item + '_status']|default('OK')]) | map('join', ': ')) | flatten }}"
+    loop: "{{ svc_list|default([]) }}"
+    loop_control:
+      loop_var: svc_item
+    when: vars[svc_item + '_status'] is defined
+    no_log: true
+  - name: Sanity test report
+    ansible.builtin.debug:
+      msg: "{{ report_message|default([]) }}"
+  vars:
+    rly_svc_list: ['rly_current_version', 'puppet_push', 'rly_rpms', 'service', 'rly_errors', 'rly_rules', 'rly_db', 'rly_deconfigcount', 'rly_syslogrulescount', 'rly_cluster_size', 'rly_cluster', 'rly_local_state', 'rly_incoming_addresses', 'rly_db_grants', 'rly_reportstore', 'rly_primary_prt_grant', 'rly_secondary_prt_grant', 'rly_coral_container', 'rly_coral_services', 'rly_splsrcvip', 'rly_active_de_instance_ip', 'rly_de_ip', 'rly_de_username', 'rly_relaywebport', 'rly_chrony_server', 'rly_chrony_leap', 'processes', 'rly_splunk', 'rly_relayweb_conf', 'splind_hosts_idx', 'chrony', 'rly_splunk_cronjob', 'rly_backup_dir', 'rly_data01_dir', 'rly_swap', 'rly_app_prop', 'rly_config_prop', 'user_expiry', 'rly_backup_cronjob', 'ownership']
+    atarly_svc_list: ['puppet_push', 'service', 'processes', 'chrony', 'sudoers_user']
+    lnxjmp_svc_list: ['puppet_push', 'service', 'processes', 'chrony', 'sudoers_user']
+    em7_svc_list: ['puppet_push', 'service', 'chrony', 'cmspem7', 'licensed']
+    em7db_svc_list: ['puppet_push', 'service', 'chrony', 'connected', 'r0_hostname1', 'r0_address1', 'r0_hostname2', 'r0_address2', 'cmspem7', 'licensed']
+    em7prt_svc_list: ['puppet_push', 'service', 'chrony', 'cmspem7']
+    em7dc_svc_list: ['puppet_push', 'service', 'chrony', 'cmspem7']
+    em7mc_svc_list: ['puppet_push', 'service', 'chrony', 'cmspem7', 'rpfilter']
+    spl_svc_list: ['puppet_push', 'service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor','passwordless_ssh']
+    splmas_svc_list: ['puppet_push', 'service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership']
+    spldpl_svc_list: ['puppet_push', 'service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership']
+    splsrc_svc_list: ['puppet_push', 'service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor','passwordless_ssh']
+    splind_svc_list: ['puppet_push', 'service', 'processes', 'splunk', 'chrony', 'user_expiry', 'ownership']
+  tags: sanity

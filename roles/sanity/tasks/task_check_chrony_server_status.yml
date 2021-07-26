@@ -1,0 +1,19 @@
+---
+# Tasks to check chrony server and state
+- block:
+  - name: Check chrony server and state
+    ansible.builtin.shell: |
+      chronyc tracking | grep 'Reference ID\|Leap status'
+    register: reg_chronyc
+    check_mode: no
+    ignore_errors: yes
+  - name: define rly_chrony_server_status
+    ansible.builtin.set_fact:
+      rly_chrony_server_status: 'NTP server address is not configured correctly'
+    when: reg_chronyc.stdout_lines[0].split(' ')|last | regex_replace('\\(|\\)', '') != (sysconfig.secondary.ntp_server if 'dr' in group_names else sysconfig.primary.ntp_server )
+  - name: define rly_chrony_leap_status
+    ansible.builtin.set_fact:
+      rly_chrony_leap_status: 'Chrony Leap status is not Normal'
+    when: reg_chronyc.stdout_lines[1].split(' ')|last != 'Normal'
+  tags: sanity
+  

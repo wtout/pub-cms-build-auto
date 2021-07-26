@@ -1,0 +1,28 @@
+---
+# Tasks to check the users status
+- block:
+  - name: get list of users
+    ansible.builtin.shell: |
+      ls /etc/sudoers.d/
+    register: reg_users_list
+    check_mode: no
+    ignore_errors: true
+  - block:
+    - name: get the missing users list
+      ansible.builtin.set_fact:
+        missing_users_list: "{{ req_users_list | difference(reg_users_list.stdout_lines) }}"
+    - name: define sudoers_user_status
+      ansible.builtin.set_fact:
+        sudoers_user_status: "{{ missing_users_list|join(', ') + (' are ' if missing_users_list|length > 1 else ' is ') + 'missing from /etc/sudoers.d/' }}"
+    when: req_users_list | difference(reg_users_list.stdout_lines) | length >= 1
+  vars:
+    req_users_list:
+      - ansible
+      - ciscorelease
+      - ciscosupporttier1
+      - ciscosupporttier2
+      - ciscosupporttier2_leads
+      - ciscosupporttier3
+      - ciscosupporttier4
+  tags: sanity
+  

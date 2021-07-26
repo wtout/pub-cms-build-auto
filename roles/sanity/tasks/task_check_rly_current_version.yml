@@ -1,0 +1,13 @@
+---
+# Tasks to check the current version
+- block:
+  - name: check current version
+    ansible.builtin.shell: |
+      grep -wi currentversion /opt/puppet/var/data.conf
+    check_mode: no
+    register: cv
+  - name: define current_version status
+    ansible.builtin.set_fact:
+      rly_current_version_status: "{{ 'The current release version is not ' + customer.version.release | replace('R', '') }}"
+    when: cv.stdout is not search(customer.version.release | replace('R', ''))
+  tags: sanity

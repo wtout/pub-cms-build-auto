@@ -1,0 +1,25 @@
+---
+# Tasks to check the ReportStore status
+- block:
+  - name: define fileid
+    ansible.builtin.set_fact:
+      fileid: '/opt/puppet/var/data.conf'
+  - name: get {{ prt_designation }} portal server IP from data.conf
+    ansible.builtin.shell: |
+      grep -i '{{ prt_designation }}_em7_portal_server_ip' {{ fileid }}
+    register: reg_prt_ip
+    check_mode: no
+  - name: get {{ prt_designation }} portal server grant from DB
+    ansible.builtin.shell: |
+      mysql -u root -paQxkE4z2mKfqznUcTG5h --execute="select Host,User,Password from mysql.user where user='rsuser' and host='{{ reg_prt_ip.stdout.split('=')|last }}';"
+    register: reg_grant
+    check_mode: no
+  - name: define rly_prt_grant_status
+    ansible.builtin.set_fact:
+      "rly_reportstore_status": "{{ rly_reportstore_status|default([]) + ['No grants for ' + prt_designation + '_em7_portal_server_ip with IP ' + reg_prt_ip.stdout.split('=')|last] }}"
+    when: reg_grant.stdout == ''
+  when:
+    - service_status|default({})|select('search', 'mariadb is not found')|length == 0
+    - service_status|default({})|select('search', 'mariadb is not active')|length == 0
+  tags: sanity
+  

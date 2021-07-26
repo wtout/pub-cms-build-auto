@@ -1,0 +1,13 @@
+---
+# Tasks to check the licensed state on the EM7 DB
+- block:
+  - name: check licensed_state
+    ansible.builtin.command: licensed_state
+    register: lic_state
+    ignore_errors: true
+    become: true
+  - name: define lic_status
+    ansible.builtin.set_fact:
+      licensed_status: "{{ lic_state.stdout }}"
+    when: lic_state is failed
+  tags: sanity

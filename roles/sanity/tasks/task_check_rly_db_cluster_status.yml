@@ -1,0 +1,28 @@
+---
+# Tasks to check the database cluster status
+- block:
+  - name: get the global status
+    ansible.builtin.shell: |
+      mysql -u root -paQxkE4z2mKfqznUcTG5h --execute="SHOW GLOBAL STATUS WHERE Variable_name IN ('wsrep_ready','wsrep_cluster_size','wsrep_cluster_status','wsrep_local_state_comment','wsrep_last_committed','wsrep_incoming_addresses','wsrep_connected','wsrep_evs_state','wsrep_protocol_version','wsrep_provider_name','wsrep_provider_version','wsrep_cluster_state_uuid','wsrep_cluster_conf_id','wsrep_local_recv_queue_avg','wsrep_sst_donor','wsrep_sst_receive_address');"
+    register: reg_global_status
+    check_mode: no
+  - name: define rly_cluster_size_status
+    ansible.builtin.set_fact:
+      rly_cluster_size_status: "Cluster size is {{ (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last }} instead of {{ '3' if customer.disaster_recovery else '1' if groups['rly']|length == 1 else '2' }}"
+    when: (customer.disaster_recovery and (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last|int != 3) or (not customer.disaster_recovery and (((reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last|int != 1 and groups['rly']|length == 1) or (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last|int != 2 and groups['rly']|length > 1))
+  - name: define rly_cluster_status
+    ansible.builtin.set_fact:
+      rly_cluster_status: "Cluster status is {{ (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_status') | join).split('\t')|last }} instead of Priamry"
+    when: (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_status') | join).split('\t')|last != 'Primary'
+  - name: define rly_local_state_status
+    ansible.builtin.set_fact:
+      rly_local_state_status: "Cluster local state is {{ (reg_global_status.stdout_lines | select('search', 'wsrep_local_state_comment') | join).split('\t')|last }} instead of Synced"
+    when: (reg_global_status.stdout_lines | select('search', 'wsrep_local_state_comment') | join).split('\t')|last != 'Synced'
+  - name: define rly_incoming_addresses_status
+    ansible.builtin.set_fact:
+      rly_incoming_addresses_status: "Cluster incoming addresses is {{ (reg_global_status.stdout_lines | select('search', 'wsrep_incoming_addresses') | join).split('\t')|last|regex_replace('^,', '') }} instead of {{ rly_ip1_list[0] + ':3306' }}{{ ',' + rly_ip1_list[1] + ':3306,' if groups['rly']|length >= 2 else '' }}{{ ',' + drrly_ip1_list[0] + ':3306' if groups['drrly'] is defined else '' }}"
+    when: (reg_global_status.stdout_lines | select('search', 'wsrep_incoming_addresses') | join).split('\t')|last|regex_replace('^,', '') != (rly_ip1_list[0] + ':3306' + (',' + rly_ip1_list[1] + ':3306' if groups['rly']|length >= 2 else '') + (',' + drrly_ip1_list[0] + ':3306' if groups['drrly'] is defined else ''))
+  when:
+    - service_status|default({})|select('search', 'mariadb is not found')|length == 0
+    - service_status|default({})|select('search', 'mariadb is not active')|length == 0
+  tags: sanity

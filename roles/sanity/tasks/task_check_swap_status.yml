@@ -1,0 +1,14 @@
+---
+# Tasks to check swap space
+- block:
+  - name: check available swap and memory
+    ansible.builtin.shell: |
+      free | grep 'Mem\|Swap' | awk '{print $1" "$2}'
+    register: reg_free
+  - name: define rly_swap_status
+    ansible.builtin.set_fact:
+      rly_swap_status: 'Available Swap space is not greater or equal to the available memory'
+    when:
+      - (reg_free.stdout_lines | select('search', 'Mem') | join).split(' ')|last > (reg_free.stdout_lines | select('search', 'Swap') | join).split(' ')|last
+  tags: sanity
+  

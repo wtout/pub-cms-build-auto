@@ -1,0 +1,21 @@
+---
+# Tasks to check installed RPMs
+- block:
+  - name: Load rpm facts 
+    package_facts:
+      manager: "rpm"
+    no_log: true
+  - name: check relay RPMs
+    ansible.builtin.set_fact:
+      rly_csco_rpms_missing: "{{ rly_csco_rpms | difference(ansible_facts.packages|select('search', 'CSCO-CMS|csco-cms')) }}"
+      rly_mariadb_rpms_missing: "{{ rly_mariadb_rpms | difference(ansible_facts.packages|select('search', 'MariaDB')) }}"
+      rly_nfs_rpms_missing: "{{ rly_nfs_rpms | difference(ansible_facts.packages|select('search', 'nfs')) }}"
+  - name: define relay RPMs status
+    ansible.builtin.set_fact:
+      rly_rpms_status: "{{ rly_csco_rpms_missing | union(rly_mariadb_rpms_missing) | union(rly_nfs_rpms_missing) | join + ' RPM is missing' }}"
+    when: rly_csco_rpms_missing | union(rly_mariadb_rpms_missing) | union(rly_nfs_rpms_missing) | length == 1
+  - name: define relay RPMs status
+    ansible.builtin.set_fact:
+      rly_rpms_status: "{{ rly_csco_rpms_missing | union(rly_mariadb_rpms_missing) | union(rly_nfs_rpms_missing) | join + ' RPMs are missing' }}"
+    when: rly_csco_rpms_missing | union(rly_mariadb_rpms_missing) | union(rly_nfs_rpms_missing) | length > 1
+  tags: sanity

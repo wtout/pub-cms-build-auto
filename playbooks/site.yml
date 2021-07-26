@@ -53,6 +53,7 @@
     - {role: "{{ auto_dir }}/roles/vm_ppp_configuration", when: configure_ppp_vms | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/splunk_mop", when: splunk_mop_fix | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/drs_status", when: check_drs_creation | default(false) | bool}
+    - {role: "{{ auto_dir }}/roles/sanity", when: sanity_check | default(false) | bool}
 
 # Plays to delete the VMs
 - name: Rollback VMs

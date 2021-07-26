@@ -1,0 +1,33 @@
+---
+# Tasks to check atarly sanity
+- block:
+  - include_tasks: task_check_puppet_push_status.yml
+  - block:
+    - name: define list of services
+      ansible.builtin.set_fact:
+        svc_list: ['chronyd']
+    - name: check status of services
+      include_tasks:
+        file: task_check_service_status.yml
+        apply:
+          vars:
+            svc_name: "{{ svc_item }}"
+      loop: "{{ svc_list }}"
+      loop_control:
+        loop_var: svc_item
+    - name: check status of service processes
+      include_tasks:
+        file: task_check_process_status.yml
+        apply:
+          vars:
+            svc_name: "{{ svc_item.name }}"
+            nm_instances: "{{ svc_item.instances }}"
+      loop:
+        - { name: 'snmpd', instances: 1 }
+      loop_control:
+        loop_var: svc_item
+    - include_tasks: task_check_chrony_file.yml
+    - include_tasks: task_check_sudoers_user_status.yml
+    when: puppet_push_status is not defined
+  when: inventory_hostname is search('atarly')
+  tags: sanity

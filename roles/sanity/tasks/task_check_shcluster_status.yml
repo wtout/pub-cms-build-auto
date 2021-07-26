@@ -1,0 +1,18 @@
+---
+# Tasks to check shcluster status
+- block:
+  - name: check status of shcluster
+    ansible.builtin.shell: |
+      $(which su) splunk -c '/opt/splunk/bin/splunk show shcluster-status -auth "admin:$1"'
+    check_mode: no
+    register: shclst_status
+    ignore_errors: true
+  - name: define shcluster status
+    ansible.builtin.set_fact:
+      shcluster_status: 'shcluster is down'
+    when:
+      - shclst_status is failed
+  when:
+    - "spl_status|default({'failed': true}) is succeeded"
+    - inventory_hostname is search('splsrc')
+  tags: sanity

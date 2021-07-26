@@ -1,0 +1,22 @@
+---
+# Tasks to check logged errors status
+- block:
+  - name: check for errors in {{ fileid }}
+    ansible.builtin.shell: |
+      grep -i error {{ fileid }}
+    check_mode: no
+    register: err_status
+    ignore_errors: true
+  - name: define rly_errors_status
+    ansible.builtin.set_fact:
+      rly_errors_status: "{{ rly_errors_status|default([]) + [err_status.stderr|replace('^grep: ', '')] }}"
+    when:
+      - err_status is failed
+      - err_status.stderr is search('No such file or directory')
+  - name: define rly_errors_status
+    ansible.builtin.set_fact:
+      rly_errors_status: "{{ rly_errors_status|default([]) + ['Errors in ' + (fileid.split('/')|last).split('.')|first + ': ' + err_status.stdout_lines|join(', ')] }}"
+    when:
+      - err_status is succeeded
+      - err_status.stdout_lines|length >= 1
+  tags: sanity
