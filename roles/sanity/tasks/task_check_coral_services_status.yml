@@ -9,7 +9,7 @@
   - name: define rly_coral_container_status
     ansible.builtin.set_fact:
       rly_coral_container_status: 'Coral container is not up'
-    when: ((reg_docker_ps.stdout.split('\n')|last).split('   ') | select())[-3] is not search('^Up ')
+    when: reg_docker_ps.stdout_lines|last is not regex('ago[\\s]+Up[\\s][0-9]+')
   - block:
     - name: check coral services on the container
       ansible.builtin.shell: |
@@ -35,7 +35,7 @@
           loop_var: svc_item
       when: reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) | length >= 1
     when:
-      - ((reg_docker_ps.stdout.split('\n')|last).split('   ') | select())[-3] is search('^Up ')
+      - reg_docker_ps.stdout_lines|last is regex('ago[\\s]+Up[\\s][0-9]+')
   when:
     - service_status|default({})|select('search', 'docker is not found')|length == 0
   tags: sanity
