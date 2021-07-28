@@ -72,3 +72,4 @@
     delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
     when: cert_exists1|default(false) or cert_exists2|default(false)
   tags: puppet
+
