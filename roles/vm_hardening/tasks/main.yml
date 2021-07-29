@@ -61,5 +61,6 @@
   - include_tasks: task_update_iptables.yml
   - name: flush handlers
     meta: flush_handlers
+  - include_tasks: task_root_never_expire.yml
   when: harden_vms | default(false) | bool
   tags: vm_hardening
