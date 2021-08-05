@@ -12,15 +12,13 @@
       set_fact:
         ansible_user: "{{ vm_svc_user }}"
         ansible_ssh_pass: "{{ vm_svc_pass }}"
+      no_log: true
     - name: check connection
-      wait_for:
-        host: "{{ ansible_host }}"
-        port: 22
-        timeout: 10
+      wait_for_connection:
+        timeout: 3
       register: is_vm_connection
       ignore_errors: true
       check_mode: no
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     - debug:
         msg: "VM hardening is enabled"
       when: is_vm_connection is succeeded

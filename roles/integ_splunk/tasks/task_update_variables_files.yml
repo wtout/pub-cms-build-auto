@@ -50,11 +50,7 @@
       - '  async: 8200'
     loop_control:
       loop_var: line_item
-  - name: update ansible.cfg file
-    ansible.builtin.replace:
-      path: "{{ spl_ansible_path }}/ansible.cfg"
-      regexp: '^(allow_world_readable_tmpfiles = .*)$'
-      replace: '#\g<1>'
   delegate_to: localhost
   run_once: true
   tags: integ_splunk
+  

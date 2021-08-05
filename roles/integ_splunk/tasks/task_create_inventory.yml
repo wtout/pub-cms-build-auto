@@ -1,46 +1,62 @@
 ---
 # Tasks to create the Splunk automation inventory
 - block:
-  - name: define facts
-    set_fact:
-      splunk_type: 'headend'
-      tmpl_name: 'headend_inventory.yml.tmpl'
-      he_inv_file_name: "headend.yml"
-      tmpl_dest: "{{ spl_inventory_path }}"
-  - name: create the environment inventory directory
-    file:
-      path: "{{ tmpl_dest }}"
-      state: directory
-  - name: create {{ splunk_type }} inventory
-    template:
-      src: "{{ tmpl_item.name }}"
-      dest: "{{ tmpl_item.dest }}"
-    loop:
-      - { name: "templates/{{ tmpl_name }}", dest: "{{ tmpl_dest }}/{{ he_inv_file_name }}" }
-    loop_control:
-      loop_var: tmpl_item
-    when: inventory_hostname is not search('splfwd')
+  - name: check DNS record
+    ansible.builtin.command: nslookup {{ vm.name }}
+    register: reg_dns_record
+    check_mode: no
+    ignore_errors: true
+  - name: verify that DNS record exists
+    ansible.builtin.assert:
+      that: reg_dns_record is succeeded
+      fail_msg: "No DNS record for {{ vm.name }}. Cannot proceed with Splunk deployment"
   - block:
-    - name: Create the deployed customers file
+    - name: define facts
+      set_fact:
+        splunk_type: 'headend'
+        tmpl_name: 'headend_inventory.yml.tmpl'
+        he_inv_file_name: "headend.yml"
+        tmpl_dest: "{{ spl_inventory_path }}"
+    - name: create the environment inventory directory
+      file:
+        path: "{{ tmpl_dest }}"
+        state: directory
+    - name: create {{ splunk_type }} inventory
       template:
-        src: 'templates/deployed_customers.yml.tmpl'
-        dest: "{{ tmpl_dest }}/deployed_customers.yml"
-    - name: check if headend inventory file exists
-      stat:
-        path: "{{ tmpl_dest }}/{{ he_inv_file_name }}"
-      register: he_inv1
+        src: "{{ tmpl_item.name }}"
+        dest: "{{ tmpl_item.dest }}"
+      loop:
+        - { name: "templates/{{ tmpl_name }}", dest: "{{ tmpl_dest }}/{{ he_inv_file_name }}" }
+      loop_control:
+        loop_var: tmpl_item
+      when: inventory_hostname is not search('splfwd')
     - block:
-      - include_tasks: task_create_headend_inventory_file.yml
+      - name: Create the deployed customers file
+        template:
+          src: 'templates/deployed_customers.yml.tmpl'
+          dest: "{{ tmpl_dest }}/deployed_customers.yml"
       - name: check if headend inventory file exists
         stat:
           path: "{{ tmpl_dest }}/{{ he_inv_file_name }}"
-        register: he_inv2
-      when: not he_inv1.stat.exists
-    - name: fail if Headend inventory file is not found
-      assert:
-        that: he_inv1.stat.exists or he_inv2.stat.exists
-        fail_msg: "The headend inventory file is not available. Unable to deploy a customer forwarder without a Headend. Aborting!"
-    when: inventory_hostname is search('splfwd')
+        register: he_inv1
+      - block:
+        - include_tasks: task_create_headend_inventory_file.yml
+        - name: check if headend inventory file exists
+          stat:
+            path: "{{ tmpl_dest }}/{{ he_inv_file_name }}"
+          register: he_inv2
+        when: not he_inv1.stat.exists
+      - name: fail if Headend inventory file is not found
+        assert:
+          that: he_inv1.stat.exists or he_inv2.stat.exists
+          fail_msg: "The headend inventory file is not available. Unable to deploy a customer forwarder without a Headend. Aborting!"
+      when: inventory_hostname is search('splfwd')
+    - name: update ansible.cfg file
+      ansible.builtin.replace:
+        path: "{{ spl_ansible_path }}/ansible.cfg"
+        regexp: '^(allow_world_readable_tmpfiles = .*)$'
+        replace: '#\g<1>'
+    run_once: true
   delegate_to: localhost
-  run_once: true
   tags: integ_splunk
+  

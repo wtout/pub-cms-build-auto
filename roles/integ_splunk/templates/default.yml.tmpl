@@ -9,7 +9,6 @@ ansible_pre_tasks: null
 hide_password: false
 lic_retry_num: 50
 retry_num: 50
-# retry_num: 50
 shc_bootstrap_delay: 30
 splunk_home_ownership_enforcement: true
 #ajs add delay_num
@@ -90,7 +89,7 @@ splunk:
   rpm: "{{ '{{ g_splunk_rpm }}' }}"
 
   # Trusted IP for SAML AUTH
-  trustedIP: "127.0.0.1"
+  trustedIP: "127.0.0.1{{ ', 172.29.9.82' if customer.env_identifier == 'la' else '' }}"
 
   # Splunk License url
   license_uri: "{{ 'https://{{ g_splunk_license_server }}:8089' }}"
