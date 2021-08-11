@@ -17,7 +17,7 @@
   - name: check if there is at least 2 datastores to host {{ vm_group }}
     assert:
       that:
-        - "mylist|length >= 2"
+        - "mylist|default([])|length >= 2"
       fail_msg: "Not enough storage space to deploy {{ vm_group }} VMs"
     when:
       - hostvars[ansible_play_hosts|select('search', vm_group)|list|first]['vm']['name'] is not search('aio')

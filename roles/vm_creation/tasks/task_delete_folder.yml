@@ -1,26 +1,26 @@
 ---
 # Tasks to delete the VM folder
 - block:
-  - name: Delete the {{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}/{{ customer.name if customer.name|lower is search('mdr') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }} folder
+  - name: Delete the {{ folder_name }} folder
     vcenter_folder:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
       datacenter_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      folder_name: "{{ customer.name if customer.name|lower is search('mdr') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}"
+      folder_name: "{{ folder_name.split('/')[1:]|join('/') }}"
       folder_type: vm
-      parent_folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}"
+      parent_folder: "{{ folder_name.split('/')|first }}"
       state: absent
       validate_certs: no
     register: cust_folder
     ignore_errors: true
   - debug:
-      msg: "The folder '{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}/{{ customer.name if customer.name|lower is search('mdr') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}' cannot be deleted because it is not empty"
+      msg: "The folder '{{ folder_name }}' cannot be deleted because it is not empty"
     when:
       - cust_folder is failed
       - "'The attempted operation cannot be performed in the current state (Powered on)' in cust_folder.msg"
   - fail:
-      msg: "Failed to delete the folder '{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}/{{ customer.name if customer.name|lower is search('mdr') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}'"
+      msg: "Failed to delete the folder '{{ folder_name }}'"
     when:
       - cust_folder is failed
       - "'The attempted operation cannot be performed in the current state (Powered on)' not in cust_folder.msg"

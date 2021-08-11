@@ -7,6 +7,8 @@
       include_role:
         name: "{{ auto_dir + '/roles/vm_creation' }}"
         tasks_from: task_create_folder.yml
+      vars:
+        folder_name: "{{ fldr_name }}"
       when:
         - "'stack' in group_names"
         - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
@@ -14,6 +16,8 @@
       include_role:
         name: "{{ auto_dir + '/roles/vm_creation' }}"
         tasks_from: task_create_folder.yml
+      vars:
+        folder_name: "{{ fldr_name }}"
       when:
         - customer.disaster_recovery
         - "'dr' in group_names"
