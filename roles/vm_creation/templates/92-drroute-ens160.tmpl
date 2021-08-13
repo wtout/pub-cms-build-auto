@@ -1,3 +1,19 @@
+{% if hostvars[groups['vcenter'][0]]['information']['datacenter']|lower is search('staging') %}
+{% block staging %}
+ADDRESS0=172.23.251.0
+GATEWAY0={{ customer.secondary.octets }}.62
+NETMASK0=255.255.255.0
+ADDRESS1=172.23.252.0
+GATEWAY1={{ customer.secondary.octets }}.62
+NETMASK1=255.255.255.0
+ADDRESS2=172.23.253.0
+GATEWAY2={{ customer.secondary.octets }}.62
+NETMASK2=255.255.255.0
+ADDRESS3=172.23.254.0
+GATEWAY3={{ customer.secondary.octets }}.62
+NETMASK3=255.255.255.0
+{% endblock staging %}
+{% else %}
 ADDRESS0=172.19.240.0
 NETMASK0=255.255.240.0
 GATEWAY0={{ customer.secondary.octets }}.62
@@ -16,7 +32,7 @@ GATEWAY4={{ customer.secondary.octets }}.62
 ADDRESS5=172.30.251.0
 NETMASK5=255.255.255.0
 GATEWAY5={{ customer.secondary.octets }}.62
-{% if hostvars[groups['vcenter'][0]]['information']['datacenter'] is regex('RTP5|Alln1') %}
+{% if hostvars[groups['drvcenter'][0]]['information']['datacenter'] is regex('RTP5|Alln1') %}
 {% block prod %}
 {% if customer.disaster_recovery and inventory_hostname is regex('em7mc|em7dc|em7prt|rly') %}
 ADDRESS6={{ customer.primary.octets }}.0
@@ -38,4 +54,5 @@ NETMASK8=255.255.255.{{ '0' if inventory_hostname is regex('em7mc|em7dc|em7prt')
 GATEWAY8={{ customer.secondary.octets }}.62
 {% endif %}
 {% endblock lab %}
+{% endif %}
 {% endif %}
