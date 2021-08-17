@@ -3,7 +3,7 @@
 - block:
   - name: check access to keeper
     ansible.builtin.shell: |
-       sh keeper_control.sh --host=west --list_customers --cert={{ auto_dir }}/../private.pem
+       sh keeper_control.sh --host=west --list_customers --cert={{ keeper.token_filename }}
     args:
       chdir: "{{ spl_ansible_path }}"
     register: reg_keeper_access
@@ -26,7 +26,7 @@
         loop_var: file_item
     - name: Load Customer Credentials into the Customer Password Vault
       ansible.builtin.shell: |
-        sh keeper_control.sh --host=west --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ auto_dir }}/../private.pem
+        sh keeper_control.sh --host=west --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ keeper.token_filename }}
       args:
         chdir: "{{ spl_ansible_path }}"
       register: reg_cust_creds
@@ -41,7 +41,7 @@
         - inventory_hostname is search('splfwd')
     - name: Load Core Credentials into the Password Vault
       ansible.builtin.shell: |
-        sh keeper_control.sh --host=west --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ auto_dir }}/../private.pem
+        sh keeper_control.sh --host=west --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ keeper.token_filename }}
       args:
         chdir: "{{ spl_ansible_path }}"
       register: reg_core_creds

@@ -11,13 +11,13 @@
         - he_hosts_file.stat.exists
       fail_msg: "The Headend inventory is not found. Aborting!"
   - name: read Headend hosts list
-    shell: ansible stack -i inventories/{{ customer.he_identifier }} --list-hosts | grep -v hosts | sed -e 's/^"*\s*\(.*\)"*$/\1/g'
+    shell: ansible all -i inventories/{{ customer.he_identifier }} --list-hosts | grep -v 'hosts\|vcenter\|bastion' | sed -e 's/^\s*//g'
     args:
       chdir: "{{ auto_dir }}"
     register: he_hosts_list
     check_mode: no
   - name: read Headend VMs list
-    shell: ansible stack -i inventories/{{ customer.he_identifier }} -m debug -a "var='vm.name'" | grep -v SUCCESS | awk '{print $2}' | cut -d '"' -f2 | sed -e '/^$/d'
+    shell: ansible {{ he_hosts_list.stdout_lines|join(',') }} -i inventories/{{ customer.he_identifier }} -m debug -a "var='vm.name'" | grep -v SUCCESS | awk '{print $2}' | cut -d '"' -f2 | sed -e '/^$/d'
     args:
       chdir: "{{ auto_dir }}"
     register: he_vms_list

@@ -1,0 +1,15 @@
+---
+# Tasks to remove token from git config
+- name: remove repo token from git config
+  ansible.builtin.replace:
+    path: "{{ spl_wd }}/dev/{{ repo_item }}/.git/config"
+    regexp: '//.*@'
+    replace: '//'
+  loop:
+    - mdr-automation
+    - mdr-splunk-env
+  loop_control:
+    loop_var: repo_item
+  delegate_to: localhost
+  run_once: true
+  tags: integ_splunk

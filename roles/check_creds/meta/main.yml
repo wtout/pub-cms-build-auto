@@ -1,6 +1,6 @@
 galaxy_info:
   author: Wassim Tout
-  description: your description
+  description: Verify if vcenter credentials are valid
   company: your company (optional)
 
   # If the issue tracker for your role is not on github, uncomment the
@@ -16,7 +16,7 @@ galaxy_info:
   # - CC-BY
   license: license (GPLv2, CC-BY, etc)
 
-  min_ansible_version: 2.4
+  min_ansible_version: 2.10.7
 
   # If this a Container Enabled role, provide the minimum Ansible Container version.
   # min_ansible_container_version:

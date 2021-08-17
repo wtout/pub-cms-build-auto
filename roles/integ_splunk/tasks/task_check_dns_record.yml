@@ -1,0 +1,15 @@
+---
+# Tasks to check DNS record of hosts
+- block:
+  - name: check DNS record
+    ansible.builtin.command: nslookup {{ vm.name }}
+    register: reg_dns_record
+    check_mode: no
+    ignore_errors: true
+  - name: verify that DNS record exists
+    ansible.builtin.assert:
+      that: reg_dns_record is succeeded
+      fail_msg: "No DNS record for {{ vm.name }}. Cannot proceed with Splunk deployment"
+  delegate_to: localhost
+  tags: integ_splunk
+  

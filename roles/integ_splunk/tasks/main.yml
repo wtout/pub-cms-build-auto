@@ -6,12 +6,19 @@
       - ansible_ssh_pass != postppp
   - include_tasks: task_create_directory_structure.yml
   - include_tasks: task_get_repo_creds.yml
+  - include_tasks: task_enable_repo_creds_cache.yml
   - include_tasks: task_clone_repos.yml
+  - include_tasks: task_remove_token.yml
+    when: clone_repos is succeeded
   - include_tasks: task_setup_env.yml
-  - include_tasks: task_create_inventory.yml
+    when: clone_repos.results|selectattr('repo_item', 'search', 'mdr-splunk-env')|map(attribute='changed')|list|join|bool
+  - include_tasks: task_check_dns_record.yml
   - include_tasks: task_get_creds_from_keeper.yml
+  - include_tasks: task_update_lookup_file.yml
+  - include_tasks: task_disable_repo_creds_cache.yml
   - include_tasks: task_update_vm_password.yml
   - include_tasks: task_update_variables_files.yml
+  - include_tasks: task_create_inventory.yml
   - include_tasks: task_install_splunk.yml
   - include_tasks: task_update_yum_conf.yml
     when: delete_proxy|default(false)|bool
