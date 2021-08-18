@@ -1,7 +1,6 @@
 ---
 # Tasks to create the VM folder
 - block:
-#  - name: Create the {{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}/{{ customer.name if customer.name|lower is search('mdr') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }} folder
   - name: Create the {{ folder_name }} folder
     vcenter_folder:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"

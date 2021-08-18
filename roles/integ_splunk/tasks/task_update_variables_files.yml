@@ -6,7 +6,7 @@
       src: "{{ tmpl_item.name }}"
       dest: "{{ tmpl_item.dest }}"
     loop:
-      - { name: 'templates/default.yml.tmpl', dest: "{{ spl_inventory_path }}/default.yml" }
+      - { name: 'templates/default.yml.tmpl', dest: "{{ tmpl_dest }}/default.yml" }
     loop_control:
       loop_var: tmpl_item
   - name: Decrypt ssh_passwords vault
