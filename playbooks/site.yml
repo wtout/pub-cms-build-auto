@@ -37,7 +37,7 @@
     - {role: "{{ auto_dir }}/roles/infra_license", when: infra_license | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/infra_check_csr_license", when: check_csr_license | default(false) | bool}
 
-# Plays to create, configure the VMs and to run the puppet push
+# Play to create, configure the VMs and to run the puppet push
 - name: Deploy VMs
   hosts: all
   gather_facts: no
@@ -53,9 +53,16 @@
     - {role: "{{ auto_dir }}/roles/vm_ppp_configuration", when: configure_ppp_vms | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/splunk_mop", when: splunk_mop_fix | default(false) | bool}
     - {role: "{{ auto_dir }}/roles/drs_status", when: check_drs_creation | default(false) | bool}
+
+# Play to run the sanity checks
+- name: Post deploy
+  hosts: all
+  gather_facts: no
+
+  roles:
     - {role: "{{ auto_dir }}/roles/sanity", when: sanity_check | default(false) | bool}
 
-# Plays to delete the VMs
+# Play to delete the VMs
 - name: Rollback VMs
   hosts: all
   order: reverse_inventory

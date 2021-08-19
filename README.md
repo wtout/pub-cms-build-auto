@@ -130,6 +130,7 @@ The list of roles used in the playbooks:
   - **vm_ppp_configuration**: configures the stack's VMs post initial puppet push
   - **splunk_mop**: implements the datetime fix for splunk VMs
   - **drs_status**: checks the status the DRS rules
+  - **sanity**: runs a comprehensive list of sanity checks
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
 To execute specific role(s), add "_--tags 'role1,role2,...'_" as argument to the script.
