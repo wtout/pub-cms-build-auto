@@ -1,9 +1,10 @@
 ---
 # Task file to create infra nodes
 - block:
-  - name: Define folder name
-    set_fact:
-      fldr_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] + '/' + customer.name if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}"
+  - name: "{{ auto_dir + '/roles/vm_creation' }}: Define folder name"
+    include_role:
+      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      tasks_from: task_define_folder_name.yml
     when: inventory_hostname is not search('nexus')
 
   - name: "{{ auto_dir + '/roles/vm_creation' }}: get onprem datastore"

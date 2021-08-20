@@ -6,7 +6,7 @@
   - name: create Hosted VMs
     block:
     - include_tasks:
-        file: task_delete_folder.yml
+        file: task_create_folder.yml
         apply:
           vars:
             folder_name: "{{ fldr_name }}"
@@ -14,7 +14,7 @@
         - "'stack' in group_names"
         - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
     - include_tasks:
-        file: task_delete_folder.yml
+        file: task_create_folder.yml
         apply:
           vars:
             folder_name: "{{ fldr_name }}"
