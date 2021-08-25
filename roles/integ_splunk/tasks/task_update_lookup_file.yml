@@ -18,8 +18,6 @@
         path: "{{ spl_wd }}/dev/mdr-splunk-env/deployer/cisco_mdr_ucases_lookup/lookups/cisco_mdr_customer_mapping.csv"
         line: "{{ [(reg_read_info.stdout_lines|select('search', 'id:')|join).split(': ')|last, (reg_read_info.stdout_lines|select('search', 'index:')|join).split(': ')|last, (reg_last_entry.stdout_lines|last).split(',')|last|int + 1]|join(',') if reg_last_entry.stdout_lines|select('search', customer.shortname)|length == 0 else reg_last_entry.stdout_lines|select('search', customer.shortname)|join }}"
       register: reg_update_file
-    - include_tasks: task_setup_env.yml
-      when: reg_update_file is changed
     when: reg_read_info is succeeded
   when:
     - inventory_hostname is search('splfwd')

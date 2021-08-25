@@ -1,0 +1,22 @@
+---
+# Tasks to switch to environment branch
+- block:
+  - name: check if the {{ customer.env_identifier }} branch exists
+    ansible.builtin.shell:
+      git branch -a
+    args:
+      chdir: "{{ spl_wd }}/dev/mdr-splunk-env"
+    register: reg_branches
+    check_mode: no
+  - name: checkout {{ customer.env_identifier }} branch
+    ansible.builtin.shell: |
+      git checkout -f {{ customer.env_identifier }}
+      git pull
+    register: reg_checkout
+    args:
+      chdir: "{{ spl_wd }}/dev/mdr-splunk-env"
+    when: reg_branches.stdout_lines | select('search', '/' + customer.env_identifier) | length == 1
+  when: clone_repos is succeeded
+  delegate_to: localhost
+  run_once: true
+  tags: integ_splunk

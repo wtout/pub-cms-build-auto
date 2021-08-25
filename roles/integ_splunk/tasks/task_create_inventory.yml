@@ -21,10 +21,15 @@
       loop_var: tmpl_item
     when: inventory_hostname is not search('splfwd')
   - block:
+    - name: check if deployed customers file exists
+      ansible.builtin.stat:
+        path: "{{ tmpl_dest }}/deployed_customers.yml"
+      register: reg_deployed_customers
     - name: Create the deployed customers file
       template:
         src: 'templates/deployed_customers.yml.tmpl'
         dest: "{{ tmpl_dest }}/deployed_customers.yml"
+      when: not reg_deployed_customers.stat.exists
     - name: check if headend inventory file exists
       stat:
         path: "{{ tmpl_dest }}/{{ he_inv_file_name }}"

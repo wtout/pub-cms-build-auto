@@ -23,6 +23,11 @@
       file_type: file
       patterns: '*.rpm'
     register: artifacts_list
+  - name: check that Splunk artifacts are found
+    ansible.builtin.assert:
+      that:
+        - artifacts_list.matched >= 1
+      fail_msg: 'Unable to find Splunk artifacts. Aborting!'
   - debug:
       msg:
         - "{{ link_item.path }}"
@@ -42,3 +47,4 @@
   delegate_to: localhost
   run_once: true
   tags: integ_splunk
+  
