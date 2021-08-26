@@ -12,12 +12,12 @@
     validate_certs: no
     cdrom:
       - type: iso
-        iso_path: "[{{ 'HX-DS-02' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+        iso_path: "[{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}] {{ ('ISO/' + hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path']) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
         controller_number: 0
         unit_number: 0
         state: absent
       - type: iso
-        iso_path: "[{{ 'HX-DS-02' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'RTP5-HX-DS-01' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'RTP5' else vm_ds }}] {{ 'ISO/Linux' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'RTP5' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+        iso_path: "[{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}] {{ ('ISO/' + hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path']) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
         controller_number: 1
         unit_number: 0
         state: absent
