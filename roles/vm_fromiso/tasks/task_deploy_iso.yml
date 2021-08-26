@@ -87,7 +87,7 @@
         host: "{{ netconfig.ipaddress1 }}"
         search_regex: OpenSSH
         delay: 10
-        timeout: 1200
+        timeout: 1800
         sleep: 10
       when:
       - deploy_iso is succeeded
