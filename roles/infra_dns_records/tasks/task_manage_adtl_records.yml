@@ -1,0 +1,15 @@
+---
+# Tasks to add/delete the additional DNS records
+- block:
+  - name: "{{ 'Add' if dns_state == 'present' else 'Remove' }} additional {{ 'DR ' if 'dr' in group_names else '' }}DNS records"
+    community.general.nsupdate:
+      server: "{{ dns_server }}"
+      record: "{{ list_item.record }}"
+      value: "{{ list_item.value }}"
+      zone: "{{ dns_zone }}"
+      state: "{{ dns_state }}"
+    loop: "{{ dns_loop }}"
+    loop_control:
+      loop_var: list_item
+  run_once: true
+  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]

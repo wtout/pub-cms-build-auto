@@ -1,0 +1,66 @@
+---
+# Task file to delete DNS records
+- block:
+  - block:
+    - name: Remove priamry DNS records
+      community.general.nsupdate:
+        server: "{{ sysconfig.primary.dns_servers[0] }}"
+        record: "{{ vm.name }}"
+        value: "{{ netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3 }}"
+        zone: "{{ sysconfig.primary.domain_name }}"
+        state: absent
+    - name: Remove primary reverse DNS records
+      community.general.nsupdate:
+        server: "{{ sysconfig.primary.dns_servers[0] }}"
+        record: "{{ (netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3).split('.') | reverse | join('.') + '.in-addr.arpa' }}"
+        type: "PTR"
+        zone: "{{ (netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3).split('.')[:-1] | reverse | join('.') + '.in-addr.arpa' }}"
+        state: absent
+    when:
+      - "'stack' in group_names"
+
+  - block:
+    - name: Remove secondary DNS records
+      community.general.nsupdate:
+        server: "{{ sysconfig.secondary.dns_servers[0] }}"
+        record: "{{ vm.name }}"
+        value: "{{ netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3 }}"
+        zone: "{{ sysconfig.secondary.domain_name }}"
+        state: absent
+    - name: Remove secondary reverse DNS records
+      community.general.nsupdate:
+        server: "{{ sysconfig.secondary.dns_servers[0] }}"
+        record: "{{ (netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3).split('.') | reverse | join('.') + '.in-addr.arpa' }}"
+        type: "PTR"
+        zone: "{{ (netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3).split('.')[:-1] | reverse | join('.') + '.in-addr.arpa' }}"
+        state: absent
+    when:
+      - customer.disaster_recovery
+      - "'dr' in group_names"
+
+  - name: Remove additional DNS records
+    include_tasks:
+      file: task_manage_adtl_records.yml
+      apply:
+        vars:
+          dns_server: "{{ sysconfig.primary.dns_servers[0] }}"
+          dns_zone: "{{ sysconfig.primary.domain_name }}"
+          dns_state: 'absent'
+          dns_loop: "{{ dns_records }}"  
+    when:
+      - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
+
+  - name: Remove additional DR DNS records
+    include_tasks:
+      file: task_manage_adtl_records.yml
+      apply:
+        vars:
+          dns_server: "{{ sysconfig.secondary.dns_servers[0] }}"
+          dns_zone: "{{ sysconfig.secondary.domain_name }}"
+          dns_state: 'absent'
+          dns_loop: "{{ dr_dns_records }}"
+    when:
+      - customer.disaster_recovery
+      - ansible_play_batch | select('search', 'dr') | reject('search', 'vcenter|bastion|puppet|nexus') | list | length >= 1
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}" 
+  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
