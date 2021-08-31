@@ -33,7 +33,7 @@
       - vm.disk1|float > 0
   - name: Define datastore to host Disk2 for Splunk Indexers
     set_fact:
-      splind_datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|last if 'dr' in group_names else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] }}"
+      splind_datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|length >= inventory_hostname[-2:]|int else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|first }}"
     when:
       - inventory_hostname is search('splind')
       - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
@@ -68,7 +68,7 @@
       state: poweredoff
       validate_certs: no
   - name: Update VM Disk0 settings
-    community.vmware.vmware_guest:
+    community.vmware.vmware_guest_disk:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -77,7 +77,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk0_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk0_datastore }}"
           controller_number: 0
           controller_type: 'lsilogic'
@@ -86,11 +86,12 @@
     register: vmguest_disk0
     until: vmguest_disk0 is succeeded
     notify: expand disk0
+    ignore_errors: true
     when:
       - vm.disk0 is defined
       - vm.disk0|float > 0
   - name: Update VM Disk1 settings
-    community.vmware.vmware_guest:
+    community.vmware.vmware_guest_disk:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -99,7 +100,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk1_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk1_datastore }}"
           controller_number: 0
           controller_type: 'lsilogic'
@@ -108,11 +109,12 @@
     register: vmguest_disk1
     until: vmguest_disk1 is succeeded
     notify: expand disk1
+    ignore_errors: true
     when:
       - vm.disk1 is defined
       - vm.disk1|float > 0
   - name: Update VM Disk2 settings
-    community.vmware.vmware_guest:
+    community.vmware.vmware_guest_disk:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -121,8 +123,9 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk2_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk2_datastore }}"
+          state: present
           controller_number: 0
           controller_type: 'lsilogic'
           unit_number: "{{ disk2_unit_number }}"
@@ -130,12 +133,13 @@
     register: vmguest_disk2
     until: vmguest_disk2 is succeeded
     notify: expand disk2
+    ignore_errors: true
     when:
       - vm.disk2 is defined
       - vm.disk2 != ''
       - vm.disk2|float > 0
   - name: Update VM Disk3 settings
-    community.vmware.vmware_guest:
+    community.vmware.vmware_guest_disk:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -144,8 +148,9 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk3_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk3_datastore }}"
+          state: present
           controller_number: 0
           controller_type: 'lsilogic'
           unit_number: "{{ disk3_unit_number }}"
@@ -153,10 +158,14 @@
     register: vmguest_disk3
     until: vmguest_disk3 is succeeded
     notify: expand disk3
+    ignore_errors: true
     when:
       - vm.disk3 is defined
       - vm.disk3 != ''
       - vm.disk3|float > 0
+  - name: define disk_rebuild
+    set_fact:
+      disk_rebuild: "{{ vmguest_disk0|default({'failed': false}) is failed or vmguest_disk1|default({'failed': false}) is failed or vmguest_disk2|default({'failed': false}) is failed or vmguest_disk3|default({'failed': false}) is failed }}"
   when:
     - not ansible_check_mode
     - vm.disk1|float > 0 or vm.disk2|float > 0 or vm.disk3|float > 0

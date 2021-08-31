@@ -35,7 +35,7 @@
       - vm.disk1|float > 0
   - name: Define datastore to host Disk2 for Splunk Indexers
     set_fact:
-      splind_datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|length > 1 else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|first }}"
+      splind_datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|length >= inventory_hostname[-2:]|int else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|first }}"
     when:
       - splind_datastore is not defined or splind_datastore == ''
       - inventory_hostname is search('splind')
@@ -80,7 +80,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk0_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk0_datastore }}"
           state: present
           scsi_controller: 0
@@ -102,7 +102,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk1_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk1_datastore }}"
           state: present
           scsi_controller: 0
@@ -124,7 +124,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk2_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk2_datastore }}"
           state: present
           scsi_controller: 0
@@ -147,7 +147,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk3_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk3_datastore }}"
           state: present
           scsi_controller: 0
