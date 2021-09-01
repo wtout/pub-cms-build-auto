@@ -17,6 +17,11 @@
     - include_tasks: task_update_hardware.yml
     - include_tasks: task_enable_root_login.yml
     - include_tasks: task_delete_gtw_from_network_file.yml
+    - name: check if rebuild is still required
+      ansible.builtin.assert:
+        that:
+          - not gtw_rebuild|default(false)
+        fail_msg: 'Unable to delete the gateway from the network file successfully'
     when: gtw_rebuild|default(false)
   - include_tasks: task_update_default_route.yml
   - include_tasks: task_rename_interface.yml

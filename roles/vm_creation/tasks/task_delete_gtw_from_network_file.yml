@@ -82,7 +82,7 @@
         wait_for_process: true
       when: delete_gtw is succeeded
     when: inventory_hostname is not search('em7')
-  - name: Check if rebuild is required
+  - name: define gtw_rebuild
     set_fact:
       gtw_rebuild: "{{ delete_em7gtw|default({'failed': false}) is failed or delete_gtw|default({'failed': false}) is failed }}"
   when:

@@ -11,13 +11,7 @@
   - include_tasks: task_copy_kickstart_iso_to_vsphere.yml
   - include_tasks: task_deploy_iso.yml
   - include_tasks: task_delete_gtw_nic1.yml
-  - block:
-    - include_tasks: task_recreate_vm.yml
-    - name: check if rebuild is still required
-      ansible.builtin.assert:
-        that:
-          - not gtw_rebuild|default(false)
-        fail_msg: 'Unable to delete NIC1 gateway successfully'
+  - include_tasks: task_recreate_vm.yml
     when: gtw_rebuild|default(false)
   - include_tasks: task_update_disks.yml
   - block:
