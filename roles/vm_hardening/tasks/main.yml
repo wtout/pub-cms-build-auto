@@ -55,6 +55,7 @@
       when: vh_vm_reachable is succeeded
     when:
       - ansible_ssh_pass != postppp
+      - inventory_hostname is not search('em7')
 
   - include_tasks: task_enable_hardening.yml
     when: hardv | default(true) | bool
