@@ -42,6 +42,15 @@ datacenters:
     storage_datastore: 'HX-DS-02'
     storage_path: ''
 
+  PAE-HX-DC-4:
+    vsphere: 'paevcenter01.cisco-pae.com'
+    deptype: 'h'
+    folder: 'MDR'
+    cluster: 'PAE-RTP-HX'
+    datastore_cluster: 'HX-Datastore-Cluster'
+    storage_datastore: 'HX-DS-02'
+    storage_path: ''
+
   Dev Engineering:
     vsphere: 'paevcenter01.cisco-pae.com'
     deptype: 'a'
