@@ -38,6 +38,10 @@
     args:
       chdir: "/home/{{ vm_svc_user }}/hardening"
     when: not ansible_check_mode
+    no_log: true
+  - debug:
+      msg: "{{ hard_script.stdout_lines }}"
+    when: hard_script is failed
   - name: check if hardening is enabled
     ansible.builtin.shell: grep 'Cisco Acceptable Use Policy' /etc/issue
     register: harden2
