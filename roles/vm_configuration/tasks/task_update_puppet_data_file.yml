@@ -6,7 +6,7 @@
       ansible.builtin.set_fact:
         data_conf_hosts: "{{ (groups['stack'] + groups['dr']) | reject('search', infra_nodes|unique|join('|')) if customer.disaster_recovery and ansible_play_hosts|reject('search', 'vcenter|nexus')|sort == groups['dr']|sort else ansible_play_hosts | reject('search', 'bastion|puppet|vcenter|nexus|' + infra_nodes|unique|join('|')) }}"
       vars:
-        infra_nodes: "{{ groups['infra']|regex_replace('[0-9]{2,}', '') if groups['infra'] is defined else 'none' }}"
+        infra_nodes: "{{ groups['infra']|regex_replace('[0-9]{2,}', '') if groups['infra'] is defined else ['none'] }}"
     - name: create the files directory
       ansible.builtin.file:
         path: "{{ role_path }}/files"
