@@ -266,13 +266,8 @@ function remove_extra_vars_arg() {
 	echo ${NEWARGS}
 }
 
-function create_passfile() {
-	[[ -f ${PASSVAULT} ]] && cp ${PASSVAULT} ${PASSFILE} || PV="ERROR"
-	[[ ${PV} == "ERROR" ]] && echo "${PASSVAULT} file is missing. Aborting!" && exit 1
-}
-
 function install_pypkgs() {
-	ansible-playbook playbooks/pypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh
+	ansible-playbook playbooks/pypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v -e @${PASSVAULT} --vault-password-file Bash/get_common_vault_pass.sh
 	INSTALL_PYPKGS_STATUS=${?}
 	[[ ${INSTALL_PYPKGS_STATUS} != 0 ]] && echo -e "\n${BOLD}Unable to install Python packages successfully. Aborting!${NORMAL}" && exit 1
 }
@@ -314,7 +309,6 @@ function check_updates() {
 		[[ -f ${1} ]] && grep 'REPOPASS=' ${1} 1>/dev/null && rm -f ${1}
 		if [[ -f ${1} ]]
 		then
-			cp ${1} ${1}.${ENAME}
 			i=0
 			retries=3
 			while [ ${i} -lt ${retries} ]
@@ -323,14 +317,13 @@ function check_updates() {
 				if [[ ${REPOPASS} == "" ]]
 				then
 					[[ ${debug} == 1 ]] && set -x
-					read -r REPOPASS <<< $(view_vault ${1}.${ENAME} ${2} | cut -d "'" -f2)
+					read -r REPOPASS <<< $(view_vault ${1} ${2} | cut -d "'" -f2)
 				else
 					break
 				fi
 				i=$((++i))
 				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
 			done
-			rm ${1}.${ENAME}
 		else
 			echo
 			read -sp "Enter your Repository password [ENTER]: " REPOPASS
@@ -491,20 +484,20 @@ function run_playbook() {
 		### Begin: Define the extra-vars argument list and bastion credentials vault name and password file
 		if [[ $(get_bastion_address) == '[]' ]]
 		then
-			local EVARGS="{PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
+			local EVARGS="{$(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
 			local BCV=""
 		else
-			local EVARGS="{VFILE: '${CRVAULT}', SCRTFILE: 'Bash/get_creds_vault_pass.sh', PASSFILE: '${PASSFILE}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
+			local EVARGS="{VFILE: '${CRVAULT}', SCRTFILE: 'Bash/get_creds_vault_pass.sh', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
 			local BCV="-e @${CRVAULT} --vault-password-file Bash/get_creds_vault_pass.sh"
 		fi
 		### End
 		if [[ -z ${MYINVOKER+x} ]]
 		then
-			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
+			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSVAULT} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
 		else
-			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSFILE} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr 1> /dev/null
+			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} ${@} -e @${PASSVAULT} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr 1> /dev/null
 		fi
-		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep  ${PASSFILE}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSFILE}${NORMAL}" && EC=1
+		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep  ${PASSVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSVAULT}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr) == "" ]] && [[ $(grep -iv warning ${ANSIBLE_LOG_LOCATION}/${PID}.stderr) != '' ]] && cat ${ANSIBLE_LOG_LOCATION}/${PID}.stderr && EC=1
 		rm -f ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
@@ -565,11 +558,9 @@ ENAME=$(get_envname ${ORIG_ARGS})
 INVENTORY_PATH="${PWD}/inventories/${ENAME}"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
-PASSFILE="${PASSVAULT}.${ENAME}"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
-create_passfile
 if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
 then
 	git_config
