@@ -110,7 +110,6 @@
         - { name: '/data01/commands/*', user: 'commands', group: 'commands' }
       loop_control:
         loop_var: dir_item
-    when: puppet_push_status is not defined
   when:
     - inventory_hostname is search('rly')
     - inventory_hostname is not search('atarly')

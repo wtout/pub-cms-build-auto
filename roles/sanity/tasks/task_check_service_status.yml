@@ -11,12 +11,18 @@
     no_log: true
   - name: define service_status
     ansible.builtin.set_fact:
-      service_status: "{{ service_status|default([]) + ['Service ' + svc_name + ' is not found'] }}"
+      service_status: "{{ service_status|default([]) + [svc_name + ': OK'] }}"
+    when:
+      - svc_status is succeeded
+      - svc_status is not changed
+  - name: define service_status
+    ansible.builtin.set_fact:
+      service_status: "{{ service_status|default([]) + [svc_name + ': Not found'] }}"
     when:
       - svc_status is failed
       - svc_status.msg is search('Could not find the requested service')
   - name: define service_status
     ansible.builtin.set_fact:
-      service_status: "{{ service_status|default([]) + [ svc_name + ' is not active'] }}"
+      service_status: "{{ service_status|default([]) + [ svc_name + ': Not active'] }}"
     when: svc_status is changed
   tags: sanity

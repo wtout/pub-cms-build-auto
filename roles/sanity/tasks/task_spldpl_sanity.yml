@@ -49,6 +49,5 @@
         - { name: '/opt/splunk/etc/*', user: 'splunk', group: 'splunk' }
       loop_control:
         loop_var: dir_item
-    when: puppet_push_status is not defined
   when: inventory_hostname is search('spldpl')
   tags: sanity

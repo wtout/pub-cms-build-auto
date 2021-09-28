@@ -6,6 +6,8 @@
     register: sc_vm_reachable
     check_mode: no
     ignore_errors: true
+    until: sc_vm_reachable is succeeded
+    delay: 10
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
     - name: check VM credentials
@@ -25,23 +27,49 @@
           timeout: 3
         register: sc_vm_creds2
         check_mode: no
+        ignore_errors: true
+      - name: define creds_status
+        ansible.builtin.set_fact:
+          creds_status: 'The VM credentials are invalid'
+        when: sc_vm_creds2 is failed
       when:
         - sc_vm_creds1 is failed
         - sc_vm_creds1.msg is search('Invalid/incorrect username/password')
 
-    - include_tasks: task_em7_sanity.yml
-    - include_tasks: task_em7db_sanity.yml
-    - include_tasks: task_em7prt_sanity.yml
-    - include_tasks: task_em7dc_sanity.yml
-    - include_tasks: task_em7mc_sanity.yml
-    - include_tasks: task_spl_sanity.yml
-    - include_tasks: task_spldpl_sanity.yml
-    - include_tasks: task_splmas_sanity.yml
-    - include_tasks: task_splsrc_sanity.yml
-    - include_tasks: task_splind_sanity.yml
-    - include_tasks: task_rly_sanity.yml
-    - include_tasks: task_atarly_sanity.yml
-    - include_tasks: task_lnxjmp_sanity.yml
+    - block:
+      - include_tasks: task_em7_sanity.yml
+        when:
+          - inventory_hostname is search('em7')
+          - groups['em7']|length == 1
+      - include_tasks: task_em7db_sanity.yml
+        when: inventory_hostname is search('em7db')
+      - include_tasks: task_em7prt_sanity.yml
+        when: inventory_hostname is search('em7prt')
+      - include_tasks: task_em7dc_sanity.yml
+        when: inventory_hostname is search('em7dc')
+      - include_tasks: task_em7mc_sanity.yml
+        when: inventory_hostname is search('em7mc')
+      - include_tasks: task_spl_sanity.yml
+        when:
+          - inventory_hostname is search('spl')
+          - groups['spl']|length == 1
+      - include_tasks: task_spldpl_sanity.yml
+        when: inventory_hostname is search('spldpl')
+      - include_tasks: task_splmas_sanity.yml
+        when: inventory_hostname is search('splmas')
+      - include_tasks: task_splsrc_sanity.yml
+        when: inventory_hostname is search('splsrc')
+      - include_tasks: task_splind_sanity.yml
+        when: inventory_hostname is search('splind')
+      - include_tasks: task_rly_sanity.yml
+        when:
+          - inventory_hostname is search('rly')
+          - inventory_hostname is not search('ata')
+      - include_tasks: task_atarly_sanity.yml
+        when: inventory_hostname is search('atarly')
+      - include_tasks: task_lnxjmp_sanity.yml
+        when: inventory_hostname is search('lnxjmp')
+      when: "sc_vm_creds2|default({'failed': false}) is succeeded"
     - include_tasks: task_print_report.yml
     when: sc_vm_reachable is succeeded
   when:
