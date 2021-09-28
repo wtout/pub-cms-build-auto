@@ -28,6 +28,5 @@
         loop_var: svc_item
     - include_tasks: task_check_chrony_file.yml
     - include_tasks: task_check_sudoers_user_status.yml
-    when: puppet_push_status is not defined
   when: inventory_hostname is search('atarly')
   tags: sanity
