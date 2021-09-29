@@ -31,11 +31,6 @@
     when: hostvars[host_item]['cert_exists1'] is defined
     run_once: true
   - block:
-    - name: reset SSH password
-      set_fact:
-        ansible_ssh_pass: "{{ preppp }}"
-        ansible_become_pass: "{{ preppp }}"
-      no_log: true
     - include_tasks: task_rebuild_host.yml
     - include_tasks: task_delete_certificates.yml
     - include_tasks: task_add_vm_to_class.yml

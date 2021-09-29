@@ -1,6 +1,8 @@
 ---
 # tasks to delete VM
 - block:
+  - include_tasks: task_define_folder_name.yml
+    when: fldr_name is undefined
   - name: Delete VM
     community.vmware.vmware_guest:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
