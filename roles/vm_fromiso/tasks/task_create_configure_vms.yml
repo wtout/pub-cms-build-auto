@@ -1,9 +1,9 @@
 ---
 # Tasks to create and configure VM pairs
 - block:
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: get vm datastore"
+  - name: "vm_creation: get vm datastore"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_get_vm_datastore.yml
     when:
       - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == ''

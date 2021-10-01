@@ -1,33 +1,35 @@
 ---
 # Task file to create infra nodes
 - block:
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: Define folder name"
+  - name: "vm_creation: Define folder name"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_define_folder_name.yml
     when: inventory_hostname is not search('nexus')
 
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: get onprem datastore"
+  - name: "vm_creation: get onprem datastore"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_get_onprem_datastore.yml
     when: inventory_hostname is not search('nexus')
 
-  - name: Deploy Windows Jump Servers from OVA
+  - name: Deploy Windows Jump Servers From OVA
     include_tasks: task_deploy_winjmp.yml
     when: inventory_hostname is search('winjmp')
 
-  - name: Deploy Loadbalancers from OVA
+  - name: Deploy Loadbalancers From OVA
     include_tasks: task_deploy_nsvpx_ova.yml
     when: inventory_hostname is search('nsvpx')
 
-  - name: Deploy and configure CSRs
+  - name: Deploy And Configure CSRs
     block:
-      - include_tasks: task_deploy_csr_ova.yml
-      - include_tasks: task_configure_csr.yml
+      - name: Deploy CSR From OVA
+        include_tasks: task_deploy_csr_ova.yml
+      - name: Configure CSR
+        include_tasks: task_configure_csr.yml
     when: inventory_hostname is search('csr')
 
-  - name: Update Nexus switch
+  - name: Update Nexus Switch
     include_tasks:
       file: task_update_nexus.yml
       apply:
@@ -40,7 +42,7 @@
       - inventory_hostname is search('nexus')
       - hostvars['csr01']['dhcp_address'] != ''
 
-  - name: Update Nexus switch (DR)
+  - name: Update DR Nexus Switch
     include_tasks:
       file: task_update_nexus.yml
       apply:
@@ -58,7 +60,7 @@
     include_tasks: task_configure_nsvpx.yml
     when: inventory_hostname is search('nsvpx')
 
-  - name: Send Webex Teams notification with CSR/Netscaler serial numbers
+  - name: Send Webex Teams Notification With CSR/Netscaler Serial Numbers
     include_tasks: task_notify_teams.yml
     when: not inventory_hostname is search('nexus')
 

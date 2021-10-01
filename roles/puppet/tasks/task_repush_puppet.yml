@@ -6,9 +6,9 @@
       ansible_ssh_pass: "{{ preppp }}"
       ansible_become_pass: "{{ preppp }}"
     no_log: true
-  - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+  - name: "vm_configuration: make DB01 primary"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      name: vm_configuration
       tasks_from: task_make_db01_primary.yml
   - name: "relaunch puppet push #1"
     shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
@@ -48,9 +48,9 @@
       - include_tasks: task_check_certificate.yml
       when:
         - delete_client_cert_on_vm | default(false) | bool
-    - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+    - name: "vm_configuration: make DB01 primary"
       include_role:
-        name: "{{ auto_dir + '/roles/vm_configuration' }}"
+        name: vm_configuration
         tasks_from: task_make_db01_primary.yml
     - name: "relaunch puppet push #2"
       shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
@@ -77,11 +77,6 @@
       register: repush2_status
       ignore_errors: true
     - block:
-      - name: reset SSH password
-        set_fact:
-          ansible_ssh_pass: "{{ preppp }}"
-          ansible_become_pass: "{{ preppp }}"
-        no_log: true
       - include_tasks: task_rebuild_host.yml
       - include_tasks: task_delete_certificates.yml
       - include_tasks: task_add_vm_to_class.yml
@@ -91,9 +86,9 @@
         - include_tasks: task_check_certificate.yml
         when:
           - delete_client_cert_on_vm | default(false) | bool
-      - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+      - name: "vm_configuration: make DB01 primary"
         include_role:
-          name: "{{ auto_dir + '/roles/vm_configuration' }}"
+          name: vm_configuration
           tasks_from: task_make_db01_primary.yml
       - name: "relaunch puppet push #3"
         shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test

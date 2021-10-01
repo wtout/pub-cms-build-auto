@@ -1,9 +1,9 @@
 ---
 # tasks to get the license status for the EM7 VM
 - block:
-  - name: "{{ auto_dir + '/roles/vm_configuration' }}: make DB01 primary"
+  - name: "vm_configuration: make DB01 primary"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      name: vm_configuration
       tasks_from: task_make_db01_primary.yml
   - include_tasks: task_em7_get_license_info.yml
   - name: define lic_status

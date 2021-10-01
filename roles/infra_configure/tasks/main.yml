@@ -4,7 +4,7 @@
   - block:
     - name: Deploy HA infrastructure
       block:
-      - name: Create HA datastores
+      - name: Create HA Datastores
         include_tasks:
           file: task_create_datastores.yml
           apply:
@@ -16,7 +16,7 @@
         loop_control:
           loop_var: resource_item
           index_var: count_idx
-      - name: Add HA vSwitches
+      - name: Add HA VSwitches
         include_tasks: 
           file: task_add_vswitches.yml
           apply:
@@ -25,7 +25,7 @@
         loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - name: Create HA portgroups
+      - name: Create HA Portgroups
         include_tasks:
           file: task_create_portgroups.yml
           apply:
@@ -35,14 +35,15 @@
         loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - include_tasks: task_create_cluster.yml
+      - name: Create Cluster
+        include_tasks: task_create_cluster.yml
       when:
         - "'vcenter' in group_names"
         - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
     - name: Deploy DR infrastructure
       block:
-      - name: Create DR datastores
+      - name: Create DR Datastores
         include_tasks:
             file: task_create_datastores.yml
             apply:
@@ -53,7 +54,7 @@
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - name: Add DR vSwitches
+      - name: Add DR VSwitches
         include_tasks: 
           file: task_add_vswitches.yml
           apply:
@@ -62,7 +63,7 @@
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - name: Create DR portgroups
+      - name: Create DR Portgroups
         include_tasks:
           file: task_create_portgroups.yml
           apply:
@@ -73,7 +74,8 @@
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - include_tasks: task_create_drcluster.yml
+      - name: Create DR Cluster
+        include_tasks: task_create_drcluster.yml
       when:
         - customer.disaster_recovery
         - "'drvcenter' in group_names"
@@ -83,7 +85,7 @@
   - block:
     - name: Rollback HA infrastructure
       block:
-      - name: Delete HA datastores
+      - name: Delete HA Datastores
         include_tasks:
           file: task_delete_datastores.yml
           apply:
@@ -92,7 +94,7 @@
         loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - name: Delete HA vSwitches
+      - name: Delete HA VSwitches
         include_tasks:
           file: task_remove_vswitches.yml
           apply:
@@ -101,7 +103,7 @@
         loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - name: Delete HA portgroups
+      - name: Delete HA Portgroups
         include_tasks:
           file: task_delete_portgroups.yml
           apply:
@@ -110,14 +112,15 @@
         loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - include_tasks: task_delete_cluster.yml
+      - name: Delete Cluster
+        include_tasks: task_delete_cluster.yml
       when:
         - "'vcenter' in group_names"
         - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
-    - name: Rollback DR infrastructure
+    - name: Rollback DR Infrastructure
       block:
-      - name: Delete DR datastores
+      - name: Delete DR Datastores
         include_tasks:
           file: task_delete_datastores.yml
           apply:
@@ -126,7 +129,7 @@
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - name: Delete DR vSwitches
+      - name: Delete DR VSwitches
         include_tasks:
           file: task_remove_vswitches.yml
           apply:
@@ -135,7 +138,7 @@
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - name: Delete DR portgroups
+      - name: Delete DR Portgroups
         include_tasks:
           file: task_delete_portgroups.yml
           apply:

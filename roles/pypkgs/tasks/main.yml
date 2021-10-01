@@ -1,8 +1,10 @@
 ---
 # tasks file for pypkgs
 - block:
-  - include_tasks: task_get_proxy_address.yml
-  - include_tasks:
+  - name: Get proxy address
+    include_tasks: task_get_proxy_address.yml
+  - name: Install python package
+    include_tasks:
       file:
         task_install_pypkg.yml
       apply:

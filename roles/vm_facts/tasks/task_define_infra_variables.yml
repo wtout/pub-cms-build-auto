@@ -1,7 +1,8 @@
 ---
 # Tasks to define hosts variables
 - block:
-  - include_tasks:
+  - name: Define Infra variables lists
+    include_tasks:
       file: task_define_infra_variables_lists.yml
       apply:
         vars:
@@ -9,7 +10,8 @@
     loop: "{{ group_list }}"
     loop_control:
       loop_var: group_item
-  - include_tasks:
+  - name: Define DR Infra variables lists
+    include_tasks:
       file: task_define_dr_infra_variables_lists.yml
       apply:
         vars:

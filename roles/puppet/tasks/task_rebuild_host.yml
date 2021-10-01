@@ -6,21 +6,21 @@
       ansible_ssh_pass: "{{ preppp }}"
       ansible_become_pass: "{{ preppp }}"
     no_log: true
-  - name: "{{ auto_dir + '/roles/vm_configuration' }}: configure vms"
+  - name: "vm_configuration: configure vms"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      name: vm_configuration
       tasks_from: task_detect_datastore.yml
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: rollback vms"
+  - name: "vm_creation: rollback vms"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_delete_vm.yml
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: get OVA file name"
+  - name: "vm_creation: get OVA file name"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_get_ova_name.yml
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: create vms"
+  - name: "vm_creation: create vms"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_create_configure_vms.yml
     vars:
       vm_ds: "{{ ds2reuse }}"
@@ -28,15 +28,15 @@
     when:
       - ds2reuse is defined
       - ds2reuse != ''
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: create vms"
+  - name: "vm_creation: create vms"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_create_configure_vms.yml
     when:
       - ds2reuse is not defined
-  - name: "{{ auto_dir + '/roles/vm_configuration' }}: configure vms"
+  - name: "vm_configuration: configure vms"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_configuration' }}"
+      name: vm_configuration
     vars:
       configure_vms: true
   tags: puppet

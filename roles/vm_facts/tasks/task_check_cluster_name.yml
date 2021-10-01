@@ -1,10 +1,12 @@
 ---
 # tasks to get cluster name
 - block:
-  - include_tasks: task_check_onprem_cluster_name.yml
+  - name: Check on-prem cluster name
+    include_tasks: task_check_onprem_cluster_name.yml
     when:
       - information.deptype == 'a'
-  - include_tasks: task_get_cluster_name.yml
+  - name: Get cluster name
+    include_tasks: task_get_cluster_name.yml
     when:
       - information.cluster is not defined or information.cluster == ''
   when:

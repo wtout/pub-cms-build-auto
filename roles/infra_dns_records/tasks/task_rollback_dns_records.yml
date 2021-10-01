@@ -38,7 +38,7 @@
       - customer.disaster_recovery
       - "'dr' in group_names"
 
-  - name: Remove additional DNS records
+  - name: Remove Additional DNS Records
     include_tasks:
       file: task_manage_adtl_records.yml
       apply:
@@ -50,7 +50,7 @@
     when:
       - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
 
-  - name: Remove additional DR DNS records
+  - name: Remove Additional DR DNS Records
     include_tasks:
       file: task_manage_adtl_records.yml
       apply:

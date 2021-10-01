@@ -3,9 +3,9 @@
 - block:
   - include_tasks: task_purge_known_hosts.yml
     when: "'stack' in group_names or 'dr' in group_names"
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: Delete VM"
+  - name: "vm_creation: Delete VM"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_delete_vm.yml
   - include_tasks: task_deploy_iso.yml
   - include_tasks: task_delete_gtw_nic1.yml

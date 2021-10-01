@@ -3,18 +3,18 @@
 - block:
   - name: create Hosted VMs
     block:
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: create folder"
+    - name: "vm_creation: create folder"
       include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
+        name: vm_creation
         tasks_from: task_create_folder.yml
       vars:
         folder_name: "{{ fldr_name }}"
       when:
         - "'stack' in group_names"
         - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: create folder"
+    - name: "vm_creation: create folder"
       include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
+        name: vm_creation
         tasks_from: task_create_folder.yml
       vars:
         folder_name: "{{ fldr_name }}"
@@ -51,16 +51,16 @@
 
   - name: create On-prem VMs
     block:
-    - name: "{{ auto_dir + '/roles/infra_configure' }}: create primary cluster"
+    - name: "infra_configure: create primary cluster"
       include_role:
-        name: "{{ auto_dir + '/roles/infra_configure' }}"
+        name: infra_configure
         tasks_from: task_create_cluster.yml
       run_once: true
       when:
         - hostvars[groups['vcenter'][0]]['cluster_host1'] == ''
-    - name: "{{ auto_dir + '/roles/infra_configure' }}: create DR cluster"
+    - name: "infra_configure: create DR cluster"
       include_role:
-        name: "{{ auto_dir + '/roles/infra_configure' }}"
+        name: infra_configure
         tasks_from: task_create_drcluster.yml
       run_once: true
       when:

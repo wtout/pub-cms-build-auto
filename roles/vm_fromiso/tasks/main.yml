@@ -3,9 +3,9 @@
 - block:
   - include_tasks: task_purge_known_hosts.yml
     when: "'stack' in group_names or 'dr' in group_names"
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: Define folder name"
+  - name: "vm_creation: Define folder name"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_define_folder_name.yml
   - block:
     - include_tasks: task_check_con_creds.yml
@@ -14,9 +14,9 @@
     - include_tasks: task_create_vms.yml
     when: create_vms_iso | default(false) | bool
 
-  - name: "{{ auto_dir + '/roles/vm_creation' }}: Rollback VMs"
+  - name: "vm_creation: Rollback VMs"
     include_role:
-      name: "{{ auto_dir + '/roles/vm_creation' }}"
+      name: vm_creation
       tasks_from: task_rollback_vms.yml
     when: rollback_vms_iso | default(false) | bool
   tags: vm_creation

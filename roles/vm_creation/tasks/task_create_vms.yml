@@ -51,16 +51,16 @@
 
   - name: create On-prem VMs
     block:
-    - name: "{{ auto_dir + '/roles/infra_configure' }}: create primary cluster"
+    - name: "infra_configure: create primary cluster"
       include_role:
-        name: "{{ auto_dir + '/roles/infra_configure' }}"
+        name: infra_configure
         tasks_from: task_create_cluster.yml
       run_once: true
       when:
         - hostvars[groups['vcenter'][0]]['cluster_host1'] == ''
-    - name: "{{ auto_dir + '/roles/infra_configure' }}: create DR cluster"
+    - name: "infra_configure: create DR cluster"
       include_role:
-        name: "{{ auto_dir + '/roles/infra_configure' }}"
+        name: infra_configure
         tasks_from: task_create_drcluster.yml
       run_once: true
       when:

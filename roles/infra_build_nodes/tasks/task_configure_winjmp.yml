@@ -11,7 +11,7 @@
     delay: 60
 
   - block:
-    - name: First retry Windows Jump Server Deployment
+    - name: First Retry Windows Jump Server Deployment
       include_tasks: task_deploy_winjmp.yml
 
     - name: Wait for first retry Windows Jump Server OVA deployment
@@ -35,7 +35,7 @@
           force: yes
           validate_certs: no
 
-      - name: Second retry Windows Jump Server Deployment
+      - name: Second Retry Windows Jump Server Deployment
         include_tasks: task_deploy_winjmp.yml
 
       - name: Wait for second retry Windows Jump Server OVA deployment

@@ -5,4 +5,4 @@
   gather_facts: no
 
   roles:
-    - role: "{{ auto_dir }}/roles/notify"
+    - role: notify

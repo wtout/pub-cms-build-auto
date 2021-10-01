@@ -42,7 +42,7 @@
       - customer.disaster_recovery
       - "'dr' in group_names"
   
-  - name: Create additional primary DNS records
+  - name: Create Additional Primary DNS Records
     include_tasks:
       file: task_manage_adtl_records.yml
       apply:
@@ -54,7 +54,7 @@
     when:
       - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
   
-  - name: Create additional secondary DNS records
+  - name: Create Additional Secondary DNS Records
     include_tasks:
       file: task_manage_adtl_records.yml
       apply:

@@ -79,12 +79,12 @@
       set_fact:
         sdid: "{{ disk_info | map(attribute='diskid') | list }}"
     - block:
-      - name: delete created datastores
+      - name: Delete Created Datastores
         include_tasks: task_delete_datastores.yml
       - name: wait for datastores to be deleted on {{ resource }}
         wait_for:
           timeout: 10
-      - name: create datastores
+      - name: Create Datastores
         include_tasks:
           file: task_create_host_datastores.yml
           apply:
@@ -103,13 +103,13 @@
 
   - block:
     - block:
-      - name: delete existing datastores
+      - name: Delete Existing Datastores
         include_tasks: task_delete_datastores.yml
       - name: wait for datastores to be deleted on {{ resource }}
         wait_for:
           timeout: 10
       when: (existing_datastores.datastores != [] and existing_datastores.datastores|length != canonical|length) or delete_default_datastore|default(false)
-    - name: create datastores
+    - name: Create Datastores
       include_tasks:
         file: task_create_host_datastores.yml
         apply:
@@ -142,12 +142,12 @@
       set_fact:
         sdid: "{{ disk_info | map(attribute='diskid') | list }}"
     - block:
-      - name: delete created datastores
+      - name: Delete Created Datastores
         include_tasks: task_delete_datastores.yml
       - name: wait for datastores to be deleted on {{ resource }}
         wait_for:
           timeout: 10
-      - name: create datastores
+      - name: Create Datastores
         include_tasks:
           file: task_create_host_datastores.yml
           apply:
