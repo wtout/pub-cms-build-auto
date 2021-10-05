@@ -9,7 +9,7 @@
 #      when:
 #        - information.resources is not defined or information.resources == []
 
-    - include_tasks: task_get_datastore_facts.yml
+    - include_tasks: task_get_datastore_info.yml
     when:
       - information.deptype == 'h'
 
