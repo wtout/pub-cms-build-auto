@@ -60,23 +60,12 @@
 
 - name: expand disk1
   shell: |
-    pvcreate /dev/sdb
-    vgcreate vgroup2 /dev/sdb
+    {{ 'parted --script /dev/sdb mklabel gpt mkpart vgroup2 0% 100% set 1 lvm on' if vm.name is search('mdr') else '' }}
+    pvcreate /dev/{{ 'sdb1' if vm.name is search('mdr') else 'sdb' }}
+    vgcreate vgroup2 /dev/{{ 'sdb1' if vm.name is search('mdr') else 'sdb' }}
     lvcreate -l100%FREE -n opt /dev/vgroup2
   become: "{{ true if ansible_user != 'root' else false }}"
   notify: create disk1 filesystem
-  when: vm.name is not search('mdr')
-  tags: vm_creation
-
-- name: expand disk1
-  shell: |
-    parted --script /dev/sdb mklabel gpt mkpart vgroup2 0% 100% set 1 lvm on
-    pvcreate /dev/sdb1
-    vgcreate vgroup2 /dev/sdb1
-    lvcreate -l100%FREE -n opt /dev/vgroup2
-  become: "{{ true if ansible_user != 'root' else false }}"
-  notify: create disk1 filesystem
-  when: vm.name is search('mdr')
   tags: vm_creation
 
 - name: create disk1 filesystem
