@@ -6,6 +6,7 @@
       {{ 'sudo -S' if ansible_user != 'root' else '' }} crontab -l {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | grep qs
     register: reg_bk_cronjob
     args:
+    ignore_errors: yes
       warn: false
     check_mode: no
     no_log: yes
