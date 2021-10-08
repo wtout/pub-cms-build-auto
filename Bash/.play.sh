@@ -259,7 +259,7 @@ function remove_extra_vars_arg() {
 	if [[ ${MYACTION} == "clean" ]]
 	then
 		local MYARGS=$(echo ${@} | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
-		local NEWARGS=$(echo ${@} | sed "s/${ARG_NAME} ${MYARGS}//")
+		local NEWARGS=$(echo ${@} | sed "s|${ARG_NAME} ${MYARGS}||")
 	else
 		local NEWARGS=${@}
 	fi

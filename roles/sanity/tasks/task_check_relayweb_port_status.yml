@@ -3,12 +3,12 @@
 - block:
   - name: Check relayweb port is responding
     ansible.builtin.shell: |
-      $(which curl) -k --tlsv1.2 https://172.19.135.1:9001/isAlive
+      $(which curl) -k --tlsv1.2 https://{{ ansible_host }}:9001/isAlive
     register: reg_relayweb_port
     check_mode: no
-    ignore_errors: yes
   - name: define rly_relaywebport_status
     ansible.builtin.set_fact:
       rly_relaywebport_status: 'Relayweb port is not alive'
     when: reg_relayweb_port.stdout != 'yes'
   tags: sanity
+  

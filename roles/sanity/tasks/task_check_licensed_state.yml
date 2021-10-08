@@ -2,12 +2,18 @@
 # Tasks to check the licensed state on the EM7 DB
 - block:
   - name: check licensed_state
-    ansible.builtin.command: licensed_state
-    register: lic_state
-    ignore_errors: true
-    become: true
+    ansible.builtin.shell: |
+      sudo -S licensed_state <<< {{ ansible_ssh_pass }}
+    register: reg_lic_state
+    args:
+      warn: no
+    check_mode: no
+    ignore_errors: yes
+    no_log: yes
+  - debug:
+      msg: "{{ reg_lic_state|replace(ansible_ssh_pass, 'obfuscated') }}"
   - name: define lic_status
     ansible.builtin.set_fact:
-      licensed_status: "{{ lic_state.stdout }}"
-    when: lic_state is failed
+      licensed_status: "{{ reg_lic_state.stdout }}"
+    when: reg_lic_state is failed
   tags: sanity

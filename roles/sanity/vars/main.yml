@@ -1,5 +1,7 @@
 ---
 # vars file for roles/sanity
+rly_db_user: "{{ RLY_DB_USER }}"
+rly_db_pass: "{{ RLY_DB_PASS }}"
 chrony_file: '/etc/chrony.conf'
 relayweb_conf_file: '/opt/CSCO-CMS/relayweb/conf/common.properties'
 rly_csco_rpms:

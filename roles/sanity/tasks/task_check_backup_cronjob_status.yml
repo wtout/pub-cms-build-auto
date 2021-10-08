@@ -3,10 +3,14 @@
 - block:
   - name: check if there is a backup cronjob
     ansible.builtin.shell: |
-      crontab -l | grep qs
+      {{ 'sudo -S' if ansible_user != 'root' else '' }} crontab -l {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | grep qs
     register: reg_bk_cronjob
+    args:
+      warn: false
     check_mode: no
-    ignore_errors: true
+    no_log: yes
+  - debug:
+      msg: "{{ reg_bk_cronjob|replace(ansible_ssh_pass, 'obfuscated') }}"
   - name: define rly_backup_cronjob_status
     ansible.builtin.set_fact:
       rly_backup_cronjob_status: 'No backup cronjob found'

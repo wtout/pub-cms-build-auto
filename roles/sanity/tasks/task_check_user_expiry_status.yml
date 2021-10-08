@@ -3,21 +3,29 @@
 - block:
   - name: check status of {{ userid }} user account
     ansible.builtin.shell: |
-      chage -l {{ userid }} | egrep -i '^(password|account)'
+      {{ 'sudo -S' if ansible_user != 'root' else '' }} chage -l {{ userid }} {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | egrep -i '^(password|account)'
+    register: reg_acc_status
+    args:
+      warn: false
     check_mode: no
-    register: acc_status
-    ignore_errors: true
+    no_log: yes
+  - debug:
+      msg: "{{ reg_acc_status|replace(ansible_ssh_pass, 'obfuscated') }}"
   - name: define user_expiry_status
     ansible.builtin.set_fact:
-      user_expiry_status: "{{ acc_status.stderr }}"
-    when: acc_status.stderr is search('does not exist in /etc/passwd')
+      user_expiry_status: "{{ reg_acc_status.stderr }}"
+    when:
+      - reg_acc_status.stderr is defined
+      - reg_acc_status.stderr is search('does not exist in /etc/passwd')
   - name: define user_expiry_status
     ansible.builtin.set_fact:
       user_expiry_status: "{{ user_expiry_status|default([]) + [loop_item] }}"
-    loop: "{{ acc_status.stdout_lines | reject('search', 'never') }}"
+    loop: "{{ reg_acc_status.stdout_lines | reject('search', 'never') }}"
     loop_control:
       loop_var: loop_item
     when:
-      - acc_status.stderr is not search('does not exist in /etc/passwd')
-      - acc_status.stdout_lines | reject('search', 'never') | length >= 1
+      - reg_acc_status.stderr is defined
+      - reg_acc_status.stdout_lines is defined
+      - reg_acc_status.stderr is not search('does not exist in /etc/passwd')
+      - reg_acc_status.stdout_lines | reject('search', 'never') | length >= 1
   tags: sanity

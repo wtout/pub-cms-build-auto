@@ -3,9 +3,13 @@
 - block:
   - name: get list of databases
     ansible.builtin.shell: |
-      mysql -u root -paQxkE4z2mKfqznUcTG5h --execute="SHOW DATABASES;"
+      mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="SHOW DATABASES;"
     register: reg_list_dbs
+    ignore_errors: true
     check_mode: no
+    no_log: yes
+  - debug:
+      msg: "{{ reg_list_dbs|replace(rly_db_pass, 'obfuscated') }}"
   - name: define rly_dbs_status
     ansible.builtin.set_fact:
       rly_db_status: "{{ rly_db_list | difference(reg_list_dbs.stdout_lines | reject('search', '^Database$')) }} DB is missing"
@@ -17,9 +21,12 @@
   - block:
     - name: get number of DataExtractor config rules
       ansible.builtin.shell: |
-        mysql -u root -paQxkE4z2mKfqznUcTG5h --execute="select count(*) as DEConfigCount from DataExtractor.DataExtConfigurations;"
+        mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="select count(*) as DEConfigCount from DataExtractor.DataExtConfigurations;"
       register: reg_config_count
       check_mode: no
+      no_log: yes
+    - debug:
+        msg: "{{ reg_config_count|replace(rly_db_pass, 'obfuscated') }}"
     - name: define rly_deconfigcount_status
       ansible.builtin.set_fact:
         rly_deconfigcount_status: "DEConfigCount is {{ reg_config_count.stdout_lines|last }} instead of 1131"
@@ -28,9 +35,12 @@
   - block:
     - name: get number of relaydb syslog rules
       ansible.builtin.shell: |
-        mysql -u root -paQxkE4z2mKfqznUcTG5h --execute="select count(*) as SyslogRulesCount from relaydb.syslog_rules;"
+        mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="select count(*) as SyslogRulesCount from relaydb.syslog_rules;"
       register: reg_syslogrules_count
       check_mode: no
+      no_log: yes
+    - debug:
+        msg: "{{ reg_syslogrules_count|replace(rly_db_pass, 'obfuscated') }}"
     - name: define rly_syslogrulescount_status
       ansible.builtin.set_fact:
         rly_syslogrulescount_status: "SyslogRulesCount is {{ reg_syslogrules_count.stdout_lines|last }} instead of 669"

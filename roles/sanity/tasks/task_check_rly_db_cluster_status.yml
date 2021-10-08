@@ -3,9 +3,12 @@
 - block:
   - name: get the global status
     ansible.builtin.shell: |
-      mysql -u root -paQxkE4z2mKfqznUcTG5h --execute="SHOW GLOBAL STATUS WHERE Variable_name IN ('wsrep_ready','wsrep_cluster_size','wsrep_cluster_status','wsrep_local_state_comment','wsrep_last_committed','wsrep_incoming_addresses','wsrep_connected','wsrep_evs_state','wsrep_protocol_version','wsrep_provider_name','wsrep_provider_version','wsrep_cluster_state_uuid','wsrep_cluster_conf_id','wsrep_local_recv_queue_avg','wsrep_sst_donor','wsrep_sst_receive_address');"
+      mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="SHOW GLOBAL STATUS WHERE Variable_name IN ('wsrep_ready','wsrep_cluster_size','wsrep_cluster_status','wsrep_local_state_comment','wsrep_last_committed','wsrep_incoming_addresses','wsrep_connected','wsrep_evs_state','wsrep_protocol_version','wsrep_provider_name','wsrep_provider_version','wsrep_cluster_state_uuid','wsrep_cluster_conf_id','wsrep_local_recv_queue_avg','wsrep_sst_donor','wsrep_sst_receive_address');"
     register: reg_global_status
     check_mode: no
+    no_log: yes
+  - debug:
+      msg: "{{ reg_global_status|replace(rly_db_pass, 'obfuscated') }}"
   - name: define rly_cluster_size_status
     ansible.builtin.set_fact:
       rly_cluster_size_status: "Cluster size is {{ (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last }} instead of {{ '3' if customer.disaster_recovery else '1' if groups['rly']|length == 1 else '2' }}"

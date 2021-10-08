@@ -11,9 +11,12 @@
     check_mode: no
   - name: get {{ prt_designation }} portal server grant from DB
     ansible.builtin.shell: |
-      mysql -u root -paQxkE4z2mKfqznUcTG5h --execute="select Host,User,Password from mysql.user where user='rsuser' and host='{{ reg_prt_ip.stdout.split('=')|last }}';"
+      mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="select Host,User,Password from mysql.user where user='rsuser' and host='{{ reg_prt_ip.stdout.split('=')|last }}';"
     register: reg_grant
     check_mode: no
+    no_log: yes
+  - debug:
+      msg: "{{ reg_grant|replace(rly_db_pass, 'obfuscated') }}"
   - name: define rly_prt_grant_status
     ansible.builtin.set_fact:
       "rly_reportstore_status": "{{ rly_reportstore_status|default([]) + ['No grants for ' + prt_designation + '_em7_portal_server_ip with IP ' + reg_prt_ip.stdout.split('=')|last] }}"

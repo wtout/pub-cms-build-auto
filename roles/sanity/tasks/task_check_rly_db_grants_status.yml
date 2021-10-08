@@ -3,10 +3,12 @@
 - block:
   - name: get DB grants
     ansible.builtin.shell: |
-      mysql -u root -paQxkE4z2mKfqznUcTG5h --execute="select Host, User from mysql.user;"
+      mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="select Host, User from mysql.user;"
     register: reg_db_grants
     check_mode: no
-    ignore_errors: true
+    no_log: yes
+  - debug:
+      msg: "{{ reg_db_grants|replace(rly_db_pass, 'obfuscated') }}"
   - name: define rly_db_grants_status
     ansible.builtin.set_fact:
       rly_db_grants_status: "{{ 'The following DB grants are missing: ' + req_db_grants|difference(reg_db_grants.stdout_lines[1:])|join(',') }}"

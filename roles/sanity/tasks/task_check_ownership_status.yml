@@ -3,21 +3,30 @@
 - block:
   - name: check ownership status of {{ dirid }}
     ansible.builtin.shell: |
-      stat -L -c "%U %G %n" {{ dirid }}
-    check_mode: no
-    register: dir_status
+      {{ 'sudo -S' if ansible_user != 'root' else '' }} stat -L -c "%U %G %n" {{ dirid }} {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}
+    register: reg_dir_status
+    args:
+      warn: false
     ignore_errors: true
+    check_mode: no
+    no_log: yes
+  - debug:
+      msg: "{{ reg_dir_status|replace(ansible_ssh_pass, 'obfuscated') }}"
   - name: define ownership status
     ansible.builtin.set_fact:
       ownership_status: ["{{ dirid | replace('*', '') }} is empty"]
-    when: dir_status.stderr is search('No such file or directory')
+    when: reg_dir_status.stderr is search('No such file or directory')
+  - name: define ownership status
+    ansible.builtin.set_fact:
+      ownership_status: ["{{ reg_dir_status.stderr }}"]
+    when: reg_dir_status.stderr is search('Permission denied')
   - name: define ownership status
     ansible.builtin.set_fact:
       ownership_status: "{{ ownership_status|default([]) + [loop_item] }}"
-    loop: "{{ dir_status.stdout_lines }}"
+    loop: "{{ reg_dir_status.stdout_lines }}"
     loop_control:
       loop_var: loop_item
     when:
-      - dir_status.stderr is not search('No such file or directory')
+      - reg_dir_status.stderr is not search('No such file or directory')
       - loop_item is not search(userid + ' ' + groupid)
   tags: sanity
