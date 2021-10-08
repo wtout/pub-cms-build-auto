@@ -511,7 +511,7 @@ function disable_logging() {
 		unset ANSIBLE_LOG_PATH
 		NEW_LOG_FILE=${LOG_FILE}.$(ls --full-time ${LOG_FILE} | awk '{print $6"-"$7}')
 		chmod 444 ${LOG_FILE}
-		mv ${LOG_FILE} ${NEW_LOG_FILE}
+		mv -f ${LOG_FILE} ${NEW_LOG_FILE}
 		printf "\nThe log file is ${BOLD}${NEW_LOG_FILE}${NORMAL}\n\n"
 	fi
 }
