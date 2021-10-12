@@ -5,6 +5,7 @@
     ansible.builtin.shell: |
       {{ 'sudo -S' if ansible_user != 'root' else '' }} chage -l {{ userid }} {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | egrep -i '^(password|account)'
     register: reg_acc_status
+    ignore_errors: yes
     args:
       warn: false
     check_mode: no
