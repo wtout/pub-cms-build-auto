@@ -12,7 +12,7 @@
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      disk_provisioning: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
+      disk_provisioning: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
       cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
       datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
       folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"

@@ -77,7 +77,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk0_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
+          type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk0_datastore }}"
           controller_number: 0
           controller_type: 'lsilogic'
@@ -100,7 +100,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk1_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
+          type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk1_datastore }}"
           controller_number: 0
           controller_type: 'lsilogic'
@@ -123,7 +123,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk2_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
+          type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk2_datastore }}"
           controller_number: 0
           controller_type: 'lsilogic'
@@ -147,7 +147,7 @@
       name: "{{ vm.name }}"
       disk:
         - size_kb: "{{ disk3_size_kb }}"
-          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
+          type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
           datastore: "{{ disk3_datastore }}"
           controller_number: 0
           controller_type: 'lsilogic'

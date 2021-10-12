@@ -29,6 +29,8 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.em7.disk2 if (environment_definition.vm_setting.em7.disk2 is defined and environment_definition.vm_setting.em7.disk2 != none) else '0' }}"
     disk3: "{{ environment_definition.vm_setting.em7.disk3 if (environment_definition.vm_setting.em7.disk3 is defined and environment_definition.vm_setting.em7.disk3 != none) else '0' }}"
 
+    disk_provisioning: "{{ environment_definition.vm_setting.em7.disk_provisioning if (environment_definition.vm_setting.em7.disk_provisioning is defined and environment_definition.vm_setting.em7.disk_provisioning != none) else '' }}"
+
     vmname: "{{ environment_definition.vm_setting.em7.vmname if (environment_definition.vm_setting.em7.vmname is defined and environment_definition.vm_setting.em7.vmname != none) else '' }}"
 
     # Network interface 1
@@ -114,7 +116,9 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.spl.disk2 if (environment_definition.vm_setting.spl.disk2 is defined and environment_definition.vm_setting.spl.disk2 != none) else '100' }}"
     disk3: "{{ environment_definition.vm_setting.spl.disk3 if (environment_definition.vm_setting.spl.disk3 is defined and environment_definition.vm_setting.spl.disk3 != none) else '200' }}"
 
-    vmname: "{{ environment_definition.vm_setting.spl.vmname if (environment_definition.vm_setting.spl.vmname is defined and environment_definition.vm_setting.spl.vmname != none) else '' }}"
+    disk_provisioning: "{{ environment_definition.vm_setting.spl.disk_provisioning if (environment_definition.vm_setting.spl.disk_provisioning is defined and environment_definition.vm_setting.spl.disk_provisioning != none) else '' }}"
+
+    vmname: "{{ environment_definition.vm_setting.spl.vmname if (    vmname: "{{ environment_definition.vm_setting.spl.vmname if (environment_definition.vm_setting.spl.vmname is defined and environment_definition.vm_setting.spl.vmname != none) else '' }}"
 
     # Network interface 1
     ################
@@ -198,6 +202,8 @@ vm_vars:
     disk1: "{{ environment_definition.vm_setting.lnxjmp.disk1 if (environment_definition.vm_setting.lnxjmp.disk1 is defined and environment_definition.vm_setting.lnxjmp.disk1 != none) else '25' }}"
     disk2: "{{ environment_definition.vm_setting.lnxjmp.disk2 if (environment_definition.vm_setting.lnxjmp.disk2 is defined and environment_definition.vm_setting.lnxjmp.disk2 != none) else '0' }}"
     disk3: "{{ environment_definition.vm_setting.lnxjmp.disk3 if (environment_definition.vm_setting.lnxjmp.disk3 is defined and environment_definition.vm_setting.lnxjmp.disk3 != none) else '0' }}"
+
+    disk_provisioning: "{{ environment_definition.vm_setting.lnxjmp.disk_provisioning if (environment_definition.vm_setting.lnxjmp.disk_provisioning is defined and environment_definition.vm_setting.lnxjmp.disk_provisioning != none) else '' }}"
 
     vmname: "{{ environment_definition.vm_setting.lnxjmp.vmname if (environment_definition.vm_setting.lnxjmp.vmname is defined and environment_definition.vm_setting.lnxjmp.vmname != none) else '' }}"
 
@@ -284,6 +290,8 @@ vm_vars:
     disk2: "{{ environment_definition.vm_setting.rly.disk2 if (environment_definition.vm_setting.rly.disk2 is defined and environment_definition.vm_setting.rly.disk2 != none) else '100' }}"
     disk3: "{{ environment_definition.vm_setting.rly.disk3 if (environment_definition.vm_setting.rly.disk3 is defined and environment_definition.vm_setting.rly.disk3 != none) else '450' }}"
 
+    disk_provisioning: "{{ environment_definition.vm_setting.rly.disk_provisioning if (environment_definition.vm_setting.rly.disk_provisioning is defined and environment_definition.vm_setting.rly.disk_provisioning != none) else '' }}"
+
     vmname: "{{ environment_definition.vm_setting.rly.vmname if (environment_definition.vm_setting.rly.vmname is defined and environment_definition.vm_setting.rly.vmname != none) else '' }}"
 
     # Network interface 1
@@ -369,6 +377,8 @@ vm_vars:
     disk1: "{{ environment_definition.vm_setting.atarly.disk1 if (environment_definition.vm_setting.atarly.disk1 is defined and environment_definition.vm_setting.atarly.disk1 != none) else '25' }}"
     disk2: "{{ environment_definition.vm_setting.atarly.disk2 if (environment_definition.vm_setting.atarly.disk2 is defined and environment_definition.vm_setting.atarly.disk2 != none) else '120' }}"
     disk3: "{{ environment_definition.vm_setting.atarly.disk3 if (environment_definition.vm_setting.atarly.disk3 is defined and environment_definition.vm_setting.atarly.disk3 != none) else '150' }}"
+
+    disk_provisioning: "{{ environment_definition.vm_setting.atarly.disk_provisioning if (environment_definition.vm_setting.atarly.disk_provisioning is defined and environment_definition.vm_setting.atarly.disk_provisioning != none) else '' }}"
 
     vmname: "{{ environment_definition.vm_setting.atarly.vmname if (environment_definition.vm_setting.atarly.vmname is defined and environment_definition.vm_setting.atarly.vmname != none) else '' }}"
 

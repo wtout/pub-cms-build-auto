@@ -74,10 +74,19 @@
   - name: Check credentials
     shell: sshpass -p {{ credentials.default_password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'exit'
     register: login_result
+    ignore_errors: yes
     no_log: true
     failed_when: login_result.rc != 0 and login_result.rc != 5 and login_result.rc != 6
     async: 600
     poll: 10
+
+  - debug:
+      msg: "{{ login_result|replace(credentials.default_password, 'obfuscated') }}"
+    when: login_result is failed
+
+  - ansible.builtin.assert:
+      that: login_result is succeeded
+      fail_msg: 'Unable to SSH to NSVPX'
 
   - name: Retry add Netscaler key to known_hosts
     known_hosts:

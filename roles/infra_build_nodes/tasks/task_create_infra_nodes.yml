@@ -40,6 +40,7 @@
       - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
       - ansible_play_batch | select('search', 'csr') | list | length >= 1
       - inventory_hostname is search('nexus')
+      - hostvars['csr01']['dhcp_address'] is defined
       - hostvars['csr01']['dhcp_address'] != ''
 
   - name: Update DR Nexus Switch
@@ -54,6 +55,7 @@
       - ansible_play_batch | select('search', 'dr') | list | length >= 1
       - ansible_play_batch | select('search', 'drcsr') | list | length >= 1
       - inventory_hostname is search('nexus')
+      - hostvars['drcsr01']['dhcp_address'] is defined
       - hostvars['drcsr01']['dhcp_address'] != ''
 
   - name: Configure Netscalers

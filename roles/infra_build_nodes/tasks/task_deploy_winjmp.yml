@@ -12,7 +12,7 @@
     name: "{{ vm.name }}"
     template: cms-win-js-v01
     customization_spec: cms-win-js-v01
-    convert: thick
+    convert: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
     validate_certs: no
   async: 3000
   poll: 0
