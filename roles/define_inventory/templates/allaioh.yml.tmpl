@@ -118,7 +118,7 @@ vm_vars:
 
     disk_provisioning: "{{ environment_definition.vm_setting.spl.disk_provisioning if (environment_definition.vm_setting.spl.disk_provisioning is defined and environment_definition.vm_setting.spl.disk_provisioning != none) else '' }}"
 
-    vmname: "{{ environment_definition.vm_setting.spl.vmname if (    vmname: "{{ environment_definition.vm_setting.spl.vmname if (environment_definition.vm_setting.spl.vmname is defined and environment_definition.vm_setting.spl.vmname != none) else '' }}"
+    vmname: "{{ environment_definition.vm_setting.spl.vmname if (environment_definition.vm_setting.spl.vmname is defined and environment_definition.vm_setting.spl.vmname != none) else '' }}"
 
     # Network interface 1
     ################
