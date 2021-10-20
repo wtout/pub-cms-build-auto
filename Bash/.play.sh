@@ -117,6 +117,41 @@ function get_centos_release() {
 	cat /etc/centos-release | sed 's/^.*\([0-9]\{1,\}\)\.[0-9]\{1,\}\.[0-9]\{1,\}.*$/\1/'
 }
 
+function get_creds_prefix() {
+	local DATACENTER=$(cat ${SYS_ALL} | sed "/^$/d" | sed -n "/datacenter/,/####/p" | sed -n "/${1}:/,+2p" | sed -n "/name:/,1p" | awk -F ': ' '{print $NF}')
+	if [[ "${?}" == 0 ]] && [[ "x${DATACENTER}" != "x" ]] && [[ "x${DATACENTER}" != "x''" ]]
+	then
+		case ${DATACENTER} in
+			Alln1 | RTP5 | *Build*)
+				local CREDS_PREFIX='PROD_'
+				;;
+			RTP-Staging)
+				local CREDS_PREFIX='STG_'
+				;;
+			PAE-External)
+				local CREDS_PREFIX='PAEEXT_'
+				;;
+			*)
+				local CREDS_PREFIX='PAETEST_'
+				;;
+		esac
+		echo ${CREDS_PREFIX}
+		return 0
+	else
+		return 1
+	fi
+}
+
+function get_svc_cred() {
+	if [[ $(get_creds_prefix ${1}) ]]
+	then
+		echo $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep ^$(get_creds_prefix ${1})SVC_${2^^} | cut -d "'" -f2)
+		return 0
+	else
+		return 1
+	fi
+}
+
 function get_proxy() {
 	chmod +x Bash/get*
 	grep '^proxy.*:.*@*' /etc/environment /etc/profile ~/.bashrc ~/.bash_profile &>/dev/null && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
@@ -147,19 +182,29 @@ function get_proxy() {
 				read -p "Enter a valid proxy username and press [ENTER]: " PUSER
 				read -s -p "Enter a valid proxy password and press [ENTER]: " PPASS
 			else
-				read -r PUSER <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_USER | cut -d "'" -f2)
-				read -r PPASS <<< $(view_vault vars/passwords.yml Bash/get_common_vault_pass.sh  | grep SVC_PASS | cut -d "'" -f2)
+				get_svc_cred primary user 1>/dev/null && read -r PPUSER <<< $(get_svc_cred primary user)
+				get_svc_cred primary pass 1>/dev/null && read -r PPPASS <<< $(get_svc_cred primary pass)
+				get_svc_cred secondary user 1>/dev/null && read -r SPUSER <<< $(get_svc_cred secondary user)
+				get_svc_cred secondary pass 1>/dev/null && read -r SPPASS <<< $(get_svc_cred secondary pass)
 			fi
-			local MYPROXY=$(echo ${MYPROXY} | sed -e "s|//.*@|//|g" -e "s|//|//${PUSER}:${PPASS}@|g")
+			local MYPROXY=$(echo ${MYPROXY} | sed -e "s|//.*@|//|g" -e "s|//|//${PPUSER}:${PPPASS}@|g")
 			curl --proxy $(echo ${MYPROXY}) ${PUBLIC_ADDRESS} &>/dev/null
 			if [[ ${?} -eq 0 ]]
 			then
 				echo ${MYPROXY}
 				return 0
 			else
-				[[ ${debug} == 1 ]] && debug=0 && set -x
-				echo -e "Proxy credentials are not valid. Aborting!\n"
-				return 1
+				local MYPROXY=$(echo ${MYPROXY} | sed -e "s|//.*@|//|g" -e "s|//|//${SPUSER}:${SPPASS}@|g")
+				curl --proxy $(echo ${MYPROXY}) ${PUBLIC_ADDRESS} &>/dev/null
+				if [[ ${?} -eq 0 ]]
+				then
+					echo ${MYPROXY}
+					return 0
+				else
+					[[ ${debug} == 1 ]] && debug=0 && set -x
+					echo -e "Proxy credentials are not valid. Aborting!\n"
+					return 1
+				fi
 			fi
 		fi
 	fi
@@ -484,18 +529,18 @@ function run_playbook() {
 		### Begin: Define the extra-vars argument list and bastion credentials vault name and password file
 		if [[ $(get_bastion_address) == '[]' ]]
 		then
-			local EVARGS="{$(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
+			local EVARGS="{SVCFILE: '${SVCVAULT}', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
 			local BCV=""
 		else
-			local EVARGS="{VFILE: '${CRVAULT}', SCRTFILE: 'Bash/get_creds_vault_pass.sh', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
+			local EVARGS="{SVCFILE: '${SVCVAULT}', VFILE: '${CRVAULT}', SCRTFILE: 'Bash/get_creds_vault_pass.sh', $(echo $0 | sed -e 's/.*play_\(.*\)\.sh/\1/'): true}"
 			local BCV="-e @${CRVAULT} --vault-password-file Bash/get_creds_vault_pass.sh"
 		fi
 		### End
 		if [[ -z ${MYINVOKER+x} ]]
 		then
-			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} -e @${PASSVAULT} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} ${@} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
+			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} -e @${PASSVAULT} -e @${SVCVAULT} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} ${@} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr
 		else
-			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} -e @${PASSVAULT} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} ${@} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr 1> /dev/null
+			ansible-playbook playbooks/site.yml -i ${INVENTORY_PATH} --extra-vars "${EVARGS}" ${ASK_PASS} -e @${PASSVAULT} -e @${SVCVAULT} --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @${ANSIBLE_VARS} ${@} -v 2> ${ANSIBLE_LOG_LOCATION}/${PID}.stderr 1> /dev/null
 		fi
 		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep  ${PASSVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSVAULT}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" ${ANSIBLE_LOG_LOCATION}/${PID}.stderr | grep ${CRVAULT}) != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f ${CRVAULT} && EC=1
@@ -558,6 +603,8 @@ ENAME=$(get_envname ${ORIG_ARGS})
 INVENTORY_PATH="${PWD}/inventories/${ENAME}"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
+SYS_ALL="${INVENTORY_PATH}/group_vars/all.yml"
+SVCVAULT="${PWD}/.svc_acct_creds_${ENAME}.yml"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- ${@} ${NEW_ARGS}
@@ -575,6 +622,13 @@ get_inventory ${@}
 get_hosts ${@}
 get_credentials ${@}
 enable_logging ${@}
+[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+get_svc_cred primary user 1>/dev/null && echo "PSVC_USER: '$(get_svc_cred primary user)'" > ${SVCVAULT}
+get_svc_cred primary pass 1>/dev/null && echo "PSVC_PASS: '$(get_svc_cred primary pass)'" >> ${SVCVAULT}
+get_svc_cred secondary user 1>/dev/null && echo "SSVC_USER: '$(get_svc_cred secondary user)'" >> ${SVCVAULT}
+get_svc_cred secondary pass 1>/dev/null && echo "SSVC_PASS: '$(get_svc_cred secondary pass)'" >> ${SVCVAULT}
+[[ ${debug} == 1 ]] && set -x
+encrypt_vault ${SVCVAULT} Bash/get_common_vault_pass.sh
 run_playbook ${@}
 disable_logging
 send_notification ${ORIG_ARGS}

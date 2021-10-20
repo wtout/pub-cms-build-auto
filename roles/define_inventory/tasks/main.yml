@@ -19,14 +19,14 @@
       nd: "{{ 'Primary number of Data Collectors is not defined' if (environment_definition.customer.primary.number_of_dcs is not defined or environment_definition.customer.primary.number_of_dcs == none) else '' }}"
       pn: "{{ 'Primary name_prefix is not defined' if (environment_definition.customer.primary.name_prefix is not defined or  environment_definition.customer.primary.name_prefix == none) else '' }}"
       po: "{{ 'Primary octets is not defined' if (environment_definition.customer.primary.octets is not defined or environment_definition.customer.primary.octets == none) else '' }}"
-      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.name_prefix is not defined or environment_definition.customer.secondary.name_prefix == none) and datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search('a')) else '' }}"
-      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.octets is not defined or environment_definition.customer.secondary.octets == none) and datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search('a')) else '' }}"
+      sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.name_prefix is not defined or environment_definition.customer.secondary.name_prefix == none)) else '' }}"
+      so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.octets is not defined or environment_definition.customer.secondary.octets == none)) else '' }}"
       rv: "{{ 'Release version is not defined' if (environment_definition.customer.version.release is not defined or environment_definition.customer.version.release == none) else '' }}"
       pdn: "{{ 'Datacenter name is not defined' if (environment_definition.datacenter.primary.name is not defined or environment_definition.datacenter.primary.name == none) else '' }}"
-      pdh: "{{ 'Primary Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and datacenters[environment_definition.datacenter.primary.name]['deptype'] is search('a') and (environment_definition.datacenter.primary.resources is not defined or environment_definition.datacenter.primary.resources == none)) else '' }}"
+      pdh: "{{ 'Primary Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and (environment_definition.datacenter.primary.resources is not defined or environment_definition.datacenter.primary.resources == none)) else '' }}"
       pdc: "{{ 'Primary Datacenter cluster is not defined. Will use esxi hosts IPs to define the primary cluster name' if (environment_definition.datacenter.primary.cluster == none and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
       sdn: "{{ 'Secondary Datacenter name is not defined' if environment_definition.customer.disaster_recovery and (environment_definition.datacenter.secondary.name is not defined or environment_definition.datacenter.secondary.name == none) else '' }}"
-      sdh: "{{ 'Secondary Datacenter resources is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search('a') and (environment_definition.datacenter.secondary.resources is not defined or environment_definition.datacenter.secondary.resources == none)) else '' }}"
+      sdh: "{{ 'Secondary Datacenter resources is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and (environment_definition.datacenter.secondary.resources is not defined or environment_definition.datacenter.secondary.resources == none)) else '' }}"
       sdc: "{{ 'Secondary Datacenter cluster is not defined. Will use esxi hosts IPs to define the secondary cluster name' if (environment_definition.customer.disaster_recovery and environment_definition.datacenter.secondary.cluster == none and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
       pps: "{{ 'Primary Puppet server_name is not defined' if (environment_definition.puppet is not defined or environment_definition.puppet.primary.server_name is not defined or environment_definition.puppet.primary.server_name == none) else '' }}"
       pys: "{{ 'Primary Yum server_name is not defined' if (environment_definition.yum is not defined or environment_definition.yum.primary.server_name is not defined or environment_definition.yum.primary.server_name == none) else '' }}"
@@ -139,6 +139,20 @@
       that:
         - not environment_definition.yum.secondary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]|sastgyrep01') == none
       fail_msg: "Secondary Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
+    when:
+      - environment_definition.customer.disaster_recovery
+
+  - name: verify that primary datacenter is supported
+    assert:
+      that:
+        - "datacenters[environment_definition.datacenter.primary.name] is defined"
+      fail_msg: "The primary datacenter selected, {{ environment_definition.datacenter.primary.name }}, is not in the list of supported datacenters. Aborting!"
+
+  - name: verify that secondary datacenter is supported
+    assert:
+      that:
+        - "datacenters[environment_definition.datacenter.secondary.name] is defined"
+      fail_msg: "The secondary datacenter selected, {{ environment_definition.datacenter.secondary.name }}, is not in the list of supported datacenters. Aborting!"
     when:
       - environment_definition.customer.disaster_recovery
 

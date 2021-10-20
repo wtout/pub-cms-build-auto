@@ -51,6 +51,15 @@ datacenters:
     storage_datastore: 'HX-DS-02'
     storage_path: ''
 
+  PAE-External:
+    vsphere: 'paexvcsa01.exrtp-pae.test'
+    deptype: 'a'
+    folder: ''
+    cluster: ''
+    datastore_cluster: ''
+    storage_datastore: ''
+    storage_path: ''
+
   Dev Engineering:
     vsphere: 'paevcenter01.cisco-pae.com'
     deptype: 'a'

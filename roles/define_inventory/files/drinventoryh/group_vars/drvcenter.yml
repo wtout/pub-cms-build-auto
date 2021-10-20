@@ -6,8 +6,8 @@ ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ ssh_username }}@{{ ssh_address }}"
 ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else '' }}"
 
 credentials:
-  username: "{{ datacenters[datacenter.secondary.name]['vsphere'].split('.')[-3] if datacenters[datacenter.secondary.name]['vsphere']|lower is search('staging') else datacenters[datacenter.secondary.name]['vsphere'].split('.')[-2].split('-')|last }}\\{{ SVC_USER | default('') }}"
-  password: "{{ SVC_PASS | default('') }}"
+  username: "{{ datacenters[datacenter.secondary.name]['vsphere'].split('.')[-3] if datacenters[datacenter.secondary.name]['vsphere']|lower is search('staging') else datacenters[datacenter.secondary.name]['vsphere'].split('.')[-2] if datacenters[datacenter.secondary.name]['vsphere']|lower is search('exrtp') else datacenters[datacenter.secondary.name]['vsphere'].split('.')[-2].split('-')|last }}\\{{ SSVC_USER | default('') }}"
+  password: "{{ SSVC_PASS | default('') }}"
 
 cluster_name: "{{ (datacenter.secondary.resources[0].split('.')|last if datacenter.secondary.resources[0].split('.')|last | regex_search('[0-9]{1,3}') else datacenter.secondary.resources[0].split('.')|first) if datacenter.secondary.resources|length == 1 else ((datacenter.secondary.resources[0].split('.')|last if datacenter.secondary.resources[0].split('.')|last | regex_search('[0-9]{1,3}') else datacenter.secondary.resources[0].split('.')|first) + '-' + (datacenter.secondary.resources[1].split('.')|last if datacenter.secondary.resources[1].split('.')|last | regex_search('[0-9]{1,3}') else datacenter.secondary.resources[1].split('.')|first)) if datacenter.secondary.resources != [] and datacenter.secondary.resources != [''] else '' }}"
 
