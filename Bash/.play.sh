@@ -118,7 +118,8 @@ function get_centos_release() {
 }
 
 function get_creds_prefix() {
-	local DATACENTER=$(cat ${SYS_DEF} | sed "/^$/d" | grep -A14 -P "^datacenter:$" | sed -n "/${1}:/,+2p" | sed -n "/name:/,1p" | awk -F ': ' '{print $NF}')
+	[[ -f ${SYS_DEF} ]] && local FILETOCHECK=${SYS_DEF} || local FILETOCHECK=${SYS_ALL}
+	local DATACENTER=$(cat ${FILETOCHECK} | sed "/^$/d" | grep -A14 -P "^datacenter:$" | sed -n "/${1}:/,+2p" | sed -n "/name:/,1p" | awk -F ': ' '{print $NF}')
 	if [[ "${?}" == 0 ]] && [[ "x${DATACENTER}" != "x" ]] && [[ "x${DATACENTER}" != "x''" ]]
 	then
 		case ${DATACENTER} in
@@ -603,6 +604,7 @@ ENAME=$(get_envname ${ORIG_ARGS})
 INVENTORY_PATH="${PWD}/inventories/${ENAME}"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
+SYS_ALL="${INVENTORY_PATH}/group_vars/all.yml"
 SVCVAULT="${PWD}/.svc_acct_creds_${ENAME}.yml"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
