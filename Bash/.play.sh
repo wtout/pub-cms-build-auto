@@ -118,7 +118,7 @@ function get_centos_release() {
 }
 
 function get_creds_prefix() {
-	local DATACENTER=$(cat ${SYS_ALL} | sed "/^$/d" | sed -n "/datacenter/,/####/p" | sed -n "/${1}:/,+2p" | sed -n "/name:/,1p" | awk -F ': ' '{print $NF}')
+	local DATACENTER=$(cat ${SYS_DEF} | sed "/^$/d" | grep -A14 -P "^datacenter:$" | sed -n "/${1}:/,+2p" | sed -n "/name:/,1p" | awk -F ': ' '{print $NF}')
 	if [[ "${?}" == 0 ]] && [[ "x${DATACENTER}" != "x" ]] && [[ "x${DATACENTER}" != "x''" ]]
 	then
 		case ${DATACENTER} in
@@ -312,7 +312,7 @@ function remove_extra_vars_arg() {
 }
 
 function install_pypkgs() {
-	ansible-playbook playbooks/pypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v -e @${PASSVAULT} --vault-password-file Bash/get_common_vault_pass.sh
+	ansible-playbook playbooks/pypkgs.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" $(remove_extra_vars_arg $(remove_hosts_arg ${@})) -e @${ANSIBLE_VARS} -v -e @${PASSVAULT} -e @${SVCVAULT} --vault-password-file Bash/get_common_vault_pass.sh
 	INSTALL_PYPKGS_STATUS=${?}
 	[[ ${INSTALL_PYPKGS_STATUS} != 0 ]] && echo -e "\n${BOLD}Unable to install Python packages successfully. Aborting!${NORMAL}" && exit 1
 }
@@ -570,11 +570,11 @@ function send_notification() {
 		if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
 		then
 			# Send playbook status notification
-			ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @${ANSIBLE_VARS} -v &>/dev/null &
+			ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${SVCVAULT}', SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @${SVCVAULT} --vault-password-file Bash/get_common_vault_pass.sh -e @${ANSIBLE_VARS} -v &>/dev/null &
 		else
 			[[ -z ${MYINVOKER+x} ]] && local INVOKED=false || local INVOKED=true
 			# Send playbook status notification
-			ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}', INVOKED: ${INVOKED}}" --tags notify -e @${ANSIBLE_VARS} -v
+			ansible-playbook playbooks/notify.yml --extra-vars "{SNAME: '$(basename ${0})', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}', INVOKED: ${INVOKED}}" --tags notify -e @${SVCVAULT} --vault-password-file Bash/get_common_vault_pass.sh -e @${ANSIBLE_VARS} -v
 		fi
 	fi
 }
@@ -603,7 +603,6 @@ ENAME=$(get_envname ${ORIG_ARGS})
 INVENTORY_PATH="${PWD}/inventories/${ENAME}"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 SYS_DEF="${PWD}/Definitions/${ENAME}.yml"
-SYS_ALL="${INVENTORY_PATH}/group_vars/all.yml"
 SVCVAULT="${PWD}/.svc_acct_creds_${ENAME}.yml"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
@@ -616,18 +615,18 @@ then
 	install_packages
 	check_updates ${REPOVAULT} Bash/get_repo_vault_pass.sh
 fi
-install_pypkgs ${@}
-get_inventory ${@}
-[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
-get_hosts ${@}
-get_credentials ${@}
-enable_logging ${@}
 [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 get_svc_cred primary user 1>/dev/null && echo "PSVC_USER: '$(get_svc_cred primary user)'" > ${SVCVAULT}
 get_svc_cred primary pass 1>/dev/null && echo "PSVC_PASS: '$(get_svc_cred primary pass)'" >> ${SVCVAULT}
 get_svc_cred secondary user 1>/dev/null && echo "SSVC_USER: '$(get_svc_cred secondary user)'" >> ${SVCVAULT}
 get_svc_cred secondary pass 1>/dev/null && echo "SSVC_PASS: '$(get_svc_cred secondary pass)'" >> ${SVCVAULT}
 [[ ${debug} == 1 ]] && set -x
+install_pypkgs ${@}
+get_inventory ${@}
+[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep ${SLEEPTIME}
+get_hosts ${@}
+get_credentials ${@}
+enable_logging ${@}
 encrypt_vault ${SVCVAULT} Bash/get_common_vault_pass.sh
 run_playbook ${@}
 disable_logging

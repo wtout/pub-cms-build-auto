@@ -13,17 +13,6 @@
       - groups['bastion']|length >= 1
       - hostvars[task_item]['ansible_host'] != ''
 
-  - name: delete svc acct vault file
-    file:
-      path: "{{ file_item }}"
-      state: absent
-    loop:
-      - "{{ SVCFILE | default('') }}"
-    loop_control:
-      loop_var: file_item
-    when: file_item != ''
-    check_mode: no
-
   - include_tasks:
       file: task_validate_vcenter_creds.yml
       apply:

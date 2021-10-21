@@ -3,44 +3,72 @@
 - block:
   - name: get proxy setting
     shell: grep -r "^proxy.*=.*" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq
-    register: proxy_string
+    register: reg_proxy_string
     no_log: true
     check_mode: no
 
   - name: define proxy_address
     set_fact:
-      proxy_address: "{{ 'http://' + proxy_string.stdout if proxy_string.stdout is not search('http') else proxy_string.stdout }}"
-    no_log: "{{ true if proxy_string.stdout is regex(':.*@') else false }}"
+      proxy_address: "{{ 'http://' + reg_proxy_string.stdout if reg_proxy_string.stdout is not search('http') else reg_proxy_string.stdout }}"
+    no_log: "{{ true if reg_proxy_string.stdout is regex(':.*@') else false }}"
 
   - name: validate detected proxy setting
     uri:
       url: "https://time.google.com"
-    register: validate_proxy1
+    register: reg_validate_proxy1
     ignore_errors: "{{ true if proxy_address != '' else false }}"
     environment:
       http_proxy: "{{ proxy_address }}"
       https_proxy: "{{ proxy_address }}"
 
   - block:
-    - name: update proxy_address
+    - name: update proxy_address with primary {{ PSVC_USER }} credentials
       set_fact:
-        proxy_address: "{{ proxy_address | regex_replace('//.*@', '//') | regex_replace('//', '//' + SVC_USER + ':' + SVC_PASS + '@') }}"
+        proxy_address: "{{ proxy_address | regex_replace('//.*@', '//') | regex_replace('//', '//' + PSVC_USER + ':' + PSVC_PASS + '@') }}"
       no_log: true
-    - name: validate updated proxy setting
+    - name: validate updated proxy setting with primary {{ PSVC_USER }} credentials
       uri:
         url: "https://time.google.com"
-      register: validate_proxy2
+      register: reg_validate_proxyp
       ignore_errors: true
       environment:
         http_proxy: "{{ proxy_address }}"
         https_proxy: "{{ proxy_address }}"
-    - name: check if updated proxy address failed
+    - name: check if updated proxy address with primary {{ PSVC_USER }} credentials failed
       assert:
         that:
-          - validate_proxy2 is succeeded
-        fail_msg: "{{ SVC_USER }} service account credentials are not valid for the detected proxy. Aborting!"
+          - reg_validate_proxyp is succeeded
+        fail_msg: "Primary {{ PSVC_USER }} service account credentials are not valid for the detected proxy. Aborting!"
+      when: SSVC_USER is not defined
+    - block:
+      - name: check if updated proxy address with primary {{ PSVC_USER }} account failed
+        assert:
+          that:
+            - reg_validate_proxyp is succeeded
+          fail_msg: "Primary {{ PSVC_USER }} service account credentials are not valid for the detected proxy. Trying with secondary {{ SSVC_USER }}"
+        ignore_errors: yes
+      - name: update proxy_address with secondary {{ SSVC_USER }} credentials
+        set_fact:
+          proxy_address: "{{ proxy_address | regex_replace('//.*@', '//') | regex_replace('//', '//' + SSVC_USER + ':' + SSVC_PASS + '@') }}"
+        no_log: true
+      - name: validate updated proxy setting with secondary {{ SSVC_USER }} credentials
+        uri:
+          url: "https://time.google.com"
+        register: reg_validate_proxys
+        ignore_errors: true
+        environment:
+          http_proxy: "{{ proxy_address }}"
+          https_proxy: "{{ proxy_address }}"
+      - name: check if updated proxy address with secondary {{ SSVC_USER }} account failed
+        assert:
+          that:
+            - reg_validate_proxys is succeeded
+          fail_msg: "Secondary {{ SSVC_USER }} service account credentials are not valid for the detected proxy. Aborting!"
+      when:
+        - SSVC_USER is defined
+        - reg_validate_proxyp is failed
     when:
-      - validate_proxy1 is failed
+      - reg_validate_proxy1 is failed
 
   when: auto_dir is not search('cdra')
   delegate_to: "{{ host_delegate|default('localhost') }}"

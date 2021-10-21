@@ -1,6 +1,16 @@
 ---
 # Tasks for notify
 - block:
+  - name: delete svc acct vault file
+    file:
+      path: "{{ file_item }}"
+      state: absent
+    loop:
+      - "{{ SVCFILE | default('') }}"
+    loop_control:
+      loop_var: file_item
+    when: file_item != ''
+    check_mode: no
   - name: Get playbook status from {{ LFILE }}
     ansible.builtin.shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP/,+{{ NHOSTS }}p' {{ LFILE }} | grep -v awk | egrep 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
     register: playbook_status

@@ -1,9 +1,12 @@
 ---
 # Tasks to verify access to keeper
 - block:
+  - name: define keeper host
+    ansible.builtin.set_fact:
+      keeper_host: "{{ ('alpha' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is not search('Alln1|RTP5') else '') + 'west' }}"
   - name: check access to keeper
     ansible.builtin.shell: |
-       sh keeper_control.sh --host=west --list_customers --cert={{ keeper.token_filename }}
+       sh keeper_control.sh --host={{ keeper_host }} --list_customers --cert={{ keeper.token_filename }}
     args:
       chdir: "{{ spl_ansible_path }}"
     register: reg_keeper_access
@@ -26,7 +29,7 @@
         loop_var: file_item
     - name: Load Customer Credentials into the Customer Password Vault
       ansible.builtin.shell: |
-        sh keeper_control.sh --host=west --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ keeper.token_filename }}
+        sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ keeper.token_filename }}
       args:
         chdir: "{{ spl_ansible_path }}"
       register: reg_cust_creds
@@ -41,13 +44,13 @@
         - inventory_hostname is search('splfwd')
     - name: Load Core Credentials into the Password Vault
       ansible.builtin.shell: |
-        sh keeper_control.sh --host=west --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ keeper.token_filename }}
+        sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ keeper.token_filename }}
       args:
         chdir: "{{ spl_ansible_path }}"
       register: reg_core_creds
       failed_when: "'Error: getting ' in reg_core_creds.stdout"
       ignore_errors: true
-      no_log: true
+#      no_log: true
       when: inventory_hostname is not search('splfwd')
     - debug:
         msg: 'Core Credentials not found in Keeper'
@@ -74,6 +77,7 @@
         - phantom_config_assets.yml
       loop_control:
         loop_var: file_item
+    - pause:
     when: reg_keeper_access is succeeded
   delegate_to: localhost
   run_once: true
