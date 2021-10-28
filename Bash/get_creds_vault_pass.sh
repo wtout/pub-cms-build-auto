@@ -1,2 +1,2 @@
 #! /bin/bash
-ansible-vault view --vault-password-file Bash/get_repo_vault_pass.sh .repovault.yml | awk -F "'" '{print $2}'
+ansible-vault view .repovault.yml --vault-password-file Bash/get_repo_vault_pass.sh | awk -F "'" '{print $2}'

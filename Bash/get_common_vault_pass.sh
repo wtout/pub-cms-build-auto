@@ -1,5 +1,5 @@
 #! /bin/bash
-if [[ "x$(pwd | grep -i 'cdra')" == "x" ]]
+if [[ "$(pwd | grep -i 'cdra')" == "" ]]
 then
 	git config remote.origin.url | awk -F '/' '{print $NF}'
 else
