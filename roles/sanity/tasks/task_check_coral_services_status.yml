@@ -45,16 +45,6 @@
         loop: "{{ flty_svc_list }}"
         loop_control:
           loop_var: svc_item
-#      - include_tasks:
-#          file: task_check_service_state.yml
-#          apply:
-#            vars:
-#              svc_name: "{{ svc_item }}"
-#              reg_svc_list: "{{ reg_coral_services.stdout_lines }}"
-#              def_svc_list: "{{ rly_coral_services }}"
-#        loop: "{{ flty_svc_list }}"
-#        loop_control:
-#          loop_var: svc_item
       when: reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) | length >= 1
     when:
       - reg_docker_ps.stdout_lines|last is regex('ago[\\s]+Up[\\s][0-9]+')
