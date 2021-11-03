@@ -5,6 +5,7 @@
     ansible.builtin.shell: |
       mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="select Host, User from mysql.user;"
     register: reg_db_grants
+    ignore_errors: yes
     check_mode: no
     no_log: yes
   - debug:

@@ -14,15 +14,15 @@
       msg: "{{ reg_dir_status|replace(ansible_ssh_pass, 'obfuscated') }}"
   - name: define ownership status
     ansible.builtin.set_fact:
-      ownership_status: ["{{ dirid | replace('*', '') }} is empty"]
+      ownership_status: "{{ ownership_status|default([]) + [dirid | replace('*', '') + ' is empty'] }}"
     when: reg_dir_status.stderr is search('No such file or directory')
   - name: define ownership status
     ansible.builtin.set_fact:
-      ownership_status: ["{{ reg_dir_status.stderr }}"]
+      ownership_status: "{{ ownership_status|default([]) + [reg_dir_status.stderr] }}"
     when: reg_dir_status.stderr is search('Permission denied')
   - name: define ownership status
     ansible.builtin.set_fact:
-      ownership_status: "{{ ownership_status|default([]) + [loop_item] }}"
+      ownership_status: "{{ ownership_status|default([]) + [loop_item + ' instead of ' + userid + ' ' + groupid + ' ' + loop_item.split(' ')|last] }}"
     loop: "{{ reg_dir_status.stdout_lines }}"
     loop_control:
       loop_var: loop_item

@@ -7,6 +7,10 @@
     check_mode: no
     register: rly_spl_status
     ignore_errors: true
+    no_log: yes
+  - debug:
+      msg: "{{ rly_spl_status }}"
+    when: rly_spl_status is failed
   - name: define rly_splunk status
     ansible.builtin.set_fact:
       rly_splunk_status: 'splunk service is not running'

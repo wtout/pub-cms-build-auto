@@ -14,6 +14,7 @@
   - name: define rly_coral_container_status
     ansible.builtin.set_fact:
       rly_coral_container_status: 'Coral container is not up'
+      rly_coral_services_status: 'Coral services are not running'
     when: reg_docker_ps.stdout_lines|last is not regex('ago[\\s]+Up[\\s][0-9]+')
   - block:
     - name: check coral services on the container
@@ -33,16 +34,27 @@
         loop: "{{ reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) }}"
         loop_control:
           loop_var: svc_item
-      - include_tasks:
-          file: task_check_service_state.yml
-          apply:
-            vars:
-              svc_name: "{{ svc_item }}"
-              reg_svc_list: "{{ reg_coral_services.stdout_lines }}"
-              def_svc_list: "{{ rly_coral_services }}"
+      - name: define rly_coral_services_status
+        ansible.builtin.set_fact:
+          rly_coral_services_status: "{{ rly_coral_services_status|default([]) + ([svc_item + ' is not running in the container'] if svc_expected and not svc_registered else [svc_item + ' is not expected in the container'] if not svc_expected and svc_registered else [svc_item + ' expected state is ' + state_expected + ', got ' + state_registered] if svc_expected and svc_registered and state_expected != state_registered else ['']) }}"
+        vars:
+          svc_expected: "{{ true if rly_coral_services | select('search', svc_item)|list|length == 1 else false }}"
+          svc_registered: "{{ true if reg_coral_services.stdout_lines | select('search', svc_item)|list|length == 1 else false }}"
+          state_expected: "{{ (rly_coral_services|select('search', svc_item)|join).split(' ')|list|last }}"
+          state_registered: "{{ (reg_coral_services.stdout_lines|select('search', svc_item)|list|join).split(' ')|last }}"
         loop: "{{ flty_svc_list }}"
         loop_control:
           loop_var: svc_item
+#      - include_tasks:
+#          file: task_check_service_state.yml
+#          apply:
+#            vars:
+#              svc_name: "{{ svc_item }}"
+#              reg_svc_list: "{{ reg_coral_services.stdout_lines }}"
+#              def_svc_list: "{{ rly_coral_services }}"
+#        loop: "{{ flty_svc_list }}"
+#        loop_control:
+#          loop_var: svc_item
       when: reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) | length >= 1
     when:
       - reg_docker_ps.stdout_lines|last is regex('ago[\\s]+Up[\\s][0-9]+')

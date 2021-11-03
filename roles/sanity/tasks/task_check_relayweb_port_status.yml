@@ -5,6 +5,7 @@
     ansible.builtin.shell: |
       $(which curl) -k --tlsv1.2 https://{{ ansible_host }}:9001/isAlive
     register: reg_relayweb_port
+    ignore_errors: yes
     check_mode: no
   - name: define rly_relaywebport_status
     ansible.builtin.set_fact:

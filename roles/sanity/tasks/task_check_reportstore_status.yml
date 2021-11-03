@@ -13,6 +13,7 @@
     ansible.builtin.shell: |
       mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="select Host,User,Password from mysql.user where user='rsuser' and host='{{ reg_prt_ip.stdout.split('=')|last }}';"
     register: reg_grant
+    ignore_errors: yes
     check_mode: no
     no_log: yes
   - debug:
