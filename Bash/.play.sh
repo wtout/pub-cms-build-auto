@@ -173,7 +173,7 @@ function get_proxy() {
 	chmod +x Bash/get*
 	grep '^proxy.*:.*@*' /etc/environment /etc/profile ~/.bashrc ~/.bash_profile &>/dev/null && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 	MYPROXY=$(grep -r "^proxy.*=.*" /etc/environment /etc/profile ~/.bashrc ~/.bash_profile | cut -d '"' -f2 | uniq)
-	[[ "$(echo "${MYPROXY}" | grep http)" == "" ]] && MYPROXY=http://${MYPROXY}
+	[[ "${MYPROXY}" != "" ]] && [[ "$(echo "${MYPROXY}" | grep http)" == "" ]] && MYPROXY=http://${MYPROXY}
 	PUBLIC_ADDRESS="https://time.google.com"
 	if [[ "${MYPROXY}" == "" ]]
 	then
@@ -232,14 +232,17 @@ function get_proxy() {
 
 function add_proxy_yum() {
 	[[ ${#} -ne 2 ]] && echo -e "\nFunction add_proxy_yum requires 2 arguments\n" && exit 1
-	if [[ "${2}" != "" ]]
+	if [[ "${1}" != "" ]]
 	then
-		[[ "$(echo "${1}" | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-		grep '^proxy' /etc/yum.conf &>/dev/null || sudo -S sed -i "s|^\(\[main\]\)$|\1\nproxy=${1}|" /etc/yum.conf <<< "${2}"
-		[[ ${debug} == 1 ]] && debug=0 && set -x
-	else
-		echo -e "\nUnable to edit /etc/yum.conf without sudo password. Aborting!\n"
-		exit 1
+		if [[ "${2}" != "" ]]
+		then
+			[[ "$(echo "${1}" | grep ':.*@' &>/dev/null;echo ${?})" -eq 0 ]] && [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+			grep '^proxy' /etc/yum.conf &>/dev/null || sudo -S sed -i "s|^\(\[main\]\)$|\1\nproxy=${1}|" /etc/yum.conf <<< "${2}"
+			[[ ${debug} == 1 ]] && debug=0 && set -x
+		else
+			echo -e "\nUnable to edit /etc/yum.conf without sudo password. Aborting!\n"
+			exit 1
+		fi
 	fi
 }
 
