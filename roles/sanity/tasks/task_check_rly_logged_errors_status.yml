@@ -9,18 +9,21 @@
       warn: false
     ignore_errors: true
     check_mode: no
-    no_log: yes
+    no_log: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
   - debug:
       msg: "{{ reg_err_status|replace(ansible_ssh_pass, 'obfuscated') }}"
+    when: ansible_user != 'root'
   - name: define rly_errors_status
     ansible.builtin.set_fact:
-      rly_errors_status: "{{ rly_errors_status|default([]) + [reg_err_status.stderr|replace('^grep: ', '')] }}"
+      rly_errors: "{{ [reg_err_status.stderr|regex_replace('^.*password for.*?: ', '')|replace('grep: ', '')] }}"
+      rly_errors_status: "{{ rly_errors_status|default([]) + [reg_err_status.stderr|regex_replace('^.*password for.*?: ', '')|replace('grep: ', '')] }}"
     when:
       - reg_err_status is failed
       - reg_err_status.stderr is search('No such file or directory')
   - name: define rly_errors_status
     ansible.builtin.set_fact:
-      rly_errors_status: "{{ rly_errors_status|default([]) + ['Errors in ' + (fileid.split('/')|last).split('.')|first + ': ' + reg_err_status.stdout_lines|join(', ')] }}"
+      rly_errors: "{{ ['Errors in ' + fileid + ': '] }}"
+      rly_errors_status: "{{ rly_errors_status|default([]) + ['Errors in ' + fileid + ': ' + reg_err_status.stdout_lines|join(', ')] }}"
     when:
       - reg_err_status is succeeded
       - reg_err_status.stdout_lines|length >= 1

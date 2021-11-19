@@ -18,6 +18,7 @@
     - include_tasks: task_check_chrony_file.yml
     - include_tasks: task_check_cmsp_em7_file.yml
     - include_tasks: task_check_licensed_state.yml
+    - include_tasks: task_check_sudoers_user_status.yml
   when:
     - groups['em7']|length == 1
     - inventory_hostname is search('em7')

@@ -22,7 +22,7 @@
       when: reg_relayweb_config.stdout_lines[0].split('= ')|last != 'em7-message-collector-vip'
     - name: define rly_relayweb_conf_status
       ansible.builtin.set_fact:
-        rly_relayweb_conf_status: "{{ rly_relayweb_conf_status|default([]) + ['cluster.relay.dbpeer is not configured correctly in ' + relayweb_conf_file + '. Got ' + reg_relayweb_config.stdout_lines[1].split('= ')|last + ' instead of ' + (drrly_ip1_list[0] if 'dr' in group_names else rly_ip1_list[0] + ',' + ('' if 'dr' in group_names else rly_ip1_list[0] if groups['rly']|length == 1 else rly_ip1_list[1]))] }}"
-      when: reg_relayweb_config.stdout_lines[1].split('= ')|last != (drrly_ip1_list[0] if 'dr' in group_names else rly_ip1_list[0] + ',' + ('' if 'dr' in group_names else rly_ip1_list[0] if groups['rly']|length == 1 else rly_ip1_list[1]))
+        rly_relayweb_conf_status: "{{ rly_relayweb_conf_status|default([]) + ['cluster.relay.dbpeer is not configured correctly in ' + relayweb_conf_file + '. Got ' + reg_relayweb_config.stdout_lines[1].split('= ')|last + ' instead of ' + rly_ip1_list|join(',') + ((',' + drrly_ip1_list|join(',')) if drrly_ip1_list != [] and 'dr' in group_names else '')] }}"
+      when: reg_relayweb_config.stdout_lines[1].split('= ')|last != (rly_ip1_list|join(',') + ((',' + drrly_ip1_list|join(',')) if drrly_ip1_list != [] and 'dr' in group_names else ''))
     when: reg_rw_conf_file.stat.exists
   tags: sanity

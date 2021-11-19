@@ -3,7 +3,7 @@
 - block:
   - name: check DB connected status
     ansible.builtin.shell: |
-      cat /proc/drbd | grep cs | awk '{print $2}' | awk -F ':' '{print $2}'
+      grep cs /proc/drbd | awk '{print $2}' | awk -F ':' '{print $2}'
     check_mode: no
     register: cs_check
   - name: define connected_status

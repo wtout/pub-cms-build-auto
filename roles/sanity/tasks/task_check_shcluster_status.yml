@@ -13,6 +13,18 @@
     ignore_errors: yes
   - name: define shcluster status
     ansible.builtin.set_fact:
+      shcluster_status: 'Admin password configured in /opt/splunk/etc/passwd is invalid'
+    when:
+      - reg_shclst_status.stderr != ''
+      - reg_shclst_status.stderr is search('Login failed')
+  - name: define shcluster status
+    ansible.builtin.set_fact:
+      shcluster_status: "{{ reg_shclst_status.stderr }}"
+    when:
+      - reg_shclst_status.stderr != ''
+      - reg_shclst_status.stderr is not search('Login failed')
+  - name: define shcluster status
+    ansible.builtin.set_fact:
       shcluster_status: 'shcluster is down'
     when:
       - reg_shclst_status is failed

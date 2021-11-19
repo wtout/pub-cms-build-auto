@@ -53,7 +53,7 @@
             prt_designation: "{{ prt_item }}"
       loop:
         - primary
-        - "{{ 'secondary' if groups['em7']|length > 1 else '' }}"
+        - "{{ 'secondary' if groups['em7']|length > 1 and 'dr' not in group_names else '' }}"
       loop_control:
         loop_var: prt_item
       when: prt_item != ''
@@ -110,6 +110,7 @@
         - { name: '/data01/commands/*', user: 'commands', group: 'commands' }
       loop_control:
         loop_var: dir_item
+    - include_tasks: task_check_sudoers_user_status.yml
   when:
     - inventory_hostname is search('rly')
     - inventory_hostname is not search('atarly')

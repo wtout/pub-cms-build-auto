@@ -9,13 +9,15 @@
     args:
       warn: false
     check_mode: no
-    no_log: yes
+    no_log: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
   - debug:
       msg: "{{ reg_bk_cronjob|replace(ansible_ssh_pass, 'obfuscated') }}"
+    when:
+      - reg_bk_cronjob.stdout_lines|length == 0
   - name: define rly_backup_cronjob_status
     ansible.builtin.set_fact:
       rly_backup_cronjob_status: 'No backup cronjob found'
     when:
-      - reg_bk_cronjob.stdout|int == 0
+      - reg_bk_cronjob.stdout_lines|length == 0
   tags: sanity
   

@@ -26,17 +26,17 @@
     ansible.builtin.debug:
       msg: "{{ report_message|default([]) }}"
   vars:
-    rly_svc_list: ['rly_current_version', 'rly_rpms', 'service', 'rly_errors', 'rly_rules', 'rly_db', 'rly_deconfigcount', 'rly_syslogrulescount', 'rly_cluster_size', 'rly_cluster', 'rly_local_state', 'rly_incoming_addresses', 'rly_db_grants', 'rly_reportstore', 'rly_primary_prt_grant', 'rly_secondary_prt_grant', 'rly_coral_container', 'rly_coral_services', 'rly_splsrcvip', 'rly_active_de_instance_ip', 'rly_de_ip', 'rly_de_username', 'rly_relaywebport', 'rly_chrony_server', 'rly_chrony_leap', 'processes', 'rly_splunk', 'rly_relayweb_conf', 'splind_hosts_idx', 'chrony', 'rly_splunk_cronjob', 'rly_backup_dir', 'rly_data01_dir', 'rly_swap', 'rly_app_prop', 'rly_config_prop', 'user_expiry', 'rly_backup_cronjob', 'ownership']
+    rly_svc_list: ['rly_current_version', 'rly_rpms', 'service', 'rly_errors', 'rly_rules', 'rly_db', 'rly_deconfigcount', 'rly_syslogrulescount', 'rly_cluster_size', 'rly_cluster', 'rly_local_state', 'rly_incoming_addresses', 'rly_db_grants', 'rly_reportstore', 'rly_primary_prt_grant', 'rly_secondary_prt_grant', 'rly_coral_container', 'rly_coral_services', 'rly_splsrcvip', 'rly_active_de_instance_ip', 'rly_de_ip', 'rly_de_username', 'rly_relaywebport', 'rly_chrony_server', 'rly_chrony_leap', 'processes', 'rly_splunk', 'rly_relayweb_conf', 'splind_hosts_idx', 'chrony', 'rly_splunk_cronjob', 'rly_backup_dir', 'rly_data01_dir', 'rly_swap', 'rly_app_prop', 'rly_config_prop', 'user_expiry', 'rly_backup_cronjob', 'ownership', 'sudoers_user']
     atarly_svc_list: ['service', 'processes', 'chrony', 'sudoers_user']
     lnxjmp_svc_list: ['service', 'processes', 'chrony', 'sudoers_user']
-    em7_svc_list: ['service', 'chrony', 'cmspem7', 'licensed']
-    em7db_svc_list: ['service', 'chrony', 'connected', 'r0_hostname1', 'r0_address1', 'r0_hostname2', 'r0_address2', 'cmspem7', 'licensed']
-    em7prt_svc_list: ['service', 'chrony', 'cmspem7']
-    em7dc_svc_list: ['service', 'chrony', 'cmspem7']
-    em7mc_svc_list: ['service', 'chrony', 'cmspem7', 'rpfilter']
-    spl_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor','passwordless_ssh']
-    splmas_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership']
-    spldpl_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership']
-    splsrc_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor','passwordless_ssh']
-    splind_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'ownership']
+    em7_svc_list: ['service', 'chrony', 'cmspem7', 'licensed', 'sudoers_user']
+    em7db_svc_list: ['service', 'chrony', 'connected', 'r0_hostname1', 'r0_address1', 'r0_hostname2', 'r0_address2', 'cmspem7', 'licensed', 'sudoers_user']
+    em7prt_svc_list: ['service', 'chrony', 'cmspem7', 'sudoers_user']
+    em7dc_svc_list: ['service', 'chrony', 'cmspem7', 'sudoers_user']
+    em7mc_svc_list: ['service', 'chrony', 'cmspem7', 'rpfilter', 'sudoers_user']
+    spl_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor','passwordless_ssh', 'sudoers_user']
+    splmas_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership', 'sudoers_user']
+    spldpl_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership', 'sudoers_user']
+    splsrc_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor','passwordless_ssh', 'sudoers_user']
+    splind_svc_list: ['service', 'processes', 'splunk', 'chrony', 'user_expiry', 'ownership', 'sudoers_user']
   tags: sanity

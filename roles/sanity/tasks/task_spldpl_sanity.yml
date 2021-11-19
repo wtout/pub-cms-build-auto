@@ -49,5 +49,6 @@
         - { name: '/opt/splunk/etc/*', user: 'splunk', group: 'splunk' }
       loop_control:
         loop_var: dir_item
+    - include_tasks: task_check_sudoers_user_status.yml
   when: inventory_hostname is search('spldpl')
   tags: sanity

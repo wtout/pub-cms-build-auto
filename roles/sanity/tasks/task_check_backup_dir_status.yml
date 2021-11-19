@@ -14,7 +14,7 @@
       rly_backup_dir_status: "{{ rly_backup_dir_status|default([]) + ['/backup/em7/config is not found'] }}"
     when:
       - not reg_config_dir.stat.exists
-  - name: define rly_full_dir_status
+  - name: define rly_backup_dir_status
     ansible.builtin.set_fact:
       rly_backup_dir_status: "{{ rly_backup_dir_status|default([]) + ['/backup/em7/full is not found'] }}"
     when:
