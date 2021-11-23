@@ -1,19 +1,21 @@
 ---
 # Tasks to check Indexer Discovery status
 - block:
-  - include_tasks: task_get_splunk_admin_creds.yml
-    when: spl_admin_creds is undefined
   - name: check status of indexer discovery
     ansible.builtin.shell: |
-      $(which su) splunk -c '/opt/splunk/bin/splunk list forward-server -auth {{ spl_admin_creds }}'
+      $(which su) splunk -c '/opt/splunk/bin/splunk list forward-server -auth {{ spl_admin_user }}:{{ spl_admin_pass }}'
     register: reg_ind_disc
     args:
       warn: no
     check_mode: no
     ignore_errors: yes
+    no_log: yes
+  - debug:
+      msg: "{{ reg_ind_disc|replace(spl_admin_pass, 'obfuscated') }}"
+    when: reg_ind_disc is failed
   - name: define indexer_discovery status
     ansible.builtin.set_fact:
-      indexer_discovery_status: 'Admin password configured in /opt/splunk/etc/passwd is invalid'
+      indexer_discovery_status: 'Admin credentials are invalid'
     when:
       - reg_ind_disc is failed
       - reg_ind_disc.stderr == 'Login failed'
