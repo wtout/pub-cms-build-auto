@@ -2,6 +2,40 @@
 # Task file to configure CSRs
 - block:
   - block:
+    - name: define csr NICs
+      ansible.builtin.set_fact:
+        nic1:
+          - name: "{{ netconfig.network1 }}"
+            ip: "{{ netconfig.ipaddress1 }}"
+            netmask: "{{ netconfig.netmask1 }}"
+            gateway: "{{ netconfig.gateway1 }}"
+            device_type: vmxnet3
+        nic2:
+          - name: "{{ netconfig.network2 }}"
+            ip: "{{ netconfig.ipaddress2 }}"
+            netmask: "{{ netconfig.netmask2 }}"
+            gateway: "{{ netconfig.gateway2 }}"
+            device_type: vmxnet3
+        nic3:
+          - name: "{{ netconfig.network3 }}"
+            ip: "{{ netconfig.ipaddress3 }}"
+            netmask: "{{ netconfig.netmask3 }}"
+            gateway: "{{ netconfig.gateway3 }}"
+            device_type: vmxnet3
+        nic4:
+          - name: "{{ netconfig.network4 }}"
+            ip: "{{ netconfig.ipaddress4 }}"
+            netmask: "{{ netconfig.netmask4 }}"
+            gateway: "{{ netconfig.gateway4 }}"
+            device_type: vmxnet3
+    - name: define csr NIC5
+      ansible.builtin.set_fact:
+        nic5:
+          - name: "{{ netconfig.network5 }}"
+            ip: "{{ netconfig.ipaddress5 }}"
+            netmask: "{{ netconfig.netmask5 }}"
+            gateway: "{{ netconfig.gateway5 }}"
+            device_type: vmxnet3
     - name: Update VM hardware settings with correct NICs
       vmware_guest:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
@@ -13,26 +47,7 @@
         hardware:
           memory_mb: "{{ vm.memory | int * 1024 }}"
           num_cpus: "{{ vm.cpu | int }}"
-        networks:
-          - name: "{{ netconfig.network1 }}"
-            device_type: vmxnet3
-          - name: "{{ netconfig.network2 }}"
-            device_type: vmxnet3
-          - name: "{{ netconfig.network3 }}"
-            ip: "{{ netconfig.ipaddress3 }}"
-            netmask: "{{ netconfig.netmask3 }}"
-            gateway: "{{ netconfig.gateway3 }}"
-            device_type: vmxnet3
-          - name: "{{ netconfig.network4 }}"
-            ip: "{{ netconfig.ipaddress4 }}"
-            netmask: "{{ netconfig.netmask4 }}"
-            gateway: "{{ netconfig.gateway4 }}"
-            device_type: vmxnet3
-          - name: "{{ netconfig.network5 }}"
-            ip: "{{ netconfig.ipaddress5 }}"
-            netmask: "{{ netconfig.netmask5 }}"
-            gateway: "{{ netconfig.gateway5 }}"
-            device_type: vmxnet3
+        networks: "{{ nic1 + nic2 + nic3 + nic4 + nic5|default([]) }}"
         validate_certs: no
         
     - name: Power on VM

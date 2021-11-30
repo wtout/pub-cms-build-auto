@@ -41,8 +41,8 @@
         roomId: Y2lzY29zcGFyazovL3VzL1JPT00vYjRiMWM0MzAtMTg2My0xMWViLWE4OWQtNTNkMDRiZjUxMjMy
         markdown: "{{ '**Infra Serial Numbers**' + '\n' + NOTIF_MSG | join('  \n') }}"
     environment:
-      http_proxy: "{{ proxy_address }}"
-      https_proxy: "{{ proxy_address }}"
+      http_proxy: "{{ proxy_address|default('') }}"
+      https_proxy: "{{ proxy_address|default('') }}"
     when: NOTIF_MSG is defined and NOTIF_MSG != []
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

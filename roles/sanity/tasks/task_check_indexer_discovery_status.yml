@@ -24,7 +24,7 @@
       indexer_discovery_status: "{{ reg_ind_disc.stdout }}"
     when:
       - reg_ind_disc is succeeded
-      - (reg_ind_disc.stdout_lines[1] is not search('None') and group_names | select('search', 'dr') | length > 0) or (reg_ind_disc.stdout_lines[1] is search('None') and group_names | select('search', 'dr') | length == 0)
+      - reg_ind_disc.stdout_lines[1] is search('None')
   when:
     - "spl_status|default({'failed': true}) is succeeded"
     - inventory_hostname is search('spl')
