@@ -16,14 +16,17 @@
         path: '/etc/sysconfig/network-scripts/ifcfg-ens192'
         regexp: '^(.*)ens224'
         replace: '\g<1>ens192'
-      notify: reboot vm
+      register: rename_nic
     - name: delete nic2 old interface file
       ansible.builtin.file:
         path: '/etc/sysconfig/network-scripts/ifcfg-ens224'
         state: absent
+    - name: reboot vm
+      reboot:
+        post_reboot_delay: 10
+        reboot_timeout: 180
+      when: rename_nic is changed
     when: int_file.stat.exists
-  - name: flush handlers
-    meta: flush_handlers
   become: "{{ true if ansible_user != 'root' else false }}"
   when:
     - netconfig.ipaddress2 != ''

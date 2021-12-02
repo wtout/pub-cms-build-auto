@@ -1,0 +1,229 @@
+#jinja2: trim_blocks: False
+{
+  "builders": [
+    {
+      "CPUs": "{{ '{{' }} user `vm-cpu-num` {{ '}}' }}",
+      "RAM": "{{ '{{' }} user `vm-mem-size` {{ '}}' }}",
+      "RAM_reserve_all": false,
+      "boot_command": [
+        "<tab>",
+        " inst.gpt",
+        "<enter>",
+        "<wait90s>",
+        "<down>",
+        "<down>",
+        "<down>",
+        "<down>",
+        "<tab>",
+        "<enter>",
+        "<wait1s>",
+        "<tab>",
+        "<enter>",
+        "<wait1s>",
+        "{{ '{{' }} user `vm-ipaddress1` {{ '}}' }}",
+        "<down>",
+        "{{ '{{' }} user `vm-netmask1` {{ '}}' }}",
+        "<down>",
+        "{{ '{{' }} user `vm-gateway1` {{ '}}' }}",
+        "<down>",
+        "{{ '{{' }} user `name-server1` {{ '}}' }}",
+        "<down>",
+        "{{ '{{' }} user `vm-name` {{ '}}' }}",
+        "<down>",
+        "<enter>",
+        "<wait1s>",
+        "{{ '{{' }} user `em7root-passwd` {{ '}}' }}",
+        "<enter>",
+        "<enter>",
+        "<wait1s>",
+        "{{ '{{' }} user `em7root-passwd` {{ '}}' }}",
+        "<enter>",
+        "<enter>",
+        "<wait1s>",
+        "<wait8m>",
+        "{{ '{{' }} user `vm-username` {{ '}}' }}",
+        "<enter>",
+        "<wait1s>",
+        "{{ '{{' }} user `em7root-passwd` {{ '}}' }}",
+        "<enter>",
+        "<wait1s>",
+        "INTFILE2=/etc/sysconfig/network-scripts/ifcfg-ens224; grep \"^BOOTPROTO\" ${INTFILE2} &>/dev/null && sed -i \"s|^\\(BOOTPROTO=\\).*$|\\1none|\" ${INTFILE2} || echo \"BOOTPROTO=none\" >> ${INTFILE2}",
+        "<enter>",
+        "<wait1s>",
+        "INTFILE2=/etc/sysconfig/network-scripts/ifcfg-ens224; grep \"^ONBOOT\" ${INTFILE2} &>/dev/null && sed -i \"s|^\\(ONBOOT=\\).*$|\\1yes|\" ${INTFILE2} || echo \"ONBOOT=yes\" >> ${INTFILE2}",
+        "<enter>",
+        "<wait1s>",
+        "IPADDRESS={{ '{{' }} user `vm-ipaddress2` {{ '}}' }}; NETMASK={{ '{{' }} user `vm-netmask2` {{ '}}' }}; echo -e \"IPADDR=${IPADDRESS}\\nNETMASK=${NETMASK}\" >> /etc/sysconfig/network-scripts/ifcfg-ens224",
+        "<enter>",
+        "<wait1s>",
+        "grep \"^PermitRootLogin\" /etc/ssh/sshd_config &>/dev/null && sed -i \"s|^\\(PermitRootLogin.*\\)$|#\\1|\" /etc/ssh/sshd_config",
+        "<enter>",
+        "systemctl restart sshd",
+        "<enter>",
+        "<wait5s>",
+        "YUM_FQDN={{ '{{' }} user `yum-server-fqdn` {{ '}}' }}; REPO_NAME=QS{{ 'V2' if customer.version.release is search('9.2') else '' }}; echo -e \"[QS-PROD]\\nbaseurl = https://${YUM_FQDN}/${REPO_NAME}\\nenabled = 1\\ngpgcheck = 0\\nname = Production repo\\nsslverify = 0\" > /etc/yum.repos.d/QS.repo; yum install -y --disablerepo=* --enablerepo=QS-PROD open-vm-tools; systemctl start vmtoolsd.service --now; systemctl status vmtoolsd.service",
+        "<enter>",
+        "<wait1s>",
+        "systemctl restart network",
+        "<enter>"
+      ],
+      "boot_order": "disk,cdrom,floppy",
+      "boot_wait": "10s",
+      "convert_to_template": false,
+      "datacenter": "{{ '{{' }} user `vsphere-datacenter` {{ '}}' }}",
+      "datastore": "{{ '{{' }} user `vsphere-datastore` {{ '}}' }}",
+      "folder": "{{ '{{' }} user `vsphere-folder` {{ '}}' }}",
+      "guest_os_type": "oracleLinux7_64Guest",
+      "insecure_connection": "true",
+      "iso_url": "{{ '{{' }} user `iso_url` {{ '}}' }}",
+      "iso_checksum": "{{ '{{' }} user `iso_checksum` {{ '}}' }}",
+      "network_adapters": [
+        {
+          "network": "{{ '{{' }} user `vsphere-network1` {{ '}}' }}",
+          "network_card": "vmxnet3"
+        },
+        {
+          "network": "{{ '{{' }} user `vsphere-network2` {{ '}}' }}",
+          "network_card": "vmxnet3"
+        }
+      ],
+      "notes": "Build via Packer",
+      "password": "{{ '{{' }} user `vsphere-passwd` {{ '}}' }}",
+      "ssh_username": "{{ '{{' }} user `vm-username` {{ '}}' }}",
+      "ssh_password": "{{ '{{' }} user `em7root-passwd` {{ '}}' }}",      
+      "disk_controller_type": [
+        "pvscsi"
+{%- if vm.disk1|int != 0 -%}
+{%- block dskcntlr1 -%}
+,
+        "pvscsi"
+{%- endblock dskcntlr1 %}
+{%- endif %}
+{%- if vm.disk2|int != 0 -%}
+{%- block dskcntlr2 -%}
+,
+        "pvscsi"
+{%- endblock dskcntlr2 %}
+{%- endif %}
+{%- if vm.disk3|int != 0 -%}
+{%- block dskcntlr3 -%}
+,
+        "pvscsi"
+{%- endblock dskcntlr3 %}
+{%- endif %}
+      ],
+      "storage": [
+        {
+          "disk_size": "{{ '{{' }} user `vm-disk-size0` {{ '}}' }}",
+          "disk_thin_provisioned": "{{ '{{' }} user `vm-thin-provisioning` {{ '}}' }}"
+        }
+{%- if vm.disk1|int != 0 -%}
+{%- block disk1 -%}
+,
+        {
+          "disk_size": "{{ '{{' }} user `vm-disk-size1` {{ '}}' }}",
+          "disk_thin_provisioned": "{{ '{{' }} user `vm-thin-provisioning` {{ '}}' }}"
+        }
+{%- endblock disk1 %}
+{%- endif %}
+{%- if vm.disk2|int != 0 -%}
+{%- block disk2 -%}
+,
+        {
+          "disk_size": "{{ '{{' }} user `vm-disk-size2` {{ '}}' }}",
+          "disk_thin_provisioned": "{{ '{{' }} user `vm-thin-provisioning` {{ '}}' }}"
+        }
+{%- endblock disk2 %}
+{%- endif %}
+{%- if vm.disk3|int != 0 -%}
+{%- block disk3 -%}
+,
+        {
+          "disk_size": "{{ '{{' }} user `vm-disk-size3` {{ '}}' }}",
+          "disk_thin_provisioned": "{{ '{{' }} user `vm-thin-provisioning` {{ '}}' }}"
+        }
+{%- endblock disk3 %}
+{%- endif %}
+      ],
+      "type": "vsphere-iso",
+      "username": "{{ '{{' }} user `vsphere-user` {{ '}}' }}",
+      "vcenter_server": "{{ '{{' }} user `vsphere-server` {{ '}}' }}",
+      "cluster": "{{ '{{' }} user `vsphere-cluster` {{ '}}' }}",
+      "vm_name": "{{ '{{' }} user `vm-name` {{ '}}' }}"
+    }
+  ],
+  "provisioners": [
+   {
+      "type": "shell",
+      "inline": [
+        "DOMAIN={{ '{{' }} user `domain` {{ '}}' }}; DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; echo -e \"DOMAIN=${DOMAIN}\\nDNS2=${DNS2}\\nPEERDNS=no\" >> /etc/sysconfig/network-scripts/ifcfg-ens192",
+        "DOMAIN={{ '{{' }} user `domain` {{ '}}' }}; DNS1={{ '{{' }} user `name-server1` {{ '}}' }}; DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; echo -e \"DOMAIN=${DOMAIN}\\nDNS1=${DNS1}\\nDNS2=${DNS2}\\nPEERDNS=no\" >> /etc/sysconfig/network-scripts/ifcfg-ens224",
+        "grep \"^#PermitRootLogin\" /etc/ssh/sshd_config &>/dev/null && sed -i \"s|^#\\(PermitRootLogin.*\\)$|\\1|\" /etc/ssh/sshd_config",
+        "CIPHERSTR='Ciphers aes256-ctr,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com'; MACSTR='MACS hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1,hmac-sha2-256,hmac-sha2-512'; grep \"^${CIPHERSTR}$\" /etc/ssh/sshd_config &>/dev/null || sed -i \"s|^\\(# Ciphers and keying\\)$|\\1${CIPHERSTR}\\n${MACSTR}|\" /etc/ssh/sshd_config",
+        "echo -e \"HWADDR=$(cat /sys/class/net/ens192/address)\" >> /etc/sysconfig/network-scripts/ifcfg-ens192",
+        "echo -e \"HWADDR=$(cat /sys/class/net/ens224/address)\" >> /etc/sysconfig/network-scripts/ifcfg-ens224",
+        "mv /etc/sysconfig/network-scripts/ifcfg-ens192 /etc/sysconfig/network-scripts/ifcfg-ens160",
+        "sed -i \"s|ens192|ens160|g\" /etc/sysconfig/network-scripts/ifcfg-ens160",
+        "mv /etc/sysconfig/network-scripts/ifcfg-ens224 /etc/sysconfig/network-scripts/ifcfg-ens192",
+        "sed -i \"s|ens224|ens192|g\" /etc/sysconfig/network-scripts/ifcfg-ens192",
+        "sed -i 's|^\\(IPV6INIT=\\).*$|\\1no|g' /etc/sysconfig/network-scripts/ifcfg-ens160 /etc/sysconfig/network-scripts/ifcfg-ens192",
+        "sed -i '/^IPV6_.*$/,+d' /etc/sysconfig/network-scripts/ifcfg-ens160 /etc/sysconfig/network-scripts/ifcfg-ens192",
+        "groupadd -g 60005 {{ ansible_user }}",
+        "useradd -d /home/{{ ansible_user }} -g 60005 -s /usr/bin/bash -p $(openssl passwd -crypt {{ ansible_user }}) {{ ansible_user }}",
+        "grep '^{{ ansible_user }}.*ALL' /etc/sudoers || sed -i 's|^\\(root.*ALL=.*\\)$|\\1\\n{{ ansible_user }}\tALL=(ALL)\tALL|' /etc/sudoers"
+{%- if user.name != '' and user.password != '' -%}
+{%- block custom_user -%}
+,
+        "useradd -p $(openssl passwd -crypt {{ user.password }}) {{ user.name }}",
+        "echo -e \"Host_Alias  {{ user.name | upper }}_SUDO_HOSTS = ALL\\nRunas_Alias {{ user.name | upper }}_SUDO_RUNAS = ALL\\nCmnd_Alias  {{ user.name | upper }}_SUDO_CMNDS = ALL\\nCmnd_Alias  {{ user.name | upper }}_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh\\n%{{ user.name }} {{ user.name | upper }}_SUDO_HOSTS = ({{ user.name | upper }}_SUDO_RUNAS) NOPASSWD: {{ user.name | upper }}_SUDO_CMNDS, !{{ user.name | upper }}_SHELLS\" > /etc/sudoers.d/{{ user.name }}"
+{%- endblock custom_user %}
+{%- endif %}
+      ]
+   }
+  ],
+  "variables": {
+    "ssh_username": "autobot",
+    "ssh_key": "",
+    "ssh_key_cert": "",
+    "ssh_keypair": "",
+    "vsphere-datacenter": "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}",
+    "vsphere-cluster": "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}",
+    "vsphere-datastore": "{{ vm_ds }}",
+    "vsphere-folder": "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] + '/' + (customer.name if customer.name|lower is search('mdr') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}",
+    "vsphere-network1": "{{ netconfig.network1 }}",
+    "vsphere-network2": "{{ netconfig.network2 }}",
+    "vsphere-server": "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}",
+    "vsphere-user": "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] | replace('\\', '\\\\') }}",
+    "vsphere-passwd": "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}",
+    "iso_checksum": "{{ iso_info.stat.checksum }}",
+    "iso_url": "{{ auto_dir }}/{{ iso_dir }}/{{ iso_installer }}",
+    "vm-cpu-num": "{{ vm.cpu }}",
+    "vm-mem-size": "{{ vm.memory|int * 1024 }}",
+    "vm-disk-size0": "{{ vm.disk0|int * 1024 - 2048 }}",
+    "vm-disk-size1": "{{ vm.disk1|int * 1024 }}",
+    "vm-disk-size2": "{{ vm.disk2|int * 1024 }}",
+    "vm-disk-size3": "{{ vm.disk3|int * 1024 }}",
+    "vm-thin-provisioning": "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else false }}",
+    "vm-name": "{{ vm.name }}",
+    "vm-username": "root",
+    "vm-ipaddress1": "{{ netconfig.ipaddress1 }}",
+    "vm-ipaddress2": "{{ netconfig.ipaddress2 }}",
+    "vm-netmask1": "{{ netconfig.netmask1 }}",
+    "vm-netmask2": "{{ netconfig.netmask2 }}",
+    "vm-gateway1": "{{ netconfig.gateway1 if netconfig.gateway1 != '' else customer.secondary.octets + '.62' if inventory_hostname is search('dr') else customer.primary.octets + '.62' }}",
+    "vm-gateway2": "{{ netconfig.gateway2 }}",
+    "name-server1": "{{ sysconfig.secondary.dns_servers[0] if 'dr' in group_names else sysconfig.primary.dns_servers[0] }}",
+    "name-server2": "{{ sysconfig.secondary.dns_servers[1] if 'dr' in group_names else sysconfig.primary.dns_servers[1] }}",
+    "domain": "{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}",
+    "em7root-passwd": "em7admin",
+    "yum-server-fqdn": "{{ yum.secondary.fqdn if 'dr' in group_names else yum.primary.fqdn }}",
+    "ansible_extra_vars_level": "",
+    "ansible_extra_vars_distro": "",
+    "os_family": "",
+    "os_distro": "",
+    "os_majversion": "",
+    "ansible_command": "ansible-playbook",
+    "ansible_playbook_file": "",
+    "ansible_extra_vars_cis_cat": ""
+  }
+}

@@ -273,6 +273,8 @@ function install_packages() {
 				[[ "${FS}" == 1 ]] && echo -e "\n${SUDO_PASS}\n" && exit ${FS}
 			fi
 			add_proxy_yum "${PROXY_ADDRESS}" "${SUDO_PASS}"
+			[[ "${pkg}" == "packer" ]] && sudo -S yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo <<< "${SUDO_PASS}" || EC=1
+			[[ "${EC}" == 1 ]] && echo -e "\nUnable to add Packer repo. Aborting!\n" && exit ${EC}
 			PKG_ARR=("${PKG_LIST}")
 			[[ ${pkg} == "${PKG_ARR[0]}" ]] && printf "\n\nInstalling %s on localhost ..." "${pkg}" || printf "\nInstalling %s on localhost ..." "${pkg}"
 			sudo -S yum install -y "${pkg}" --quiet <<< "${SUDO_PASS}" 2>/dev/null
@@ -637,7 +639,7 @@ ANSIBLE_CFG="${PWD}/ansible.cfg"
 ANSIBLE_LOG_LOCATION="${PWD}/Logs"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
-PKG_LIST="epel-release sshpass python3 libselinux-python3 python3-pip"
+PKG_LIST="epel-release sshpass python3 libselinux-python3 python3-pip yum-utils packer"
 ANSIBLE_VERSION='2.10.7'
 ANSIBLE_VARS="${PWD}/vars/datacenters.yml"
 PASSVAULT="${PWD}/vars/passwords.yml"

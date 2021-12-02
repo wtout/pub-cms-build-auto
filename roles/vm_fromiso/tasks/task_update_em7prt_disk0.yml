@@ -1,0 +1,49 @@
+---
+# tasks to update VM disk settings
+- block:
+  - name: Get VM info
+    vmware_guest_disk_info:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      name: "{{ vm.name }}"
+      validate_certs: no
+    register: disk_info
+  - name: Define VM disk0
+    set_fact:
+      disk0_unit_number: "{{ disk_info.guest_disk_info | dict2items | selectattr('key','equalto', '0') | map(attribute='value.unit_number') | list| to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '') }}"
+      disk0_size_kb: "{{ (vm.disk0|float * 1024|pow(2))|int if (vm.disk0 != '' and vm.disk0|float * 1024|pow(2)|int > disk0_readsize|int) else disk0_readsize }}"
+      disk0_datastore: "{{ disk_info.guest_disk_info | dict2items | selectattr('key','equalto', '0') | map(attribute='value.backing_datastore') | list| to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '') }}"
+    vars:
+      disk0_readsize: "{{ disk_info.guest_disk_info | dict2items | selectattr('key','equalto', '0') | map(attribute='value.capacity_in_kb') | list | to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '') }}"
+    when:
+      - disk_info.guest_disk_info | dict2items | length >= 1
+      - vm.disk0 is defined
+      - vm.disk0|float > 0
+
+  - name: Update VM Disk0 settings
+    vmware_guest_disk:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name}}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      disk:
+        - size_kb: "{{ disk0_size_kb }}"
+          type: "{{ 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else 'thick' }}"
+          datastore: "{{ disk0_datastore }}"
+          state: present
+          scsi_controller: 0
+          unit_number: "{{ disk0_unit_number }}"
+      validate_certs: no
+    register: vmguest_disk0
+    until: vmguest_disk0 is succeeded
+    when:
+      - vm.disk0 is defined
+      - vm.disk0|float > 0
+  when:
+    - not ansible_check_mode
+    - inventory_hostname is search('em7prt')
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vm_creation

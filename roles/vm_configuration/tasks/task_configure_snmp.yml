@@ -8,7 +8,29 @@
     ansible.builtin.lineinfile:
       path: '/etc/snmp/snmpd.conf'
       line: "engineid {{ ens160_mac.stdout | replace(':', '') }}"
-    notify: restart snmpd service 
+    notify: restart snmpd service
+
+  - name: check if backup file exists
+    stat:
+      path: '/etc/snmp/snmpd.conf.d/snmpd_default.conf.orig'
+    register: bkp_file
+  - name: backup snmpd_default.conf file
+    ansible.builtin.copy:
+      src: '/etc/snmp/snmpd.conf.d/snmpd_default.conf'
+      dest: '/etc/snmp/snmpd.conf.d/snmpd_default.conf.orig'
+      remote_src: yes
+    when: not bkp_file.stat.exists
+
+  - name: update snmpd_default.conf
+    ansible.builtin.replace:
+      path: /etc/snmp/snmpd.conf.d/snmpd_default.conf
+      regexp: "{{ exp_item }}"
+      replace: '#\g<1>'
+    loop:
+      - '^(group.*Group\s+[v1|v2c].*)$'
+      - '^(r.*community.*em7default)$'
+    loop_control:
+      loop_var: exp_item
   when:
     - not ansible_check_mode
     - inventory_hostname is search('em7')

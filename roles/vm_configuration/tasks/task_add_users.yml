@@ -1,0 +1,52 @@
+---
+# Tasks to create the user on the VM
+- block:
+  - name: Add the user groups
+    ansible.builtin.group:
+      name: "{{ grp_item.name }}"
+      state: present
+      gid: "{{ grp_item.gid }}"
+    loop:
+      - { name: 'ciscosupporttier1', gid: 60001 }
+      - { name: 'ciscosupporttier2', gid: 60002 }
+      - { name: 'ciscosupporttier3', gid: 60003 }
+      - { name: 'ciscosupporttier4', gid: 60004 }
+      - { name: 'silosupport', gid: 60006 }
+    loop_control:
+      loop_var: grp_item
+  - name: Add the users
+    user:
+      name: "{{ user_item.name }}"
+      group: "{{ user_item.name }}"
+      password: "{{ user_item.password | password_hash('sha512') }}"
+      state: present
+    loop:
+      - { name: 'ciscosupporttier1', password: 'cisco123' }
+      - { name: 'ciscosupporttier2', password: 'cisco123' }
+      - { name: 'ciscosupporttier3', password: 'cisco123' }
+      - { name: 'ciscosupporttier4', password: 'cisco123' }
+      - { name: 'silosupport', password: 'cisco123' }
+    loop_control:
+      loop_var: user_item
+  - name: ensure the /opt/qs_scripts directory exists
+    ansible.builtin.file:
+      path: /opt/qs_scripts
+      state: directory
+      group: root
+      owner: root
+      mode: 0755
+  - name: copy scripts to em7 host
+    ansible.builtin.copy:
+      src: "{{ role_path }}/files/{{ file_item }}"
+      dest: /opt/qs_scripts
+      group: root
+      owner: root
+      mode: 0755
+    loop:
+      - users.sh
+      - password.sh
+    loop_control:
+      loop_var: file_item
+  when: inventory_hostname is search('em7')
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_configuration

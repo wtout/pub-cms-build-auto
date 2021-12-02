@@ -105,7 +105,7 @@
   when:
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-    - auto_dir is search('cdra') or customer.name | lower is search('mdr') or bfiso | default(false) | bool
+    - inventory_hostname is search('em7') or auto_dir is search('cdra') or customer.name | lower is search('mdr') or bfiso | default(false) | bool
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_creation
 
@@ -115,7 +115,6 @@
   when:
     - rollback | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-    - auto_dir is search('cdra') or customer.name | lower is search('mdr') or bfiso | default(false) | bool
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_creation
 
@@ -145,18 +144,7 @@
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - customer.name | lower is not search('mdr')
-    - not bfiso | default(false) | bool
-    - auto_dir is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: vm_creation
-
-- name: define rollback_vms_ova
-  set_fact:
-    rollback_vms_ova: true
-  when:
-    - rollback | default(false) | bool
-    - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-    - customer.name | lower is not search('mdr')
+    - inventory_hostname is not search('em7')
     - not bfiso | default(false) | bool
     - auto_dir is not search('cdra')
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))

@@ -1,0 +1,31 @@
+---
+# Tasks to create the DNS reverse lookup zone
+- block:
+#  - name: add DNS server to {{ 'secondary_name_server' if 'dr' in group_names else 'primary_name_server' }} group
+  - name: add primary DNS server
+    ansible.builtin.add_host:
+      hostname: pns01
+      ansible_host: "{{ sysconfig.primary.dns_servers[0] }}"
+      ansible_ssh_port: '53'
+      ansible_user: "{{ vars[('S' if 'dr' in group_names else 'P') + 'SVC_USER'] | default('') }}"
+      ansible_ssh_password: "{{ vars[('S' if 'dr' in group_names else 'P') + 'SVC_PASS'] | default('') }}"
+  - debug:
+      msg:
+        - "{{ hostvars['pns01']['ansible_host'] }}"
+        - "{{ hostvars['pns01']['ansible_user'] }}"
+
+#  - name: ping pns01
+#    ansible.windows.win_ping:
+#    delegate_to: pns01
+
+  - name: Ensure reverse lookup zone is present
+    community.windows.win_dns_zone:
+#      name: "{{ (customer.secondary.octets if 'dr' in group_names else customer.primary.octets).split('.') | reverse | join('.') + '.in-addr.arpa' }}"
+      name: "{{ customer.primary.octets.split('.') | reverse | join('.') + '.in-addr.arpa' }}"
+      dynamic_update: nonsecureandsecure
+      replication: domain
+      type: primary
+      state: present
+    delegate_to: pns01
+  run_once: true
+  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]

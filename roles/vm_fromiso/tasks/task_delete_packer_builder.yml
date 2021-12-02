@@ -1,0 +1,9 @@
+---
+# Tasks to delete the Packer build file locally
+- block:
+  - name: delete Packer build file locally
+    file:
+      path: "{{ role_path }}/files/{{ vm.name }}-builder.json"
+      state: absent
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vm_creation

@@ -1,0 +1,55 @@
+---
+# tasks to install corosync on EM7 DB VM
+- block:
+  - name: check if cluster is installed
+    ansible.builtin.stat:
+      path: /etc/drbd.d/r0.res
+    register: clust_installed
+
+  - block:
+    - include_tasks: task_generate_ssh_keys.yml
+    - include_tasks: task_deploy_ssh_keys.yml
+    when:
+      - not clust_installed.stat.exists
+      - inventory_hostname is search('02')
+
+  - name: stop pacemaker and corosync
+    systemd:
+      name: "{{ service_item }}"
+      state: stopped
+    loop:
+      - pacemaker
+      - corosync
+    loop_control:
+      loop_var: service_item
+    when: clust_installed.stat.exists
+
+  - include_tasks: task_run_coro_install.yml
+    when: inventory_hostname is search('01')
+
+  - include_tasks: task_run_coro_install.yml
+    when: inventory_hostname is search('02')
+
+  - name: start pacemaker and corosync
+    systemd:
+      name: "{{ service_item }}"
+      state: started
+      daemon_reload: yes
+    loop:
+      - pacemaker
+      - corosync
+    loop_control:
+      loop_var: service_item
+    when:
+      - clust_installed.stat.exists   
+      - coro_install_status1 is succeeded or coro_install_status2 is succeeded
+
+  - name: check the status of corosync cluster
+    ansible.builtin.shell: crm_mon -1
+    check_mode: no
+    register: crm_status
+    until: crm_status is succeeded
+    delay: 10
+  when: inventory_hostname is search('em7db')
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  tags: vm_configuration

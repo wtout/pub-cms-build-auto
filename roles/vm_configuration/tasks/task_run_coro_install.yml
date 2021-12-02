@@ -1,0 +1,51 @@
+---
+# tasks to install corosync on EM7 DB VM
+- block:
+  - name: check if /etc/drbd.d/r0.res exists
+    ansible.builtin.stat:
+      path: /etc/drbd.d/r0.res
+    register: res_file
+
+  - name: define the answers for DB01
+    set_fact:
+      answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n1\\ny\\ny\\n1\\n{{ vm.name | regex_replace('01$', '02') }}\\n{{ netconfig.ipaddress2 | regex_replace('[\\.]9$', '.10') }}\\n{{ netconfig.ipaddress1 | regex_replace('[\\.]13$', '.14') }}\\n{{ vip.db }}\\n26\\ny"
+    when: inventory_hostname is search('01')
+
+  - name: define the answers for DB02
+    set_fact:
+      answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n2\\ny\\ny\\n1\\n{{ vm.name | regex_replace('02$', '01') }}\\n{{ netconfig.ipaddress2 | regex_replace('[\\.]10$', '.9') }}\\n{{ netconfig.ipaddress1 | regex_replace('[\\.]14$', '.13') }}\\ny"
+    when: inventory_hostname is search('02')
+
+  - name: run coro_install script
+    ansible.builtin.shell: |
+      echo -e "{{ answers }}" | coro_install
+    register: coro_install_status1
+    until: coro_install_status1 is succeeded
+    delay: 30
+    ignore_errors: true
+    failed_when:
+      - coro_install_status1.rc != 0
+      - coro_install_status1.rc != 32
+
+  - block:
+    - name: "{{ auto_dir + '/roles/vm_fromiso' }}: reboot VM"
+      include_role:
+        name: "{{ auto_dir + '/roles/vm_fromiso' }}"
+        tasks_from: task_reboot_vm.yml
+      loop: "{{ range(1, 3 + 1)|list }}"
+      loop_control:
+        loop_var: loop_item
+    - name: re-run coro_install script
+      ansible.builtin.shell: |
+        echo -e "{{ answers }}" | coro_install
+      register: coro_install_status2
+      until: coro_install_status2 is succeeded
+      delay: 30
+      failed_when:
+        - coro_install_status2.rc != 0
+        - coro_install_status2.rc != 32
+    when: coro_install_status1.stdout is search('please start and IP the heartbeat interface')
+
+  when: inventory_hostname is search('em7db')
+  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  tags: vm_configuration

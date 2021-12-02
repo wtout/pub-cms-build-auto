@@ -1,0 +1,27 @@
+---
+# tasks to add/update setting in file
+- block:
+    - name: check if {{ varname }} is in {{ fname }}
+      ansible.builtin.shell: grep '^{{ varname }}=' {{ fname }}
+      register: var_status
+      check_mode: no
+      ignore_errors: true
+
+    - name: Update {{ varname }} in {{ fname }}
+      ansible.builtin.lineinfile:
+        path: "{{ fname }}"
+        regexp: '^({{ varname }}=).*$'
+        line: '\g<1>{{ varvalue }}'
+        backrefs: yes
+      become: yes
+      when: var_status is succeeded
+
+    - name: Add {{ varname }} to {{ fname }}
+      ansible.builtin.lineinfile:
+        path: "{{ fname }}"
+        line: "{{ varname + '=' + varvalue }}"
+        insertafter: "{{ instanza }}"
+        state: present
+      become: yes
+      when: var_status is failed
+  tags: vm_configuration

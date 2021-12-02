@@ -1,0 +1,29 @@
+---
+# tasks to deploy ssh_keys to primary DB
+- block:
+  - stat:
+      path: "{{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}"
+    register: privkey
+  - stat:
+      path: "{{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}.pub"
+    register: pubkey
+  - name: read public key
+    ansible.builtin.shell: cat {{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}.pub
+    register: key_pub
+  - block:
+    - name: set user password
+      set_fact:
+        ansible_ssh_pass: em7admin
+    - name: copy the SSH keys to primary DB
+      authorized_key:
+        user: em7admin
+        state: present
+        key: "{{ key_pub.stdout }}"
+      when:
+        - privkey.stat.exists and pubkey.stat.exists
+        - hostvars[inventory_hostname]['ansible_host'] != ''
+    - name: reset user password
+      set_fact:
+        ansible_ssh_pass: em7release
+    delegate_to: "{{ groups['em7db']|first }}"
+  tags: vm_configuration

@@ -16,7 +16,7 @@
       validate_certs: no
     register: datastore_info
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    when: host_index|int % 2 != 0 or (host_index|int % 2 == 0 and groups[vm_group][host_index|int - 2] not in ansible_play_hosts)
+    when: (host_index|int % 2 != 0 or (host_index|int % 2 == 0 and groups[vm_group][host_index|int - 2] not in ansible_play_hosts)) or inventory_hostname is search('em7')
 
   - block:
     - name: define hosted datastore names
@@ -39,7 +39,7 @@
       when:
         - groups[vm_group][host_index] is defined
         - groups[vm_group][host_index|int + 1] is defined
-    when: host_index|int % 2 != 0 or (host_index|int % 2 == 0 and groups[vm_group][host_index|int - 2] not in ansible_play_hosts)
+    when: (host_index|int % 2 != 0 or (host_index|int % 2 == 0 and groups[vm_group][host_index|int - 2] not in ansible_play_hosts)) or inventory_hostname is search('em7')
 
   - name: define hosted datastore for each odd index host
     set_fact:
@@ -49,7 +49,7 @@
 
   - name: define hosted datastore for each even index host
     set_fact:
-      vm_ds: "{{ hostvars[groups[vm_group][host_index|int - 2]]['vm_ds_names'][1] if groups[vm_group][host_index|int - 2] in ansible_play_hosts else vm_ds_names[1] }}"
+      vm_ds: "{{ vm_ds_names[1] }}"
     when:
       - host_index|int % 2 == 0
   tags: vm_creation
