@@ -383,85 +383,92 @@ function check_updates() {
 	[[ "$(echo "${PROXY_ADDRESS}" | grep ':.*@' &>/dev/null;echo ${?})" -ne 0 ]] && [[ ${debug} == 1 ]] && debug=0 && set -x
 	if [[ "x$(git config user.name)" != "x" ]]
 	then
-		[[ -f ${1} ]] && grep 'REPOPASS=' "${1}" 1>/dev/null && rm -f "${1}"
-		if [[ -f ${1} ]]
+		local localbranch
+		local remotebranchlist
+		localbranch=$(git branch|grep '*'|awk '{print $NF}')
+		remotebranchlist=$(git branch -r)
+		if [[ $(echo ${remotebranchlist}|grep '/'${localbranch}) ]]
 		then
-			local i
-			local retries
-			i=0
-			retries=3
-			while [[ ${i} -lt ${retries} ]]
-			do
-				[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-				if [[ ${REPOPASS} == "" ]]
-				then
-					[[ ${debug} == 1 ]] && set -x
-					read -r REPOPASS <<< "$(view_vault "${1}" "${2}" | cut -d "'" -f2)"
-				else
-					break
-				fi
-				i=$((++i))
-				[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
-			done
-		else
-			echo
-			read -rsp "Enter your Repository password [ENTER]: " REPOPASS
-			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-			[[ -f ${1} ]] && rm -f "${1}"
-			printf "REPOPASS='%s'\n" "${REPOPASS}" > "${1}"
-			encrypt_vault "${1}" "${2}"
-			[[ ${debug} == 1 ]] && set -x
-			echo
-		fi
-		git rev-parse --short HEAD &>/dev/null
-		if [[ ${?} -eq 0 ]]
-		then
-			local LOCALID
-			local REPOPWD
-			local REMOTEID
-			LOCALID=$(git rev-parse --short HEAD)
-			[[ $(git config --get remote.origin.url | grep "www-github") == "" ]] && [[ ${http_proxy} != "" ]] && RESET_PROXY="true"
-			for i in {1..3}
-			do
-				[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-				REPOPWD="${REPOPASS//@/%40}"
-				REMOTEID=$([[ ${RESET_PROXY} ]] && unset https_proxy || git config http.proxy "${PROXY_ADDRESS}"; git ls-remote "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|")" refs/heads/"$(git branch | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
-				[[ ${debug} == 1 ]] && set -x
-				[[ ${REMOTEID} == "" ]] && sleep 3 || break
-			done
-			if [[ "${REMOTEID}" == "" ]]
+			[[ -f ${1} ]] && grep 'REPOPASS=' "${1}" 1>/dev/null && rm -f "${1}"
+			if [[ -f ${1} ]]
 			then
-				local REPO_ERR
-				REPO_ERR="$(grep -i maintenance "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr)"
-				if [[ "${REPO_ERR}" == "" ]]
-				then
-				 	printf "\nYour Repository credentials are invalid!\n\n" && rm -f "${1}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit
-				else
-				 	printf "\n%s" "${REPO_ERR}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit
-				fi
+				local i
+				local retries
+				i=0
+				retries=3
+				while [[ ${i} -lt ${retries} ]]
+				do
+					[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+					if [[ ${REPOPASS} == "" ]]
+					then
+						[[ ${debug} == 1 ]] && set -x
+						read -r REPOPASS <<< "$(view_vault "${1}" "${2}" | cut -d "'" -f2)"
+					else
+						break
+					fi
+					i=$((++i))
+					[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
+				done
 			else
-				rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr
-			fi
-			if [[ "${LOCALID}" != "${REMOTEID}" ]]
-			then
 				echo
-				read -rp "Your installation package is not up to date. Updating it will overwrite any changes to tracked files. Do you want to update? ${BOLD}(y/n)${NORMAL}: " ANSWER
-				echo ""
-				if [[ "${ANSWER,,}" == "y" ]]
-				then
-					git reset -q --hard origin/"$(git branch | awk '{print $NF}')"
-					git pull "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPASS}@|")" &>"${PWD}"/.pullerr && sed -i "s|${REPOPASS}|xxxxx|" "${PWD}"/.pullerr
-					[[ ${?} == 0 ]] && echo -e "\nThe installation package has been updated. ${BOLD}Please re-run the script for the updates to take effect${NORMAL}\n\n"
-					[[ ${?} != 0 ]] && echo -e "\nThe installation package update has failed with the following error:\n\n${BOLD}$(cat "${PWD}"/.pullerr)${NORMAL}\n\n"
-					rm -f "${PWD}"/.pullerr
-					EC='exit'
-				else
-					EC='continue'
-				fi
+				read -rsp "Enter your Repository password [ENTER]: " REPOPASS
+				[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+				[[ -f ${1} ]] && rm -f "${1}"
+				printf "REPOPASS='%s'\n" "${REPOPASS}" > "${1}"
+				encrypt_vault "${1}" "${2}"
+				[[ ${debug} == 1 ]] && set -x
+				echo
 			fi
-			git config --get http.proxy 1>/dev/null && git config --remove-section http
-			[[ ${RESET_PROXY} == "true" ]] && source ~/.bashrc /etc/profile /etc/environment
-			${EC}
+			git rev-parse --short HEAD &>/dev/null
+			if [[ ${?} -eq 0 ]]
+			then
+				local LOCALID
+				local REPOPWD
+				local REMOTEID
+				LOCALID=$(git rev-parse --short HEAD)
+				[[ $(git config --get remote.origin.url | grep "www-github") == "" ]] && [[ ${http_proxy} != "" ]] && RESET_PROXY="true"
+				for i in {1..3}
+				do
+					[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+					REPOPWD="${REPOPASS//@/%40}"
+					REMOTEID=$([[ ${RESET_PROXY} ]] && unset https_proxy || git config http.proxy "${PROXY_ADDRESS}"; git ls-remote "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|")" refs/heads/"$(git branch | grep '*' | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
+					[[ ${debug} == 1 ]] && set -x
+					[[ ${REMOTEID} == "" ]] && sleep 3 || break
+				done
+				if [[ "${REMOTEID}" == "" ]]
+				then
+					local REPO_ERR
+					REPO_ERR="$(grep -i maintenance "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr)"
+					if [[ "${REPO_ERR}" == "" ]]
+					then
+					 	printf "\nYour Repository credentials are invalid!\n\n" && rm -f "${1}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit
+					else
+					 	printf "\n%s" "${REPO_ERR}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit
+					fi
+				else
+					rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr
+				fi
+				if [[ "${LOCALID}" != "${REMOTEID}" ]]
+				then
+					echo
+					read -rp "Your installation package is not up to date. Updating it will overwrite any changes to tracked files. Do you want to update? ${BOLD}(y/n)${NORMAL}: " ANSWER
+					echo ""
+					if [[ "${ANSWER,,}" == "y" ]]
+					then
+						git reset -q --hard origin/"$(git branch | awk '{print $NF}')"
+						git pull "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPASS}@|")" &>"${PWD}"/.pullerr && sed -i "s|${REPOPASS}|xxxxx|" "${PWD}"/.pullerr
+						[[ ${?} == 0 ]] && echo -e "\nThe installation package has been updated. ${BOLD}Please re-run the script for the updates to take effect${NORMAL}\n\n"
+						[[ ${?} != 0 ]] && echo -e "\nThe installation package update has failed with the following error:\n\n${BOLD}$(cat "${PWD}"/.pullerr)${NORMAL}\n\n"
+						rm -f "${PWD}"/.pullerr
+						EC='exit'
+					else
+						EC='continue'
+					fi
+				fi
+				git config --get http.proxy 1>/dev/null && git config --remove-section http
+				[[ ${RESET_PROXY} == "true" ]] && source ~/.bashrc /etc/profile /etc/environment
+				${EC}
+			fi
 		fi
 	fi
 }

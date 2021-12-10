@@ -10,4 +10,3 @@
         - not disk_rebuild|default(false)
       fail_msg: 'Unable to update the disks successfully'
   tags: vm_creation
-  
