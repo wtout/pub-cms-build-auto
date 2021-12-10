@@ -2,6 +2,7 @@
 # tasks file to configure_vms
 - block:
   - include_tasks: task_add_users.yml
+  - include_tasks: task_add_qs_scripts.yml
   - include_tasks: task_update_rp_filter.yml
   - include_tasks: task_configure_snmp.yml
   - include_tasks: task_update_chrony.yml

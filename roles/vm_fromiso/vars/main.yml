@@ -2,6 +2,6 @@
 # vars file for vm_fromiso
 iso_dir: 'Packages/ISO'
 iso_installer: "{{ customer.version.em7_iso if inventory_hostname is search('em7') else customer.version.centos_iso }}"
-vm_svc_user: "{{ user.name if user.name != '' else vars[('S' if 'dr' in group_names else 'P') + 'SVC_USER'] if credentials.username == 'root' else credentials.username }}"
+vm_svc_user: "{{ user.name if user.name != '' else (vars[('S' if 'dr' in group_names else 'P') + 'SVC_USER'] if customer.name|lower is search('mdr') else 'ansible') if credentials.username == 'root' else credentials.username }}"
 vm_svc_pass: "{{ user.password if user.name != '' else credentials.password }}"
 chrony_file: '/etc/chrony.conf'

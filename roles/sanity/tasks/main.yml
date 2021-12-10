@@ -17,10 +17,11 @@
       ignore_errors: true
       check_mode: no
     - block:
-      - name: Update SSH password
+      - name: Update SSH credentials
         set_fact:
-          ansible_ssh_pass: "{{ postppp }}"
-          ansible_become_pass: "{{ postppp }}"
+          ansible_user: "{{ vm_svc_user }}"
+          ansible_ssh_pass: "{{ vm_svc_pass }}"
+          ansible_become_pass: "{{ vm_svc_pass }}"
         no_log: true
       - name: check updated VM credentials
         wait_for_connection:
@@ -71,7 +72,7 @@
         when: inventory_hostname is search('lnxjmp')
       when: "sc_vm_creds2|default({'failed': false}) is succeeded"
     - include_tasks: task_print_report.yml
-    when: sc_vm_reachable is succeeded
+#    when: sc_vm_reachable is succeeded
   when:
     - sanity_check | default(false) | bool
   tags: sanity

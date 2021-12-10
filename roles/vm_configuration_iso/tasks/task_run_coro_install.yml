@@ -18,7 +18,7 @@
 
   - name: run coro_install script
     ansible.builtin.shell: |
-      echo -e "{{ answers }}" | coro_install
+      echo -e "{{ answers }}" | /opt/em7/bin/coro_install
     register: coro_install_status1
     until: coro_install_status1 is succeeded
     delay: 30
@@ -37,7 +37,7 @@
         loop_var: loop_item
     - name: re-run coro_install script
       ansible.builtin.shell: |
-        echo -e "{{ answers }}" | coro_install
+        echo -e "{{ answers }}" | /opt/em7/bin/coro_install
       register: coro_install_status2
       until: coro_install_status2 is succeeded
       delay: 30
@@ -47,5 +47,5 @@
     when: coro_install_status1.stdout is search('please start and IP the heartbeat interface')
 
   when: inventory_hostname is search('em7db')
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+  become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration

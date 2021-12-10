@@ -2,6 +2,7 @@
 # Tasks to check IND sanity
 - block:
   - include_tasks: task_check_puppet_push_status.yml
+    when: customer.version.release[1:]|replace('.', '')|int <= 9217
   - block:
     - name: define list of services
       ansible.builtin.set_fact:
@@ -26,13 +27,13 @@
         - { name: 'snmpd', instances: 1 }
       loop_control:
         loop_var: svc_item
-    - include_tasks: task_check_splunk_status.yml
-    - include_tasks: task_check_chrony_file.yml
     - include_tasks:
         file: task_check_user_expiry_status.yml
         apply:
           vars:
             userid: 'splunk'
+    - include_tasks: task_check_splunk_status.yml
+    - include_tasks: task_check_chrony_file.yml
     - include_tasks:
         file: task_check_ownership_status.yml
         apply:

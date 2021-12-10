@@ -28,5 +28,5 @@
 
     - include_tasks: task_configure_vms.yml
     when: vco_vm_reachable is succeeded
-  when: configure_vms | default(false) | bool
+  when: configure_vms_ova | default(false) | bool
   tags: vm_configuration

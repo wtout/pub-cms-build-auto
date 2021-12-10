@@ -1,31 +1,38 @@
 ---
 # Tasks to check Indexer Discovery status
 - block:
-  - name: check status of indexer discovery
-    ansible.builtin.shell: |
-      $(which su) splunk -c '/opt/splunk/bin/splunk list forward-server -auth {{ spl_admin_user }}:{{ spl_admin_pass }}'
-    register: reg_ind_disc
-    args:
-      warn: no
-    check_mode: no
-    ignore_errors: yes
-    no_log: yes
-  - debug:
-      msg: "{{ reg_ind_disc|replace(spl_admin_pass, 'obfuscated') }}"
-    when: reg_ind_disc is failed
   - name: define indexer_discovery status
     ansible.builtin.set_fact:
-      indexer_discovery_status: 'Admin credentials are invalid'
+      indexer_discovery_status: "{{ user_expiry_status }}"
+    when: user_expiry_status|default('') is search('does not exist')
+  - block:
+    - name: check status of indexer discovery
+      ansible.builtin.shell: |
+        $(which su) splunk -c '/opt/splunk/bin/splunk list forward-server -auth {{ spl_admin_user }}:{{ spl_admin_pass }}'
+      register: reg_ind_disc
+      args:
+        warn: no
+      check_mode: no
+      ignore_errors: yes
+      no_log: yes
+    - debug:
+        msg: "{{ reg_ind_disc|replace(spl_admin_pass, 'obfuscated') }}"
+      when: reg_ind_disc is failed
+    - name: define indexer_discovery status
+      ansible.builtin.set_fact:
+        indexer_discovery_status: 'Admin credentials are invalid'
+      when:
+        - reg_ind_disc is failed
+        - reg_ind_disc.stderr == 'Login failed'
+    - name: define indexer_discovery status
+      ansible.builtin.set_fact:
+        indexer_discovery_status: "{{ reg_ind_disc.stdout }}"
+      when:
+        - reg_ind_disc is succeeded
+        - reg_ind_disc.stdout_lines[1] is search('None')
     when:
-      - reg_ind_disc is failed
-      - reg_ind_disc.stderr == 'Login failed'
-  - name: define indexer_discovery status
-    ansible.builtin.set_fact:
-      indexer_discovery_status: "{{ reg_ind_disc.stdout }}"
-    when:
-      - reg_ind_disc is succeeded
-      - reg_ind_disc.stdout_lines[1] is search('None')
+      - user_expiry_status|default('') is not search('does not exist')
+      - "spl_status|default({'failed': true}) is succeeded"
   when:
-    - "spl_status|default({'failed': true}) is succeeded"
     - inventory_hostname is search('spl')
   tags: sanity

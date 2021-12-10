@@ -11,9 +11,10 @@
       - { name: 'ciscosupporttier2', gid: 60002 }
       - { name: 'ciscosupporttier3', gid: 60003 }
       - { name: 'ciscosupporttier4', gid: 60004 }
-      - { name: 'silosupport', gid: 60006 }
+      - { name: "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}", gid: "{{ '60006' if inventory_hostname is search('em7') else '' }}" }
     loop_control:
       loop_var: grp_item
+    when: grp_item.name != ''
   - name: Add the users
     user:
       name: "{{ user_item.name }}"
@@ -25,28 +26,25 @@
       - { name: 'ciscosupporttier2', password: 'cisco123' }
       - { name: 'ciscosupporttier3', password: 'cisco123' }
       - { name: 'ciscosupporttier4', password: 'cisco123' }
-      - { name: 'silosupport', password: 'cisco123' }
+      - { name: "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}", password: 'cisco123' }
     loop_control:
       loop_var: user_item
-  - name: ensure the /opt/qs_scripts directory exists
-    ansible.builtin.file:
-      path: /opt/qs_scripts
-      state: directory
-      group: root
-      owner: root
-      mode: 0755
-  - name: copy scripts to em7 host
+    when: user_item.name != ''
+  - name: copy user file to /etc/sudoers.d
     ansible.builtin.copy:
-      src: "{{ role_path }}/files/{{ file_item }}"
-      dest: /opt/qs_scripts
-      group: root
+      src: "{{ role_path }}/files/{{ user_item }}"
+      dest: "/etc/sudoers.d/{{ user_item }}"
       owner: root
-      mode: 0755
+      group: root
+      mode: 0400
     loop:
-      - users.sh
-      - password.sh
+      - ciscosupporttier1
+      - ciscosupporttier2
+      - ciscosupporttier3
+      - ciscosupporttier4
+      - "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}"
     loop_control:
-      loop_var: file_item
-  when: inventory_hostname is search('em7')
+      loop_var: user_item
+    when: user_item != ''
   become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration

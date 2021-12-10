@@ -1,0 +1,20 @@
+---
+# tasks to update /etc/silo.conf on EM7 VM
+- block:
+  - name: Update silo.conf on VM
+    replace:
+      path: /etc/silo.conf
+      regexp: '^({{ task_item.param }}) (.*)$'
+      replace: '\g<1> {{ task_item.value }}'
+    loop:
+      - { param: 'ipaddress =', value: "{{ ansible_host }}" }
+      - { param: 'dbipaddrs =', value: "{{ em7_ip1_list|join(',') if vm.name is search('em7aio') else ((em7db_ip1_list|join(',') + ',' + vip.db + ',' + drem7db_ip1_list|join(',')) if ('drem7dc' in group_names or 'drem7mc' in group_names) else (drem7db_ip1_list|join(',') + ',' + vip.db) if 'dr' in group_names else (em7db_ip1_list|join(',') + ',' + vip.db)) if customer.version.release is not search('9.2') else vip.db }}" }
+      - { param: 'ipaddr =', value: "{{ em7_ip2_list|last if vm.name is search('em7aio') else em7db_ip2_list[0] if inventory_hostname == groups['em7db'][1] else em7db_ip2_list[1] }}" }
+      - { param: 'dbserver =', value: "{{ vip.db if inventory_hostname is search('em7prt') else '' }}" }
+    loop_control:
+      loop_var: task_item
+    when:
+      - task_item.value != ''
+  when: inventory_hostname is search('em7')
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_configuration

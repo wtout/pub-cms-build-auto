@@ -1,36 +1,43 @@
 ---
 # Tasks to check shcluster status
 - block:
-  - name: check status of shcluster
-    ansible.builtin.shell: |
-      $(which su) splunk -c '/opt/splunk/bin/splunk show shcluster-status -auth {{ spl_admin_user }}:{{ spl_admin_pass }}'
-    register: reg_shclst_status
-    args:
-      warn: no
-    check_mode: no
-    ignore_errors: yes
-    no_log: yes
-  - debug:
-      msg: "{{ reg_shclst_status|replace(spl_admin_pass, 'obfuscated') }}"
-    when: reg_shclst_status is failed
-  - name: define shcluster status
+  - name: define shcluster_status
     ansible.builtin.set_fact:
-      shcluster_status: 'Admin credentials are invalid'
+      shcluster_status: "{{ user_expiry_status }}"
+    when: user_expiry_status|default('') is search('does not exist')
+  - block:
+    - name: check status of shcluster
+      ansible.builtin.shell: |
+        $(which su) splunk -c '/opt/splunk/bin/splunk show shcluster-status -auth {{ spl_admin_user }}:{{ spl_admin_pass }}'
+      register: reg_shclst_status
+      args:
+        warn: no
+      check_mode: no
+      ignore_errors: yes
+      no_log: yes
+    - debug:
+        msg: "{{ reg_shclst_status|replace(spl_admin_pass, 'obfuscated') }}"
+      when: reg_shclst_status is failed
+    - name: define shcluster status
+      ansible.builtin.set_fact:
+        shcluster_status: 'Admin credentials are invalid'
+      when:
+        - reg_shclst_status.stderr != ''
+        - reg_shclst_status.stderr is search('Login failed')
+    - name: define shcluster status
+      ansible.builtin.set_fact:
+        shcluster_status: "{{ reg_shclst_status.stderr }}"
+      when:
+        - reg_shclst_status.stderr != ''
+        - reg_shclst_status.stderr is not search('Login failed')
+    - name: define shcluster status
+      ansible.builtin.set_fact:
+        shcluster_status: 'shcluster is down'
+      when:
+        - reg_shclst_status is failed
     when:
-      - reg_shclst_status.stderr != ''
-      - reg_shclst_status.stderr is search('Login failed')
-  - name: define shcluster status
-    ansible.builtin.set_fact:
-      shcluster_status: "{{ reg_shclst_status.stderr }}"
-    when:
-      - reg_shclst_status.stderr != ''
-      - reg_shclst_status.stderr is not search('Login failed')
-  - name: define shcluster status
-    ansible.builtin.set_fact:
-      shcluster_status: 'shcluster is down'
-    when:
-      - reg_shclst_status is failed
+      - user_expiry_status|default('') is not search('does not exist')
+      - "spl_status|default({'failed': true}) is succeeded"
   when:
-    - "spl_status|default({'failed': true}) is succeeded"
     - inventory_hostname is search('splsrc')
   tags: sanity

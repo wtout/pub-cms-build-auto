@@ -56,11 +56,19 @@
   roles:
     - {role: integ_splunk, when: install_splunk | default(false) | bool}
     - {role: drs_creation, when: deploy_drs | default(false) | bool}
-    - {role: vm_configuration, when: configure_vms | default(false) | bool}
+    - {role: vm_configuration_iso, when: configure_vms_iso | default(false) | bool}
+    - {role: vm_configuration_ova, when: configure_vms_ova | default(false) | bool}
     - {role: puppet, when: push_puppet | default(false) | bool}
     - {role: vm_ppp_configuration, when: configure_ppp_vms | default(false) | bool}
     - {role: splunk_mop, when: splunk_mop_fix | default(false) | bool}
     - {role: drs_status, when: check_drs_creation | default(false) | bool}
+
+# Play to check the VMs
+- name: Check VMs
+  hosts: all
+  gather_facts: no
+
+  roles:
     - {role: sanity, when: sanity_check | default(false) | bool}
 
 # Play to delete the VMs

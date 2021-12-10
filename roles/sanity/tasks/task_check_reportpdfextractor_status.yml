@@ -1,39 +1,45 @@
 ---
 # Tasks to check report PDF extractor status
 - block:
-  - name: check if {{ fname }} exists
-    ansible.builtin.stat:
-      path: "{{ fname }}"
-    register: report_extractor
-  - name: define reportpdfextractor status
+  - name: define shcluster_status
     ansible.builtin.set_fact:
-      reportpdfextractor_status: "{{ fname + ' is not found' }}"
-    when:
-      - not report_extractor.stat.exists
+      reportpdfextractor_status: "{{ user_expiry_status }}"
+    when: user_expiry_status|default('') is search('does not exist')
   - block:
-    - name: check if mail_server is configured
-      ansible.builtin.lineinfile:
-        dest: "{{ fname }}"
-        line: 'mail_server = 127.0.0.1'
-      check_mode: yes
-      register: ms_status
-    - name: check if mailbox_user is configured
-      ansible.builtin.lineinfile:
-        dest: "{{ fname }}"
-        line: 'mailbox_user = sapphirereports'
-      check_mode: yes
-      register: mu_status
+    - name: check if {{ fname }} exists
+      ansible.builtin.stat:
+        path: "{{ fname }}"
+      register: report_extractor
     - name: define reportpdfextractor status
       ansible.builtin.set_fact:
-        reportpdfextractor_status: "{{ reportpdfextractor_status|default([]) + ['mail_server is not pointing to localhost in ' + fname] }}"
+        reportpdfextractor_status: "{{ fname + ' is not found' }}"
       when:
-        - ms_status is changed
-    - name: define reportpdfextractor status
-      ansible.builtin.set_fact:
-        reportpdfextractor_status: "{{ reportpdfextractor_status|default([]) + ['mailbox_user is not sapphirereports in ' + fname] }}"
-      when:
-        - mu_status is changed
-    when: report_extractor.stat.exists
+        - not report_extractor.stat.exists
+    - block:
+      - name: check if mail_server is configured
+        ansible.builtin.lineinfile:
+          dest: "{{ fname }}"
+          line: 'mail_server = 127.0.0.1'
+        check_mode: yes
+        register: ms_status
+      - name: check if mailbox_user is configured
+        ansible.builtin.lineinfile:
+          dest: "{{ fname }}"
+          line: 'mailbox_user = sapphirereports'
+        check_mode: yes
+        register: mu_status
+      - name: define reportpdfextractor status
+        ansible.builtin.set_fact:
+          reportpdfextractor_status: "{{ reportpdfextractor_status|default([]) + ['mail_server is not pointing to localhost in ' + fname] }}"
+        when:
+          - ms_status is changed
+      - name: define reportpdfextractor status
+        ansible.builtin.set_fact:
+          reportpdfextractor_status: "{{ reportpdfextractor_status|default([]) + ['mailbox_user is not sapphirereports in ' + fname] }}"
+        when:
+          - mu_status is changed
+      when: report_extractor.stat.exists
+    when: user_expiry_status|default('') is not search('does not exist')
   when:
     - inventory_hostname is search('splsrc')
   vars:

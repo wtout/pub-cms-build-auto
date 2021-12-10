@@ -3,11 +3,22 @@
 - block:
   - name: check current version
     ansible.builtin.shell: |
-      grep -wi currentversion /opt/puppet/var/data.conf
+      grep -wi currentversion {{ fileid }}
     check_mode: no
     register: cv
+    ignore_errors: yes
+  - name: define current_version status
+    ansible.builtin.set_fact:
+      rly_current_version_status: "{{ fileid + ' is not found' }}"
+    when:
+      - cv is failed
+      - cv.stderr is search('No such file or directory')
   - name: define current_version status
     ansible.builtin.set_fact:
       rly_current_version_status: "{{ 'The current release version is not ' + customer.version.release | replace('R', '') }}"
-    when: cv.stdout is not search(customer.version.release | replace('R', ''))
+    when:
+      - cv is succeeded
+      - cv.stdout is not search(customer.version.release | replace('R', ''))
+  vars:
+    fileid: '/opt/puppet/var/data.conf'
   tags: sanity

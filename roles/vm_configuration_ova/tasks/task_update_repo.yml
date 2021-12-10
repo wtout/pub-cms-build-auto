@@ -1,0 +1,37 @@
+---
+# tasks to create yum repos on VM
+- block:
+  - name: get list of default yum repositories
+    find:
+      path: '/etc/yum.repos.d'
+      patterns: '*.repo'
+      excludes: 'QS*,qs*'
+    register: repo_names
+  - name: delete the default yum repositories
+    file:
+      path: "{{ repo_item.path }}"
+      state: absent
+    loop: "{{ repo_names.files }}"
+    loop_control:
+      loop_var: repo_item
+    notify: yum clean all
+  - name: Create the yum repositories
+    yum_repository:
+      name: "{{ repo_item.name }}"
+      baseurl: "{{ repo_item.baseurl }}"
+      description: "{{ repo_item.description }}"
+      enabled: "{{ repo_item.enabled }}"
+      file: "{{ repo_item.file }}"
+      gpgcheck: "{{ repo_item.gpgcheck }}"
+      sslverify: "{{ repo_item.sslverify }}"
+      state: "{{ repo_item.state }}"
+    loop:
+      - { name: 'QuickSilver_Packages', baseurl: "{{ yum.secondary.baseurl if 'dr' in group_names else yum.primary.baseurl }}/{{ customer.version.release }}", description: 'QuickSilver Packages repo', enabled: yes, file: 'qs_repo', gpgcheck: no, sslverify: no, state: 'present' }
+      - { name: 'QS-PROD', baseurl: "{{ yum.secondary.baseurl if 'dr' in group_names else yum.primary.baseurl }}/QS{{ \"V2\" if customer.version.release is search(\"9.2\") else \"\" }}", description: 'Production repo', enabled: yes, file: 'QS', gpgcheck: no, sslverify: no, state: 'present' }
+    loop_control:
+      loop_var: repo_item
+    register: yum_repo
+    until: yum_repo is succeeded
+    retries: 3
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_configuration

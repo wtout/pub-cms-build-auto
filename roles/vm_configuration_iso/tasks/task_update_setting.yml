@@ -13,7 +13,7 @@
         regexp: '^({{ varname }}=).*$'
         line: '\g<1>{{ varvalue }}'
         backrefs: yes
-      become: yes
+      become: "{{ true if ansible_user != 'root' else false }}"
       when: var_status is succeeded
 
     - name: Add {{ varname }} to {{ fname }}
@@ -22,6 +22,6 @@
         line: "{{ varname + '=' + varvalue }}"
         insertafter: "{{ instanza }}"
         state: present
-      become: yes
+      become: "{{ true if ansible_user != 'root' else false }}"
       when: var_status is failed
   tags: vm_configuration

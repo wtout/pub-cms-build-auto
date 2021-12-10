@@ -1,0 +1,16 @@
+---
+# Tasks to configure snmpd on the VM
+- block:
+  - name: get nic ens160 MAC address 
+    ansible.builtin.shell: ip link show ens160 | grep ether | awk '{print $2}'
+    register: ens160_mac
+  - name: update snmpd.conf with ens160 MAC address
+    ansible.builtin.lineinfile:
+      path: '/etc/snmp/snmpd.conf'
+      line: "engineid {{ ens160_mac.stdout | replace(':', '') }}"
+    notify: restart snmpd service 
+  when:
+    - not ansible_check_mode
+    - inventory_hostname is search('em7')
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_configuration

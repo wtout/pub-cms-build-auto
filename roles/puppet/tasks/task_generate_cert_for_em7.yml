@@ -19,54 +19,58 @@
       - customer.version.release is search('9.2')
       - inventory_hostname is regex('mc|dc')
 
+  - name: check if generate-ngx-cert.sh exists
+    stat:
+      path: '/opt/em7/share/ssl/generate-ngx-cert.sh'
+    register: script2_stat
+  - assert:
+      that: script2_stat.stat.exists
+      fail_msg: 'Script to generate nginx certificates for em7 does not exist. Aborting!'
   - block:
-    - name: create a backup of old nginx certificate files
-      ansible.builtin.shell: |
-        cp silossl.key silossl.key.$(ls --full-time silossl.key | awk '{print $6"-"$7}')
-        cp silossl.pem silossl.pem.$(ls --full-time silossl.pem | awk '{print $6"-"$7}')
-      ignore_errors: true
-      args:
-        chdir: /etc/nginx
-      become: "{{ true if ansible_user != 'root' else false }}"
-    - name: generate nginx certificate for EM7 VM
-      shell: |
-        openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=US/ST=Silo/L=Reston/O=Silo/CN=`hostname`" -keyout /etc/nginx/silossl.key -out /etc/nginx/silossl.pem
-      register: nginx_cert
-      become: "{{ true if ansible_user != 'root' else false }}"
+    - name: check if script has CRLF line terminators
+      command: file /opt/em7/share/ssl/generate-ngx-cert.sh
+      register: file_status
+      check_mode: no
     - block:
-      - name: restart nginx
-        systemd:
-          name: nginx
-          state: restarted
-          daemon_reload: yes
-        become: "{{ true if ansible_user != 'root' else false }}"
-      - name: ensure /home/em7release/.puppetlabs/etc/puppet/puppet.conf exists
-        ansible.builtin.file:
-          path: "{{ file_item.path }}"
-          state: "{{ file_item.state }}"
-        loop:
-          - { path: '/home/em7release/.puppetlabs/etc/puppet', state: directory }
-          - { path: '/home/em7release/.puppetlabs/etc/puppet/puppet.conf', state: touch }
-        loop_control:
-          loop_var: file_item
-      - name: update puppet.conf
-        lineinfile:
-          path: '/home/em7release/.puppetlabs/etc/puppet/puppet.conf'
-          line: "{{ line_item }}"
-          group: em7release
-          owner: em7release
-        loop:
-          - '[agent]'
-          - 'certname = em7release.{{ vm.name }}.{{ sysconfig.secondary.domain_name if 'dr in group_names else sysconfig.primary.domain_name }}'
-          - 'server = {{ puppet.fqdn }}'
-        loop_control:
-          loop_var: line_item
-      when: nginx_cert is succeeded
-
+      - name: remove CR from script
+        shell: tr -d '\r' <generate-ngx-cert.sh> cleanfile.sh
+        args:
+          chdir: /opt/em7/share/ssl
+      - name: replace the faulty script with the corrected one
+        copy:
+          src: /opt/em7/share/ssl/cleanfile.sh
+          dest: /opt/em7/share/ssl/generate-ngx-cert.sh
+          remote_src: yes
+          force: yes
+          owner: root
+          group: root
+          mode: 0755
+      - name: delete the temporary file
+        file:
+          path: /opt/em7/share/ssl/cleanfile.sh
+          state: absent
+      when: file_status.stdout is search('CRLF line terminators')
+    - name: generate nginx certificate for EM7 VM
+      shell: ./generate-ngx-cert.sh
+      args:
+        chdir: '/opt/em7/share/ssl'
+    - name: update puppet.conf
+      lineinfile:
+        path: '/home/em7release/.puppetlabs/etc/puppet/puppet.conf'
+        line: "{{ line_item }}"
+        group: em7release
+        owner: em7release
+      loop:
+        - '[agent]'
+        - "certname = em7release.{{ vm.name }}.{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"
+        - "server = {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}"
+      loop_control:
+        loop_var: line_item
+    when: script2_stat.stat.exists
+    become: "{{ true if ansible_user != 'root' else false }}"
   - name: create em7 certificate
     shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
     register: puppet_agent_cmd
     failed_when: puppet_agent_cmd.stdout is not search('Creating a new SSL key for')
   when: inventory_hostname is search('em7')
   tags: puppet
-

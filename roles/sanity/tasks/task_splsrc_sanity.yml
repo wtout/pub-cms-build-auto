@@ -2,6 +2,7 @@
 # Tasks to check SRC sanity
 - block:
   - include_tasks: task_check_puppet_push_status.yml
+    when: customer.version.release[1:]|replace('.', '')|int <= 9217
   - block:
     - name: define list of services
       ansible.builtin.set_fact:
@@ -32,21 +33,18 @@
         apply:
           vars:
             userid: 'splunk'
-    - block:
-      - include_tasks: task_check_splunk_status.yml
-      - include_tasks: task_check_indexer_discovery_status.yml
-      - include_tasks: task_check_shcluster_status.yml
-      - include_tasks: task_check_reportpdfextractor_status.yml
-      - include_tasks:
-          file: task_check_passwordless_ssh_status.yml
-          apply:
-            vars:
-              rly_host: "{{ host_item }}"
-        loop: "{{ groups['rly'] }}"
-        loop_control:
-          loop_var: host_item
-      when:
-        - user_expiry_status|default('') is not search('does not exist')
+    - include_tasks: task_check_splunk_status.yml
+    - include_tasks: task_check_indexer_discovery_status.yml
+    - include_tasks: task_check_shcluster_status.yml
+    - include_tasks: task_check_reportpdfextractor_status.yml
+    - include_tasks:
+        file: task_check_passwordless_ssh_status.yml
+        apply:
+          vars:
+            rly_host: "{{ host_item }}"
+      loop: "{{ groups['rly'] }}"
+      loop_control:
+        loop_var: host_item
     - include_tasks:
         file: task_check_ownership_status.yml
         apply:
@@ -65,3 +63,4 @@
     - include_tasks: task_check_sudoers_user_status.yml
   when: inventory_hostname is search('splsrc')
   tags: sanity
+  

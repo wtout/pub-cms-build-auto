@@ -1,0 +1,19 @@
+---
+# tasks to get the license status for the EM7 VM
+- block:
+  - include_tasks:
+      file: task_em7_check_db_entries.yml
+      apply:
+        vars:
+          em7_host_delegate: "{{ groups['em7db']|first if groups['em7db'] is defined else groups['em7']|first }}"
+          status_var: 'licenses_status1'
+  - include_tasks:
+      file: task_em7_check_db_entries.yml
+      apply:
+        vars:
+          em7_host_delegate: "{{ groups['drem7db']|first }}"
+          status_var: 'licenses_status2'
+    when:
+      - inventory_hostname is search('dr')
+      - licenses_status1.stdout_lines|default([]) | select('search', vm.name) | length < 1
+  tags: puppet

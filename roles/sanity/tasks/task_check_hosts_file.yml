@@ -18,13 +18,19 @@
   - name: define splind_hosts_idx_status
     ansible.builtin.set_fact:
       splind_hosts_idx_status: "{{ splind_hosts_idx_status|default([]) + ['Wrong splunk-head-indexer is configured in /etc/hosts'] }}"
-    when: (reg_hosts_idx.stdout_lines | select('search', 'head')|first).split('\t')|first != splunk.he_indexer01_ip
+    when:
+      - reg_hosts_idx.stdout_lines | select('search', 'head') | length > 0
+      - (reg_hosts_idx.stdout_lines | select('search', 'head')|first).split('\t')|first != splunk.he_indexer01_ip
   - name: define splind_hosts_idx_status
     ansible.builtin.set_fact:
       splind_hosts_idx_status: "{{ splind_hosts_idx_status|default([]) + ['Wrong splunk-site1-indexer01 is configured in /etc/hosts'] }}"
-    when: (reg_hosts_idx.stdout_lines | select('search', 'site')|first).split('\t')|first != (spl_ip1_list[0] if groups['spl']|length == 1 else drsplind_ip1_list[0] if 'dr' in group_names else splind_ip1_list[0])
+    when:
+      - reg_hosts_idx.stdout_lines | select('search', 'site') | length > 0
+      - (reg_hosts_idx.stdout_lines | select('search', 'site')|first).split('\t')|first != (spl_ip1_list[0] if groups['spl']|length == 1 else drsplind_ip1_list[0] if 'dr' in group_names else splind_ip1_list[0])
   - name: define splind_hosts_idx_status
     ansible.builtin.set_fact:
       splind_hosts_idx_status: "{{ splind_hosts_idx_status|default([]) + ['Wrong splunk-site2-indexer01 is configured in /etc/hosts'] }}"
-    when: (reg_hosts_idx.stdout_lines | select('search', 'site')|last).split('\t')|first != (spl_ip1_list[0] if groups['spl']|length == 1 else drsplind_ip1_list[0] if 'dr' in group_names else splind_ip1_list[1])
+    when:
+      - reg_hosts_idx.stdout_lines | select('search', 'site') | length > 0
+      - (reg_hosts_idx.stdout_lines | select('search', 'site')|last).split('\t')|first != (spl_ip1_list[0] if groups['spl']|length == 1 else drsplind_ip1_list[0] if 'dr' in group_names else splind_ip1_list[1])
   tags: sanity

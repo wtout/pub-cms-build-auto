@@ -1,0 +1,43 @@
+---
+# tasks to install packages and upgrade kernel on non-EM7 VM
+- block:
+  - name: install packages and upgrade kernel
+    yum:
+      name: "{{ pkg_item.name }}"
+      state: "{{ pkg_item.state }}"
+    loop:
+      - { name: 'expect', state: 'installed' }
+      - { name: 'kernel', state: 'latest' }
+      - { name: 'perl-Config-IniFiles', state: 'installed' }
+    loop_control:
+      loop_var: pkg_item
+    register: pkg_install
+    until: pkg_install is succeeded
+    retries: 7
+    async: 8400
+    poll: 10
+    when: not ansible_check_mode
+
+  - block:
+    - name: create /root/bin directory
+      file:
+        path: /root/bin
+        state: directory
+    - name: install nfs-utils
+      yum:
+        name: nfs-utils
+        state: installed
+      notify: start nfs
+      register: nfs_install
+      until: nfs_install is succeeded
+      retries: 7
+      async: 600
+      poll: 10
+      when: not ansible_check_mode
+    when:
+      - inventory_hostname is not search('atarly')
+      - inventory_hostname is search('rly')
+  become: "{{ true if ansible_user != 'root' else false }}"
+  when:
+    - inventory_hostname is not search('em7')
+  tags: vm_configuration

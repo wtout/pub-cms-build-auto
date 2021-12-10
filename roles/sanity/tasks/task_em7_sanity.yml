@@ -2,6 +2,7 @@
 # Tasks to check DB sanity
 - block:
   - include_tasks: task_check_puppet_push_status.yml
+    when: customer.version.release[1:]|replace('.', '')|int <= 9217
   - block:
     - name: define list of services
       ansible.builtin.set_fact:

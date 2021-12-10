@@ -3,7 +3,7 @@
 - block:
   - name: "vm_configuration: make DB01 primary"
     include_role:
-      name: vm_configuration
+      name: vm_configuration_ova
       tasks_from: task_make_db01_primary.yml
   - name: check if puppet push {{ push_num|int }} is already running
     shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"

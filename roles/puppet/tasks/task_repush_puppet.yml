@@ -8,7 +8,7 @@
     no_log: true
   - name: "vm_configuration: make DB01 primary"
     include_role:
-      name: vm_configuration
+      name: vm_configuration_ova
       tasks_from: task_make_db01_primary.yml
   - name: "relaunch puppet push #1"
     shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
@@ -50,7 +50,7 @@
         - delete_client_cert_on_vm | default(false) | bool
     - name: "vm_configuration: make DB01 primary"
       include_role:
-        name: vm_configuration
+        name: vm_configuration_ova
         tasks_from: task_make_db01_primary.yml
     - name: "relaunch puppet push #2"
       shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
@@ -88,7 +88,7 @@
           - delete_client_cert_on_vm | default(false) | bool
       - name: "vm_configuration: make DB01 primary"
         include_role:
-          name: vm_configuration
+          name: vm_configuration_ova
           tasks_from: task_make_db01_primary.yml
       - name: "relaunch puppet push #3"
         shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test

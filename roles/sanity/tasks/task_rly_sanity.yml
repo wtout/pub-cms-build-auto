@@ -2,6 +2,7 @@
 # Tasks to check RLY sanity
 - block:
   - include_tasks: task_check_puppet_push_status.yml
+    when: customer.version.release[1:]|replace('.', '')|int <= 9217
   - block:
     - include_tasks: task_check_rly_current_version.yml
     - include_tasks: task_check_rly_rpms_status.yml

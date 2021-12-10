@@ -8,7 +8,7 @@
       state: present
       reload: yes
     register: add_sysctl
-    become: yes
+    become: "{{ true if ansible_user != 'root' else false }}"
     loop:
       - { key: net.ipv4.conf.default.rp_filter, value: 2 }
       - { key: net.ipv4.conf.all.rp_filter, value: 2 }
