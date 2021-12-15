@@ -20,7 +20,7 @@
     - include_tasks: task_deploy_em7iso.yml
     - ansible.builtin.assert:
         that:
-          - deploy_em7iso is succeeded
+          - "deploy_em7iso|default({'failed': false}) is succeeded"
     - include_tasks: task_update_em7prt_disk0.yml
     - include_tasks: task_reboot_vm.yml
     - include_tasks: task_rename_nic2.yml

@@ -7,15 +7,27 @@
   - include_tasks: task_configure_snmp.yml
   - include_tasks: task_update_chrony.yml
   - include_tasks: task_update_repo.yml
-  - include_tasks: task_update_puppet_data_file.yml
   - include_tasks: task_update_hosts_file.yml
   - include_tasks: task_coro_install.yml
+  - name: time laps
+    ansible.builtin.wait_for:
+      timeout: 30
+    async: 35
+    poll: 0
+    register: reg_time_laps
+    when: inventory_hostname is search('em7db')
   - include_tasks: task_update_silo_file.yml
-  - include_tasks: task_update_password_silo_file.yml
   - include_tasks: task_install_packages.yml
   - name: flush handlers
     meta: flush_handlers
+  - name: check time laps
+    ansible.builtin.async_status:
+      jid: "{{ reg_time_laps.ansible_job_id }}"
+    register: reg_time_check
+    until: reg_time_check.finished
+    retries: 3
+    delay: 12
+    when: inventory_hostname is search('em7db')
   - include_tasks: task_set_max_connections.yml
   - include_tasks: task_update_exports_file.yml
-  - include_tasks: task_update_silo_dr_file.yml
   tags: vm_configuration

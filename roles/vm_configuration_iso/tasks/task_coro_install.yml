@@ -30,14 +30,14 @@
   - include_tasks: task_run_coro_install.yml
     when: inventory_hostname is search('02')
 
-  - name: start pacemaker and corosync
+  - name: start corosync and pacemaker
     systemd:
       name: "{{ service_item }}"
       state: started
       daemon_reload: yes
     loop:
-      - pacemaker
       - corosync
+      - pacemaker
     loop_control:
       loop_var: service_item
     when:
