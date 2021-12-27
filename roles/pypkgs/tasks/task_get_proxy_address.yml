@@ -76,7 +76,7 @@
       when:
         - reg_validate_proxy1 is failed
     when: reg_access_internet is failed or ansible_parent_role_names|default([]) != []
-  when: auto_dir is not search('cdra')
+  when: invoker is not search('cdra')
   delegate_to: "{{ host_delegate|default('localhost') }}"
   run_once: true
   tags: [ 'always', 'pypkgs' ]

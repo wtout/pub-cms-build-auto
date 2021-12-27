@@ -29,7 +29,7 @@
       when: NOTIF_MSG|default([]) != []
     - assert:
         that: NOTIF_MSG|default([]) == []
-    when: INVOKED|default(false) or auto_dir is search('cdra')
+    when: invoker is search('cdra')
   - block:
     - name: Get user's identity
       shell: head -4 {{ LFILE }}
@@ -67,14 +67,6 @@
       include_role:
         name: pypkgs
         tasks_from: task_get_proxy_address.yml
-  # This module cannot be used currently due to a known bug. Will revisit in the future
-  #  - name: Send notification via Webex Teams
-  #    cisco_spark:
-  #      recipient_type: roomId
-  #      recipient_id: 'Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj'
-  #      message_type: markdown
-  #      message: "{{ NOTIF_MSG | join('\n') }}"
-  #      personal_token: MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f
   # The below task implements the following curl command
   #  - name: Send notification via Webex Teams
   #    shell: >
@@ -93,7 +85,5 @@
       environment:
         http_proxy: "{{ proxy_address|default('') }}"
         https_proxy: "{{ proxy_address|default('') }}" # Ansible only supports http proxies currently
-    when:
-      - not INVOKED|default(false)
-      - auto_dir is not search('cdra')
+    when: invoker is not search('cdra')
   tags: [ 'never', 'notify' ]

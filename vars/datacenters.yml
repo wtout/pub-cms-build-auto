@@ -1,7 +1,6 @@
 ---
 auto_dir: "{{ lookup('env', 'PWD') }}"
-#bfiso: true
-
+invoker: "{{ lookup('env', 'MYINVOKER') }}"
 ##########################################
 # Do not modify anything below this line
 ##########################################

@@ -21,8 +21,8 @@
           device_type: e1000
         - name: "{{ netconfig.network2 }}"
           device_type: e1000
-      customvalues:
-        - key: machine.id
+      advanced_settings:
+        - key: 'machine.id'
           value: "ip={{ netconfig.ipaddress1 }}&netmask={{ netconfig.netmask1 }}&gateway={{ netconfig.gateway1 }}"
       customization:
         dns_servers: "{{ sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers }}"

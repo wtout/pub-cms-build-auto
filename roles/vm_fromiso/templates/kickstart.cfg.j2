@@ -75,7 +75,7 @@ samba-common-tools
 krb5-workstation
 openldap-clients
 policycoreutils-python
-{% if auto_dir is search('cdra') %}
+{% if invoker is search('cdra') %}
 {% block cdra_pkgs %}
 nss-pam-ldapd
 expect

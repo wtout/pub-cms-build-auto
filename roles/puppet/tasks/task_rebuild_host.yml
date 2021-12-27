@@ -20,7 +20,7 @@
       tasks_from: task_get_ova_name.yml
   - name: "vm_creation: create vms"
     include_role:
-      name: vm_creation_ova
+      name: vm_creation
       tasks_from: task_create_configure_vms.yml
     vars:
       vm_ds: "{{ ds2reuse }}"
