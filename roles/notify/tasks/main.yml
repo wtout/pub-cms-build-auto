@@ -63,10 +63,6 @@
         - "The log file is **`{{ LFILE }}`**"
         - ' '
         - '========================================================='
-    - name: "pypkgs: Get Proxy Address"
-      include_role:
-        name: pypkgs
-        tasks_from: task_get_proxy_address.yml
   # The below task implements the following curl command
   #  - name: Send notification via Webex Teams
   #    shell: >

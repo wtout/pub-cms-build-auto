@@ -1,8 +1,4 @@
 ---
-- debug:
-    msg: "{{ invoker }}"
-  run_once: yes
-  tags: always
 - name: define configure_ssh_keys
   set_fact:
     configure_ssh_keys: true

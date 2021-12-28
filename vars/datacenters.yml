@@ -1,6 +1,7 @@
 ---
 auto_dir: "{{ lookup('env', 'PWD') }}"
 invoker: "{{ lookup('env', 'MYINVOKER') }}"
+proxy_address: "{{ lookup('env', 'HTTP_PROXY') }}"
 ##########################################
 # Do not modify anything below this line
 ##########################################
