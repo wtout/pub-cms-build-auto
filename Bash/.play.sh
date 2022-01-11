@@ -318,7 +318,7 @@ function disable_logging() {
 		NEW_LOG_FILE=${LOG_FILE}.$(ls --full-time "${LOG_FILE}" | awk '{print $6"-"$7}')
 		chmod 444 "${LOG_FILE}"
 		mv -f "${LOG_FILE}" "${NEW_LOG_FILE}"
-		echo -e "\nThe log file is ${BOLD}${MYHOME}/Logs/$(basename ${NEW_LOG_FILE})${NORMAL}\n\n"
+		echo -e "\nThe log file is ${BOLD}${MYHOME}/Ansible_Logs/$(basename ${NEW_LOG_FILE})${NORMAL}\n\n"
 	fi
 }
 
