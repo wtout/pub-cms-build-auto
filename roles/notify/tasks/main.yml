@@ -60,7 +60,7 @@
         - "{{ user_abort.stdout if user_abort is succeeded else '' }}"
         - "{{ playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else '' }}"
         - ''
-        - "The log file is **`{{ LFILE }}`**"
+        - "The log file is **`{{ lookup('env', 'MYHOME') }}/Logs/{{ LFILE|basename }}`**"
         - ' '
         - '========================================================='
   # The below task implements the following curl command

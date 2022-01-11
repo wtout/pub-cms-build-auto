@@ -248,7 +248,7 @@ function enable_logging() {
 		fi
 		if [[ -z ${MYINVOKER+x} ]]
 		then
-			echo -e "############################################################\nAnsible Control Machine ${MYHOSTNAME} ${MYIP}\nThis script was run$(check_mode "${@}")by ${MYID} on $(date)\n############################################################\n\n" > "${LOG_FILE}"
+			echo -e "############################################################\nAnsible Control Machine ${MYHOSTNAME} ${MYIP}\nThis script was run$(check_mode "${@}")by $(basename ${MYHOME}) on $(date)\n############################################################\n\n" > "${LOG_FILE}"
 		else
 			echo -e "############################################################\nAnsible Control Machine ${MYHOSTNAME} ${MYIP}\nThis script was run$(check_mode "${@}")by ${MYINVOKER} on $(date)\n############################################################\n\n" > "${LOG_FILE}"
 		fi
@@ -304,8 +304,8 @@ function run_playbook() {
 		fi
 		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep  "${PASSVAULT}") != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSVAULT}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep "${CRVAULT}") != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f "${CRVAULT}" && EC=1
-		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr) == "" ]] && [[ $(grep -i warning "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep -iv deprecation) != '' ]] && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr && EC=1
-		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr) == "" ]] && [[ $(grep -i warning "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep -iv deprecation) == '' ]] && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr
+		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr) == "" ]] && [[ $(grep -i warning "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep -Eiv 'deprecation|noop') != '' ]] && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr && EC=1
+		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr) == "" ]] && [[ $(grep -i warning "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep -Eiv 'deprecation|noop') == '' ]] && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr
 		rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr
 		[[ ${EC} == 1 ]] && exit 1
 	fi
@@ -318,7 +318,7 @@ function disable_logging() {
 		NEW_LOG_FILE=${LOG_FILE}.$(ls --full-time "${LOG_FILE}" | awk '{print $6"-"$7}')
 		chmod 444 "${LOG_FILE}"
 		mv -f "${LOG_FILE}" "${NEW_LOG_FILE}"
-		echo -e "\nThe log file is ${BOLD}${NEW_LOG_FILE}${NORMAL}\n\n"
+		echo -e "\nThe log file is ${BOLD}${MYHOME}/Logs/$(basename ${NEW_LOG_FILE})${NORMAL}\n\n"
 	fi
 }
 
