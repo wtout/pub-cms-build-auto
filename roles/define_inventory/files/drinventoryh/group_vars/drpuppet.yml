@@ -8,4 +8,4 @@ ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bas
 ansible_user: "{{ SSVC_USER | default('') }}"
 ansible_ssh_pass: "{{ SSVC_PASS | default('') }}"
 ansible_become_pass: "{{ SSVC_PASS | default('') }}"
-ansible_host: "{{ puppet.secondary.fqdn }}"
+ansible_host: "{{ puppet.secondary.ipaddress }}"
