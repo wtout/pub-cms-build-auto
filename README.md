@@ -106,7 +106,6 @@ with the system-name being the name of the system definition file from "Configur
 
 The list of roles used in the playbooks:
 
-  - **pypkgs**: installs the required Python3 packages
   - **define_inventory**: generates the system inventory from the system definition file
   - **collect_info**: prompts the user for required information
   - **check_creds**: validates the user's credentials
@@ -125,7 +124,8 @@ The list of roles used in the playbooks:
   - **integ_splunk**: Downloads, configures and runs the MDR-Splunk automation package to install the core and the customer forwarder
   - **vm_creation**: deploys the stack's VMs from OVA
   - **drs_creation**: creates the DRS rules
-  - **vm_configuration**: configures the stack's VMs
+  - **vm_configuration_iso**: configures the stack's VMs created from ISO
+  - **vm_configuration**: configures the stack's VMs created from OVA
   - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
   - **vm_ppp_configuration**: configures the stack's VMs post initial puppet push
   - **splunk_mop**: implements the datetime fix for splunk VMs

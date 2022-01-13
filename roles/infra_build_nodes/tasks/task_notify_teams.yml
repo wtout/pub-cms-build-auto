@@ -1,11 +1,6 @@
 ---
 # Task file for notifying teams with csr serial no. for license
 - block:
-  - name: "pypkgs: Get proxy setting"
-    include_role:
-      name: pypkgs
-      tasks_from: task_get_proxy_address.yml
-
   - name: Generate notification message
     set_fact:
       NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line_item] | list }}"
