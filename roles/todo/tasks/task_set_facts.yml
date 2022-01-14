@@ -105,7 +105,7 @@
   when:
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-    - customer.version.release[1:]|replace('.', '')|int > 9217 or not bfova | default(false) | bool
+    - customer.name | lower is search('mdr') or customer.version.release[1:]|replace('.', '')|int > 9217 or not bfova | default(false) | bool
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_creation
 
