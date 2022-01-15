@@ -8,5 +8,7 @@
   when: clone_repos is succeeded
   delegate_to: localhost
   run_once: true
+  environment:
+    https_proxy: "{{ proxy_address|default('') }}"
   tags: integ_splunk
   

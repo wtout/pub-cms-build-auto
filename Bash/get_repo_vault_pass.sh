@@ -1,2 +1,2 @@
 #! /bin/bash
-git config user.email | cut -d '@' -f1
+echo ${MYHOME} | awk -F '/' '{print $NF}'
