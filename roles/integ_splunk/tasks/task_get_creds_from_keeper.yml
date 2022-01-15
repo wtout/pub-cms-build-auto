@@ -80,4 +80,7 @@
     when: reg_keeper_access is succeeded
   delegate_to: localhost
   run_once: true
+  environment:
+    http_proxy: "{{ proxy_address|default('') }}"
+    https_proxy: "{{ proxy_address|default('') }}"
   tags: integ_splunk
