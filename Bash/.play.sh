@@ -243,7 +243,7 @@ function get_repo_creds() {
 		while [[ ${i} -lt ${retries} ]]
 		do
 			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-			if [[ ${REPOPASS} == "" ]]
+			if [[ ${REPOUSER} == "" || ${REPOPASS} == "" ]]
 			then
 				[[ ${debug} == 1 ]] && set -x
 				read -r REPOUSER <<< "$(view_vault "${1}" "${2}" | grep USER | cut -d "'" -f2)"
@@ -264,6 +264,36 @@ function get_repo_creds() {
 		encrypt_vault "${1}" "${2}"
 		[[ ${debug} == 1 ]] && set -x
 		echo
+	fi
+	if [[ ${REPOUSER} != "" && ${REPOPASS} != "" ]]
+	then
+		local REPOPWD
+		local REMOTEID
+		[[ $(git config --get remote.origin.url | grep "www-github") != "" ]] && [[ ${MYPROXY} != "" ]] && SET_PROXY="true"
+		for i in {1..3}
+		do
+			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+			REPOPWD="${REPOPASS//@/%40}"
+			REMOTEID=$([[ ${SET_PROXY} ]] && export https_proxy=${MYPROXY}; git ls-remote "$(git config --get remote.origin.url | sed -e "s|://|://${REPOUSER}:${REPOPWD}@|")" refs/heads/"$(git branch | grep '*' | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
+			[[ ${debug} == 1 ]] && set -x
+			[[ ${REMOTEID} == "" ]] && sleep 3 || break
+		done
+		if [[ "${REMOTEID}" == "" ]]
+		then
+			local REPO_ERR
+			REPO_ERR="$(grep -i maintenance "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr)"
+			if [[ "${REPO_ERR}" == "" ]]
+			then
+			 	printf "\nYour Repository credentials are invalid!\n\n" && rm -f "${1}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit
+			else
+			 	printf "\n%s" "${REPO_ERR}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit
+			fi
+		else
+			rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr
+		fi
+	else
+		echo "Unable to get repo credentials"
+		exit 1
 	fi
 }
 
@@ -402,7 +432,7 @@ SVCVAULT="${PWD}/.svc_acct_creds_${ENAME}.yml"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- "${@}" "${NEW_ARGS}"
-[[ "$(basename ${0})" == *"deploy"* ]] && [[ "${ENAME}" == *"mdr"* ]] && get_repo_creds ${REPOVAULT} Bash/get_repo_vault_pass
+[[ "$(basename ${0})" == *"deploy"* ]] && [[ "${ENAME}" == *"mdr"* ]] && get_repo_creds ${REPOVAULT} Bash/get_repo_vault_pass.sh
 [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 get_svc_cred primary user 1>/dev/null && echo "PSVC_USER: '$(get_svc_cred primary user)'" > "${SVCVAULT}"
 get_svc_cred primary pass 1>/dev/null && echo "PSVC_PASS: '$(get_svc_cred primary pass)'" >> "${SVCVAULT}"
