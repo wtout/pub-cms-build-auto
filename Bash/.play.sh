@@ -256,7 +256,7 @@ function get_repo_creds() {
 		done
 	else
 		echo
-		read -rs "Enter your Repository username [ENTER]: " REPOUSER
+		read -rp "Enter your Repository username [ENTER]: " REPOUSER
 		read -rsp "Enter your Repository password [ENTER]: " REPOPASS
 		[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 		[[ -f ${1} ]] && rm -f "${1}"
