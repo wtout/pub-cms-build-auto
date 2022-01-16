@@ -232,6 +232,41 @@ function create_log_dir() {
 	fi
 }
 
+function get_repo_creds() {
+	[[ -f ${1} ]] && grep 'REPOPASS=' "${1}" 1>/dev/null && rm -f "${1}"
+	if [[ -f ${1} ]]
+	then
+		local i
+		local retries
+		i=0
+		retries=3
+		while [[ ${i} -lt ${retries} ]]
+		do
+			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+			if [[ ${REPOPASS} == "" ]]
+			then
+				[[ ${debug} == 1 ]] && set -x
+				read -r REPOUSER <<< "$(view_vault "${1}" "${2}" | grep USER | cut -d "'" -f2)"
+				read -r REPOPASS <<< "$(view_vault "${1}" "${2}" | grep PASS | cut -d "'" -f2)"
+			else
+				break
+			fi
+			i=$((++i))
+			[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
+		done
+	else
+		echo
+		read -rs "Enter your Repository username [ENTER]: " REPOUSER
+		read -rsp "Enter your Repository password [ENTER]: " REPOPASS
+		[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+		[[ -f ${1} ]] && rm -f "${1}"
+		printf "REPOUSER='%s'\nREPOPASS='%s'\n" "${REPOUSER}" "${REPOPASS}" > "${1}"
+		encrypt_vault "${1}" "${2}"
+		[[ ${debug} == 1 ]] && set -x
+		echo
+	fi
+}
+
 function enable_logging() {
 	LOG=true
 	if [[ "${LOG}" == "true" ]]
@@ -248,9 +283,9 @@ function enable_logging() {
 		fi
 		if [[ -z ${MYINVOKER+x} ]]
 		then
-			echo -e "############################################################\nAnsible Control Machine ${MYHOSTNAME} ${MYIP}\nThis script was run$(check_mode "${@}")by $(basename ${MYHOME}) on $(date)\n############################################################\n\n" > "${LOG_FILE}"
+			echo -e "############################################################\nAnsible Control Machine ${MYHOSTNAME} ${MYIP} ${MYCONTAINERNAME}\nThis script was run$(check_mode "${@}")by $(basename ${MYHOME}) on $(date)\n############################################################\n\n" > "${LOG_FILE}"
 		else
-			echo -e "############################################################\nAnsible Control Machine ${MYHOSTNAME} ${MYIP}\nThis script was run$(check_mode "${@}")by ${MYINVOKER} on $(date)\n############################################################\n\n" > "${LOG_FILE}"
+			echo -e "############################################################\nAnsible Control Machine ${MYHOSTNAME} ${MYIP} ${MYCONTAINERNAME}\nThis script was run$(check_mode "${@}")by ${MYINVOKER} on $(date)\n############################################################\n\n" > "${LOG_FILE}"
 		fi
 	fi
 }
@@ -304,8 +339,7 @@ function run_playbook() {
 		fi
 		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep  "${PASSVAULT}") != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${PASSVAULT}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep "${CRVAULT}") != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f "${CRVAULT}" && EC=1
-		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr) == "" ]] && [[ $(grep -i warning "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep -Eiv 'deprecation|noop') != '' ]] && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr && EC=1
-		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr) == "" ]] && [[ $(grep -i warning "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr | grep -Eiv 'deprecation|noop') == '' ]] && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr
+		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr) == "" ]] && [[ $(grep -i warning "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr) == '' ]] && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr
 		rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}".stderr
 		[[ ${EC} == 1 ]] && exit 1
 	fi
@@ -368,6 +402,7 @@ SVCVAULT="${PWD}/.svc_acct_creds_${ENAME}.yml"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- "${@}" "${NEW_ARGS}"
+[[ "${ENAME}" == *"mdr"* ]] && get_repo_creds ${REPOVAULT} Bash/get_repo_vault_pass
 [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 get_svc_cred primary user 1>/dev/null && echo "PSVC_USER: '$(get_svc_cred primary user)'" > "${SVCVAULT}"
 get_svc_cred primary pass 1>/dev/null && echo "PSVC_PASS: '$(get_svc_cred primary pass)'" >> "${SVCVAULT}"
