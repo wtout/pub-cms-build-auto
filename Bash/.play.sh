@@ -402,7 +402,7 @@ SVCVAULT="${PWD}/.svc_acct_creds_${ENAME}.yml"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- "${@}" "${NEW_ARGS}"
-[[ "${ENAME}" == *"mdr"* ]] && get_repo_creds ${REPOVAULT} Bash/get_repo_vault_pass
+[[ "$(basename ${0})" == *"deploy"* ]] && [[ "${ENAME}" == *"mdr"* ]] && get_repo_creds ${REPOVAULT} Bash/get_repo_vault_pass
 [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 get_svc_cred primary user 1>/dev/null && echo "PSVC_USER: '$(get_svc_cred primary user)'" > "${SVCVAULT}"
 get_svc_cred primary pass 1>/dev/null && echo "PSVC_PASS: '$(get_svc_cred primary pass)'" >> "${SVCVAULT}"
