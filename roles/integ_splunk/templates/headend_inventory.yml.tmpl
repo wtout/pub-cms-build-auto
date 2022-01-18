@@ -48,7 +48,7 @@
 
   splunk_deployer:
     hosts:
-      {{ hostvars[groups['spldplr'][0]]['vm']['name'] if groups['spldplr'] is defined else spldplr_list[0] }}:
+      {{ hostvars[groups['spldpl'][0]]['vm']['name'] if groups['spldpl'] is defined else spldpl_list[0] }}:
     vars:
       splunk:
         role: splunk_deployer
@@ -56,17 +56,17 @@
 
   splunk_search_head:
     hosts:
-       {{ hostvars[groups['splmth'][2]]['vm']['name'] if groups['splmth'] is defined else splmth_list[2] }}:
+       {{ hostvars[groups['splsrc'][2]]['vm']['name'] if groups['splsrc'] is defined else splsrc_list[2] }}:
         splunk_search_head_captain: false
-       {{ hostvars[groups['splmth'][1]]['vm']['name'] if groups['splmth'] is defined else splmth_list[1] }}:
+       {{ hostvars[groups['splsrc'][1]]['vm']['name'] if groups['splsrc'] is defined else splsrc_list[1] }}:
         splunk_search_head_captain: false
-       {{ hostvars[groups['splmth'][0]]['vm']['name'] if groups['splmth'] is defined else splmth_list[0] }}:
+       {{ hostvars[groups['splsrc'][0]]['vm']['name'] if groups['splsrc'] is defined else splsrc_list[0] }}:
         splunk_search_head_captain: true
     vars:
       splunk:
         role: splunk_search_head
         site: site0
-        hostname: mdrsplmthla01
+        hostname: mdrsplsrcla01
         # ^^ Host name is the searchhead captain
         auth_type: LDAP
         auth_settings: MDR_LA
@@ -85,7 +85,7 @@
 
 #  splunk_deployment_server:
 #    hosts:
-#      {{ hostvars[groups['spldpl'][0]]['vm']['name'] if groups['spldpl'] is defined else spldpl_list[0] }}:
+#      {{ hostvars[groups['splds'][0]]['vm']['name'] if groups['splds'] is defined else splds_list[0] }}:
 #    vars:
 #      splunk:
 #        role: splunk_deployment_server
