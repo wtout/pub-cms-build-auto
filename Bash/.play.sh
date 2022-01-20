@@ -309,6 +309,7 @@ function enable_logging() {
 		else
 			export ANSIBLE_LOG_PATH=${LOG_FILE}
 			touch "${LOG_FILE}"
+			[[ ${?} -ne 0 ]] && echo -e "\nUnable to create ${LOG_FILE}. Aborting run!\n" && exit 1
 			chown "$(stat -c '%U' "$(pwd)")":"$(stat -c '%G' "$(pwd)")" "${LOG_FILE}"
 		fi
 		if [[ -z ${MYINVOKER+x} ]]
