@@ -83,11 +83,12 @@
         svcs_forwarder_enabled: true
 {% endif %}
 
+{% if groups['splds'] is defined %}
 #  splunk_deployment_server:
 #    hosts:
 #      {{ hostvars[groups['splds'][0]]['vm']['name'] if groups['splds'] is defined else splds_list[0] }}:
 #    vars:
 #      splunk:
 #        role: splunk_deployment_server
-
+{% endif %}
 
