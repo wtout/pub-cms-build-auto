@@ -3,7 +3,7 @@
 - block:
   - name: define keeper host
     ansible.builtin.set_fact:
-      keeper_host: "{{ ('alphaeast' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is not search('Alln1|RTP5') else '') + 'west' }}"
+      keeper_host: "{{ 'alphaeast' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is not search('Alln1|RTP5') else 'west' }}"
   - name: check access to keeper
     ansible.builtin.shell: |
        sh keeper_control.sh --host={{ keeper_host }} --list_customers --cert={{ keeper.token_filename }}
