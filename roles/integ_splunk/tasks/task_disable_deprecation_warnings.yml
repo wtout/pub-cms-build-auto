@@ -1,0 +1,11 @@
+---
+# Tasks to disable deprecation warnings
+- block:
+  - name: disable deprecation warnings in {{ spl_ansible_path }}/ansible.cfg
+    lineinfile:
+      path: "{{ spl_ansible_path }}/ansible.cfg"
+      line: 'deprecation_warnings = False'
+      insertbefore: 'command_warnings'
+  delegate_to: localhost
+  run_once: true
+  tags: integ_splunk

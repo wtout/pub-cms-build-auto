@@ -11,6 +11,7 @@
       chdir: "{{ spl_ansible_path }}"
     register: reg_keeper_access
     failed_when: reg_keeper_access.stderr != ''
+    until: reg_keeper_access is succeeded
     ignore_errors: true
     no_log: true
   - ansible.builtin.debug:
@@ -27,21 +28,6 @@
         - phantom_config_assets.yml
       loop_control:
         loop_var: file_item
-    - name: Load Customer Credentials into the Customer Password Vault
-      ansible.builtin.shell: |
-        sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ keeper.token_filename }}
-      args:
-        chdir: "{{ spl_ansible_path }}"
-      register: reg_cust_creds
-      failed_when: "'Error: getting ' in reg_cust_creds.stdout"
-      ignore_errors: true
-      no_log: true
-      when: inventory_hostname is search('splfwd')
-    - debug:
-        msg: "{{ 'Core' if reg_cust_creds.stdout is search('core') else 'customer' }} Credentials not found in Keeper"
-      when:
-        - reg_cust_creds is failed
-        - inventory_hostname is search('splfwd')
     - name: Load Core Credentials into the Password Vault
       ansible.builtin.shell: |
         sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ keeper.token_filename }}
@@ -49,6 +35,7 @@
         chdir: "{{ spl_ansible_path }}"
       register: reg_core_creds
       failed_when: "'Error: getting ' in reg_core_creds.stdout"
+      until: reg_core_creds is succeeded
       ignore_errors: true
       no_log: true
       when: inventory_hostname is not search('splfwd')
@@ -57,6 +44,23 @@
       when:
         - reg_core_creds is failed
         - inventory_hostname is not search('splfwd')
+    - name: Load Customer Credentials into the Customer Password Vault
+      ansible.builtin.shell: |
+        sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ keeper.token_filename }}
+      args:
+        chdir: "{{ spl_ansible_path }}"
+      register: reg_cust_creds
+      failed_when: "'Error: getting ' in reg_cust_creds.stdout"
+      until: reg_cust_creds is succeeded
+      ignore_errors: true
+      no_log: true
+      when: inventory_hostname is search('splfwd')
+    - debug:
+        msg: "{{ 'Core' if reg_cust_creds.stdout is search('core') else 'customer' }} Credentials not found in Keeper"
+      when:
+        - reg_cust_creds is failed
+        - inventory_hostname is search('splfwd')
+
     - name: restore default config files
       ansible.builtin.copy:
         src: "{{ spl_ansible_path }}/{{ file_item }}.orig"

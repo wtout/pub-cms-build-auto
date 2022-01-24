@@ -8,6 +8,7 @@
   - include_tasks: task_get_repo_creds.yml
   - include_tasks: task_enable_repo_creds_cache.yml
   - include_tasks: task_clone_repos.yml
+  - include_tasks: task_disable_deprecation_warnings.yml
   - include_tasks: task_setup_env.yml
     when: clone_repos.results|selectattr('repo_item', 'search', 'mdr-splunk-env')|map(attribute='changed')|list|join|bool
   - include_tasks: task_remove_token.yml

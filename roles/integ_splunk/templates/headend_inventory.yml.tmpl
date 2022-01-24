@@ -72,18 +72,18 @@
         auth_settings: MDR_LA
 
 {% if (inventory_hostname is search('splfwd') and reg_cust_creds is succeeded) or (inventory_hostname is not search('splfwd') and reg_core_creds is succeeded) %}
-  splunk_svcs_forwarder:
-    hosts:
-      {{ hostvars[groups['splsvc'][0]]['vm']['name'] if groups['splsvc'] is defined else splsvc_list[0] }}:
-    vars:
-      splunk:
-        role: splunk_heavy_forwarder
-        yum_proxy_enabled: true
-        TA_proxy_enabled: true
-        svcs_forwarder_enabled: true
+#  splunk_svcs_forwarder:
+#    hosts:
+#      {{ hostvars[groups['splsvc'][0]]['vm']['name'] if groups['splsvc'] is defined else splsvc_list[0] }}:
+#    vars:
+#      splunk:
+#        role: splunk_heavy_forwarder
+#        yum_proxy_enabled: true
+#        TA_proxy_enabled: true
+#        svcs_forwarder_enabled: true
 {% endif %}
 
-{% if groups['splds'] is defined %}
+{% if groups['splds'] is defined or 'splds' in he_group_list|default([]) %}
 #  splunk_deployment_server:
 #    hosts:
 #      {{ hostvars[groups['splds'][0]]['vm']['name'] if groups['splds'] is defined else splds_list[0] }}:

@@ -6,11 +6,6 @@
       path: "{{ spl_ansible_path }}/ansible.cfg"
       regex: '^log_path ='
       state: absent
-  - name: disable deprecation warnings in {{ spl_ansible_path }}/ansible.cfg
-    lineinfile:
-      path: "{{ spl_ansible_path }}/ansible.cfg"
-      line: 'deprecation_warnings = False'
-      insertbefore: 'command_warnings'
   - name: Get Ansible Log file name
     shell: echo ${ANSIBLE_LOG_PATH}
     register: log_file_name

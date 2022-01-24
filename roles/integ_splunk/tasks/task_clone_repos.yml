@@ -1,17 +1,38 @@
 ---
 # Tasks to clone the repos
-- name: clone the repos
-  git:
-    repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
-    dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
-    version: "{{ repo_item.release }}"
-    force: yes
-  loop:
-    - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-automation.git', release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
-    - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-splunk-env.git', release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
-  loop_control:
-    loop_var: repo_item
-  register: clone_repos
+- block:
+  - name: clone the repos
+    git:
+      repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
+      dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
+      version: "{{ repo_item.release }}"
+      force: yes
+    loop:
+      - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-automation.git', release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
+      - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-splunk-env.git', release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
+    loop_control:
+      loop_var: repo_item
+    register: reg_clone_repos1
+    async: 120
+    poll: 10
+  - name: clone the repos
+    git:
+      repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
+      dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
+      version: "{{ repo_item.release }}"
+      force: yes
+    loop:
+      - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-automation.git', release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
+      - { name: 'https://www-github3.cisco.com/cms-mdr/mdr-splunk-env.git', release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
+    loop_control:
+      loop_var: repo_item
+    register: reg_clone_repos2
+    async: 90
+    poll: 10
+    when: reg_clone_repos1 is failed
+  - name: define clone_repos
+    ansible.builtin.set_fact:
+      clone_repos: "{{ reg_clone_repos1 if reg_clone_repos1 is succeeded else reg_clone_repos2 }}"
   delegate_to: localhost
   run_once: true
   environment:
