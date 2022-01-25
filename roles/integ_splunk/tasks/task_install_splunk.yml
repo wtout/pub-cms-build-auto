@@ -22,15 +22,26 @@
     args:
       chdir: "{{ spl_ansible_path }}"
     when: inventory_hostname is not search('splfwd')
-  - name: Deploy Splunk heavy forwarder (customer)
-    shell: |
-      ANSIBLE_LOG_PATH={{ log_file_name.stdout }}
-      DEPLOY_HOME={{ spl_wd }}
-      export ANSIBLE_LOG_PATH DEPLOY_HOME
-      ./build_customer.sh  --environment={{ customer.env_identifier }} --customerhost={{ vm.name }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
-    register: cu_install
-    args:
-      chdir: "{{ spl_ansible_path }}"
+  - block:
+    - name: check if customer has already been deployed
+      ansible.builtin.shell:
+        grep -r {{ vm.name }} {{ tmpl_dest }}/deployed_customers.yml
+      register: reg_deployed_customer
+      ignore_errors: yes
+      check_mode: no
+    - name: Deploy Splunk heavy forwarder (customer)
+      shell: |
+        ANSIBLE_LOG_PATH={{ log_file_name.stdout }}
+        DEPLOY_HOME={{ spl_wd }}
+        export ANSIBLE_LOG_PATH DEPLOY_HOME
+        ./build_customer.sh  --environment={{ customer.env_identifier }} --customerhost={{ vm.name }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+      register: cu_install
+      args:
+        chdir: "{{ spl_ansible_path }}"
+      when: reg_deployed_customer is failed
+    - debug:
+        msg: "Splunk has already been deployed on {{ vm.name }}"
+      when: reg_deployed_customer is succeeded
     when: inventory_hostname is search('splfwd')
   - name: define delete_proxy
     set_fact:
