@@ -27,15 +27,33 @@
   max_fail_percentage: 0
   gather_facts: no
 
-  roles:
-    - {role: ssh_keys, when: configure_ssh_keys | default(false) | bool}
-    - {role: infra_configure, when: configure_infra | default(false) | bool}
-    - {role: capcheck, when: capcheck | default(false) | bool}
-    - {role: get_release, when: get_release | default(false) | bool}
-    - {role: infra_dns_records, when: add_dns_records | default(false) | bool}
-    - {role: infra_build_nodes, when: build_infra_nodes | default(false) | bool}
-    - {role: infra_license, when: infra_license | default(false) | bool}
-    - {role: infra_check_csr_license, when: check_csr_license | default(false) | bool}
+  tasks:
+    - block:
+      - include_role:
+          name: ssh_keys
+        when: configure_ssh_keys | default(false) | bool
+      - include_role:
+          name: infra_configure
+        when: configure_infra | default(false) | bool
+      - include_role:
+          name: capcheck
+        when: capcheck | default(false) | bool
+      - include_role:
+          name: get_release
+        when: get_release | default(false) | bool
+      - include_role:
+          name: infra_dns_records
+        when: add_dns_records | default(false) | bool
+      - include_role:
+          name: infra_build_nodes
+        when: build_infra_nodes | default(false) | bool
+      - include_role:
+          name: infra_license
+        when: infra_license | default(false) | bool
+      - include_role:
+          name: infra_check_csr_license
+        when: check_csr_license | default(false) | bool
+      when: deploy | default(false) | bool
 
 # Play to create the VMs
 - name: Deploy VMs
@@ -43,33 +61,63 @@
   strategy: free
   gather_facts: no
 
-  roles:
-    - {role: vm_fromiso, when: create_vms_iso | default(false) | bool}
-    - {role: vm_hardening, when: harden_vms | default(false) | bool}
-    - {role: vm_creation, when: create_vms_ova | default(false) | bool}
+  tasks:
+    - block:
+      - include_role:
+          name: vm_fromiso
+        when: create_vms_iso | default(false) | bool
+      - include_role:
+          name: vm_hardening
+        when: harden_vms | default(false) | bool
+      - include_role:
+          name: vm_creation
+        when: create_vms_ova | default(false) | bool
+      when: deploy | default(false) | bool
 
 # Play to configure the VMs and to run the puppet push
 - name: Configure VMs
   hosts: all
   gather_facts: no
 
-  roles:
-    - {role: integ_splunk, when: install_splunk | default(false) | bool}
-    - {role: drs_creation, when: deploy_drs | default(false) | bool}
-    - {role: vm_configuration_iso, when: configure_vms_iso | default(false) | bool}
-    - {role: vm_configuration_ova, when: configure_vms_ova | default(false) | bool}
-    - {role: puppet, when: push_puppet | default(false) | bool}
-    - {role: vm_ppp_configuration, when: configure_ppp_vms | default(false) | bool}
-    - {role: splunk_mop, when: splunk_mop_fix | default(false) | bool}
-    - {role: drs_status, when: check_drs_creation | default(false) | bool}
+  tasks:
+    - block:
+      - include_role:
+          name: integ_splunk
+        when: install_splunk | default(false) | bool
+      - include_role:
+          name: drs_creation
+        when: deploy_drs | default(false) | bool
+      - include_role:
+          name: vm_configuration_iso
+        when: configure_vms_iso | default(false) | bool
+      - include_role:
+          name: vm_configuration_ova
+        when: configure_vms_ova | default(false) | bool
+      - include_role:
+          name: puppet
+        when: push_puppet | default(false) | bool
+      - include_role:
+          name: vm_ppp_configuration
+        when: configure_ppp_vms | default(false) | bool
+      - include_role:
+          name: splunk_mop
+        when: splunk_mop_fix | default(false) | bool
+      - include_role:
+          name: drs_status
+        when: check_drs_creation | default(false) | bool
+      when: deploy | default(false) | bool
 
 # Play to check the VMs
 - name: Check VMs
   hosts: all
   gather_facts: no
 
-  roles:
-    - {role: sanity, when: sanity_check | default(false) | bool}
+  tasks:
+    - block:
+      - include_role:
+          name: sanity
+        when: sanity_check | default(false) | bool
+      when: deploy | default(false) | bool
 
 # Play to delete the VMs
 - name: Rollback VMs
@@ -77,13 +125,33 @@
   order: reverse_inventory
   gather_facts: no
 
-  roles:
-    - {role: puppet, when: rollback_puppet | default(false) | bool}
-    - {role: drs_creation, when: rollback_drs | default(false) | bool}
-    - {role: vm_creation, when: rollback_vms_ova | default(false) | bool}
-    - {role: vm_fromiso, when: rollback_vms_iso | default(false) | bool}
-    - {role: infra_build_nodes, when: rollback_infra_nodes | default(false) | bool}
-    - {role: infra_dns_records, when: rollback_dns_records | default(false) | bool}
-    - {role: infra_configure, when: rollback_infra | default(false) | bool}
-    - {role: drs_status, when: check_drs_removal | default(false) | bool}
-    - {role: ssh_keys, when: rollback_ssh_keys | default(false) | bool}
+  tasks:
+    - block:
+      - include_role:
+          name: puppet
+        when: rollback_puppet | default(false) | bool
+      - include_role:
+          name: drs_creation
+        when: rollback_drs | default(false) | bool
+      - include_role:
+          name: vm_creation
+        when: rollback_vms_ova | default(false) | bool
+      - include_role:
+          name: vm_fromiso
+        when: rollback_vms_iso | default(false) | bool
+      - include_role:
+          name: infra_build_nodes
+        when: rollback_infra_nodes | default(false) | bool
+      - include_role:
+          name: infra_dns_records
+        when: rollback_dns_records | default(false) | bool
+      - include_role:
+          name: infra_configure
+        when: rollback_infra | default(false) | bool
+      - include_role:
+          name: drs_status
+        when: check_drs_removal | default(false) | bool
+      - include_role:
+          name: ssh_keys
+        when: rollback_ssh_keys | default(false) | bool
+      when: rollback | default(false) | bool
