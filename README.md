@@ -1,11 +1,11 @@
 # README #
 
-This README provides instructions and information to get your Ansible control machine up and running with the automation package to deploy the CMS stack.
+This README provides instructions and information to get your Ansible control machine up and running with the automation package to deploy CMSP and MDR stacks.
 
 
 ### What is this repository for? ###
 
-This repository contains Ansible playbooks to be used in the full deployment of the CMS stack.
+This repository contains Ansible playbooks to be used in the full deployment of CMSP and MDR stacks.
 
 
 ### Disclaimer ###
@@ -15,21 +15,21 @@ The deployment procedure has to be the same for all deployments. Ansible code co
 
 ### Installation ###
 
-On a newly installed Linux **CentOS 7** VM that can access the internet, automation repo and the VM infrastructure, run the following commands to install the required packages:
+On a newly installed Linux **CentOS 7** VM that has docker installed and configured and that can access the internet, container repo and the VM infrastructure, run the following command to download and start the container hosting the automation code:
 
-1- Install the git package
+1- Delete old containers
 
-    $> sudo yum install -y git
+    $> docker rm $(docker ps -q -a) -f
 
-2- Download the Ansible automation package
+2- Delete old images
 
-    $> git clone --single-branch --branch master https://<your-repo-username>@www-github3.cisco.com/cms-build-team/cmsp-auto-deploy.git
+    $> docker rmi $(docker images -a -q) -f
 
-3- Go to the newly cloned cmsp-auto-deploy directory
+3- Download and start the container
 
-    $> cd cmsp-auto-deploy
+    $> docker run -e MYPROXY=${http_proxy} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME="$(whoami)_ansible" -e MYIP=$(ip a show "$(ip link | grep 2: | head -1 | awk '{print $2}')" | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}') --user ansible -w /home/ansible/cmsp-auto-deploy -v /data:/data:Z -v /tmp:/tmp:Z -v ${HOME}/certificates:/home/ansible/certificates:Z -v ${HOME}/Ansible_data/Logs:/home/ansible/cmsp-auto-deploy/Logs:Z -v ${HOME}/Ansible_data/Definitions:/home/ansible/cmsp-auto-deploy/Definitions:Z -v ${HOME}/Ansible_data/inventories:/home/ansible/cmsp-auto-deploy/inventories:Z --name $(whoami)_cmsp-auto-deploy -it -d containers.cisco.com/watout/cmsp-auto-deploy:latest
 
-***Note**: you might need to disable the proxy to be able to download the package*
+***Note**: Be careful not to delete a container that is in use by another user*
 
 
 ### System definition ###
@@ -69,7 +69,7 @@ Non-standard host specific settings are to be added to a dedicated file under _`
 
 To create the system inventory without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
 
-    $> sh Bash/play_deploy.sh –-envname <system-name> --tags none
+    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/play_deploy.sh –-envname <system-name> --tags none
 
 
 ### Artifacts ###
@@ -80,14 +80,14 @@ If the automated procedure is preferred, the user must ensure that the correct a
 
 To download the artifacts without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
 
-    $> sh Bash/play_deploy.sh –-envname <system-name> --tags get_release
+    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/play_deploy.sh –-envname <system-name> --tags get_release
 
 
 ### System Deployment ###
 
 1- From the automation root directory (cmsp-auto-deploy), run one of the bash scripts under the Bash folder depending on what you want to do. 
 
-    $> sh Bash/<script name> --envname <system-name>
+    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/<script name> --envname <system-name>
 
 with the system-name being the name of the system definition file from "Configuration" step 1 and the script name being one of the following options:
 
@@ -95,7 +95,7 @@ with the system-name being the name of the system definition file from "Configur
 
 - ``play_rollback.sh``
 
-  Script output is automatically saved to a log file. The file is saved under _``Logs/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
+  Script output is automatically saved to a log file. The file is saved under _``~/Ansible_data/Logs/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
 
 ***Note**: Running multiple instances of the same script for a given customer simultaneously is prohibited*
 
@@ -139,17 +139,17 @@ To skip specific role(s), add "_--skip-tags 'role1,role2,...'_" as argument to t
 
 **_Example1_**: to install/uninstall docker and ntp, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp'
+    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp'
 
 **_Example2_**: to run all roles except os and ntp, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --skip-tags 'os,ntp'
+    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/<script-name> --envname <system-name> --skip-tags 'os,ntp'
 
 To limit the processing to specific host(s) or group(s) or a combination of both, add "_--limit 'group1,host1,...'_" as argument to the script.
 
 **_Example3_**: to install/uninstall docker and ntp on the linux jump servers and on relay01, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'
+    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'
 
 ***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 
