@@ -32,27 +32,35 @@
       - include_role:
           name: ssh_keys
         when: configure_ssh_keys | default(false) | bool
+        tags: ssh_keys
       - include_role:
           name: infra_configure
         when: configure_infra | default(false) | bool
+        tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]
       - include_role:
           name: capcheck
         when: capcheck | default(false) | bool
+        tags: ['capcheck', 'vm_creation', 'infra_build_nodes']
       - include_role:
           name: get_release
         when: get_release | default(false) | bool
+        tags: [ 'get_release', 'infra_build_nodes', 'vm_creation', 'vm_configuration', 'puppet', 'integ_splunk' ]
       - include_role:
           name: infra_dns_records
         when: add_dns_records | default(false) | bool
+        tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
       - include_role:
           name: infra_build_nodes
         when: build_infra_nodes | default(false) | bool
+        tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
       - include_role:
           name: infra_license
         when: infra_license | default(false) | bool
+        tags: infra_license
       - include_role:
           name: infra_check_csr_license
         when: check_csr_license | default(false) | bool
+        tags: [ 'infra_check_csr_license', 'vm_creation' ]
       when: deploy | default(false) | bool
 
 # Play to create the VMs
@@ -66,12 +74,15 @@
       - include_role:
           name: vm_fromiso
         when: create_vms_iso | default(false) | bool
+        tags: vm_creation
       - include_role:
           name: vm_hardening
         when: harden_vms | default(false) | bool
+        tags: vm_hardening
       - include_role:
           name: vm_creation
         when: create_vms_ova | default(false) | bool
+        tags: vm_creation
       when: deploy | default(false) | bool
 
 # Play to configure the VMs and to run the puppet push
@@ -84,27 +95,35 @@
       - include_role:
           name: integ_splunk
         when: install_splunk | default(false) | bool
+        tags: integ_splunk
       - include_role:
           name: drs_creation
         when: deploy_drs | default(false) | bool
+        tags: [ 'drs_creation', 'vm_creation' ]
       - include_role:
           name: vm_configuration_iso
         when: configure_vms_iso | default(false) | bool
+        tags: vm_configuration
       - include_role:
           name: vm_configuration_ova
         when: configure_vms_ova | default(false) | bool
+        tags: vm_configuration
       - include_role:
           name: puppet
         when: push_puppet | default(false) | bool
+        tags: puppet
       - include_role:
           name: vm_ppp_configuration
         when: configure_ppp_vms | default(false) | bool
+        tags: vm_ppp_configuration
       - include_role:
           name: splunk_mop
         when: splunk_mop_fix | default(false) | bool
+        tags: splunk_mop
       - include_role:
           name: drs_status
         when: check_drs_creation | default(false) | bool
+        tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]
       when: deploy | default(false) | bool
 
 # Play to check the VMs
@@ -117,6 +136,7 @@
       - include_role:
           name: sanity
         when: sanity_check | default(false) | bool
+        tags: sanity
       when: deploy | default(false) | bool
 
 # Play to delete the VMs
@@ -130,28 +150,37 @@
       - include_role:
           name: puppet
         when: rollback_puppet | default(false) | bool
+        tags: puppet
       - include_role:
           name: drs_creation
         when: rollback_drs | default(false) | bool
+        tags: [ 'drs_creation', 'vm_creation' ]
       - include_role:
           name: vm_creation
         when: rollback_vms_ova | default(false) | bool
+        tags: vm_creation
       - include_role:
           name: vm_fromiso
         when: rollback_vms_iso | default(false) | bool
+        tags: vm_creation
       - include_role:
           name: infra_build_nodes
         when: rollback_infra_nodes | default(false) | bool
+        tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
       - include_role:
           name: infra_dns_records
         when: rollback_dns_records | default(false) | bool
+        tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
       - include_role:
           name: infra_configure
         when: rollback_infra | default(false) | bool
+        tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]
       - include_role:
           name: drs_status
         when: check_drs_removal | default(false) | bool
+        tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]
       - include_role:
           name: ssh_keys
         when: rollback_ssh_keys | default(false) | bool
+        tags: ssh_keys
       when: rollback | default(false) | bool

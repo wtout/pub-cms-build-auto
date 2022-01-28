@@ -7,4 +7,3 @@
   - include_tasks: rollback_ssh_keys.yml
     when: rollback_ssh_keys | default(false) | bool
   tags: ssh_keys
-

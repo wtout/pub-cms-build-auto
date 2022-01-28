@@ -98,6 +98,8 @@ echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sys
 
 # Yum repos
 rm -f /etc/yum.repos.d/*
+{% if customer.primary.name_prefix is not search('mdr') %}
+{% block QS_repo %}
 cat <<EOF > /etc/yum.repos.d/QS.repo
 [QS-PROD]
 Name=QS-PROD
@@ -105,10 +107,12 @@ baseurl={{ (yum.secondary.baseurl if 'dr' in group_names else yum.primary.baseur
 enabled=1
 gpgcheck=0
 sslverify=False
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)') %}
+{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
 proxy=_none_
 {% endif %}
 EOF
+{% endblock QS_repo %}
+{% endif %}
 
 {% if customer.primary.name_prefix is search('mdr') %}
 {% block artifactory_repo %}
@@ -119,7 +123,7 @@ baseurl=https://engci-maven.cisco.com/artifactory/cms-epel/7Server/x86_64/
 enabled=1
 gpgcheck=1
 gpgkey=https://engci-maven.cisco.com/artifactory/cms-epel/RPM-GPG-KEY-EPEL-7Server
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)') %}
+{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
 proxy=_none_
 {% endif %}
 
@@ -129,7 +133,7 @@ baseurl=https://engci-maven.cisco.com/artifactory/cms-centos7/os/x86_64/
 enabled=1
 gpgcheck=1
 gpgkey=https://engci-maven.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)') %}
+{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
 proxy=_none_
 {% endif %}
 
@@ -139,7 +143,7 @@ baseurl=https://engci-maven.cisco.com/artifactory/cms-centos7/extras/x86_64/
 enabled=1
 gpgcheck=1
 gpgkey=https://engci-maven.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)') %}
+{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
 proxy=_none_
 {% endif %}
 
@@ -149,7 +153,7 @@ baseurl=https://engci-maven.cisco.com/artifactory/cms-centos7/updates/x86_64/
 enabled=1
 gpgcheck=1
 gpgkey=https://engci-maven.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)') %}
+{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
 proxy=_none_
 {% endif %}
 EOF
