@@ -1,87 +1,38 @@
 ---
-# Tasks to verify access to keeper
+# Tasks to get Core and Customer information from keeper
 - block:
-  - name: define keeper host
-    ansible.builtin.set_fact:
-      keeper_host: "{{ 'alphaeast' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is not search('Alln1|RTP5') else 'west' }}"
-  - name: check access to keeper
+  - name: Load Core Credentials into the Password Vault
     ansible.builtin.shell: |
-       sh keeper_control.sh --host={{ keeper_host }} --list_customers --cert={{ keeper.token_filename }}
+      sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ keeper_token_filename }}
     args:
       chdir: "{{ spl_ansible_path }}"
-    register: reg_keeper_access
-    failed_when: reg_keeper_access.stderr != ''
-    until: reg_keeper_access is succeeded
+    register: reg_core_creds
+    failed_when: "'Error: getting ' in reg_core_creds.stdout"
+    until: reg_core_creds is succeeded
     ignore_errors: true
     no_log: true
-  - ansible.builtin.debug:
-      msg: "{{ reg_keeper_access }}"
-    when: reg_keeper_access is failed
-  - block:
-    - name: back up default config files
-      ansible.builtin.copy:
-        src: "{{ spl_ansible_path }}/{{ file_item }}"
-        dest: "{{ spl_ansible_path }}/{{ file_item }}.orig"
-        decrypt: no
-      loop:
-        - default_core_passwords.yml
-        - phantom_config_assets.yml
-      loop_control:
-        loop_var: file_item
-    - name: Load Core Credentials into the Password Vault
-      ansible.builtin.shell: |
-        sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ keeper.token_filename }}
-      args:
-        chdir: "{{ spl_ansible_path }}"
-      register: reg_core_creds
-      failed_when: "'Error: getting ' in reg_core_creds.stdout"
-      until: reg_core_creds is succeeded
-      ignore_errors: true
-      no_log: true
-      when: inventory_hostname is not search('splfwd')
-    - debug:
-        msg: 'Core Credentials not found in Keeper'
-      when:
-        - reg_core_creds is failed
-        - inventory_hostname is not search('splfwd')
-    - name: Load Customer Credentials into the Customer Password Vault
-      ansible.builtin.shell: |
-        sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ keeper.token_filename }}
-      args:
-        chdir: "{{ spl_ansible_path }}"
-      register: reg_cust_creds
-      failed_when: "'Error: getting ' in reg_cust_creds.stdout"
-      until: reg_cust_creds is succeeded
-      ignore_errors: true
-      no_log: true
-      when: inventory_hostname is search('splfwd')
-    - debug:
-        msg: "{{ 'Core' if reg_cust_creds.stdout is search('core') else 'customer' }} Credentials not found in Keeper"
-      when:
-        - reg_cust_creds is failed
-        - inventory_hostname is search('splfwd')
-
-    - name: restore default config files
-      ansible.builtin.copy:
-        src: "{{ spl_ansible_path }}/{{ file_item }}.orig"
-        dest: "{{ spl_ansible_path }}/{{ file_item }}"
-        decrypt: no
-      loop:
-        - default_core_passwords.yml
-        - phantom_config_assets.yml
-      loop_control:
-        loop_var: file_item
-      when: (inventory_hostname is search('splfwd') and reg_cust_creds is failed) or (inventory_hostname is not search('splfwd') and reg_core_creds is failed)
-    - name: delete back up files
-      ansible.builtin.file:
-        path: "{{ spl_ansible_path }}/{{ file_item }}.orig"
-        state: absent
-      loop:
-        - default_core_passwords.yml
-        - phantom_config_assets.yml
-      loop_control:
-        loop_var: file_item
-    when: reg_keeper_access is succeeded
+    when: inventory_hostname is not search('splfwd')
+  - debug:
+      msg: "{{ reg_core_creds.stdout_lines | select('search', '(E|e)rror:') }}"
+    when:
+      - reg_core_creds is failed
+      - inventory_hostname is not search('splfwd')
+  - name: Load Customer Credentials into the Customer Password Vault
+    ansible.builtin.shell: |
+      sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ keeper_token_filename }}
+    args:
+      chdir: "{{ spl_ansible_path }}"
+    register: reg_cust_creds
+    failed_when: "'Error: getting ' in reg_cust_creds.stdout"
+    until: reg_cust_creds is succeeded
+    ignore_errors: true
+    no_log: true
+    when: inventory_hostname is search('splfwd')
+  - debug:
+      msg: "{{ reg_cust_creds.stdout_lines | select('search', '(E|e)rror:') }}"
+    when:
+      - reg_cust_creds is failed
+      - inventory_hostname is search('splfwd')
   delegate_to: localhost
   run_once: true
   environment:

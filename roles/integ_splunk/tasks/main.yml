@@ -14,6 +14,7 @@
   - include_tasks: task_remove_token.yml
     when: clone_repos is succeeded
   - include_tasks: task_check_dns_record.yml
+  - include_tasks: task_get_keeper_token.yml
   - include_tasks: task_get_creds_from_keeper.yml
   - include_tasks: task_update_lookup_file.yml
   - include_tasks: task_switch_branch.yml
