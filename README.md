@@ -19,7 +19,7 @@ On a newly installed Linux **CentOS 7** VM that has docker installed and configu
 
 1- Delete old containers
 
-    $> docker rm $(docker ps -q -a) -f
+    $> docker rm $(docker ps -q -a)
 
 2- Delete old images
 
