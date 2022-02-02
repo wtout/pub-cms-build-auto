@@ -11,6 +11,13 @@
     register: host_key
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
+  - name: create ~/.ssh directory
+    ansible.builtin.file:
+      path: '~/.ssh'
+      state: directory
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    run_once: yes
+
   - name: Add CSR key to known_hosts
     known_hosts:
       name: "{{ netconfig.ipaddress3 }}"
