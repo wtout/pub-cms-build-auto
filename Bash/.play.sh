@@ -396,7 +396,7 @@ function send_notification() {
 		if [[ -z ${MYINVOKER+x} ]]
 		then
 			# Send playbook status notification
-			ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v &>/dev/null &
+			ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v &>/dev/null 
 		else
 			local INVOKED
 			INVOKED=true
