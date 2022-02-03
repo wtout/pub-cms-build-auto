@@ -17,6 +17,17 @@
       src: "{{ spl_wd }}/dev/mdr-splunk-env"
       state: link
       force: yes
+  - name: Ensure {{ auto_dir }}/Packages/Splunk exists
+    ansible.builtin.file:
+      path: "{{ auto_dir }}/Packages/Splunk"
+      state: directory
+  - name: Download Splunk artifacts
+    get_url:
+      url: "{{ spl_rpm_url }}"
+      dest: "{{ auto_dir }}/Packages/Splunk/"
+    register: download_action
+    until: download_action is succeeded
+    retries: 7
   - name: get list of Splunk artifacts
     find:
       paths: "{{ auto_dir }}/Packages/Splunk"
