@@ -21,6 +21,8 @@
     ansible.builtin.file:
       path: "{{ auto_dir }}/Packages/Splunk"
       state: directory
+      mode: 0777
+    become: yes
   - name: Download Splunk artifacts
     get_url:
       url: "{{ spl_rpm_url }}"
