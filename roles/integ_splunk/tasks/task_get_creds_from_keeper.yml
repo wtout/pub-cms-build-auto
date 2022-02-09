@@ -9,11 +9,13 @@
     register: reg_core_creds
     failed_when: "'Error: getting ' in reg_core_creds.stdout"
     until: reg_core_creds is succeeded
+    retries: 5
     ignore_errors: true
     no_log: true
     when: inventory_hostname is not search('splfwd')
-  - debug:
-      msg: "{{ reg_core_creds.stdout_lines | select('search', '(E|e)rror:') }}"
+  - assert:
+      that: reg_core_creds.stdout_lines | select('search', '(E|e)rror:') | list | join == ''
+      fail_msg: "{{ reg_core_creds.stdout_lines | select('search', '(E|e)rror:') }}"
     when:
       - reg_core_creds is failed
       - inventory_hostname is not search('splfwd')
@@ -25,11 +27,13 @@
     register: reg_cust_creds
     failed_when: "'Error: getting ' in reg_cust_creds.stdout"
     until: reg_cust_creds is succeeded
+    retries: 5
     ignore_errors: true
     no_log: true
     when: inventory_hostname is search('splfwd')
-  - debug:
-      msg: "{{ reg_cust_creds.stdout_lines | select('search', '(E|e)rror:') }}"
+  - assert:
+      that: reg_cust_creds.stdout_lines | select('search', '(E|e)rror:') | list | join == ''
+      fail_msg: "{{ reg_cust_creds.stdout_lines | select('search', '(E|e)rror:') }}"
     when:
       - reg_cust_creds is failed
       - inventory_hostname is search('splfwd')

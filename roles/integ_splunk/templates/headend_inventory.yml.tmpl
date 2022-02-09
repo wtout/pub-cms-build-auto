@@ -71,7 +71,7 @@
         auth_type: LDAP
         auth_settings: MDR_LA
 
-{% if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('Alln1|RTP5') and ((inventory_hostname is search('splfwd') and reg_cust_creds is succeeded) or (inventory_hostname is not search('splfwd') and reg_core_creds is succeeded)) %}
+{% if include_svc and ((inventory_hostname is search('splfwd') and reg_cust_creds is succeeded) or (inventory_hostname is not search('splfwd') and reg_core_creds is succeeded)) %}
   splunk_svcs_forwarder:
     hosts:
       {{ hostvars[groups['splsvc'][0]]['vm']['name'] if groups['splsvc'] is defined else splsvc_list[0] }}:

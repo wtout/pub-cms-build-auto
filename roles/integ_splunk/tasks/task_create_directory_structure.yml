@@ -23,28 +23,35 @@
       state: directory
       mode: 0777
     become: yes
-  - name: Download Splunk artifacts
-    get_url:
-      url: "{{ spl_rpm_url }}"
-      dest: "{{ auto_dir }}/Packages/Splunk/"
-    register: download_action
-    until: download_action is succeeded
-    retries: 7
   - name: get list of Splunk artifacts
     find:
       paths: "{{ auto_dir }}/Packages/Splunk"
       file_type: file
       patterns: '*.rpm'
     register: artifacts_list
-  - name: check that Splunk artifacts are found
-    ansible.builtin.assert:
-      that:
-        - artifacts_list.matched >= 1
-      fail_msg: 'Unable to find Splunk artifacts. Aborting!'
+  - block:
+    - name: Download Splunk artifacts
+      get_url:
+        url: "{{ spl_rpm_url }}"
+        dest: "{{ auto_dir }}/Packages/Splunk/"
+      register: download_action
+      until: download_action is succeeded
+      retries: 7
+    - name: get list of Splunk artifacts
+      find:
+        paths: "{{ auto_dir }}/Packages/Splunk"
+        file_type: file
+        patterns: '*.rpm'
+      register: artifacts_list1
+    - name: check that Splunk artifacts are found
+      ansible.builtin.assert:
+        that:
+          - artifacts_list1.matched >= 1
+        fail_msg: 'Unable to find Splunk artifacts. Aborting!'
+    when: artifacts_list.matched == 0
   - debug:
       msg:
         - "{{ link_item.path }}"
-        - "{{ link_item.path | basename }}"
     loop: "{{ artifacts_list.files }}"
     loop_control:
       loop_var: link_item

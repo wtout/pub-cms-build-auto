@@ -13,7 +13,8 @@
     loop_control:
       loop_var: repo_item
     register: reg_clone_repos1
-    async: 120
+    ignore_errors: yes
+    async: 200
     poll: 10
   - name: clone the repos
     git:
@@ -27,7 +28,7 @@
     loop_control:
       loop_var: repo_item
     register: reg_clone_repos2
-    async: 90
+    async: 200
     poll: 10
     when: reg_clone_repos1 is failed
   - name: define clone_repos

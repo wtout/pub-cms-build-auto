@@ -1,0 +1,28 @@
+---
+# Tasks to check indexers cluster status
+- block:
+  - name: get splunk admin creds from vault
+    shell: |
+      (head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault view default_core_passwords.yml --vault-password-file vault-password-file || cat default_core_passwords.yml) | sed -n '/splunk:/,/proxy/p' | grep -E 'user|password' | awk -F ': ' '{print $NF}'
+    args:
+      chdir: "{{ spl_ansible_path }}"
+    register: reg_spl_admin_creds
+    check_mode: no
+    no_log: yes
+    delegate_to: localhost
+  - assert:
+      that:
+        - reg_spl_admin_creds.stdout_lines|first != ''
+        - reg_spl_admin_creds.stdout_lines|last != ''
+      fail_msg: 'Unable to get Splunk Admin credentials. Aborting'
+  - name: check the indexers cluster status
+    ansible.builtin.shell: |
+      $(which su) splunk -c '/opt/splunk/bin/splunk show cluster-status -auth {{ reg_spl_admin_creds.stdout_lines|first }}:{{ reg_spl_admin_creds.stdout_lines|last }}'
+    register: reg_cluster_status
+    ignore_errors: yes
+    check_mode: no
+    become: yes
+    delegate_to: "{{ groups['splmas']|first }}"
+  when: inventory_hostname is not search('splfwd')
+  run_once: true
+  tags: integ_splunk

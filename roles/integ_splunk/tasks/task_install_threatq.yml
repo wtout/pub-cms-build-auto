@@ -1,0 +1,71 @@
+---
+# tasks to deploy threatq
+- block:
+  - include_tasks:
+      file: task_switch_branch.yml
+      apply:
+        vars:
+          branch_name: 'threatq'
+          repo_name: 'mdr-automation'
+    when: clone_repos is succeeded
+  - include_tasks: task_setup_env.yml
+    when: clone_repos.results|selectattr('repo_item', 'search', 'mdr-automation')|map(attribute='changed')|list|join|bool
+  - include_tasks:
+      file: task_create_inventory.yml
+      apply:
+        vars:
+          build_svc: true
+  - include_tasks: task_update_ansible_cfg.yml
+  - include_tasks: task_get_creds_from_keeper.yml
+  - include_tasks: task_update_variables_files.yml
+  - name: Deploy the indexer changes
+    shell: |
+      ANSIBLE_LOG_PATH={{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      DEPLOY_HOME={{ spl_wd }}
+      export ANSIBLE_LOG_PATH DEPLOY_HOME
+      ./deploy_cm.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+    register: reg_ind_install
+    args:
+      chdir: "{{ spl_ansible_path }}"
+  - name: Build the SVCs Forwarder
+    shell: |
+      ANSIBLE_LOG_PATH={{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      DEPLOY_HOME={{ spl_wd }}
+      export ANSIBLE_LOG_PATH DEPLOY_HOME
+      ./build_core.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --skippushtoindexer --skippushtosearch --skipphantom --skipphantomconfig --skipjoincore --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh --limit {{ hostvars[groups['splsvc']|first]['vm']['name'] }}" 1>/dev/null
+    register: reg_ind_install
+    args:
+      chdir: "{{ spl_ansible_path }}"
+  - name: Deploy the SVCs Changes
+    shell: |
+      ANSIBLE_LOG_PATH={{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      DEPLOY_HOME={{ spl_wd }}
+      export ANSIBLE_LOG_PATH DEPLOY_HOME
+      ./deploy_svcs.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+    register: reg_ind_install
+    args:
+      chdir: "{{ spl_ansible_path }}"
+  - name: Deploy the SHC Changes
+    shell: |
+      ANSIBLE_LOG_PATH={{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      DEPLOY_HOME={{ spl_wd }}
+      export ANSIBLE_LOG_PATH DEPLOY_HOME
+      ./deploy_shc.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+    register: reg_ind_install
+    args:
+      chdir: "{{ spl_ansible_path }}"
+  - name: Deploy the Phantom Changes
+    shell: |
+      ANSIBLE_LOG_PATH={{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      DEPLOY_HOME={{ spl_wd }}
+      export ANSIBLE_LOG_PATH DEPLOY_HOME
+      ./config_phantom.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+    register: reg_ind_install
+    args:
+      chdir: "{{ spl_ansible_path }}"
+  when:
+    - groups['splsvc'] is defined
+    - inventory_hostname is not search('splfwd')
+  delegate_to: localhost
+  run_once:  yes
+  tags: integ_splunk
