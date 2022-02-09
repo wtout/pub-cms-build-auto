@@ -10,7 +10,7 @@
     loop_control:
       loop_var: tmpl_item
   - name: Decrypt ssh_passwords vault
-    shell: head -1 ssh_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt --vault-password-file ssh-vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh ssh_passwords.yml || echo 'Not encrypted'
+    shell: head -1 ssh_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt ssh_passwords.yml --vault-password-file ssh-vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Update SSH passwords vault
@@ -22,11 +22,11 @@
     loop_control:
       loop_var: tmpl_item
   - name: Encrypt ssh_passwords vault
-    shell: ansible-vault encrypt --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh ssh_passwords.yml
+    shell: ansible-vault encrypt ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Decrypt phantom config assets file
-    shell: head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt --vault-password-file vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh phantom_config_assets.yml || echo 'Not encrypted'
+    shell: head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt phantom_config_assets.yml --vault-password-file vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Update phantom config assets file
@@ -41,13 +41,13 @@
       loop_var: line_item
     no_log: true
   - name: Encrypt phantom config assets file
-    shell: head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh phantom_config_assets.yml
+    shell: head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt phantom_config_assets.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
     args:
       chdir: "{{ spl_ansible_path }}"
 
   - block:
     - name: Decrypt default_core_passwords vault
-      shell: head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt --vault-password-file vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh default_core_passwords.yml || echo 'Not encrypted'
+      shell: head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt default_core_passwords.yml --vault-password-file vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
       args:
         chdir: "{{ spl_ansible_path }}"
     - name: get threatq setings
@@ -66,7 +66,7 @@
         line: "{{ tq_def | to_nice_yaml(indent=2) }}"
       when: reg_tq_in_vault is changed
     - name: Encrypt default core passwords file
-      shell: head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh default_core_passwords.yml
+      shell: head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt default_core_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
       args:
         chdir: "{{ spl_ansible_path }}"
     when: (inventory_hostname is search('splfwd') and reg_cust_creds is failed) or (inventory_hostname is not search('splfwd') and reg_core_creds is failed)

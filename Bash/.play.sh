@@ -255,6 +255,8 @@ function get_repo_creds() {
 			[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
 		done
 	else
+		local REPOUSER
+		local REPOPASS
 		echo
 		read -rp "Enter your Repository username [ENTER]: " REPOUSER
 		read -rsp "Enter your Repository password [ENTER]: " REPOPASS
