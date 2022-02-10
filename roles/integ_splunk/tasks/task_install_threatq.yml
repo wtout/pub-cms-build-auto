@@ -24,7 +24,7 @@
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
       ./deploy_cm.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
-    register: reg_ind_install
+    register: reg_deploy_indexer_changes
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Build the SVCs Forwarder
@@ -33,7 +33,7 @@
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
       ./build_core.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --skippushtoindexer --skippushtosearch --skipphantom --skipphantomconfig --skipjoincore --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh --limit {{ hostvars[groups['splsvc']|first]['vm']['name'] }}" 1>/dev/null
-    register: reg_ind_install
+    register: reg_build_svcs_forwarder
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Deploy the SVCs Changes
@@ -42,7 +42,7 @@
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
       ./deploy_svcs.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
-    register: reg_ind_install
+    register: reg_deploy_svcs_changes
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Deploy the SHC Changes
@@ -51,7 +51,7 @@
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
       ./deploy_shc.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
-    register: reg_ind_install
+    register: reg_deploy_shc_changes
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Deploy the Phantom Changes
@@ -60,7 +60,7 @@
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
       ./config_phantom.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
-    register: reg_ind_install
+    register: reg_deploy_phantom_changes
     args:
       chdir: "{{ spl_ansible_path }}"
   when:
