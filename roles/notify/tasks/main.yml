@@ -12,7 +12,7 @@
     when: file_item != ''
     check_mode: no
   - name: Get playbook status from {{ LFILE }}
-    ansible.builtin.shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP/,+{{ NHOSTS }}p' {{ LFILE }} | grep -v awk | grep -E 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
+    ansible.builtin.shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP /{h;b};H;${x;p}' {{ LFILE }} | sed -n '/PLAY RECAP /,+{{ NHOSTS }}p' | grep -v awk | grep -E 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
     register: playbook_status
   - block:
     - name: define notifcation message
@@ -40,7 +40,7 @@
       ignore_errors: true
     - name: Get playbook execution time from {{ LFILE }}
       ansible.builtin.shell: |
-        grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP/,+{{ NHOSTS|int + 2 }}p' {{ LFILE }} | grep -vE 'awk|RECAP|===' | grep '*' &>/dev/null && sed -n '/PLAY RECAP/,+{{ NHOSTS|int + 2 }}p' {{ LFILE }} | grep -vE 'awk|RECAP|===' | grep -E '.[1-9]{,3} \*{3,}' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
+        grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP /{h;b};H;${x;p}' {{ LFILE }} | sed -n '/PLAY RECAP /,+{{ NHOSTS|int + 2 }}p' | grep -vE 'awk|RECAP|===' | grep '*' &>/dev/null && sed -n '/PLAY RECAP /{h;b};H;${x;p}' {{ LFILE }} | sed -n '/PLAY RECAP /,+{{ NHOSTS|int + 2 }}p' | grep -vE 'awk|RECAP|===' | grep -E '.[0-9]{,3} \*{3,}' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
       register: playbook_execution
     - set_fact:
         playbook_time: "{{ playbook_time|default('') + ' ' + time_item.0|regex_replace('^0*', '') + time_item.1 }}"
