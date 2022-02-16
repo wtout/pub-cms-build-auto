@@ -16,13 +16,15 @@
   - include_tasks: task_check_dns_record.yml
   - include_tasks: task_get_keeper_token.yml
   - include_tasks: task_get_creds_from_keeper.yml
-  - include_tasks: task_update_lookup_file.yml
   - include_tasks:
       file: task_switch_branch.yml
       apply:
         vars:
           branch_name: "{{ customer.env_identifier }}"
           repo_name: 'mdr-splunk-env'
+    when:
+      - inventory_hostname is search('splfwd')
+  - include_tasks: task_update_lookup_file.yml
   - include_tasks: task_setup_env.yml
     when: clone_repos.results|selectattr('repo_item', 'search', 'mdr-splunk-env')|map(attribute='changed')|list|join|bool
   - include_tasks: task_update_vm_password.yml
