@@ -11,13 +11,15 @@
   - block:
     - name: get list of customer entries from lookup file
       ansible.builtin.command: |
-        cat {{ spl_wd }}/dev/mdr-splunk-env/deployer/cisco_mdr_ucases_lookup/lookups/cisco_mdr_customer_mapping.csv
+        cat {{ spl_wd }}/dev/mdr-splunk-env/deployer/cisco_mdr_ucases_lookup/lookups/cisco_mdr_customer_mapping.csv_{{ customer.env_identifier }}
       register: reg_last_entry
+      ignore_errors: yes
     - name: update lookup file
       ansible.builtin.lineinfile:
-        path: "{{ spl_wd }}/dev/mdr-splunk-env/deployer/cisco_mdr_ucases_lookup/lookups/cisco_mdr_customer_mapping.csv"
+        path: "{{ spl_wd }}/dev/mdr-splunk-env/deployer/cisco_mdr_ucases_lookup/lookups/cisco_mdr_customer_mapping.csv_{{ customer.env_identifier }}"
         line: "{{ [(reg_read_info.stdout_lines|select('search', 'id:')|join).split(': ')|last, (reg_read_info.stdout_lines|select('search', 'index:')|join).split(': ')|last, (reg_last_entry.stdout_lines|last).split(',')|last|int + 1]|join(',') if reg_last_entry.stdout_lines|select('search', customer.shortname)|length == 0 else reg_last_entry.stdout_lines|select('search', customer.shortname)|join }}"
       register: reg_update_file
+      when: reg_last_entry is succeeded
     when: reg_read_info is succeeded
   when:
     - inventory_hostname is search('splfwd')
