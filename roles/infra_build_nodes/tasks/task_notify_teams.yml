@@ -25,19 +25,26 @@
       - customer.disaster_recovery
       - line_item != ''
 
-  - name: Send notification via Webex Teams with infra serial numbers
-    uri:
-      url: "https://webexapis.com/v1/messages"
-      method: POST
-      headers:
-        Authorization: "Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
-      body_format: json
-      body:
-        roomId: Y2lzY29zcGFyazovL3VzL1JPT00vYjRiMWM0MzAtMTg2My0xMWViLWE4OWQtNTNkMDRiZjUxMjMy
-        markdown: "{{ '**Infra Serial Numbers**' + '\n' + NOTIF_MSG | join('  \n') }}"
-    environment:
-      http_proxy: "{{ proxy_address|default('') }}"
-      https_proxy: "{{ proxy_address|default('') }}"
+  - block:
+    - name: Send notification via Webex Teams with infra serial numbers
+      uri:
+        url: "https://webexapis.com/v1/messages"
+        method: POST
+        headers:
+          Authorization: "Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
+        body_format: json
+        body:
+          roomId: Y2lzY29zcGFyazovL3VzL1JPT00vYjRiMWM0MzAtMTg2My0xMWViLWE4OWQtNTNkMDRiZjUxMjMy
+          markdown: "{{ '**Infra Serial Numbers**' + '\n' + NOTIF_MSG | join('  \n') }}"
+      register: reg_notify
+      ignore_errors: yes
+      environment:
+        http_proxy: "{{ proxy_address|default('') }}"
+        https_proxy: "{{ proxy_address|default('') }}"
+    - name: print notification message to screen/log
+      debug:
+        msg: "{{ ['Infra Serial Numbers'] + NOTIF_MSG }}"
+      when: reg_notify is failed
     when: NOTIF_MSG is defined and NOTIF_MSG != []
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
