@@ -44,7 +44,7 @@
       - include_role:
           name: get_release
         when: get_release | default(false) | bool
-        tags: [ 'get_release', 'infra_build_nodes', 'vm_creation', 'vm_configuration', 'puppet', 'integ_splunk' ]
+        tags: [ 'get_release', 'infra_build_nodes', 'infra_license', 'vm_creation', 'vm_configuration', 'puppet', 'integ_splunk' ]
       - include_role:
           name: infra_dns_records
         when: add_dns_records | default(false) | bool

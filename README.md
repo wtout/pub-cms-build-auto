@@ -15,21 +15,21 @@ The deployment procedure has to be the same for all deployments. Ansible code co
 
 ### Installation ###
 
-On a newly installed Linux **CentOS 7** VM that has docker installed and configured and that can access the internet, container repo and the VM infrastructure, run the following command to download and start the container hosting the automation code:
+On a newly installed Linux **CentOS 7.7+** VM that has docker installed and configured and that can access the internet, container repo and the VM infrastructure, run the following command to download and start the container hosting the automation code:
 
-1- Delete old containers
+1- Install the git package
 
-    $> docker rm $(docker ps -q -a)
+    $> sudo yum install -y git
 
-2- Delete old images
+6- Download the Ansible automation package
 
-    $> docker rmi $(docker images -a -q) -f
+    $> git clone https://ww-github3.cisco.com/cms-build-team/cmsp-auto-deploy.git
 
-3- Download and start the container
+7- Go to the newly cloned cmsp-auto-deploy directory
 
-    $> docker run -e MYPROXY=${http_proxy} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME="$(whoami)_ansible" -e MYIP=$(ip a show "$(ip link | grep 2: | head -1 | awk '{print $2}')" | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}') --user ansible -w /home/ansible/cmsp-auto-deploy -v /data:/data:Z -v /tmp:/tmp:Z -v ${HOME}/certificates:/home/ansible/certificates:Z -v ${HOME}/Ansible_data/Logs:/home/ansible/cmsp-auto-deploy/Logs:Z -v ${HOME}/Ansible_data/Definitions:/home/ansible/cmsp-auto-deploy/Definitions:Z -v ${HOME}/Ansible_data/inventories:/home/ansible/cmsp-auto-deploy/inventories:Z --name $(whoami)_cmsp-auto-deploy -it -d containers.cisco.com/watout/cmsp-auto-deploy:latest
+    $> cd cmsp-auto-deploy
 
-***Note**: Be careful not to delete a container that is in use by another user*
+***Note**: you might need to disable the proxy to be able to clone the repository*
 
 
 ### System definition ###
@@ -69,7 +69,7 @@ Non-standard host specific settings are to be added to a dedicated file under _`
 
 To create the system inventory without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
 
-    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/play_deploy.sh –-envname <system-name> --tags none
+    $> sh Bash/play_deploy.sh –-envname <system-name> --tags none
 
 
 ### Artifacts ###
@@ -80,14 +80,14 @@ If the automated procedure is preferred, the user must ensure that the correct a
 
 To download the artifacts without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
 
-    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/play_deploy.sh –-envname <system-name> --tags get_release
+    $> sh Bash/play_deploy.sh –-envname <system-name> --tags get_release
 
 
 ### System Deployment ###
 
 1- From the automation root directory (cmsp-auto-deploy), run one of the bash scripts under the Bash folder depending on what you want to do. 
 
-    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/<script name> --envname <system-name>
+    $> sh Bash/<script name> --envname <system-name>
 
 with the system-name being the name of the system definition file from "Configuration" step 1 and the script name being one of the following options:
 
@@ -95,7 +95,7 @@ with the system-name being the name of the system definition file from "Configur
 
 - ``play_rollback.sh``
 
-  Script output is automatically saved to a log file. The file is saved under _``~/Ansible_data/Logs/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
+  Script output is automatically saved to a log file. The file is saved under _``Logs/<script-name>.<system-name>.log.<time-stamp>``_ on the Ansible control machine
 
 ***Note**: Running multiple instances of the same script for a given customer simultaneously is prohibited*
 
@@ -133,23 +133,23 @@ The list of roles used in the playbooks:
   - **sanity**: runs a comprehensive list of sanity checks
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
-To execute specific role(s), add "_--tags 'role1,role2,...'_" as argument to the script.
+To execute specific role(s), add "_--tags 'role1,role2,etc...'_" as argument to the script.
 
-To skip specific role(s), add "_--skip-tags 'role1,role2,...'_" as argument to the script.
+To skip specific role(s), add "_--skip-tags 'role1,role2,etc...'_" as argument to the script.
 
-**_Example1_**: to install/uninstall docker and ntp, run the script as follows:
+**_Example1_**: to execute one or more roles, run the script as follows:
 
-    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp'
+    $> sh Bash/<script-name> --envname <system-name> --tags 'role1,role2,etc...'
 
-**_Example2_**: to run all roles except os and ntp, run the script as follows:
+**_Example2_**: to run all roles except one or more, run the script as follows:
 
-    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/<script-name> --envname <system-name> --skip-tags 'os,ntp'
+    $> sh Bash/<script-name> --envname <system-name> --skip-tags 'role1,role2,etc...'
 
-To limit the processing to specific host(s) or group(s) or a combination of both, add "_--limit 'group1,host1,...'_" as argument to the script.
+To limit the processing to specific host(s) or group(s) or a combination of both, add "_--limit 'group1,host1,etc...'_" as argument to the script.
 
-**_Example3_**: to install/uninstall docker and ntp on the linux jump servers and on relay01, run the script as follows:
+**_Example3_**: to execute role1 and role2 on the linux jump servers and on relay01, run the script as follows:
 
-    $> docker exec -it $(whoami)_cmsp-auto-deploy sh Bash/<script-name> --envname <system-name> --tags 'docker,ntp' --limit 'lnxjmp,rly01'
+    $> sh Bash/<script-name> --envname <system-name> --tags 'role1,role2' --limit 'lnxjmp,rly01'
 
 ***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 

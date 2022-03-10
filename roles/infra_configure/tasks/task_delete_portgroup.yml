@@ -5,7 +5,7 @@
     hostname: "{{ information.address }}"
     username: "{{ credentials.username }}"
     password: "{{ credentials.password }}"
-    hosts: "{{ resource }}"
+    hosts: "{{ esxi_resource }}"
     validate_certs: false
     switch: "{{ portgroup.vswitch }}"
     state: absent

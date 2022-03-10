@@ -11,6 +11,7 @@
       loop_var: file_item
     when: file_item != ''
     check_mode: no
+    become: yes
   - name: Get playbook status from {{ LFILE }}
     ansible.builtin.shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP /{h;b};H;${x;p}' {{ LFILE }} | sed -n '/PLAY RECAP /,+{{ NHOSTS }}p' | grep -v awk | grep -E 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
     register: playbook_status

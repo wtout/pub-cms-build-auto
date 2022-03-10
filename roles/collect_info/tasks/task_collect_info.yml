@@ -86,9 +86,9 @@
         - { name: 'bastion', key: 'pass', value: '{{ bastion.password }}' }
     loop_control:
       loop_var: task_item
-    when:
-      - groups['bastion'] | length >=1
-      - bastion.address != [] and bastion.address != ['']
+  when:
+    - groups['bastion'] | length >=1
+    - bastion.address != [] and bastion.address != ['']
   no_log: true
   check_mode: no
   tags: always

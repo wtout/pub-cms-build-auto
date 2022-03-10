@@ -52,7 +52,7 @@
   - debug:
       msg:
         - "{{ link_item.path }}"
-    loop: "{{ artifacts_list.files }}"
+    loop: "{{ artifacts_list.files if artifacts_list.matched > 0 else artifacts_list1.files }}"
     loop_control:
       loop_var: link_item
   - name: create the splunk artifacts symbolic links
@@ -61,7 +61,7 @@
       src: "{{ link_item.path }}"
       state: link
       force: yes
-    loop: "{{ artifacts_list.files }}"
+    loop: "{{ artifacts_list.files if artifacts_list.matched > 0 else artifacts_list1.files }}"
     loop_control:
       loop_var: link_item
   delegate_to: localhost

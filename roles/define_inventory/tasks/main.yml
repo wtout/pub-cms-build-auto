@@ -3,7 +3,7 @@
 - block:
   - name: read customer definition
     include_vars:
-      file: "{{ SYS_NAME }}"
+      file: "{{ auto_dir + '/' + SYS_NAME }}"
       name: 'environment_definition'
 
   - debug: var=environment_definition
@@ -245,8 +245,8 @@
     when:
       - environment_definition.customer.deployment_model is search('h')
 
-  - name: check if localhost's IP address is private
-    shell: ip a show $(ip link | grep '2:' | head -1 | awk '{print $2}') | grep 'inet ' | cut -d '/' -f1 | awk '{print $2}' | grep '192\.168\.' || echo 'Not local'
+  - name: check if host's IP address is private
+    shell: echo {{ lookup('env', 'MYIP') }} | grep '192\.168\.' || echo 'Not local'
     register: localhost_ip
   
   - name: define template variables
@@ -257,11 +257,11 @@
       number_of_dcs: "{{ environment_definition.customer.primary.number_of_dcs }}"
 
   - name: detect directory owner
-    shell: stat -c '%U' {{ auto_dir }}/Bash
+    shell: ls -ld {{ auto_dir }}/Bash | awk '{print $3}' | xargs
     register: dir_owner
 
   - name: detect directory group
-    shell: stat -c '%G' {{ auto_dir }}/Bash
+    shell: ls -ld {{ auto_dir }}/Bash | awk '{print $4}' | xargs
     register: dir_group
 
   - name: generate customer inventory
@@ -270,6 +270,7 @@
       dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower }}"
       owner: "{{ dir_owner.stdout }}"
       group: "{{ dir_group.stdout }}"
+    become: yes
 
   - name: add disaster recovery to customer inventory
     copy:
@@ -277,6 +278,7 @@
       dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower }}"
       owner: "{{ dir_owner.stdout }}"
       group: "{{ dir_group.stdout }}"
+    become: yes
     when: environment_definition.customer.disaster_recovery
 
   - name: customize inventory
@@ -290,6 +292,7 @@
       - { name: 'templates/hosts.j2', dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower + '/hosts.yml' }}" }
     loop_control:
       loop_var: tmpl_item
+    become: yes
 
   check_mode: no
   tags: [ 'always', 'define_inventory' ]

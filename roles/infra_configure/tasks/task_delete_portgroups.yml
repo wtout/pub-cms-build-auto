@@ -15,7 +15,7 @@
       apply:
         vars:
           portgroup: "{{ portgroup_item }}"
-          resource: "{{ resource }}"
+          esxi_resource: "{{ resource }}"
     loop: "{{ (existing_portgroups.hosts_portgroup_info|dict2items|first).value }}"
     loop_control:
       loop_var: portgroup_item

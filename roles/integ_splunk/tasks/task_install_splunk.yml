@@ -3,7 +3,7 @@
 - block:
   - name: Deploy Splunk headend (core)
     shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
       ./build_core.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
@@ -22,7 +22,7 @@
       check_mode: no
     - name: Deploy Splunk heavy forwarder (customer)
       shell: |
-        ANSIBLE_LOG_PATH={{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+        ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
         DEPLOY_HOME={{ spl_wd }}
         export ANSIBLE_LOG_PATH DEPLOY_HOME
         ./build_customer.sh  --environment={{ customer.env_identifier }} --customerhost={{ vm.name }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null

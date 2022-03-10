@@ -12,13 +12,6 @@
     check_mode: no
     register: vmguest_info
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-  - debug:
-      msg:
-        - "{{ hostvars[groups[('dr' if drvm_names is defined and vm_name in drvm_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-        - "{{ vmguest_info.instance.hw_cluster }}"
-        - "{{ vmguest_info.instance.hw_cluster == hostvars[groups[('dr' if drvm_names is defined and vm_name in drvm_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-        - "{{ true if vmguest_info.instance.hw_cluster == hostvars[groups[('dr' if drvm_names is defined and vm_name in drvm_names else '') + 'vcenter'][0]]['information']['cluster'] else false }}"
   - name: define cluster_empty
     set_fact:
       cluster_empty: "{{ cluster_empty|default(true) and not vm_in_cluster }}"
