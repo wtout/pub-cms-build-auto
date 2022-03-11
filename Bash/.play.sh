@@ -208,16 +208,10 @@ function get_proxy() {
 			return 0
 		else
 			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-			if [[ "$(which ansible 2>/dev/null)" == "" ]]
-			then
-				read -rp "Enter a valid proxy username and press [ENTER]: " PPUSER
-				read -rsp "Enter a valid proxy password and press [ENTER]: " PPPASS
-			else
-				get_svc_cred primary user 1>/dev/null && read -r PPUSER <<< "$(get_svc_cred primary user)"
-				get_svc_cred primary pass 1>/dev/null && read -r PPPASS <<< "$(get_svc_cred primary pass)"
-				get_svc_cred secondary user 1>/dev/null && read -r SPUSER <<< "$(get_svc_cred secondary user)"
-				get_svc_cred secondary pass 1>/dev/null && read -r SPPASS <<< "$(get_svc_cred secondary pass)"
-			fi
+			get_svc_cred primary user 1>/dev/null && read -r PPUSER <<< "$(get_svc_cred primary user)"
+			get_svc_cred primary pass 1>/dev/null && read -r PPPASS <<< "$(get_svc_cred primary pass)"
+			get_svc_cred secondary user 1>/dev/null && read -r SPUSER <<< "$(get_svc_cred secondary user)"
+			get_svc_cred secondary pass 1>/dev/null && read -r SPPASS <<< "$(get_svc_cred secondary pass)"
 			MYPROXY=$(echo "${MYPROXY}" | sed -e "s|//.*@|//|g" -e "s|//|//${PPUSER}:${PPPASS}@|g")
 			curl --proxy "${MYPROXY}" "${PUBLIC_ADDRESS}" &>/dev/null
 			if [[ ${?} -eq 0 ]]
