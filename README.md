@@ -23,7 +23,7 @@ On a newly installed Linux **CentOS 7.7+** VM that has docker installed and conf
 
 6- Download the Ansible automation package
 
-    $> git clone https://ww-github3.cisco.com/cms-build-team/cmsp-auto-deploy.git
+    $> git clone https://www-github3.cisco.com/cms-build-team/cmsp-auto-deploy.git
 
 7- Go to the newly cloned cmsp-auto-deploy directory
 
