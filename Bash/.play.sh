@@ -725,6 +725,7 @@ stop_container
 create_symlink
 add_write_permission "${PWD}/roles"
 add_write_permission "${PWD}/roles/*"
+add_write_permission "${PWD}/roles/*/files"
 enable_logging "${@}"
 start_container
 run_playbook "${@}"
