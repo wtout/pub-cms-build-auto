@@ -241,7 +241,7 @@ function get_proxy() {
 function add_write_permission() {
 	for i in ${*}
 	do
-		chmod o+w ${i}
+		sudo chmod o+w ${i}
 	done
 }
 
@@ -325,8 +325,8 @@ function get_host_ip() {
 }
 
 function encrypt_vault() {
-	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && $(docker_cmd) exec -it ${CONTAINERNAME} ansible-vault encrypt "${1}" --vault-password-file "${2}" 1>/dev/null 2>"${ANSIBLE_LOG_LOCATION}"/encrypt_error."${PID}"
-	if [[ -s "${ANSIBLE_LOG_LOCATION}/encrypt_error.${PID}" ]]
+	[[ -f ${1} ]] && [[ -f ${2} ]] && [[ -x ${2} ]] && $(docker_cmd) exec -it ${CONTAINERNAME} ansible-vault encrypt "${1}" --vault-password-file "${2}" &>"${ANSIBLE_LOG_LOCATION}"/encrypt_error."${PID}"
+	if [[ -s "${ANSIBLE_LOG_LOCATION}/encrypt_error.${PID}" && "$(grep 'successful' "${ANSIBLE_LOG_LOCATION}/encrypt_error.${PID}")" == "" ]]
 	then
 		cat "${ANSIBLE_LOG_LOCATION}"/encrypt_error."${PID}"
 		exit 1
@@ -374,11 +374,11 @@ function get_repo_creds() {
 			[[ -f ${1} ]] && rm -f "${1}"
 			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 			printf "REPOUSER='%s'\nREPOPASS='%s'\n" "${REPOUSER}" "${REPOPASS}" > "${1}"
-			chmod 666 "${1}"
+			add_write_permission "${1}"
 			encrypt_vault "${1}" "${2}"
 			[[ ${debug} == 1 ]] && set -x
 			sudo chown "$(stat -c '%U' "$(pwd)")":"$(stat -c '%G' "$(pwd)")" "${1}"
-			sudo chmod 666 "${1}"
+			sudo chmod 644 "${1}"
 		fi
 		echo
 	fi
@@ -695,7 +695,7 @@ INVENTORY_PATH="inventories/${ENAME}"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 SYS_DEF="Definitions/${ENAME}.yml"
 SYS_ALL="${INVENTORY_PATH}/group_vars/all.yml"
-SVCVAULT=".svc_acct_creds_${ENAME}.yml"
+SVCVAULT="vars/.svc_acct_creds_${ENAME}.yml"
 CONTAINERNAME="$(whoami)_ansible_${ANSIBLE_VERSION}_${ENAME}"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
@@ -716,7 +716,10 @@ get_svc_cred primary pass 1>/dev/null && echo "PSVC_PASS: '$(get_svc_cred primar
 get_svc_cred secondary user 1>/dev/null && echo "SSVC_USER: '$(get_svc_cred secondary user)'" >> "${SVCVAULT}"
 get_svc_cred secondary pass 1>/dev/null && echo "SSVC_PASS: '$(get_svc_cred secondary pass)'" >> "${SVCVAULT}"
 [[ ${debug} == 1 ]] && set -x
+add_write_permission "${SVCVAULT}"
 encrypt_vault "${SVCVAULT}" Bash/get_common_vault_pass.sh
+sudo chown "$(stat -c '%U' "$(pwd)")":"$(stat -c '%G' "$(pwd)")" "${SVCVAULT}"
+sudo chmod 644 "${SVCVAULT}"
 get_inventory "${@}"
 [[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep "${SLEEPTIME}"
 get_hosts "${@}"
