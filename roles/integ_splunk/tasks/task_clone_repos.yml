@@ -34,6 +34,11 @@
   - name: define clone_repos
     ansible.builtin.set_fact:
       clone_repos: "{{ reg_clone_repos1 if reg_clone_repos1 is succeeded else reg_clone_repos2 }}"
+  - name: switch to last working version of MDR-Automation
+    ansible.builtin.shell: |
+      git reset --hard a4f42334d57a0d1e09d650f433a431e86b1614f0
+    args:
+      chdir: "{{ spl_wd }}/dev/mdr-automation"
   delegate_to: localhost
   run_once: true
   environment:

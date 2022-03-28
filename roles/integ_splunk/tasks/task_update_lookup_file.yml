@@ -3,7 +3,9 @@
 - block:
   - name: Read customer information obtained from keeper
     ansible.builtin.shell: |
-      head -1 customer_core_passwords.yml | grep '$ANSIBLE_VAULT' 1&2>/dev/null && ansible-vault view customer_core_passwords.yml --vault-password-file vault-password-file | egrep "(index\:| id\:)"
+      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      export ANSIBLE_LOG_PATH
+      head -1 customer_core_passwords.yml | grep '$ANSIBLE_VAULT' &>/dev/null && ansible-vault view customer_core_passwords.yml --vault-password-file vault-password-file | grep -E "(index\:| id\:)"
     args:
       chdir: "{{ spl_ansible_path }}"
     register: reg_read_info

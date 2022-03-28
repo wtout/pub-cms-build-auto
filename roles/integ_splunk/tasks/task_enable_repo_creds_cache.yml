@@ -3,7 +3,7 @@
 - name: Cache the repo credentials
   shell: |
     git config --global credential.helper cache
-    git config --global credential.helper "cache --timeout=4000"
+    git config --global credential.helper "cache --timeout=12000"
   delegate_to: localhost
   run_once: true
   tags: integ_splunk

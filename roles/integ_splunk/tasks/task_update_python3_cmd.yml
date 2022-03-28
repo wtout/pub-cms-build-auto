@@ -1,0 +1,20 @@
+---
+# Tasks to update python3 command in files
+- block:
+  - name: find files containing python3
+    ansible.builtin.shell: |
+      grep -rw python3 {{ spl_ansible_path }} | grep -vE 'python3.9|roles' | cut -d ':' -f1 | sort -u
+    register: reg_found_files
+  - debug:
+      msg: "{{ reg_found_files }}"
+  - name: replace python3 with python3.9
+    ansible.builtin.replace:
+      path: "{{ file_item }}"
+      regexp: 'python3'
+      replace: 'python3.9'
+    loop: "{{ reg_found_files.stdout_lines }}"
+    loop_control:
+      loop_var: file_item
+  delegate_to: localhost
+  run_once: true
+  tags: integ_splunk

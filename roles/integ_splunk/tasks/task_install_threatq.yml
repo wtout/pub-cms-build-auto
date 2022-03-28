@@ -8,6 +8,7 @@
           branch_name: 'threatq'
           repo_name: 'mdr-automation'
     when: clone_repos is succeeded
+  - include_tasks: task_update_python3_cmd.yml
   - include_tasks: task_setup_env.yml
     when: clone_repos.results|selectattr('repo_item', 'search', 'mdr-automation')|map(attribute='changed')|list|join|bool
   - include_tasks:

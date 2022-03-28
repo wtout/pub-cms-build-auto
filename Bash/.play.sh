@@ -31,7 +31,7 @@ function check_arguments() {
 }
 
 function check_docker_login() {
-	if [[ ! -f ${HOME}/.docker/config.json || "$(grep 'containers.cisco.com' ${HOME}/.docker/config.json)" == "" ]]
+	if [[ ! -f ${HOME}/.docker/config.json || "$(grep $(echo ${CONTAINERREPO}|cut -d '/' -f1) ${HOME}/.docker/config.json)" == "" ]]
 	then
 		echo "You must login to containers repository to gain access to images before running this automation"
 		exit 1
@@ -57,6 +57,14 @@ function restart_docker() {
 	fi
 }
 
+function image_prune() {
+	local CIID
+	local IIDLIST
+	CIID=$($(docker_cmd) images | grep -E "${CONTAINERREPO}.*${ANSIBLE_VERSION}" | awk '{print $3}')
+	[[ "${CIID}" == "" ]] && IIDLIST=$($(docker_cmd) images -a -q) || IIDLIST=$($(docker_cmd) images -a -q | grep -v ${CIID})
+	[[ "${IIDLIST}" != "" ]] && $(docker_cmd) rmi ${IIDLIST}
+}
+
 function check_container() {
 	$(docker_cmd) ps | grep ${CONTAINERNAME} &>/dev/null
 	return ${?}
@@ -65,13 +73,14 @@ function check_container() {
 function start_container() {
 	if [[ $(check_container; echo "${?}") -ne 0 ]]
 	then
+		sleep 10
 		echo "Starting container ${CONTAINERNAME}"
 		[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 		if [[ "${ANSIBLE_LOG_PATH}" == "" ]]
 		then
-			$(docker_cmd) run --rm -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CONTAINERNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${PWD}:${CONTAINERWD}:z --name ${CONTAINERNAME} -it -d --entrypoint /bin/bash containers.cisco.com/watout/ansible:${ANSIBLE_VERSION}
+			$(docker_cmd) run --rm -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CONTAINERNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${PWD}:${CONTAINERWD}:z --name ${CONTAINERNAME} -it -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION}
 		else
-			$(docker_cmd) run --rm -e ANSIBLE_LOG_PATH=${ANSIBLE_LOG_PATH} -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CONTAINERNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${PWD}:${CONTAINERWD}:z --name ${CONTAINERNAME} -it -d --entrypoint /bin/bash containers.cisco.com/watout/ansible:${ANSIBLE_VERSION}
+			$(docker_cmd) run --rm -e ANSIBLE_LOG_PATH=${ANSIBLE_LOG_PATH} -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CONTAINERNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${PWD}:${CONTAINERWD}:z --name ${CONTAINERNAME} -it -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION}
 		fi
 		[[ ${debug} == 1 ]] && set -x
 		[[ $(check_container; echo "${?}") -ne 0 ]] && echo "Unable to start container ${CONTAINERNAME}" && exit 1
@@ -676,6 +685,7 @@ ANSIBLE_VARS="vars/datacenters.yml"
 PASSVAULT="vars/passwords.yml"
 REPOVAULT="vars/.repovault.yml"
 CONTAINERWD="/home/ansible/cmsp-auto-deploy"
+CONTAINERREPO="containers.cisco.com/watout/ansible"
 MDR_AUTO_LOCATION="imp_auto"
 SECON=true
 
@@ -707,6 +717,7 @@ PROXY_ADDRESS=$(get_proxy) || PA=${?}
 git_config
 add_write_permission ${PWD}/vars
 stop_container
+image_prune
 start_container
 get_repo_creds "${REPOVAULT}" Bash/get_repo_vault_pass.sh
 check_updates "${REPOVAULT}" Bash/get_repo_vault_pass.sh

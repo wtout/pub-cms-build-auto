@@ -6,16 +6,21 @@
       path: "{{ spl_ansible_path }}/ansible.cfg"
       regex: '^log_path ='
       state: absent
-  - name: remove allow_world_readable_tmpfiles parameter from {{ spl_ansible_path }}/ansible.cfg
+  - name: disable allow_world_readable_tmpfiles parameter from {{ spl_ansible_path }}/ansible.cfg
     ansible.builtin.replace:
       path: "{{ spl_ansible_path }}/ansible.cfg"
       regexp: '^(allow_world_readable_tmpfiles = .*)$'
       replace: '#\g<1>'
-  - name: disable deprecation warnings in {{ spl_ansible_path }}/ansible.cfg
-    lineinfile:
+  - name: disable command_warnings parameter from {{ spl_ansible_path }}/ansible.cfg
+    ansible.builtin.replace:
       path: "{{ spl_ansible_path }}/ansible.cfg"
-      line: 'deprecation_warnings = False'
-      insertbefore: 'command_warnings'
+      regexp: '^(command_warnings = .*)$'
+      replace: '#\g<1>'
+  - name: replace callback_whitelist with callbacks_enabled
+    replace:
+      path: "{{ spl_ansible_path }}/ansible.cfg"
+      regexp: '^callback_whitelist'
+      replace: 'callbacks_enabled'
   delegate_to: localhost
   run_once: true
   tags: integ_splunk
