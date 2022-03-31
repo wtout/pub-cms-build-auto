@@ -76,7 +76,7 @@ function check_image() {
 }
 
 function check_container() {
-	$(docker_cmd) ps | grep ${CONTAINERNAME} &>/dev/null
+	$(docker_cmd) ps | grep -w ${CONTAINERNAME} &>/dev/null
 	return ${?}
 }
 
@@ -106,7 +106,8 @@ function stop_container() {
 }
 
 function check_repeat_job() {
-	repeat_job="$( pgrep "${ENAME}" | grep "$(basename "${0}" | awk -F '.' '{print $1}')" | grep -v "${PID}" )"
+	ps aux | grep -w "${ENAME}" | grep -vwE "${PID}|grep"
+	return ${?}
 }
 
 function check_hosts_limit() {
@@ -143,7 +144,8 @@ function check_hosts_limit() {
 }
 
 function check_concurrency() {
-	pgrep "$(basename "${0}")" | grep -v "${PID}"
+	#ps aux | grep "$(basename "${0}")" | grep -vE "${PID}|grep"
+	ps aux | grep "$(basename "${0}")" | grep -vwE "${ENAME}|grep"
 }
 
 function clean_arguments() {
@@ -508,13 +510,13 @@ function check_updates() {
 function get_hostsinplay() {
 	local ENVS
 	local HN
-	ENVS="$(pgrep play.sh | grep envname | grep -v "${ENAME}" | awk -F 'envname ' '{print $NF}' | cut -d'-' -f1 | sort -u)"
+	ENVS="$(ps aux | grep -E 'play.*\.sh' | grep envname | grep -vw "${ENAME}" | awk -F 'envname ' '{print $NF}' | cut -d'-' -f1 | sort -u)"
 	HN=""
 	for env in ${ENVS}
 	do
-		HN="${HN}$(cat "${INVENTORY_PATH}"/hosts | awk '{print $1}' | grep -Ev '\[|=' | sed '/^$/d')"
+		HN="${HN}$($(docker_cmd) exec -i ${CONTAINERNAME} ansible all -i "${INVENTORY_PATH}"/../${env} --list-hosts | grep -v host | sed -e 's/^\s*\(\w.*\)$/\1/g' | sort)"
 	done
-	echo "${HN}"
+	echo "${HN}" | wc -l
 }
 
 function get_inventory() {
@@ -535,11 +537,8 @@ function get_inventory() {
 }
 
 function get_sleeptime() {
-	local HN
 	local HOSTNUM
-	HN=$(get_hostsinplay)
-	HN=( "${HN}" )
-	HOSTNUM=${#HN[@]}
+	HOSTNUM=$(get_hostsinplay)
 	echo $((HOSTNUM + HOSTNUM / 4))
 }
 
@@ -581,16 +580,11 @@ function enable_logging() {
 	then
 		LOG_FILE="${ANSIBLE_LOG_LOCATION}/$(basename "${0}" | awk -F '.' '{print $1}').${ENAME}.log"
 		[[ "$( grep ^log_path "${ANSIBLE_CFG}" )" != "" ]] && sed -i '/^log_path = .*\$/d' "${ANSIBLE_CFG}"
-		if [[ -f ${LOG_FILE} ]] && [[ "${repeat_job}" != "" ]]
-		then
-			echo -e "\nRunning multiple instances of ${BOLD}$(basename "${0}")${NORMAL} is prohibited. Aborting!\n\n" && exit 1
-		else
-			export ANSIBLE_LOG_PATH=${LOG_FILE}
-			touch "${LOG_FILE}"
-			[[ ${?} -ne 0 ]] && echo -e "\nUnable to create ${LOG_FILE}. Aborting run!\n" && exit 1
-			chown "$(stat -c '%U' "$(pwd)")":"$(stat -c '%G' "$(pwd)")" "${LOG_FILE}"
-			chmod o+rw "${LOG_FILE}"
-		fi
+		export ANSIBLE_LOG_PATH=${LOG_FILE}
+		touch "${LOG_FILE}"
+		[[ ${?} -ne 0 ]] && echo -e "\nUnable to create ${LOG_FILE}. Aborting run!\n" && exit 1
+		chown "$(stat -c '%U' "$(pwd)")":"$(stat -c '%G' "$(pwd)")" "${LOG_FILE}"
+		chmod o+rw "${LOG_FILE}"
 		if [[ -z ${MYINVOKER+x} ]]
 		then
 			echo -e "############################################################\nAnsible Control Machine $(hostname) $(get_host_ip) ${CONTAINERNAME}\nThis script was run$(check_mode "${@}")by $(whoami) on $(date)\n############################################################\n\n" > "${LOG_FILE}"
@@ -708,16 +702,16 @@ check_docker_login
 restart_docker
 NEW_ARGS=$(check_hosts_limit "${@}")
 set -- && set -- "${@}" "${NEW_ARGS}"
-CC=$(check_concurrency)
 ORIG_ARGS="${@}"
 ENAME=$(get_envname "${ORIG_ARGS}")
+check_repeat_job && echo -e "\nRunning multiple instances of ${BOLD}$(basename "${0}")${NORMAL} is prohibited. Aborting!\n\n" && exit 1
+CC=$(check_concurrency)
 INVENTORY_PATH="inventories/${ENAME}"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 SYS_DEF="Definitions/${ENAME}.yml"
 SYS_ALL="${INVENTORY_PATH}/group_vars/all.yml"
 SVCVAULT="vars/.svc_acct_creds_${ENAME}.yml"
 CONTAINERNAME="$(whoami | cut -d '@' -f1)_ansible_${ANSIBLE_VERSION}_${ENAME}"
-check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- "${@}" "${NEW_ARGS}"
 [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
