@@ -33,8 +33,13 @@ function check_arguments() {
 function check_docker_login() {
 	if [[ ! -f ${HOME}/.docker/config.json || "$(grep $(echo ${CONTAINERREPO}|cut -d '/' -f1) ${HOME}/.docker/config.json)" == "" ]]
 	then
-		echo "You must login to containers repository to gain access to images before running this automation"
-		exit 1
+		if [[ $(check_image; echo "${?}") -ne 0 ]]
+		then
+			echo "You must login to containers repository to gain access to images before running this automation"
+			exit 1
+		else
+			echo "You must login to containers repository to gain access to automation images"
+		fi
 	fi
 }
 
@@ -63,6 +68,11 @@ function image_prune() {
 	CIID=$($(docker_cmd) images | grep -E "${CONTAINERREPO}.*${ANSIBLE_VERSION}" | awk '{print $3}')
 	[[ "${CIID}" == "" ]] && IIDLIST=$($(docker_cmd) images -a -q) || IIDLIST=$($(docker_cmd) images -a -q | grep -v ${CIID})
 	[[ "${IIDLIST}" != "" ]] && $(docker_cmd) rmi ${IIDLIST}
+}
+
+function check_image() {
+	$(docker_cmd) images | grep -E "${CONTAINERREPO}.*${ANSIBLE_VERSION}" &>/dev/null
+	return ${?}
 }
 
 function check_container() {
@@ -706,7 +716,7 @@ CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 SYS_DEF="Definitions/${ENAME}.yml"
 SYS_ALL="${INVENTORY_PATH}/group_vars/all.yml"
 SVCVAULT="vars/.svc_acct_creds_${ENAME}.yml"
-CONTAINERNAME="$(whoami)_ansible_${ANSIBLE_VERSION}_${ENAME}"
+CONTAINERNAME="$(whoami | cut -d '@' -f1)_ansible_${ANSIBLE_VERSION}_${ENAME}"
 check_repeat_job
 NEW_ARGS=$(clean_arguments "${ENAME}" "${@}")
 set -- && set -- "${@}" "${NEW_ARGS}"
