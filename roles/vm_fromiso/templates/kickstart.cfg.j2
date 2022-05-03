@@ -119,43 +119,31 @@ EOF
 cat <<EOF > /etc/yum.repos.d/artifactory.repo
 [EpelArtifactory]
 name=Epel Artifactory
-baseurl=https://engci-maven.cisco.com/artifactory/cms-epel/7Server/x86_64/
+baseurl=https://devhub.cisco.com/artifactory/cms-epel/7Server/x86_64/
 enabled=1
 gpgcheck=1
-gpgkey=https://engci-maven.cisco.com/artifactory/cms-epel/RPM-GPG-KEY-EPEL-7Server
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
-proxy=_none_
-{% endif %}
+gpgkey=https://devhub.cisco.com/artifactory/cms-epel/RPM-GPG-KEY-EPEL-7Server
 
 [CentosBaseArtifactory]
 name=Centos Base Artifactory
-baseurl=https://engci-maven.cisco.com/artifactory/cms-centos7/os/x86_64/
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/
 enabled=1
 gpgcheck=1
-gpgkey=https://engci-maven.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
-proxy=_none_
-{% endif %}
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
 
 [CentosExtrasArtifactory]
 name=Centos Extras Artifactory
-baseurl=https://engci-maven.cisco.com/artifactory/cms-centos7/extras/x86_64/
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/extras/x86_64/
 enabled=1
 gpgcheck=1
-gpgkey=https://engci-maven.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
-proxy=_none_
-{% endif %}
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
 
 [CentosUpdatesArtifactory]
 name=Centos Updates Artifactory
-baseurl=https://engci-maven.cisco.com/artifactory/cms-centos7/updates/x86_64/
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/updates/x86_64/
 enabled=1
 gpgcheck=1
-gpgkey=https://engci-maven.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
-proxy=_none_
-{% endif %}
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
 EOF
 {% endblock artifactory_repo %}
 
