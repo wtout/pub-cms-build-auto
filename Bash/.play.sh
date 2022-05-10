@@ -114,8 +114,8 @@ function check_hosts_limit() {
 	local ARG_NAME
 	local MYACTION
 	local NEWARGS
-	[[ "$(echo "${@}" | grep -Ew '\-\-limit')" != "" ]] && [[ "$(echo "${@}" | grep -w 'vcenter')" == "" ]] && ARG_NAME="--limit" && MYACTION="add"
-	[[ "$(echo "${@}" | grep -Ew '\-l')" != "" ]] && [[ "$(echo "${@}" | grep -w 'vcenter')" == "" ]] && ARG_NAME="-l" && MYACTION="add"
+	[[ "$(echo "${@}" | grep -Ew '\-\-limit')" != "" ]] && [[ "$(echo "${@}" | grep 'vcenter')" == "" ]] && ARG_NAME="--limit" && MYACTION="add"
+	[[ "$(echo "${@}" | grep -Ew '\-l')" != "" ]] && [[ "$(echo "${@}" | grep 'vcenter')" == "" ]] && ARG_NAME="-l" && MYACTION="add"
 	if [[ ${MYACTION} == "add" ]]
 	then
 		local MYHOSTS
@@ -127,7 +127,17 @@ function check_hosts_limit() {
 		[[ "${MYTAGS}" == "" ]] && UPDATE_ARGS=1
 		[[ "$(echo "${MYTAGS}" | grep -Ew 'vm_creation|capcheck|infra_configure')" != "" ]] && UPDATE_ARGS=1
 		[[ "$(echo "${MYTAGS}" | grep -Ew 'infra_build_nodes')" != "" ]] && UPDATE_ARGS=2
-		[[ "$(echo "${MYHOSTS}" | grep 'dr')" != "" ]] && VCENTERS='vcenter,drvcenter' || VCENTERS='vcenter'
+		if [[ "$(echo "${MYHOSTS}" | grep 'dr')" == "" ]]
+		then
+			VCENTERS='vcenter'
+		else
+			if [[ "$(echo "${MYHOSTS}" | sed "s/,/\n/g" | grep -v 'dr')" == "" ]]
+			then
+				VCENTERS='drvcenter'
+			else
+				VCENTERS='vcenter,drvcenter'
+			fi
+		fi
 		if [[ ${UPDATE_ARGS} -eq 1 ]]
 		then
 			NEWARGS=$(echo "${@}" | sed "s/${MYHOSTS}/${MYHOSTS},${VCENTERS}/")
@@ -144,7 +154,6 @@ function check_hosts_limit() {
 }
 
 function check_concurrency() {
-	#ps aux | grep "$(basename "${0}")" | grep -vE "${PID}|grep"
 	ps aux | grep "$(basename "${0}")" | grep -vwE "${ENAME}|grep"
 }
 
@@ -271,7 +280,7 @@ function get_creds_prefix() {
     local DATACENTER
     local CREDS_PREFIX
 	[[ -f "${SYS_DEF}" ]] && FILETOCHECK="${SYS_DEF}" || FILETOCHECK="${SYS_ALL}"
-	DATACENTER=$(cat "${FILETOCHECK}" | sed "/^$/d" | grep -A14 -P "^datacenter:$" | sed -n "/${1}:/,+2p" | sed -n "/name:/,1p" | awk -F ': ' '{print $NF}')
+	DATACENTER=$(cat "${FILETOCHECK}" | sed "/^$/d" | grep -A32 -P "^datacenter:$" | sed -n "/${1}:/,+2p" | sed -n "/name:/,1p" | awk -F ': ' '{print $NF}')
 	if [[ "${?}" == "0" ]] && [[ "${DATACENTER}" != "" ]] && [[ "${DATACENTER}" != "''" ]]
 	then
 		case ${DATACENTER} in
@@ -483,6 +492,8 @@ function check_updates() {
 				if [[ "${REMOTEID}" == "" ]]
 				then
 					echo "Unable to get the remote revision ID"
+				else
+					rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr
 				fi
 				if [[ "${REMOTEID}" != "" && "${LOCALID}" != "${REMOTEID}" ]]
 				then

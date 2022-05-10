@@ -205,23 +205,25 @@
         that:
           - ip_item | ipaddr
         fail_msg: "The secondary resources list {{ environment_definition.datacenter.secondary.resources }} is not a valid IP address list. Aborting!"
-      loop: "{{ [environment_definition.datacenter.secondary.resources] }}"
+      loop: "{{ environment_definition.datacenter.secondary.resources.split(separator) }}"
       loop_control:
         loop_var: ip_item
-      when: ip_item | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
+      when:
+        - environment_definition.customer.disaster_recovery
+        - ip_item | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
 
     - name: verify that there are enough primary resources
       assert:
         that:
-          - environment_definition.datacenter.primary.resources.split(separator) | length == required_number_resources|int
+          - environment_definition.datacenter.primary.resources.split(separator) | length >= required_number_resources|int
         fail_msg: "The resources list contains {{ environment_definition.datacenter.primary.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
       vars:
         required_number_resources: "{{ 1 if environment_definition.customer.deployment_model | lower is search('aio') else 2 }}"
     - name: verify that there are enough secondary resources
       assert:
         that:
-          - environment_definition.datacenter.secondary.resources.split(separator) | length == required_number_resources|int
-        fail_msg: "The resources list contains {{ environment_definition.datacenter.secondary.resources | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
+          - environment_definition.datacenter.secondary.resources.split(separator) | length >= required_number_resources|int
+        fail_msg: "The resources list contains {{ environment_definition.datacenter.secondary.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
       vars:
         required_number_resources: '1'
       when:
@@ -233,6 +235,47 @@
       loop: "{{ environment_definition.datacenter.primary.resources.split(separator) }}"
       loop_control:
         loop_var: ip_item
+    - name: reformat secondary resources list
+      set_fact:
+        secondary_resources: "{{ secondary_resources|default([]) + [ip_item] }}"
+      loop: "{{ environment_definition.datacenter.secondary.resources.split(separator) }}"
+      loop_control:
+        loop_var: ip_item
+      when:
+        - environment_definition.customer.disaster_recovery
+
+    - name: verify that primary VLAN IDs are valid
+      assert:
+        that:
+          - "{{ vlan_item.value|int >= 1 }}"
+          - "{{ vlan_item.value|int <= 4094 }}"
+        fail_msg: "{{ vlan_item.value }} is not a valid VLAN ID value for {{ vlan_item.name }}. It must be in [1-4094] range. Aborting!"
+      loop:
+        - { name: 'internal_net_vlan_id', value: "{{ environment_definition.datacenter.primary.internal_net_vlan_id }}" }
+        - { name: 'loadbalancer_net_vlan_id', value: "{{ environment_definition.datacenter.primary.loadbalancer_net_vlan_id }}" }
+        - { name: 'customer_net_inside_vlan_id', value: "{{ environment_definition.datacenter.primary.customer_net_inside_vlan_id }}" }
+        - { name: 'em7db_heartbeat_link_vlan_id', value: "{{ environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id }}" }
+      loop_control:
+        loop_var: vlan_item
+      when:
+        - vlan_item.value != ''
+
+    - name: verify that secondary VLAN IDs are valid
+      assert:
+        that:
+          - "{{ vlan_item.value|int >= 1 }}"
+          - "{{ vlan_item.value|int <= 4094 }}"
+        fail_msg: "{{ vlan_item.value }} is not a valid VLAN ID value for {{ vlan_item.name }}. It must be in [1-4094] range. Aborting!"
+      loop:
+        - { name: 'internal_net_vlan_id', value: "{{ environment_definition.datacenter.secondary.internal_net_vlan_id }}" }
+        - { name: 'loadbalancer_net_vlan_id', value: "{{ environment_definition.datacenter.secondary.loadbalancer_net_vlan_id }}" }
+        - { name: 'customer_net_inside_vlan_id', value: "{{ environment_definition.datacenter.secondary.customer_net_inside_vlan_id }}" }
+        - { name: 'em7db_heartbeat_link_vlan_id', value: "{{ environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id }}" }
+      loop_control:
+        loop_var: vlan_item
+      when:
+        - environment_definition.customer.disaster_recovery
+        - vlan_item.value != ''
     when:
       - environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')
 

@@ -36,6 +36,8 @@ drvm_vars:
 
       disk_provisioning: "{{ environment_definition.drvm_setting.em7.em7db.disk_provisioning if (environment_definition.drvm_setting.em7.em7db.disk_provisioning is defined and environment_definition.drvm_setting.em7.em7db.disk_provisioning != none) else '' }}"
 
+      hostmap: "{{ (environment_definition.drvm_setting.em7.em7db.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.em7.em7db.hostmap is search(',') else [environment_definition.drvm_setting.em7.em7db.hostmap|string]) if (environment_definition.drvm_setting.em7.em7db.hostmap is defined and environment_definition.drvm_setting.em7.em7db.hostmap != none) else [] }}"
+
       vmname: "{{ environment_definition.drvm_setting.em7.em7db.vmname if (environment_definition.drvm_setting.em7.em7db.vmname is defined and environment_definition.drvm_setting.em7.em7db.vmname != none) else '' }}"
 
       # Network interface 1
@@ -122,6 +124,8 @@ drvm_vars:
       disk3: "{{ environment_definition.drvm_setting.em7.em7dc.disk3 if (environment_definition.drvm_setting.em7.em7dc.disk3 is defined and environment_definition.drvm_setting.em7.em7dc.disk3 != none) else '0' }}"
 
       disk_provisioning: "{{ environment_definition.drvm_setting.em7.em7dc.disk_provisioning if (environment_definition.drvm_setting.em7.em7dc.disk_provisioning is defined and environment_definition.drvm_setting.em7.em7dc.disk_provisioning != none) else '' }}"
+
+      hostmap: "{{ (environment_definition.drvm_setting.em7.em7dc.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.em7.em7dc.hostmap is search(',') else [environment_definition.drvm_setting.em7.em7dc.hostmap|string]) if (environment_definition.drvm_setting.em7.em7dc.hostmap is defined and environment_definition.drvm_setting.em7.em7dc.hostmap != none) else [] }}"
 
       vmname: "{{ environment_definition.drvm_setting.em7.em7dc.vmname if (environment_definition.drvm_setting.em7.em7dc.vmname is defined and environment_definition.drvm_setting.em7.em7dc.vmname != none) else '' }}"
 
@@ -210,6 +214,8 @@ drvm_vars:
 
       disk_provisioning: "{{ environment_definition.drvm_setting.em7.em7mc.disk_provisioning if (environment_definition.drvm_setting.em7.em7mc.disk_provisioning is defined and environment_definition.drvm_setting.em7.em7mc.disk_provisioning != none) else '' }}"
 
+      hostmap: "{{ (environment_definition.drvm_setting.em7.em7mc.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.em7.em7mc.hostmap is search(',') else [environment_definition.drvm_setting.em7.em7mc.hostmap|string]) if (environment_definition.drvm_setting.em7.em7mc.hostmap is defined and environment_definition.drvm_setting.em7.em7mc.hostmap != none) else [] }}"
+
       vmname: "{{ environment_definition.drvm_setting.em7.em7mc.vmname if (environment_definition.drvm_setting.em7.em7mc.vmname is defined and environment_definition.drvm_setting.em7.em7mc.vmname != none) else '' }}"
 
       # Network interface 1
@@ -296,6 +302,8 @@ drvm_vars:
       disk3: "{{ environment_definition.drvm_setting.em7.em7prt.disk3 if (environment_definition.drvm_setting.em7.em7prt.disk3 is defined and environment_definition.drvm_setting.em7.em7prt.disk3 != none) else '0' }}"
 
       disk_provisioning: "{{ environment_definition.drvm_setting.em7.em7prt.disk_provisioning if (environment_definition.drvm_setting.em7.em7prt.disk_provisioning is defined and environment_definition.drvm_setting.em7.em7prt.disk_provisioning != none) else '' }}"
+
+      hostmap: "{{ (environment_definition.drvm_setting.em7.em7prt.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.em7.em7prt.hostmap is search(',') else [environment_definition.drvm_setting.em7.em7prt.hostmap|string]) if (environment_definition.drvm_setting.em7.em7prt.hostmap is defined and environment_definition.drvm_setting.em7.em7prt.hostmap != none) else [] }}"
 
       vmname: "{{ environment_definition.drvm_setting.em7.em7prt.vmname if (environment_definition.drvm_setting.em7.em7prt.vmname is defined and environment_definition.drvm_setting.em7.em7prt.vmname != none) else '' }}"
 
@@ -389,6 +397,8 @@ drvm_vars:
 
       disk_provisioning: "{{ environment_definition.drvm_setting.spl.spldpl.disk_provisioning if (environment_definition.drvm_setting.spl.spldpl.disk_provisioning is defined and environment_definition.drvm_setting.spl.spldpl.disk_provisioning != none) else '' }}"
 
+      hostmap: "{{ (environment_definition.drvm_setting.spl.spldpl.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.spl.spldpl.hostmap is search(',') else [environment_definition.drvm_setting.spl.spldpl.hostmap|string]) if (environment_definition.drvm_setting.spl.spldpl.hostmap is defined and environment_definition.drvm_setting.spl.spldpl.hostmap != none) else [] }}"
+
       vmname: "{{ environment_definition.drvm_setting.spl.spldpl.vmname if (environment_definition.drvm_setting.spl.spldpl.vmname is defined and environment_definition.drvm_setting.spl.spldpl.vmname != none) else '' }}"
 
       # Network interface 1
@@ -475,6 +485,8 @@ drvm_vars:
       disk3: "{{ environment_definition.drvm_setting.spl.splind.disk3 if (environment_definition.drvm_setting.spl.splind.disk3 is defined and environment_definition.drvm_setting.spl.splind.disk3 != none) else '100' }}"
 
       disk_provisioning: "{{ environment_definition.drvm_setting.spl.splind.disk_provisioning if (environment_definition.drvm_setting.spl.splind.disk_provisioning is defined and environment_definition.drvm_setting.spl.splind.disk_provisioning != none) else '' }}"
+
+      hostmap: "{{ (environment_definition.drvm_setting.spl.splind.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.spl.splind.hostmap is search(',') else [environment_definition.drvm_setting.spl.splind.hostmap|string]) if (environment_definition.drvm_setting.spl.splind.hostmap is defined and environment_definition.drvm_setting.spl.splind.hostmap != none) else [] }}"
 
       vmname: "{{ environment_definition.drvm_setting.spl.splind.vmname if (environment_definition.drvm_setting.spl.splind.vmname is defined and environment_definition.drvm_setting.spl.splind.vmname != none) else '' }}"
 
@@ -563,6 +575,8 @@ drvm_vars:
 
       disk_provisioning: "{{ environment_definition.drvm_setting.spl.splmas.disk_provisioning if (environment_definition.drvm_setting.spl.splmas.disk_provisioning is defined and environment_definition.drvm_setting.spl.splmas.disk_provisioning != none) else '' }}"
 
+      hostmap: "{{ (environment_definition.drvm_setting.spl.splmas.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.spl.splmas.hostmap is search(',') else [environment_definition.drvm_setting.spl.splmas.hostmap|string]) if (environment_definition.drvm_setting.spl.splmas.hostmap is defined and environment_definition.drvm_setting.spl.splmas.hostmap != none) else [] }}"
+
       vmname: "{{ environment_definition.drvm_setting.spl.splmas.vmname if (environment_definition.drvm_setting.spl.splmas.vmname is defined and environment_definition.drvm_setting.spl.splmas.vmname != none) else '' }}"
 
       # Network interface 1
@@ -649,6 +663,8 @@ drvm_vars:
       disk3: "{{ environment_definition.drvm_setting.spl.splsrc.disk3 if (environment_definition.drvm_setting.spl.splsrc.disk3 is defined and environment_definition.drvm_setting.spl.splsrc.disk3 != none) else '0' }}"
 
       disk_provisioning: "{{ environment_definition.drvm_setting.spl.splsrc.disk_provisioning if (environment_definition.drvm_setting.spl.splsrc.disk_provisioning is defined and environment_definition.drvm_setting.spl.splsrc.disk_provisioning != none) else '' }}"
+
+      hostmap: "{{ (environment_definition.drvm_setting.spl.splsrc.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.spl.splsrc.hostmap is search(',') else [environment_definition.drvm_setting.spl.splsrc.hostmap|string]) if (environment_definition.drvm_setting.spl.splsrc.hostmap is defined and environment_definition.drvm_setting.spl.splsrc.hostmap != none) else [] }}"
 
       vmname: "{{ environment_definition.drvm_setting.spl.splsrc.vmname if (environment_definition.drvm_setting.spl.splsrc.vmname is defined and environment_definition.drvm_setting.spl.splsrc.vmname != none) else '' }}"
 
@@ -737,6 +753,8 @@ drvm_vars:
 
     disk_provisioning: "{{ environment_definition.drvm_setting.lnxjmp.disk_provisioning if (environment_definition.drvm_setting.lnxjmp.disk_provisioning is defined and environment_definition.drvm_setting.lnxjmp.disk_provisioning != none) else '' }}"
 
+    hostmap: "{{ (environment_definition.drvm_setting.lnxjmp.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.lnxjmp.hostmap is search(',') else [environment_definition.drvm_setting.lnxjmp.hostmap|string]) if (environment_definition.drvm_setting.lnxjmp.hostmap is defined and environment_definition.drvm_setting.lnxjmp.hostmap != none) else [] }}"
+
     vmname: "{{ environment_definition.drvm_setting.lnxjmp.vmname if (environment_definition.drvm_setting.lnxjmp.vmname is defined and environment_definition.drvm_setting.lnxjmp.vmname != none) else '' }}"
 
     # Network interface 1
@@ -823,6 +841,8 @@ drvm_vars:
     disk3: "{{ environment_definition.drvm_setting.rly.disk3 if (environment_definition.drvm_setting.rly.disk3 is defined and environment_definition.drvm_setting.rly.disk3 != none) else '450' }}"
 
     disk_provisioning: "{{ environment_definition.drvm_setting.rly.disk_provisioning if (environment_definition.drvm_setting.rly.disk_provisioning is defined and environment_definition.drvm_setting.rly.disk_provisioning != none) else '' }}"
+
+    hostmap: "{{ (environment_definition.drvm_setting.rly.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.rly.hostmap is search(',') else [environment_definition.drvm_setting.rly.hostmap|string]) if (environment_definition.drvm_setting.rly.hostmap is defined and environment_definition.drvm_setting.rly.hostmap != none) else [] }}"
 
     vmname: "{{ environment_definition.drvm_setting.rly.vmname if (environment_definition.drvm_setting.rly.vmname is defined and environment_definition.drvm_setting.rly.vmname != none) else '' }}"
 
@@ -913,6 +933,8 @@ drvm_vars:
 
     disk_provisioning: "{{ environment_definition.drvm_setting.atarly.disk_provisioning if (environment_definition.drvm_setting.atarly.disk_provisioning is defined and environment_definition.drvm_setting.atarly.disk_provisioning != none) else '' }}"
 
+    hostmap: "{{ (environment_definition.drvm_setting.atarly.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.atarly.hostmap is search(',') else [environment_definition.drvm_setting.atarly.hostmap|string]) if (environment_definition.drvm_setting.atarly.hostmap is defined and environment_definition.drvm_setting.atarly.hostmap != none) else [] }}"
+
     vmname: "{{ environment_definition.drvm_setting.atarly.vmname if (environment_definition.drvm_setting.atarly.vmname is defined and environment_definition.drvm_setting.atarly.vmname != none) else '' }}"
 
     # Network interface 1
@@ -997,6 +1019,8 @@ drvm_vars:
       disk3: "{{ environment_definition.drvm_setting.infra.csr.disk3 if (environment_definition.drvm_setting.infra.csr.disk3 is defined and environment_definition.drvm_setting.infra.csr.disk3 != none) else '0' }}"
 
       disk_provisioning: "{{ environment_definition.drvm_setting.infra.csr.disk_provisioning if (environment_definition.drvm_setting.infra.csr.disk_provisioning is defined and environment_definition.drvm_setting.infra.csr.disk_provisioning != none) else '' }}"
+
+      hostmap: "{{ (environment_definition.drvm_setting.infra.csr.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.infra.csr.hostmap is search(',') else [environment_definition.drvm_setting.infra.csr.hostmap|string]) if (environment_definition.drvm_setting.infra.csr.hostmap is defined and environment_definition.drvm_setting.infra.csr.hostmap != none) else [] }}"
 
       vmname: "{{ environment_definition.drvm_setting.infra.csr.vmname if (environment_definition.drvm_setting.infra.csr.vmname is defined and environment_definition.drvm_setting.infra.csr.vmname != none) else '' }}"
 
@@ -1159,6 +1183,8 @@ drvm_vars:
 
       disk_provisioning: "{{ environment_definition.drvm_setting.infra.nsvpx.disk_provisioning if (environment_definition.drvm_setting.infra.nsvpx.disk_provisioning is defined and environment_definition.drvm_setting.infra.nsvpx.disk_provisioning != none) else '' }}"
 
+      hostmap: "{{ (environment_definition.drvm_setting.infra.nsvpx.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.infra.nsvpx.hostmap is search(',') else [environment_definition.drvm_setting.infra.nsvpx.hostmap|string]) if (environment_definition.drvm_setting.infra.nsvpx.hostmap is defined and environment_definition.drvm_setting.infra.nsvpx.hostmap != none) else [] }}"
+
       vmname: "{{ environment_definition.drvm_setting.infra.nsvpx.vmname if (environment_definition.drvm_setting.infra.nsvpx.vmname is defined and environment_definition.drvm_setting.infra.nsvpx.vmname != none) else '' }}"
 
 
@@ -1236,6 +1262,8 @@ drvm_vars:
       disk2: "{{ environment_definition.drvm_setting.infra.winjmp.disk2 if (environment_definition.drvm_setting.infra.winjmp.disk2 is defined and environment_definition.drvm_setting.infra.winjmp.disk2 != none) else '0' }}"
 
       disk_provisioning: "{{ environment_definition.drvm_setting.infra.winjmp.disk_provisioning if (environment_definition.drvm_setting.infra.winjmp.disk_provisioning is defined and environment_definition.drvm_setting.infra.winjmp.disk_provisioning != none) else '' }}"
+
+      hostmap: "{{ (environment_definition.drvm_setting.infra.winjmp.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.infra.winjmp.hostmap is search(',') else [environment_definition.drvm_setting.infra.winjmp.hostmap|string]) if (environment_definition.drvm_setting.infra.winjmp.hostmap is defined and environment_definition.drvm_setting.infra.winjmp.hostmap != none) else [] }}"
 
       vmname: "{{ environment_definition.drvm_setting.infra.winjmp.vmname if (environment_definition.drvm_setting.infra.winjmp.vmname is defined and environment_definition.drvm_setting.infra.winjmp.vmname != none) else '' }}"
 

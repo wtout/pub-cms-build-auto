@@ -33,7 +33,7 @@
     set_fact:
       dnuds_name: "{{ dnuds_name|default([]) | union([myname]) }}"
     vars:
-      myidx: "{{ idx|int + 1 if canonical|length > 1 else '' }}"
+      myidx: "{{ idx|int + 1 if canonical|length > 3 else '' }}"
       mycount: "{{ count|int + 1 }}"
       myname: "{{ customer_prefix + '-esxi-only-%02d'|format(mycount|int) + '-donotuse' + myidx }}"
     loop: "{{ canonical[2:] if canonical|length > 2 else [] }}"

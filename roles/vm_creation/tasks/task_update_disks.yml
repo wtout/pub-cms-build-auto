@@ -35,7 +35,9 @@
       - vm.disk1|float > 0
   - name: Define datastore to host Disk2 for Splunk Indexers
     set_fact:
-      splind_datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names'][inventory_hostname[-2:]|int - 1] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|length >= inventory_hostname[-2:]|int else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names']|first }}"
+      splind_datastore: "{{ myssd_names|select('regex', '-%02d'|format(vm.hostmap[inventory_hostname[-2:]|int - 1]|int))|list|join if vm.hostmap|default([]) != [] else myssd_names|select('search', '-02')|list|join if inventory_hostname[-2:]|int % 2 == 0 else myssd_names|select('search', '-01')|list|join }}"
+    vars:
+      myssd_names: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names'] }}"
     when:
       - splind_datastore is not defined or splind_datastore == ''
       - inventory_hostname is search('splind')

@@ -12,6 +12,7 @@ vm:
   disk2: "{{ vm_vars.em7.em7prt.disk2 | default(0) }}"
   disk3: "{{ vm_vars.em7.em7prt.disk3 | default(0) }}"
   disk_provisioning: "{{ vm_vars.em7.em7prt.disk_provisioning if vm_vars.em7.em7prt.disk_provisioning != '' else '' }}"
+  hostmap: "{{ vm_vars.em7.em7prt.hostmap | default([]) }}"
   name: "{{ vm_vars.em7.em7prt.vmname if vm_vars.em7.em7prt.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + datacenters[datacenter.primary.name]['deptype'] + inventory_hostname[-2:]) }}"
 
 netconfig:

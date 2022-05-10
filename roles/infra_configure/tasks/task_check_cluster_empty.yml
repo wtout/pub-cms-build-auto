@@ -3,10 +3,10 @@
 - block:
   - name: Get the{{ ' DR' if (drvm_names is defined and vm_name in drvm_names) else '' }} guest_info
     vmware_guest_info:
-      hostname: "{{ hostvars[groups[('dr' if drvm_names is defined and vm_name in drvm_names else '') + 'vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups[('dr' if drvm_names is defined and vm_name in drvm_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups[('dr' if drvm_names is defined and vm_name in drvm_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups[('dr' if drvm_names is defined and vm_name in drvm_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      datacenter: "{{ information.datacenter }}"
       name: "{{ vm_name }}"
       validate_certs: no
     check_mode: no
@@ -17,7 +17,7 @@
       cluster_empty: "{{ cluster_empty|default(true) and not vm_in_cluster }}"
   #    cluster_empty: "{{ cluster_empty|default(true) and not (vm_in_cluster and vm_on) }}"
     vars:
-      clus_name: "{{ hostvars[groups[('dr' if drvm_names is defined and vm_name in drvm_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+      clus_name: "{{ information.cluster }}"
       vm_in_cluster: "{{ true if vmguest_info.instance.hw_cluster == clus_name else false }}"
   #    vm_on: "{{ true if vmguest_info.instance.hw_power_status|lower is search('poweredon') else false }}"
   when: cluster_empty | default(true)

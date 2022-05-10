@@ -23,3 +23,7 @@ information:
   datastore_cluster: "{{ datacenters[datacenter.primary.name]['datastore_cluster'] if datacenters[datacenter.primary.name]['datastore_cluster'] is defined else '' }}"
   storage_datastore: "{{ datacenters[datacenter.primary.name]['storage_datastore'] if datacenters[datacenter.primary.name]['storage_datastore'] is defined else '' }}"
   storage_path: "{{ datacenters[datacenter.primary.name]['storage_path'] if datacenters[datacenter.primary.name]['storage_path'] is defined else '' }}"
+  internal_net_vlan_id: "{{ datacenter.primary.internal_net_vlan_id if datacenter.primary.internal_net_vlan_id is defined else '' }}"
+  loadbalancer_net_vlan_id: "{{ datacenter.primary.loadbalancer_net_vlan_id if datacenter.primary.loadbalancer_net_vlan_id is defined else '' }}"
+  customer_net_inside_vlan_id: "{{ datacenter.primary.customer_net_inside_vlan_id if datacenter.primary.customer_net_inside_vlan_id is defined else '' }}"
+  em7db_heartbeat_link_vlan_id: "{{ datacenter.primary.em7db_heartbeat_link_vlan_id if datacenter.primary.em7db_heartbeat_link_vlan_id is defined else '' }}"

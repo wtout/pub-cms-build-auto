@@ -16,6 +16,7 @@ vm:
   disk2: "{{ vm_vars.atarly.disk2 | default(0) }}"
   disk3: "{{ vm_vars.atarly.disk3 | default(0) }}"
   disk_provisioning: "{{ vm_vars.atarly.disk_provisioning if vm_vars.atarly.disk_provisioning != '' else '' }}"
+  hostmap: "{{ vm_vars.atarly.hostmap | default([]) }}"
   name: "{{ vm_vars.atarly.vmname if vm_vars.atarly.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + datacenters[datacenter.primary.name]['deptype'] + inventory_hostname[-2:]) }}"
 
 netconfig:

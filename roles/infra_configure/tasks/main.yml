@@ -50,10 +50,11 @@
               vars:
                 resource: "{{ resource_item }}"
                 customer_prefix: "{{ customer.secondary.name_prefix }}"
-                count: 0
+                count: "{{ count_idx }}"
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
+          index_var: count_idx
       - name: Add DR VSwitches
         include_tasks: 
           file: task_add_vswitches.yml
@@ -70,12 +71,11 @@
             vars:
               resource: "{{ resource_item }}"
               customer_prefix: "{{ customer.secondary.name_prefix }}"
-              count: 1
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
       - name: Create DR Cluster
-        include_tasks: task_create_drcluster.yml
+        include_tasks: task_create_cluster.yml
       when:
         - customer.disaster_recovery
         - "'drvcenter' in group_names"
@@ -147,7 +147,7 @@
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
-      - include_tasks: task_delete_drcluster.yml
+      - include_tasks: task_delete_cluster.yml
       when:
         - customer.disaster_recovery
         - "'drvcenter' in group_names"
