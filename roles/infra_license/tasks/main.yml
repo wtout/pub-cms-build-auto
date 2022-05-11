@@ -23,68 +23,71 @@
       ansible_host: "{{ csr_info.instance.ipv4 }}"
       dhcp_address: "{{ csr_info.instance.ipv4 }}"
 
+  - name: Define CSR key
+    shell: ssh-keyscan -t rsa {{ netconfig.ipaddress3 }}
+    register: reg_ssh_key
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+
+  - name: create ~/.ssh directory
+    ansible.builtin.file:
+      path: '~/.ssh'
+      state: directory
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    run_once: yes
+
+  - name: Add CSR key to known_hosts
+    known_hosts:
+      name: "{{ netconfig.ipaddress3 }}"
+      key: "{{ reg_ssh_key.stdout }}"
+      state: present
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+
   - name: "infra_check_csr_license: check CSR license"
     include_role:
       name: infra_check_csr_license
     vars:
-      ignore: true
+      ignore: yes
 
   - block:
-    - name: Define CSR key
-      shell: ssh-keyscan -t rsa {{ netconfig.ipaddress3 }}
-      register: host_key
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-    - name: Add CSR key to known_hosts
-      known_hosts:
-        name: "{{ netconfig.ipaddress3 }}"
-        key: "{{ host_key.stdout }}"
-        state: present
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
     - name: Define CSR serial number
       ios_facts:
         gather_subset: min
-
     - name: List Licenses directory
       shell: "ls {{ auto_dir }}/Packages/licenses"
       register: license_file_names
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
     - name: Define CSR license file name
       set_fact:
         license_file_name: "{{ license_file_names.stdout_lines | select('search', ansible_net_serialnum) | list | first if license_file_names.stdout_lines | select('search', ansible_net_serialnum) | list | length >= 1 else '' }}"
-
     - assert:
         that:
           - license_file_name != ''
         fail_msg: 'CSR license file not found. Aborting playbook execution!'
-
-    - name: Transfer license from Packages to CSR
-      shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.ipaddress3 }}:/bootflash:{{ license_file_name }}"
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-    - name: install license
-      ios_command:
-        commands:
-          - command: "license install bootflash:{{ license_file_name }}"
-            prompt: '[confirm]'
-            answer: 'yes'
-      register: csr_license_details_1
-      failed_when: csr_license_details_1 is search('1/1 licenses were failed to install')
-
-    - name: disable scp server
-      ios_config:
-        lines:
-          - no ip scp server enable
-
-    - name: Remove CSR key from known_hosts
-      known_hosts:
-        name: "{{ netconfig.ipaddress3 }}"
-        key: "{{ host_key.stdout }}"
-        state: absent
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+      ignore_errors: yes
+    - block:
+      - name: Transfer license from Packages to CSR
+        shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.ipaddress3 }}:/bootflash:{{ license_file_name }}"
+        delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+      - name: install license
+        ios_command:
+          commands:
+            - command: "license install bootflash:{{ license_file_name }}"
+              prompt: '[confirm]'
+              answer: 'yes'
+        register: csr_license_details_1
+        failed_when: csr_license_details_1 is search('1/1 licenses were failed to install')
+      - name: disable scp server
+        ios_config:
+          lines:
+            - no ip scp server enable
+      when: license_file_name != ''
     when: not is_licensed
+  - name: Remove CSR key from known_hosts
+    known_hosts:
+      name: "{{ netconfig.ipaddress3 }}"
+      key: "{{ reg_ssh_key.stdout }}"
+      state: absent
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   when: inventory_hostname is search('csr')
   tags: infra_license
   

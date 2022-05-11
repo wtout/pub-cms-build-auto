@@ -258,6 +258,7 @@
       loop_control:
         loop_var: vlan_item
       when:
+        - vlan_item.value is defined
         - vlan_item.value != ''
 
     - name: verify that secondary VLAN IDs are valid
@@ -275,6 +276,7 @@
         loop_var: vlan_item
       when:
         - environment_definition.customer.disaster_recovery
+        - vlan_item.value is defined
         - vlan_item.value != ''
     when:
       - environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')

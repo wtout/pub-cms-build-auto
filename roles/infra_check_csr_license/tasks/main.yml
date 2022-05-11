@@ -1,44 +1,59 @@
 ---
 # tasks file for infra_check_csr_license
 - block:
-  - name: check CSR reachable
-    shell: ping {{ ansible_host }} -c 3
-    check_mode: no
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-  - name: Define CSR key
-    shell: ssh-keyscan -t rsa {{ netconfig.ipaddress3 }}
-    register: host_key
-    failed_when: host_key.stdout == ''
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-  - name: create ~/.ssh directory
-    ansible.builtin.file:
-      path: '~/.ssh'
-      state: directory
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    run_once: yes
-
-  - name: Add CSR key to known_hosts
-    known_hosts:
-      name: "{{ netconfig.ipaddress3 }}"
-      key: "{{ host_key.stdout }}"
-      state: present
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - block:
+    - name: Gather VM info
+      vmware_guest_info:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        name: "{{ vm.name }}"
+        datacenter: "{{ datacenter.primary.name if 'stack' in group_names else datacenter.secondary.name }}"
+        validate_certs: no
+      register: csr_info
+      until: csr_info.instance.ipv4 != None
+      ignore_errors: true
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - assert:
+        that:
+          - csr_info is succeeded
+        fail_msg: 'The CSR VM is not found. Aborting playbook execution!'
+    - set_fact:
+        ansible_host: "{{ csr_info.instance.ipv4 }}"
+    - name: Define CSR key
+      shell: ssh-keyscan -t rsa {{ netconfig.ipaddress3 }}
+      register: host_key
+      failed_when: host_key.stdout == ''
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - name: create ~/.ssh directory
+      ansible.builtin.file:
+        path: '~/.ssh'
+        state: directory
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+      run_once: yes
+    - name: Add CSR key to known_hosts
+      known_hosts:
+        name: "{{ netconfig.ipaddress3 }}"
+        key: "{{ host_key.stdout }}"
+        state: present
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    when: not ignore|default(false)
 
   - name: Check if CSR is licensed
     ios_command:
       commands: "show license detail"
     register: lic_detail
-    ignore_errors: "{{ ignore | default(false) }}"
+    ignore_errors: "{{ ignore|default(false) }}"
 
   - set_fact:
-      is_licensed: "{{ false if lic_detail is failed else true }}"
+      is_licensed: "{{ lic_detail is succeeded }}"
 
-  - name: Purge known hosts file
-    copy:
-      dest: ~/.ssh/known_hosts
-      content: ''
-    run_once: true
+  - name: Remove CSR key from known_hosts
+    known_hosts:
+      name: "{{ netconfig.ipaddress3 }}"
+      key: "{{ host_key.stdout }}"
+      state: absent
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    when: not ignore|default(false)
   when: inventory_hostname is search('csr')
   tags: [ 'infra_check_csr_license', 'vm_creation' ]

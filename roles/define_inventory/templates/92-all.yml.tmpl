@@ -61,10 +61,10 @@ datacenter:
 
     # ONLY for on-premise deployments, define the VLAN IDs to use (string)
     # For hosted deployments DO NOT TOUCH
-    internal_net_vlan_id: '{{ environment_definition.datacenter.primary.internal_net_vlan_id if environment_definition.datacenter.primary.internal_net_vlan_id != none else "" }}'
-    loadbalancer_net_vlan_id: '{{ environment_definition.datacenter.primary.loadbalancer_net_vlan_id if environment_definition.datacenter.primary.loadbalancer_net_vlan_id != none else "" }}'
-    customer_net_inside_vlan_id: '{{ environment_definition.datacenter.primary.customer_net_inside_vlan_id if environment_definition.datacenter.primary.customer_net_inside_vlan_id != none else "" }}'
-    em7db_heartbeat_link_vlan_id: '{{ environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id != none else "" }}'
+    internal_net_vlan_id: '{{ environment_definition.datacenter.primary.internal_net_vlan_id if environment_definition.datacenter.primary.internal_net_vlan_id is defined and environment_definition.datacenter.primary.internal_net_vlan_id != none else "" }}'
+    loadbalancer_net_vlan_id: '{{ environment_definition.datacenter.primary.loadbalancer_net_vlan_id if environment_definition.datacenter.primary.loadbalancer_net_vlan_id is defined and environment_definition.datacenter.primary.loadbalancer_net_vlan_id != none else "" }}'
+    customer_net_inside_vlan_id: '{{ environment_definition.datacenter.primary.customer_net_inside_vlan_id if environment_definition.datacenter.primary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.primary.customer_net_inside_vlan_id != none else "" }}'
+    em7db_heartbeat_link_vlan_id: '{{ environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id != none else "" }}'
 
   secondary:
 
@@ -81,10 +81,10 @@ datacenter:
 
     # ONLY for on-premise deployments, define the VLAN IDs to use (string)
     # For hosted deployments DO NOT TOUCH
-    internal_net_vlan_id: '{{ environment_definition.datacenter.secondary.internal_net_vlan_id if environment_definition.datacenter.secondary.internal_net_vlan_id != none else environment_definition.datacenter.primary.internal_net_vlan_id if environment_definition.datacenter.primary.internal_net_vlan_id != none else "" }}'
-    loadbalancer_net_vlan_id: '{{ environment_definition.datacenter.secondary.loadbalancer_net_vlan_id if environment_definition.datacenter.secondary.loadbalancer_net_vlan_id != none else environment_definition.datacenter.primary.loadbalancer_net_vlan_id if environment_definition.datacenter.primary.loadbalancer_net_vlan_id != none else "" }}'
-    customer_net_inside_vlan_id: '{{ environment_definition.datacenter.secondary.customer_net_inside_vlan_id if environment_definition.datacenter.secondary.customer_net_inside_vlan_id != none else environment_definition.datacenter.primary.customer_net_inside_vlan_id if environment_definition.datacenter.primary.customer_net_inside_vlan_id != none else "" }}'
-    em7db_heartbeat_link_vlan_id: '{{ environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id != none else environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id != none else "" }}'
+    internal_net_vlan_id: '{{ environment_definition.datacenter.secondary.internal_net_vlan_id if environment_definition.datacenter.secondary.internal_net_vlan_id is defined and environment_definition.datacenter.secondary.internal_net_vlan_id != none else environment_definition.datacenter.primary.internal_net_vlan_id if environment_definition.datacenter.primary.internal_net_vlan_id is defined and environment_definition.datacenter.primary.internal_net_vlan_id != none else "" }}'
+    loadbalancer_net_vlan_id: '{{ environment_definition.datacenter.secondary.loadbalancer_net_vlan_id if environment_definition.datacenter.secondary.loadbalancer_net_vlan_id is defined and environment_definition.datacenter.secondary.loadbalancer_net_vlan_id != none else environment_definition.datacenter.primary.loadbalancer_net_vlan_id if environment_definition.datacenter.primary.loadbalancer_net_vlan_id is defined and environment_definition.datacenter.primary.loadbalancer_net_vlan_id != none else "" }}'
+    customer_net_inside_vlan_id: '{{ environment_definition.datacenter.secondary.customer_net_inside_vlan_id if environment_definition.datacenter.secondary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.secondary.customer_net_inside_vlan_id != none else environment_definition.datacenter.primary.customer_net_inside_vlan_id if environment_definition.datacenter.primary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.primary.customer_net_inside_vlan_id != none else "" }}'
+    em7db_heartbeat_link_vlan_id: '{{ environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id != none else environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id != none else "" }}'
 
 
 ##################################################################################
