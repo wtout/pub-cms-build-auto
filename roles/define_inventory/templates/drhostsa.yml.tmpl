@@ -28,10 +28,10 @@
                 drem7dc[01:{{ '%02d' | format(number_of_dcs|int / 2) }}]:
             drem7mc:
               hosts:
-                drem7mc[01:01]:
+                drem7mc[01:{{ '%02d' | format(number_of_mcs|int / 2) }}]:
             drem7prt:
               hosts:
-                drem7prt[01:01]:
+                drem7prt[01:{{ '%02d' | format(number_of_prts|int / 2) }}]:
         drspl:
           children:
             drsplsrc:
