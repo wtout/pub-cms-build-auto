@@ -125,7 +125,7 @@
   - name: define drem7prt lists
     set_fact:
       drem7prt_ip1_list: "{{ drem7prt_ip1_list | default([]) + ipvar1 if (drem7prt_ip1_list is defined and drem7prt_ip1_list != '') else ipvar1 }}"
-      drem7prt_ip2_list: "{{ drem7prt_ip2_list | default([]) + ipvar2 if (drem7prt_ip12list is defined and drem7prt_ip2_list != '') else ipvar2 }}"
+      drem7prt_ip2_list: "{{ drem7prt_ip2_list | default([]) + ipvar2 if (drem7prt_ip2_list is defined and drem7prt_ip2_list != '') else ipvar2 }}"
       drem7prt_hst_list: "{{ drem7prt_hst_list | default([]) + hstvar if (drem7prt_hst_list is defined and drem7prt_hst_list != '') else hstvar }}"
       drem7prt_cpu_list: "{{ drem7prt_cpu_list | default([]) + cpuvar if (drem7prt_cpu_list is defined and drem7prt_cpu_list != '') else cpuvar }}"
       drem7prt_mem_list: "{{ drem7prt_mem_list | default([]) + cpuvar if (drem7prt_mem_list is defined and drem7prt_mem_list != '') else memvar }}"
