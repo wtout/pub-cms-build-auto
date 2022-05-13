@@ -14,6 +14,5 @@
           em7_host_delegate: "{{ groups['drem7db']|first }}"
           status_var: 'licenses_status2'
     when:
-      - inventory_hostname is search('dr')
-      - licenses_status1.stdout_lines|default([]) | select('search', vm.name) | length < 1
+      - licenses_status1.stdout_lines|default([]) | select('search', hostvars[groups['drem7db']|first]['vm']['name'][:-2]) | length < 1
   tags: puppet

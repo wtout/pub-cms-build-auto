@@ -8,24 +8,82 @@
   - include_tasks: task_em7_get_license_info.yml
   - name: define lic_status
     set_fact:
-      lic_status: "{{ ((licenses_status1.stdout_lines|default([]) | select('search', vm.name))[-1:] | join).split('\t') if groups['em7']|length == 1 else ((licenses_status1.stdout_lines|default([]) | select('search', hostvars[groups['em7db']|first]['vm']['name']))[-1:] | join).split('\t') if inventory_hostname is regex('em7(dc|mc|prt)') and inventory_hostname is not search('dr') else ((licenses_status1.stdout_lines|default([]) | select('search', vm.name))[-1:] | join).split('\t') if licenses_status1.stdout_lines|default([]) | select('search', vm.name) | length >= 1 else ((licenses_status2.stdout_lines|default([]) | select('search', hostvars[groups['drem7db']|first]['vm']['name']))[-1:] | join).split('\t') if inventory_hostname is regex('drem7(dc|mc|prt)') else ((licenses_status2.stdout_lines|default([]) | select('search', vm.name))[-1:] | join).split('\t') }}"
+      lic_status: "{{ (combined_status | select('search', vm.name) if groups['em7']|length == 1 else ((combined_status | select('search', hostvars[groups['em7db']|first]['vm']['name'][:-2]) if groups['em7db']|length >= 1 else []) + (combined_status | select('search', hostvars[groups['drem7db']|first]['vm']['name'][:-2]) if groups['drem7db'] is defined and groups['drem7db']|length >= 1 else []))) if (licenses_status1 is succeeded or licenses_status2|default({'failed': true}) is succeeded ) else [] }}"
+    vars:
+      combined_status: "{{ (licenses_status1.stdout_lines|default([])|union(licenses_status2.stdout_lines|default([]))) }}"
+    when: "licenses_status1 is succeeded or licenses_status2|default({'failed': true}) is succeeded"
+
+  - name: get date from EM7 host
+    ansible.builtin.shell:
+      cmd: date +"%Y-%m-%d %H:%M:%S"
+    register: curr_date
+    when: lic_status|length >= 1
+    delegate_to: "{{ (groups['em7'] if groups['em7'] == 1 else groups['em7db']) | union(groups['drem7db'] if groups['drem7db'] is defined else [])|first }}"
+    check_mode: no
+
+  - name: define status_message
+    set_fact:
+      status_message: 'This EM7 host is not licensed. Please ensure it is licensed before proceeding further with the Build process'
+    when:
+      - groups['em7']|length == 1
+      - lic_status|select('search', vm.name)|length == 0
+  - name: define status_message
+    set_fact:
+      status_message: 'This EM7 host has an expired license. Please renew the license before proceeding further with the Build process'
+    when:
+      - groups['em7']|length == 1
+      - lic_status|select('search', vm.name)|length == 1
+      - (lic_status|select('search', vm.name)|list|join).split('\t')|last != 'NULL'
+      - (lic_status|select('search', vm.name)|list|join).split('\t')|last < curr_date.stdout
+ 
+  - name: define status_message
+    set_fact:
+      status_message: "{{ status_message|default([]) + ['The EM7 DB01 host is not licensed. Please ensure it is licensed before proceeding further with the Build process'] }}"
+    when:
+      - groups['em7db']|length >= 1
+      - lic_status|select('search', hostvars[groups['em7db']|first]['vm']['name'])|length == 0
+  - name: define status_message
+    set_fact:
+      status_message: "{{ status_message|default([]) + ['The EM7 DB01 host has an expired license. Please renew the license before proceeding further with the Build process'] }}"
+    when:
+      - groups['em7db']|length >= 1
+      - lic_status|select('search', hostvars[groups['em7db']|first]['vm']['name'])|length == 1
+      - (lic_status|select('search', hostvars[groups['em7db']|first]['vm']['name'])|list|join).split('\t')|last != 'NULL'
+      - (lic_status|select('search', hostvars[groups['em7db']|first]['vm']['name'])|list|join).split('\t')|last < curr_date.stdout
+  - name: define status_message
+    set_fact:
+      status_message: "{{ status_message|default([]) + ['The EM7 DB02 host is not licensed. Please ensure it is licensed before proceeding further with the Build process'] }}"
+    when:
+      - groups['em7db']|length == 2
+      - lic_status|select('search', hostvars[groups['em7db']|last]['vm']['name'])|length == 0
+  - name: define status_message
+    set_fact:
+      status_message: "{{ status_message|default([]) + ['The EM7 DB01 host has an expired license. Please renew the license before proceeding further with the Build process'] }}"
+    when:
+      - groups['em7db']|length == 2
+      - lic_status|select('search', hostvars[groups['em7db']|last]['vm']['name'])|length == 1
+      - (lic_status|select('search', hostvars[groups['em7db']|last]['vm']['name'])|list|join).split('\t')|last != 'NULL'
+      - (lic_status|select('search', hostvars[groups['em7db']|last]['vm']['name'])|list|join).split('\t')|last < curr_date.stdout
+  - name: define status_message
+    set_fact:
+      status_message: "{{ status_message|default([]) + ['The DR EM7 DB01 host is not licensed. Please ensure it is licensed before proceeding further with the Build process'] }}"
+    when:
+      - customer.disaster_recovery
+      - groups['drem7db']|length >= 1
+      - lic_status|select('search', hostvars[groups['drem7db']|first]['vm']['name'])|length == 0
+  - name: define status_message
+    set_fact:
+      status_message: "{{ status_message|default([]) + ['The DR EM7 DB01 host has an expired license. Please renew the license before proceeding further with the Build process'] }}"
+    when:
+      - groups['drem7db']|length >= 1
+      - lic_status|select('search', hostvars[groups['drem7db']|first]['vm']['name'])|length == 1
+      - (lic_status|select('search', hostvars[groups['drem7db']|first]['vm']['name'])|list|join).split('\t')|last != 'NULL'
+      - (lic_status|select('search', hostvars[groups['drem7db']|first]['vm']['name'])|list|join).split('\t')|last < curr_date.stdout
   - ansible.builtin.assert:
       that:
-        - lic_status != []
-        - lic_status != ['']
-        - lic_status[1] == '1'
-      fail_msg: 'This EM7 host is not licensed. Please ensure it is licensed before proceeding further with the Build process'
-  - block:
-    - name: get date from host
-      ansible.builtin.shell:
-        cmd: date +"%Y-%m-%d %H:%M:%S"
-      register: curr_date
-      check_mode: no
-    - ansible.builtin.assert:
-        that:
-          - lic_status|last > curr_date.stdout
-        fail_msg: 'This EM7 host has an expired license. Please renew the license before proceeding further with the Build process'
-    when: lic_status|last != 'NULL'
+        - status_message|default([]) == []
+      fail_msg: "{{ status_message|default([]) }}"
+  run_once: yes
   when:
     - inventory_hostname is search('em7')
   tags: puppet

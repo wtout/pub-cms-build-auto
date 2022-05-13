@@ -13,5 +13,6 @@
   - ansible.builtin.debug:
       msg:
         - "{{ vars[status_var].stdout_lines }}"
+    when: vars[status_var].stdout_lines is defined
   run_once: true
   tags: puppet
