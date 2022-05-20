@@ -25,7 +25,7 @@
           vars:
             fileid: "{{ file_item }}"
       loop:
-        - /var/log/mysql/messages
+        - /var/log/messages
         - /opt/CSCO-CMS/relayweb/log/relayweb.log
         - /opt/CSCO-CMS/relaysnmp/log/trapprocessor.log
         - /var/log/mysql/mysql.error.log
@@ -104,7 +104,7 @@
         - { name: '/opt/splunk/*', user: 'splunk', group: 'splunk' }
         - { name: '/opt/trapserverlogs/', user: 'root', group: 'root' }
         - { name: '/opt/trapserverlogs/*', user: 'root', group: 'root' }
-        - { name: '/data01/cms-seed/*', user: 'cms_user', group: 'cms_user' }
+        - { name: '/data01/cmcs-seed/*', user: 'cmcs_usr', group: 'cmcs_usr' }
         - { name: '/data01/CMSData/*', user: 'splunk', group: 'splunk' }
         - { name: '/data01/syslogs/', user: 'splunk', group: 'splunk' }
         - { name: '/data01/commands/', user: 'commands', group: 'commands' }

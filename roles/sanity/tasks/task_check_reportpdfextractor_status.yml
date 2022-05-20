@@ -43,5 +43,5 @@
   when:
     - inventory_hostname is search('splsrc')
   vars:
-    fname: '/opt/CSCO-CMS/ReportPDFExtractor/reportPDFExtractor.cfg'
+    fname: '/opt/CSCO-CMS/ReportPDFExtractor/configs/reportPDFExtractor.cfg'
   tags: sanity

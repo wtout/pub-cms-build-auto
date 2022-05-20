@@ -15,6 +15,15 @@ datacenters:
     storage_datastore: 'stg-ds-01'
     storage_path: ''
 
+  RTP-Staging-Build:
+    vsphere: 'sastgvcap01.staging.cisco-cms.com'
+    deptype: 'a'
+    folder: ''
+    cluster: ''
+    datastore_cluster: ''
+    storage_datastore: ''
+    storage_path: ''
+
   PAE-HX-DC-1:
     vsphere: 'paevcenter01.cisco-pae.com'
     deptype: 'h'
