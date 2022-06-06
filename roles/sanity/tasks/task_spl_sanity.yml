@@ -4,65 +4,16 @@
   - include_tasks: task_check_puppet_push_status.yml
     when: customer.version.release[1:]|replace('.', '')|int <= 9217
   - block:
-    - name: define list of services
-      ansible.builtin.set_fact:
-        svc_list: ['chronyd']
-    - name: check status of services
-      include_tasks:
-        file: task_check_service_status.yml
-        apply:
-          vars:
-            svc_name: "{{ svc_item }}"
-      loop: "{{ svc_list }}"
-      loop_control:
-        loop_var: svc_item
-    - name: check status of service processes
-      include_tasks:
-        file: task_check_process_status.yml
-        apply:
-          vars:
-            svc_name: "{{ svc_item.name }}"
-            nm_instances: "{{ svc_item.instances }}"
-      loop:
-        - { name: 'snmpd', instances: 1 }
-      loop_control:
-        loop_var: svc_item
+    - include_tasks: task_check_service_status.yml
+    - include_tasks: task_check_process_status.yml
     - include_tasks: task_check_chrony_file.yml
-    - include_tasks:
-        file: task_check_user_expiry_status.yml
-        apply:
-          vars:
-            userid: 'splunk'
-    - block:
-      - include_tasks: task_check_splunk_status.yml
-      - include_tasks: task_check_indexer_discovery_status.yml
-      - include_tasks: task_check_shcluster_status.yml
-      - include_tasks: task_check_reportpdfextractor_status.yml
-      - include_tasks:
-          file: task_check_passwordless_ssh_status.yml
-          apply:
-            vars:
-              rly_host: "{{ host_item }}"
-        loop: "{{ groups['rly'] }}"
-        loop_control:
-          loop_var: host_item
-      when:
-        - user_expiry_status|default('') is not search('does not exist')
-    - include_tasks:
-        file: task_check_ownership_status.yml
-        apply:
-          vars:
-            dirid: "{{ dir_item.name }}"
-            userid: "{{ dir_item.user }}"
-            groupid: "{{ dir_item.group }}"
-      loop:
-        - { name: '/opt/splunk/etc/apps/*', user: 'splunk', group: 'splunk' }
-        - { name: '/opt/splunk/var/log', user: 'splunk', group: 'splunk' }
-        - { name: '/opt/splunk/var/log/*', user: 'splunk', group: 'splunk' }
-        - { name: '/opt/splunk/etc', user: 'splunk', group: 'splunk' }
-        - { name: '/opt/splunk/etc/*', user: 'splunk', group: 'splunk' }
-      loop_control:
-        loop_var: dir_item
+    - include_tasks: task_check_user_expiry_status.yml
+    - include_tasks: task_check_splunk_status.yml
+    - include_tasks: task_check_indexer_discovery_status.yml
+    - include_tasks: task_check_shcluster_status.yml
+    - include_tasks: task_check_reportpdfextractor_status.yml
+    - include_tasks: task_check_passwordless_ssh_status.yml
+    - include_tasks: task_check_ownership_status.yml
     - include_tasks: task_check_sudoers_user_status.yml
   when:
     - groups['spl']|length == 1

@@ -26,9 +26,9 @@
       - include_tasks: task_define_infra_variables.yml
         when: ansible_run_tags is search('infra_build_nodes')
       - include_tasks: task_define_hosts_variables.yml
-        when: configure_vms_iso | default(false) | bool or configure_vms_ova | default(false) | bool or push_puppet | default(false) | bool or configure_ppp_vms | default(false) | bool or (sanity_check | default(false) | bool and ansible_play_hosts | select('search', 'rly') | length >= 1)
+        when: configure_vms_iso|default(false) or configure_vms_ova|default(false) or push_puppet|default(false) or configure_ppp_vms|default(false) or sanity_check|default(false)
       when:
-        - deploy | default(false) | bool
+        - deploy | default(false)
     - include_tasks: task_define_vm_ip.yml
     when:
       - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"

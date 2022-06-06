@@ -26,7 +26,7 @@
     ansible.builtin.debug:
       msg: "{{ report_message|default([]) }}"
   vars:
-    rly_svc_list: ['rly_current_version', 'rly_rpms', 'service', 'rly_errors', 'rly_rules', 'rly_db', 'rly_deconfigcount', 'rly_syslogrulescount', 'rly_cluster_size', 'rly_cluster', 'rly_local_state', 'rly_incoming_addresses', 'rly_db_grants', 'rly_reportstore', 'rly_coral_container', 'rly_coral_services', 'rly_splsrcvip', 'rly_active_de_instance_ip', 'rly_de_ip', 'rly_de_username', 'rly_relaywebport', 'rly_chrony_server', 'rly_chrony_leap', 'processes', 'rly_splunk', 'rly_relayweb_conf', 'splind_hosts_idx', 'chrony', 'rly_splunk_cronjob', 'rly_backup_dir', 'rly_data01_dir', 'rly_swap', 'rly_app_prop', 'rly_config_prop', 'user_expiry', 'rly_backup_cronjob', 'ownership', 'sudoers_user']
+    rly_svc_list: ['rly_current_version', 'rly_rpms', 'service', 'rly_errors', 'rly_rules', 'rly_db', 'rly_deconfigcount', 'rly_syslogrulescount', 'rly_cluster_size', 'rly_cluster', 'rly_local_state', 'rly_incoming_addresses', 'rly_db_grants', 'rly_reportstore', 'rly_coral_services', 'rly_splsrcvip', 'rly_active_de_instance_ip', 'rly_de_ip', 'rly_de_username', 'rly_relaywebport', 'rly_chrony_server', 'rly_chrony_leap', 'processes', 'rly_splunk', 'rly_relayweb_conf', 'splind_hosts_idx', 'chrony', 'rly_splunk_cronjob', 'rly_backup_dir', 'rly_data01_dir', 'rly_swap', 'rly_app_prop', 'rly_config_prop', 'user_expiry', 'rly_backup_cronjob', 'ownership', 'sudoers_user']
     atarly_svc_list: ['service', 'processes', 'chrony', 'sudoers_user']
     lnxjmp_svc_list: ['service', 'processes', 'chrony', 'sudoers_user']
     em7_svc_list: ['service', 'chrony', 'cmspem7', 'licensed', 'sudoers_user']

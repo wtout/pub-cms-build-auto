@@ -1,30 +1,38 @@
 ---
 # Tasks to check logged errors status
 - block:
-  - name: check for errors in {{ fileid }}
+  - name: check for errors in log files
     ansible.builtin.shell: |
-      {{ 'sudo -S' if ansible_user != 'root' else '' }} grep -i error {{ fileid }} {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}
+      {{ 'sudo -S' if ansible_user != 'root' else '' }} grep -i error {{ fileid }} {{ '<<< ' + ansible_password if ansible_user != 'root' else '' }} | grep -v ansible
     register: reg_err_status
     args:
       warn: false
     ignore_errors: true
     check_mode: no
     no_log: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
+    loop:
+      - /var/log/messages
+      - /opt/CSCO-CMS/relayweb/log/relayweb.log
+      - /opt/CSCO-CMS/relaysnmp/log/trapprocessor.log
+      - /var/log/mysql/mysql.error.log
+    loop_control:
+      loop_var: fileid
   - debug:
-      msg: "{{ reg_err_status|replace(ansible_ssh_pass, 'obfuscated') }}"
+      msg: "{{ reg_err_status.results|replace(ansible_password, 'obfuscated') }}"
     when: ansible_user != 'root'
+
   - name: define rly_errors_status
     ansible.builtin.set_fact:
-      rly_errors: "{{ [reg_err_status.stderr|regex_replace('^.*password for.*?: ', '')|replace('grep: ', '')] }}"
-      rly_errors_status: "{{ rly_errors_status|default([]) + [reg_err_status.stderr|regex_replace('^.*password for.*?: ', '')|replace('grep: ', '')] }}"
-    when:
-      - reg_err_status is failed
-      - reg_err_status.stderr is search('No such file or directory')
-  - name: define rly_errors_status
-    ansible.builtin.set_fact:
-      rly_errors: "{{ ['Errors in ' + fileid + ': '] }}"
-      rly_errors_status: "{{ rly_errors_status|default([]) + ['Errors in ' + fileid + ': ' + reg_err_status.stdout_lines|join(', ')] }}"
-    when:
-      - reg_err_status is succeeded
-      - reg_err_status.stdout_lines|length >= 1
+      rly_errors_status: "{{ rly_errors_status|default([]) + [file_stderr|regex_replace('^.*password for.*?: ', '')|replace('grep: ', '') if file_stderr|regex_replace('^.*password for.*?: ', '') != '' else ('Errors detected in ' + file_item) if file_stdout != '' else '']|select()|list }}"
+    vars:
+      file_stdout: "{{ reg_err_status.results|selectattr('fileid', 'equalto', file_item)|map(attribute='stdout')|join }}"
+      file_stderr: "{{ reg_err_status.results|selectattr('fileid', 'equalto', file_item)|map(attribute='stderr')|join }}"
+    loop:
+      - /var/log/mysql/messages
+      - /opt/CSCO-CMS/relayweb/log/relayweb.log
+      - /opt/CSCO-CMS/relaysnmp/log/trapprocessor.log
+      - /var/log/mysql/mysql.error.log
+    loop_control:
+      loop_var: file_item
   tags: sanity
+

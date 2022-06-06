@@ -20,7 +20,9 @@
   - name: define r0_address2_status
     ansible.builtin.set_fact:
       r0_address2_status: '192.170.170.10 is not configured in /etc/drbd.d/r0.res'
-    when: r0_content.stdout_lines[4] is not search('192.170.170.10')
+    when:
+      - r0_content.stdout_lines[4] is not search('192.170.170.10')
+      - "'dr' not in group_names"
   when:
     - groups['em7'] | length > 1
   tags: sanity

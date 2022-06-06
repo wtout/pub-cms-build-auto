@@ -1,17 +1,22 @@
 ---
 # Tasks to check user account expiry status
 - block:
-  - name: check status of {{ userid }} user account
+  - name: check status of user account
     ansible.builtin.shell: |
-      {{ 'sudo -S' if ansible_user != 'root' else '' }} chage -l {{ userid }} {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | egrep -i '^(password|account)'
+      {{ 'sudo -S' if ansible_user != 'root' else '' }} chage -l {{ userid }} {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | grep -iE '^(password|account)'
     register: reg_acc_status
     ignore_errors: yes
     args:
       warn: false
     check_mode: no
-    no_log: yes
+    no_log: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
+    vars:
+      userid: "{{ 'rstore' if vm.name is search('rly') else 'splunk' if vm.name is search('spl') else '' }}"
   - debug:
       msg: "{{ reg_acc_status|replace(ansible_ssh_pass, 'obfuscated') }}"
+    when:
+      - ansible_user != 'root'
+      - reg_acc_status is failed
   - name: define user_expiry_status
     ansible.builtin.set_fact:
       user_expiry_status: "{{ reg_acc_status.stderr }}"
@@ -20,13 +25,14 @@
       - reg_acc_status.stderr is search('does not exist in /etc/passwd')
   - name: define user_expiry_status
     ansible.builtin.set_fact:
-      user_expiry_status: "{{ user_expiry_status|default([]) + [loop_item] }}"
-    loop: "{{ reg_acc_status.stdout_lines | reject('search', 'never') }}"
+      user_expiry_status: "{{ user_expiry_status|default([]) + [loop_item|replace('\t', '')] }}"
+    loop: "{{ reg_acc_status.stdout_lines | reject('search', 'never') | list }}"
     loop_control:
       loop_var: loop_item
+      label: "{{ reg_acc_status.cmd|regex_search('.* -l ([a-z]+) <.*$', '\\1')|first }}"
     when:
       - reg_acc_status.stderr is defined
       - reg_acc_status.stdout_lines is defined
       - reg_acc_status.stderr is not search('does not exist in /etc/passwd')
-      - reg_acc_status.stdout_lines | reject('search', 'never') | length >= 1
+      - reg_acc_status.stdout_lines | reject('search', 'never') | list | length >= 1
   tags: sanity

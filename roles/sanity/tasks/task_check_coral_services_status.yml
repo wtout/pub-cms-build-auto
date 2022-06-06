@@ -11,12 +11,49 @@
     no_log: yes
   - debug:
       msg: "{{ reg_docker_ps|replace(ansible_ssh_pass, 'obfuscated') }}"
-  - name: define rly_coral_container_status
+  - name: define rly_coral_services_status
     ansible.builtin.set_fact:
-      rly_coral_container_status: 'Coral container is not up'
-      rly_coral_services_status: 'Coral services are not running'
+      rly_coral_services_status: ['Coral container is not up']
     when: reg_docker_ps.stdout_lines|last is not regex('ago[\\s]+Up[\\s][0-9]+')
   - block:
+    - name: define coral container name
+      ansible.builtin.set_fact:
+        container_name: "{{ (reg_docker_ps.stdout_lines|select('search', 'coral-service')|list|last).split(' ')|last }}"
+    - name: get coral version
+      ansible.builtin.shell: |
+        {{ 'sudo -S' if ansible_user != 'root' else '' }} $(which docker) exec {{ container_name }} cat VERSION {{ '<<< ' + ansible_password if ansible_user != 'root' else '' }}
+      register: reg_coral_version
+      args:
+        warn: false
+      check_mode: no
+    - name: define coral services list
+      ansible.builtin.set_fact:
+        rly_coral_services: "{{ coral_services|select()|list }}"
+      vars:
+        coral_services:
+          - flower RUNNING
+          - log_catcher RUNNING
+          - logrotate RUNNING
+          - mongo_monitoring RUNNING
+          - mongod RUNNING
+          - mongodb_maint RUNNING
+          - node RUNNING
+          - post-up RUNNING
+          - rabbit_monitoring RUNNING
+          - rabbitmq RUNNING
+          - "{{ 'rabbitmq-controller EXITED' if reg_coral_version.stdout is version('21.0.3', '<') else '' }}"
+          - setup {{ 'RUNNING' if (groups['rly']|length == 1 or reg_coral_version.stdout is version('19.1.1', '=')) else 'EXITED' }}
+          - web:nginx RUNNING
+          - web:uwsgi RUNNING
+          - "{{ 'workers:core.1 RUNNING' if reg_coral_version.stdout is version('19.1.1', '<') else '' }}"
+          - workers:default.1 RUNNING
+          - workers:important.1 RUNNING
+          - workers:local.1 RUNNING
+          - "{{ 'workers:retries.1 RUNNING' if reg_coral_version.stdout is version('19.1.1', '<') else '' }}"
+          - workers:schedule.1 RUNNING
+          - workers:subtask.1 RUNNING
+          - workers:subtask.2 RUNNING
+          - workers:task.1 RUNNING
     - name: check coral services on the container
       ansible.builtin.shell: |
         {{ 'sudo -S' if ansible_user != 'root' else '' }} docker exec {{ (reg_docker_ps.stdout.split('\n')|last).split('   ') | select() | last }} supervisorctl status {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | awk '{print $1" "$2}'
