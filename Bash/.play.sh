@@ -111,19 +111,21 @@ function check_repeat_job() {
 }
 
 function check_hosts_limit() {
+	local MYARGS
 	local ARG_NAME
 	local MYACTION
 	local NEWARGS
-	[[ "$(echo "${@}" | grep -Ew '\-\-limit')" != "" ]] && [[ "$(echo "${@}" | grep 'vcenter')" == "" ]] && ARG_NAME="--limit" && MYACTION="add"
-	[[ "$(echo "${@}" | grep -Ew '\-l')" != "" ]] && [[ "$(echo "${@}" | grep 'vcenter')" == "" ]] && ARG_NAME="-l" && MYACTION="add"
+	MYARGS=$(echo "${@}" | sed 's/,\(dr\)*vcenter//')
+	[[ "$(echo "${MYARGS}" | grep -Ew '\-\-limit')" != "" ]] && [[ "$(echo "${MYARGS}" | grep 'vcenter')" == "" ]] && ARG_NAME="--limit" && MYACTION="add"
+	[[ "$(echo "${MYARGS}" | grep -Ew '\-l')" != "" ]] && [[ "$(echo "${MYARGS}" | grep 'vcenter')" == "" ]] && ARG_NAME="-l" && MYACTION="add"
 	if [[ ${MYACTION} == "add" ]]
 	then
 		local MYHOSTS
 		local MYTAGS
 		local UPDATE_ARGS
 		local VCENTERS
-		MYHOSTS=$(echo "${@}" | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
-		[[ "$(echo "${@}" | grep -Ew '\-\-tags')" != "" ]] && MYTAGS=$(echo "${@}" | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
+		MYHOSTS=$(echo "${MYARGS}" | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}')
+		[[ "$(echo "${MYARGS}" | grep -Ew '\-\-tags')" != "" ]] && MYTAGS=$(echo "${MYARGS}" | awk -F '--tags ' '{print $NF}' | awk -F ' -' '{print $1}')
 		[[ "${MYTAGS}" == "" ]] && UPDATE_ARGS=1
 		[[ "$(echo "${MYTAGS}" | grep -Ew 'vm_creation|capcheck|infra_configure')" != "" ]] && UPDATE_ARGS=1
 		[[ "$(echo "${MYTAGS}" | grep -Ew 'infra_build_nodes')" != "" ]] && UPDATE_ARGS=2
@@ -140,15 +142,15 @@ function check_hosts_limit() {
 		fi
 		if [[ ${UPDATE_ARGS} -eq 1 ]]
 		then
-			NEWARGS=$(echo "${@}" | sed "s/${MYHOSTS}/${MYHOSTS},${VCENTERS}/")
+			NEWARGS=$(echo "${MYARGS}" | sed "s/${MYHOSTS}/${MYHOSTS},${VCENTERS}/")
 		elif [[ ${UPDATE_ARGS} -eq 2 ]]
 		then
-			NEWARGS=$(echo "${@}" | sed "s/${MYHOSTS}/${MYHOSTS},${VCENTERS},nexus/")
+			NEWARGS=$(echo "${MYARGS}" | sed "s/${MYHOSTS}/${MYHOSTS},${VCENTERS},nexus/")
 		else
-			NEWARGS="${@}"
+			NEWARGS="${MYARGS}"
 		fi
 	else
-		NEWARGS="${@}"
+		NEWARGS="${MYARGS}"
 	fi
 	echo "${NEWARGS}"
 }
@@ -417,7 +419,7 @@ function get_repo_creds() {
 		local REPOPWD
 		local REMOTEID
 		local SET_PROXY
-		[[ $(git config --get remote.origin.url | grep "www-github") != "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
+		[[ $(git config --get remote.origin.url | grep "github") != "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
 		for i in {1..3}
 		do
 			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
@@ -480,7 +482,7 @@ function check_updates() {
 				local REMOTEID
 				local SET_PROXY
 				LOCALID=$(git rev-parse --short HEAD)
-				[[ $(git config --get remote.origin.url | grep "www-github") == "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
+				[[ $(git config --get remote.origin.url | grep "github") == "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
 				for i in {1..3}
 				do
 					[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
