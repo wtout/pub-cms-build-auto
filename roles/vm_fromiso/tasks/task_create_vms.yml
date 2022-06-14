@@ -57,6 +57,7 @@
         tasks_from: task_create_cluster.yml
       run_once: true
       when:
+        - ansible_play_hosts | reject('search', 'dr') | length >= 1
         - hostvars[groups['vcenter'][0]]['cluster_host'] == []
     - name: "infra_configure: create DR cluster"
       include_role:

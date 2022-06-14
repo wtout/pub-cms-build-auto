@@ -55,6 +55,7 @@
   - include_tasks: task_add_gtw2.yml
 
   - block:
+    - include_tasks: task_add_ipv6.yml
     - include_tasks: task_expand_fs.yml
     - include_tasks: task_delete_packer_builder.yml
     when: inventory_hostname is search('em7')

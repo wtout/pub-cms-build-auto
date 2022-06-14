@@ -55,6 +55,12 @@ vm_vars:
       # Netmask
       netmask: "{{ environment_definition.vm_setting.em7.nic1.netmask if (environment_definition.vm_setting.em7.nic1.netmask is defined and environment_definition.vm_setting.em7.nic1.netmask != none) else '255.255.255.192' }}"
 
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.em7.nic1.ipv6_pool if (environment_definition.vm_setting.em7.nic1.ipv6_pool is defined and environment_definition.vm_setting.em7.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.em7.nic1.ipv6_gtw if (environment_definition.vm_setting.em7.nic1.ipv6_gtw is defined and environment_definition.vm_setting.em7.nic1.ipv6_gtw != none) else '' }}"
+
       # Net Name
       netname: "{{ environment_definition.vm_setting.em7.nic1.netname if (environment_definition.vm_setting.em7.nic1.netname is defined and environment_definition.vm_setting.em7.nic1.netname != none) else '' }}"
 
@@ -82,6 +88,12 @@ vm_vars:
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.em7.nic2.netmask if (environment_definition.vm_setting.em7.nic2.netmask is defined and environment_definition.vm_setting.em7.nic2.netmask != none) else '255.255.255.224' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.em7.nic2.ipv6_pool if (environment_definition.vm_setting.em7.nic2.ipv6_pool is defined and environment_definition.vm_setting.em7.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.em7.nic2.ipv6_gtw if (environment_definition.vm_setting.em7.nic2.ipv6_gtw is defined and environment_definition.vm_setting.em7.nic2.ipv6_gtw != none) else '' }}"
 
       # Net Name
       netname: "{{ environment_definition.vm_setting.em7.nic2.netname if (environment_definition.vm_setting.em7.nic2.netname is defined and environment_definition.vm_setting.em7.nic2.netname != none) else '' }}"
@@ -142,6 +154,12 @@ vm_vars:
       # Netmask
       netmask: "{{ environment_definition.vm_setting.spl.nic1.netmask if (environment_definition.vm_setting.spl.nic1.netmask is defined and environment_definition.vm_setting.spl.nic1.netmask != none) else '255.255.255.192' }}"
 
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.spl.nic1.ipv6_pool if (environment_definition.vm_setting.spl.nic1.ipv6_pool is defined and environment_definition.vm_setting.spl.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.spl.nic1.ipv6_gtw if (environment_definition.vm_setting.spl.nic1.ipv6_gtw is defined and environment_definition.vm_setting.spl.nic1.ipv6_gtw != none) else '' }}"
+
       # Net Name
       netname: "{{ environment_definition.vm_setting.spl.nic1.netname if (environment_definition.vm_setting.spl.nic1.netname is defined and environment_definition.vm_setting.spl.nic1.netname != none) else '' }}"
 
@@ -169,6 +187,12 @@ vm_vars:
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.spl.nic2.netmask if (environment_definition.vm_setting.spl.nic2.netmask is defined and environment_definition.vm_setting.spl.nic2.netmask != none) else '' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.spl.nic2.ipv6_pool if (environment_definition.vm_setting.spl.nic2.ipv6_pool is defined and environment_definition.vm_setting.spl.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.spl.nic2.ipv6_gtw if (environment_definition.vm_setting.spl.nic2.ipv6_gtw is defined and environment_definition.vm_setting.spl.nic2.ipv6_gtw != none) else '' }}"
 
       # Net Name
       netname: "{{ environment_definition.vm_setting.spl.nic2.netname if (environment_definition.vm_setting.spl.nic2.netname is defined and environment_definition.vm_setting.spl.nic2.netname != none) else '' }}"
@@ -229,6 +253,12 @@ vm_vars:
       # Netmask
       netmask: "{{ environment_definition.vm_setting.lnxjmp.nic1.netmask if (environment_definition.vm_setting.lnxjmp.nic1.netmask is defined and environment_definition.vm_setting.lnxjmp.nic1.netmask != none) else '255.255.255.192' }}"
 
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.lnxjmp.nic1.ipv6_pool if (environment_definition.vm_setting.lnxjmp.nic1.ipv6_pool is defined and environment_definition.vm_setting.lnxjmp.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.lnxjmp.nic1.ipv6_gtw if (environment_definition.vm_setting.lnxjmp.nic1.ipv6_gtw is defined and environment_definition.vm_setting.lnxjmp.nic1.ipv6_gtw != none) else '' }}"
+
       # Net Name
       netname: "{{ environment_definition.vm_setting.lnxjmp.nic1.netname if (environment_definition.vm_setting.lnxjmp.nic1.netname is defined and environment_definition.vm_setting.lnxjmp.nic1.netname != none) else '' }}"
 
@@ -256,6 +286,12 @@ vm_vars:
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.lnxjmp.nic2.netmask if (environment_definition.vm_setting.lnxjmp.nic2.netmask is defined and environment_definition.vm_setting.lnxjmp.nic2.netmask != none) else '255.255.255.224' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.lnxjmp.nic2.ipv6_pool if (environment_definition.vm_setting.lnxjmp.nic2.ipv6_pool is defined and environment_definition.vm_setting.lnxjmp.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.lnxjmp.nic2.ipv6_gtw if (environment_definition.vm_setting.lnxjmp.nic2.ipv6_gtw is defined and environment_definition.vm_setting.lnxjmp.nic2.ipv6_gtw != none) else '' }}"
 
       # Net Name
       netname: "{{ environment_definition.vm_setting.lnxjmp.nic2.netname if (environment_definition.vm_setting.lnxjmp.nic2.netname is defined and environment_definition.vm_setting.lnxjmp.nic2.netname != none) else '' }}"
@@ -316,6 +352,12 @@ vm_vars:
       # Netmask
       netmask: "{{ environment_definition.vm_setting.rly.nic1.netmask if (environment_definition.vm_setting.rly.nic1.netmask is defined and environment_definition.vm_setting.rly.nic1.netmask != none) else '255.255.255.192' }}"
 
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.rly.nic1.ipv6_pool if (environment_definition.vm_setting.rly.nic1.ipv6_pool is defined and environment_definition.vm_setting.rly.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.rly.nic1.ipv6_gtw if (environment_definition.vm_setting.rly.nic1.ipv6_gtw is defined and environment_definition.vm_setting.rly.nic1.ipv6_gtw != none) else '' }}"
+
       # Net Name
       netname: "{{ environment_definition.vm_setting.rly.nic1.netname if (environment_definition.vm_setting.rly.nic1.netname is defined and environment_definition.vm_setting.rly.nic1.netname != none) else '' }}"
 
@@ -343,6 +385,12 @@ vm_vars:
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.rly.nic2.netmask if (environment_definition.vm_setting.rly.nic2.netmask is defined and environment_definition.vm_setting.rly.nic2.netmask != none) else '255.255.255.224' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.rly.nic2.ipv6_pool if (environment_definition.vm_setting.rly.nic2.ipv6_pool is defined and environment_definition.vm_setting.rly.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.rly.nic2.ipv6_gtw if (environment_definition.vm_setting.rly.nic2.ipv6_gtw is defined and environment_definition.vm_setting.rly.nic2.ipv6_gtw != none) else '' }}"
 
       # Net Name
       netname: "{{ environment_definition.vm_setting.rly.nic2.netname if (environment_definition.vm_setting.rly.nic2.netname is defined and environment_definition.vm_setting.rly.nic2.netname != none) else '' }}"
@@ -405,6 +453,12 @@ vm_vars:
       # Netmask
       netmask: "{{ environment_definition.vm_setting.atarly.nic1.netmask if (environment_definition.vm_setting.atarly.nic1.netmask is defined and environment_definition.vm_setting.atarly.nic1.netmask != none) else '255.255.255.192' }}"
 
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.atarly.nic1.ipv6_pool if (environment_definition.vm_setting.atarly.nic1.ipv6_pool is defined and environment_definition.vm_setting.atarly.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.atarly.nic1.ipv6_gtw if (environment_definition.vm_setting.atarly.nic1.ipv6_gtw is defined and environment_definition.vm_setting.atarly.nic1.ipv6_gtw != none) else '' }}"
+
       # Net Name
       netname: "{{ environment_definition.vm_setting.atarly.nic1.netname if (environment_definition.vm_setting.atarly.nic1.netname is defined and environment_definition.vm_setting.atarly.nic1.netname != none) else '' }}"
 
@@ -432,6 +486,12 @@ vm_vars:
 
       # Netmask
       netmask: "{{ environment_definition.vm_setting.atarly.nic2.netmask if (environment_definition.vm_setting.atarly.nic2.netmask is defined and environment_definition.vm_setting.atarly.nic2.netmask != none) else '255.255.255.224' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.vm_setting.atarly.nic2.ipv6_pool if (environment_definition.vm_setting.atarly.nic2.ipv6_pool is defined and environment_definition.vm_setting.atarly.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.vm_setting.atarly.nic2.ipv6_gtw if (environment_definition.vm_setting.atarly.nic2.ipv6_gtw is defined and environment_definition.vm_setting.atarly.nic2.ipv6_gtw != none) else '' }}"
 
       # Net Name
       netname: "{{ environment_definition.vm_setting.atarly.nic2.netname if (environment_definition.vm_setting.atarly.nic2.netname is defined and environment_definition.vm_setting.atarly.nic2.netname != none) else '' }}"
@@ -490,6 +550,12 @@ vm_vars:
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.csr.nic1.netmask if (environment_definition.vm_setting.infra.csr.nic1.netmask is defined and environment_definition.vm_setting.infra.csr.nic1.netmask != none) else '' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.csr.nic1.ipv6_pool if (environment_definition.vm_setting.infra.csr.nic1.ipv6_pool is defined and environment_definition.vm_setting.infra.csr.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.csr.nic1.ipv6_gtw if (environment_definition.vm_setting.infra.csr.nic1.ipv6_gtw is defined and environment_definition.vm_setting.infra.csr.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.csr.nic1.netname if (environment_definition.vm_setting.infra.csr.nic1.netname is defined and environment_definition.vm_setting.infra.csr.nic1.netname != none) else '' }}"
 
@@ -517,6 +583,12 @@ vm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.csr.nic2.netmask if (environment_definition.vm_setting.infra.csr.nic2.netmask is defined and environment_definition.vm_setting.infra.csr.nic2.netmask != none) else '' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.csr.nic2.ipv6_pool if (environment_definition.vm_setting.infra.csr.nic2.ipv6_pool is defined and environment_definition.vm_setting.infra.csr.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.csr.nic2.ipv6_gtw if (environment_definition.vm_setting.infra.csr.nic2.ipv6_gtw is defined and environment_definition.vm_setting.infra.csr.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.csr.nic2.netname if (environment_definition.vm_setting.infra.csr.nic2.netname is defined and environment_definition.vm_setting.infra.csr.nic2.netname != none) else '' }}"
@@ -546,6 +618,12 @@ vm_vars:
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.csr.nic3.netmask if (environment_definition.vm_setting.infra.csr.nic3.netmask is defined and environment_definition.vm_setting.infra.csr.nic3.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.csr.nic3.ipv6_pool if (environment_definition.vm_setting.infra.csr.nic3.ipv6_pool is defined and environment_definition.vm_setting.infra.csr.nic3.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.csr.nic3.ipv6_gtw if (environment_definition.vm_setting.infra.csr.nic3.ipv6_gtw is defined and environment_definition.vm_setting.infra.csr.nic3.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.csr.nic3.netname if (environment_definition.vm_setting.infra.csr.nic3.netname is defined and environment_definition.vm_setting.infra.csr.nic3.netname != none) else '' }}"
 
@@ -574,6 +652,12 @@ vm_vars:
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.csr.nic4.netmask if (environment_definition.vm_setting.infra.csr.nic4.netmask is defined and environment_definition.vm_setting.infra.csr.nic4.netmask != none) else '255.255.255.224' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.csr.nic4.ipv6_pool if (environment_definition.vm_setting.infra.csr.nic4.ipv6_pool is defined and environment_definition.vm_setting.infra.csr.nic4.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.csr.nic4.ipv6_gtw if (environment_definition.vm_setting.infra.csr.nic4.ipv6_gtw is defined and environment_definition.vm_setting.infra.csr.nic4.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.csr.nic4.netname if (environment_definition.vm_setting.infra.csr.nic4.netname is defined and environment_definition.vm_setting.infra.csr.nic4.netname != none) else '' }}"
 
@@ -601,6 +685,12 @@ vm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.csr.nic5.netmask if (environment_definition.vm_setting.infra.csr.nic5.netmask is defined and environment_definition.vm_setting.infra.csr.nic5.netmask != none) else '255.255.255.224' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.csr.nic5.ipv6_pool if (environment_definition.vm_setting.infra.csr.nic5.ipv6_pool is defined and environment_definition.vm_setting.infra.csr.nic5.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.csr.nic5.ipv6_gtw if (environment_definition.vm_setting.infra.csr.nic5.ipv6_gtw is defined and environment_definition.vm_setting.infra.csr.nic5.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.csr.nic5.netname if (environment_definition.vm_setting.infra.csr.nic5.netname is defined and environment_definition.vm_setting.infra.csr.nic5.netname != none) else '' }}"
@@ -652,6 +742,12 @@ vm_vars:
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.netmask if (environment_definition.vm_setting.infra.nsvpx.nic1.netmask is defined and environment_definition.vm_setting.infra.nsvpx.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.nsvpx.nic1.ipv6_pool if (environment_definition.vm_setting.infra.nsvpx.nic1.ipv6_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.ipv6_gtw if (environment_definition.vm_setting.infra.nsvpx.nic1.ipv6_gtw is defined and environment_definition.vm_setting.infra.nsvpx.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.netname if (environment_definition.vm_setting.infra.nsvpx.nic1.netname is defined and environment_definition.vm_setting.infra.nsvpx.nic1.netname != none) else '' }}"
 
@@ -679,6 +775,12 @@ vm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.netmask if (environment_definition.vm_setting.infra.nsvpx.nic2.netmask is defined and environment_definition.vm_setting.infra.nsvpx.nic2.netmask != none) else '' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.nsvpx.nic2.ipv6_pool if (environment_definition.vm_setting.infra.nsvpx.nic2.ipv6_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.ipv6_gtw if (environment_definition.vm_setting.infra.nsvpx.nic2.ipv6_gtw is defined and environment_definition.vm_setting.infra.nsvpx.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.netname if (environment_definition.vm_setting.infra.nsvpx.nic2.netname is defined and environment_definition.vm_setting.infra.nsvpx.nic2.netname != none) else '' }}"
@@ -742,6 +844,12 @@ vm_vars:
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.winjmp.nic1.netmask if (environment_definition.vm_setting.infra.winjmp.nic1.netmask is defined and environment_definition.vm_setting.infra.winjmp.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.winjmp.nic1.ipv6_pool if (environment_definition.vm_setting.infra.winjmp.nic1.ipv6_pool is defined and environment_definition.vm_setting.infra.winjmp.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.winjmp.nic1.ipv6_gtw if (environment_definition.vm_setting.infra.winjmp.nic1.ipv6_gtw is defined and environment_definition.vm_setting.infra.winjmp.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.winjmp.nic1.netname if (environment_definition.vm_setting.infra.winjmp.nic1.netname is defined and environment_definition.vm_setting.infra.winjmp.nic1.netname != none) else '' }}"
 
@@ -771,6 +879,12 @@ vm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.vm_setting.infra.winjmp.nic2.netmask if (environment_definition.vm_setting.infra.winjmp.nic2.netmask is defined and environment_definition.vm_setting.infra.winjmp.nic2.netmask != none) else '255.255.255.224' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.vm_setting.infra.winjmp.nic2.ipv6_pool if (environment_definition.vm_setting.infra.winjmp.nic2.ipv6_pool is defined and environment_definition.vm_setting.infra.winjmp.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.vm_setting.infra.winjmp.nic2.ipv6_gtw if (environment_definition.vm_setting.infra.winjmp.nic2.ipv6_gtw is defined and environment_definition.vm_setting.infra.winjmp.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.vm_setting.infra.winjmp.nic2.netname if (environment_definition.vm_setting.infra.winjmp.nic2.netname is defined and environment_definition.vm_setting.infra.winjmp.nic2.netname != none) else '' }}"

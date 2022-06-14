@@ -3,9 +3,9 @@
 - block:
   - name: Wait on VMware Tools to become available
     vmware_guest_tools_wait:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
       folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
       validate_certs: false
       name: "{{ vm.name }}"
@@ -16,10 +16,10 @@
   - block:
     - name: copy default route file to EM7 VM
       vmware_guest_file_operation:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
         folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         validate_certs: false
         vm_id: "{{ vm.name }}"
@@ -37,10 +37,10 @@
         https_proxy: ''
     - name: restart the network on the EM7 VM
       vmware_vm_shell:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
         folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         validate_certs: false
         vm_id: "{{ vm.name }}"
@@ -54,10 +54,10 @@
   - block:
     - name: copy default route file to non-EM7 VM
       vmware_guest_file_operation:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter']}}"
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter']}}"
         folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         validate_certs: false
         vm_id: "{{ vm.name}}"
@@ -75,10 +75,10 @@
         https_proxy: ''
     - name: restart the network on the non-EM7 VM
       vmware_vm_shell:
-        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
         folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         validate_certs: false
         vm_id: "{{ vm.name }}"

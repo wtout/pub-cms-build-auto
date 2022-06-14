@@ -26,6 +26,8 @@ netconfig:
   gateway1: "{{ vm_vars.infra.csr.nic1.gtw if vm_vars.infra.csr.nic1.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic1.gtw_octet) if vm_vars.infra.csr.nic1.gtw_octet != '' else '' }}"
   netmask1: "{{ vm_vars.infra.csr.nic1.netmask }}"
   network1: "{{ vm_vars.infra.csr.nic1.netname if vm_vars.infra.csr.nic1.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic1.netbase) if vm_vars.infra.csr.nic1.netbase != '' else '' }}"
+  ipv6_pool1: "{{ vm_vars.infra.csr.nic1.ipv6_pool | default([]) }}"
+  ipv6_gtw1: "{{ vm_vars.infra.csr.nic1.ipv6_gtw | default('') }}"
 
   intname2: "{{ vm_vars.infra.csr.nic2.intname }}"
   ippool2: "{{ vm_vars.infra.csr.nic2.ip_pool | default([]) }}"
@@ -33,6 +35,8 @@ netconfig:
   gateway2: "{{ vm_vars.infra.csr.nic2.gtw if vm_vars.infra.csr.nic2.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic2.gtw_octet) if vm_vars.infra.csr.nic2.gtw_octet != '' else '' }}"
   netmask2: "{{ vm_vars.infra.csr.nic2.netmask }}"
   network2: "{{ vm_vars.infra.csr.nic2.netname if vm_vars.infra.csr.nic2.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic2.netbase) if vm_vars.infra.csr.nic2.netbase != '' else '' }}"
+  ipv6_pool2: "{{ vm_vars.infra.csr.nic2.ipv6_pool | default([]) }}"
+  ipv6_gtw2: "{{ vm_vars.infra.csr.nic2.ipv6_gtw | default('') }}"
 
   intname3: "{{ vm_vars.infra.csr.nic3.intname }}"
   ippool3: "{{ vm_vars.infra.csr.nic3.ip_pool | default([]) }}"
@@ -40,6 +44,8 @@ netconfig:
   gateway3: "{{ vm_vars.infra.csr.nic3.gtw if vm_vars.infra.csr.nic3.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic3.gtw_octet) if vm_vars.infra.csr.nic3.gtw_octet != '' else '' }}"
   netmask3: "{{ vm_vars.infra.csr.nic3.netmask }}"
   network3: "{{ vm_vars.infra.csr.nic3.netname if vm_vars.infra.csr.nic3.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic3.netbase) if vm_vars.infra.csr.nic3.netbase != '' else '' }}"
+  ipv6_pool3: "{{ vm_vars.infra.csr.nic3.ipv6_pool | default([]) }}"
+  ipv6_gtw3: "{{ vm_vars.infra.csr.nic3.ipv6_gtw | default('') }}"
 
   intname4: "{{ vm_vars.infra.csr.nic4.intname }}"
   ippool4: "{{ vm_vars.infra.csr.nic4.ip_pool | default([]) }}"
@@ -47,6 +53,8 @@ netconfig:
   gateway4: "{{ vm_vars.infra.csr.nic4.gtw if vm_vars.infra.csr.nic4.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic4.gtw_octet) if vm_vars.infra.csr.nic4.gtw_octet != '' else '' }}"
   netmask4: "{{ vm_vars.infra.csr.nic4.netmask }}"
   network4: "{{ vm_vars.infra.csr.nic4.netname if vm_vars.infra.csr.nic4.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic4.netbase) if vm_vars.infra.csr.nic4.netbase != '' else '' }}"
+  ipv6_pool4: "{{ vm_vars.infra.csr.nic4.ipv6_pool | default([]) }}"
+  ipv6_gtw4: "{{ vm_vars.infra.csr.nic4.ipv6_gtw | default('') }}"
 
   intname5: "{{ vm_vars.infra.csr.nic5.intname }}"
   ippool5: "{{ vm_vars.infra.csr.nic5.ip_pool | default([]) }}"
@@ -54,3 +62,5 @@ netconfig:
   gateway5: "{{ vm_vars.infra.csr.nic5.gtw if vm_vars.infra.csr.nic5.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.csr.nic5.gtw_octet) if vm_vars.infra.csr.nic5.gtw_octet != '' else '' }}"
   netmask5: "{{ vm_vars.infra.csr.nic5.netmask }}"
   network5: "{{ vm_vars.infra.csr.nic5.netname if vm_vars.infra.csr.nic5.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.infra.csr.nic5.netbase) if vm_vars.infra.csr.nic5.netbase != '' else '' }}"
+  ipv6_pool5: "{{ vm_vars.infra.csr.nic5.ipv6_pool | default([]) }}"
+  ipv6_gtw5: "{{ vm_vars.infra.csr.nic5.ipv6_gtw | default('') }}"

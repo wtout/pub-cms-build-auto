@@ -22,6 +22,8 @@ netconfig:
   gateway1: "{{ vm_vars.spl.spldpl.nic1.gtw if vm_vars.spl.spldpl.nic1.gtw != '' else (customer.primary.octets + '.' + vm_vars.spl.spldpl.nic1.gtw_octet) if vm_vars.spl.spldpl.nic1.gtw_octet != '' else '' }}"
   netmask1: "{{ vm_vars.spl.spldpl.nic1.netmask }}"
   network1: "{{ vm_vars.spl.spldpl.nic1.netname if vm_vars.spl.spldpl.nic1.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.spl.spldpl.nic1.netbase) if vm_vars.spl.spldpl.nic1.netbase != '' else '' }}"
+  ipv6_pool1: "{{ vm_vars.spl.spldpl.nic1.ipv6_pool | default([]) }}"
+  ipv6_gtw1: "{{ vm_vars.spl.spldpl.nic1.ipv6_gtw | default('') }}"
 
   intname2: "{{ vm_vars.spl.spldpl.nic2.intname }}"
   ippool2: "{{ vm_vars.spl.spldpl.nic2.ip_pool | default([]) }}"
@@ -29,3 +31,5 @@ netconfig:
   gateway2: "{{ vm_vars.spl.spldpl.nic2.gtw if vm_vars.spl.spldpl.nic2.gtw != '' else (customer.primary.octets + '.' + vm_vars.spl.spldpl.nic2.gtw_octet) if vm_vars.spl.spldpl.nic2.gtw_octet != '' else '' }}"
   netmask2: "{{ vm_vars.spl.spldpl.nic2.netmask }}"
   network2: "{{ vm_vars.spl.spldpl.nic2.netname if vm_vars.spl.spldpl.nic2.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.spl.spldpl.nic2.netbase) if vm_vars.spl.spldpl.nic2.netbase != '' else '' }}"
+  ipv6_pool2: "{{ vm_vars.spl.spldpl.nic2.ipv6_pool | default([]) }}"
+  ipv6_gtw2: "{{ vm_vars.spl.spldpl.nic2.ipv6_gtw | default('') }}"

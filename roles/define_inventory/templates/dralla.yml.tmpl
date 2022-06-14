@@ -62,6 +62,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.em7.em7db.nic1.netmask if (environment_definition.drvm_setting.em7.em7db.nic1.netmask is defined and environment_definition.drvm_setting.em7.em7db.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.em7.em7db.nic1.ipv6_pool if (environment_definition.drvm_setting.em7.em7db.nic1.ipv6_pool is defined and environment_definition.drvm_setting.em7.em7db.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.em7.em7db.nic1.ipv6_gtw if (environment_definition.drvm_setting.em7.em7db.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.em7.em7db.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.em7.em7db.nic1.netname if (environment_definition.drvm_setting.em7.em7db.nic1.netname is defined and environment_definition.drvm_setting.em7.em7db.nic1.netname != none) else '' }}"
 
@@ -89,6 +95,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.em7.em7db.nic2.netmask if (environment_definition.drvm_setting.em7.em7db.nic2.netmask is defined and environment_definition.drvm_setting.em7.em7db.nic2.netmask != none) else '255.255.255.252' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.em7.em7db.nic2.ipv6_pool if (environment_definition.drvm_setting.em7.em7db.nic2.ipv6_pool is defined and environment_definition.drvm_setting.em7.em7db.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.em7.em7db.nic2.ipv6_gtw if (environment_definition.drvm_setting.em7.em7db.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.em7.em7db.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.em7.em7db.nic2.netname if (environment_definition.drvm_setting.em7.em7db.nic2.netname is defined and environment_definition.drvm_setting.em7.em7db.nic2.netname != none) else '' }}"
@@ -151,6 +163,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.em7.em7dc.nic1.netmask if (environment_definition.drvm_setting.em7.em7dc.nic1.netmask is defined and environment_definition.drvm_setting.em7.em7dc.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.em7.em7dc.nic1.ipv6_pool if (environment_definition.drvm_setting.em7.em7dc.nic1.ipv6_pool is defined and environment_definition.drvm_setting.em7.em7dc.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.em7.em7dc.nic1.ipv6_gtw if (environment_definition.drvm_setting.em7.em7dc.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.em7.em7dc.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.em7.em7dc.nic1.netname if (environment_definition.drvm_setting.em7.em7dc.nic1.netname is defined and environment_definition.drvm_setting.em7.em7dc.nic1.netname != none) else '' }}"
 
@@ -178,6 +196,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.em7.em7dc.nic2.netmask if (environment_definition.drvm_setting.em7.em7dc.nic2.netmask is defined and environment_definition.drvm_setting.em7.em7dc.nic2.netmask != none) else '255.255.255.224' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.em7.em7dc.nic2.ipv6_pool if (environment_definition.drvm_setting.em7.em7dc.nic2.ipv6_pool is defined and environment_definition.drvm_setting.em7.em7dc.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.em7.em7dc.nic2.ipv6_gtw if (environment_definition.drvm_setting.em7.em7dc.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.em7.em7dc.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.em7.em7dc.nic2.netname if (environment_definition.drvm_setting.em7.em7dc.nic2.netname is defined and environment_definition.drvm_setting.em7.em7dc.nic2.netname != none) else '' }}"
@@ -240,6 +264,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.em7.em7mc.nic1.netmask if (environment_definition.drvm_setting.em7.em7mc.nic1.netmask is defined and environment_definition.drvm_setting.em7.em7mc.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.em7.em7mc.nic1.ipv6_pool if (environment_definition.drvm_setting.em7.em7mc.nic1.ipv6_pool is defined and environment_definition.drvm_setting.em7.em7mc.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.em7.em7mc.nic1.ipv6_gtw if (environment_definition.drvm_setting.em7.em7mc.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.em7.em7mc.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.em7.em7mc.nic1.netname if (environment_definition.drvm_setting.em7.em7mc.nic1.netname is defined and environment_definition.drvm_setting.em7.em7mc.nic1.netname != none) else '' }}"
 
@@ -267,6 +297,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.em7.em7mc.nic2.netmask if (environment_definition.drvm_setting.em7.em7mc.nic2.netmask is defined and environment_definition.drvm_setting.em7.em7mc.nic2.netmask != none) else '' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.em7.em7mc.nic2.ipv6_pool if (environment_definition.drvm_setting.em7.em7mc.nic2.ipv6_pool is defined and environment_definition.drvm_setting.em7.em7mc.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.em7.em7mc.nic2.ipv6_gtw if (environment_definition.drvm_setting.em7.em7mc.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.em7.em7mc.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.em7.em7mc.nic2.netname if (environment_definition.drvm_setting.em7.em7mc.nic2.netname is defined and environment_definition.drvm_setting.em7.em7mc.nic2.netname != none) else '' }}"
@@ -329,6 +365,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.em7.em7prt.nic1.netmask if (environment_definition.drvm_setting.em7.em7prt.nic1.netmask is defined and environment_definition.drvm_setting.em7.em7prt.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.em7.em7prt.nic1.ipv6_pool if (environment_definition.drvm_setting.em7.em7prt.nic1.ipv6_pool is defined and environment_definition.drvm_setting.em7.em7prt.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.em7.em7prt.nic1.ipv6_gtw if (environment_definition.drvm_setting.em7.em7prt.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.em7.em7prt.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.em7.em7prt.nic1.netname if (environment_definition.drvm_setting.em7.em7prt.nic1.netname is defined and environment_definition.drvm_setting.em7.em7prt.nic1.netname != none) else '' }}"
 
@@ -356,6 +398,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.em7.em7prt.nic2.netmask if (environment_definition.drvm_setting.em7.em7prt.nic2.netmask is defined and environment_definition.drvm_setting.em7.em7prt.nic2.netmask != none) else '255.255.255.224' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.em7.em7prt.nic2.ipv6_pool if (environment_definition.drvm_setting.em7.em7prt.nic2.ipv6_pool is defined and environment_definition.drvm_setting.em7.em7prt.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.em7.em7prt.nic2.ipv6_gtw if (environment_definition.drvm_setting.em7.em7prt.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.em7.em7prt.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.em7.em7prt.nic2.netname if (environment_definition.drvm_setting.em7.em7prt.nic2.netname is defined and environment_definition.drvm_setting.em7.em7prt.nic2.netname != none) else '' }}"
@@ -423,6 +471,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.spl.spldpl.nic1.netmask if (environment_definition.drvm_setting.spl.spldpl.nic1.netmask is defined and environment_definition.drvm_setting.spl.spldpl.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.spl.spldpl.nic1.ipv6_pool if (environment_definition.drvm_setting.spl.spldpl.nic1.ipv6_pool is defined and environment_definition.drvm_setting.spl.spldpl.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.spl.spldpl.nic1.ipv6_gtw if (environment_definition.drvm_setting.spl.spldpl.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.spl.spldpl.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.spl.spldpl.nic1.netname if (environment_definition.drvm_setting.spl.spldpl.nic1.netname is defined and environment_definition.drvm_setting.spl.spldpl.nic1.netname != none) else '' }}"
 
@@ -450,6 +504,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.spl.spldpl.nic2.netmask if (environment_definition.drvm_setting.spl.spldpl.nic2.netmask is defined and environment_definition.drvm_setting.spl.spldpl.nic2.netmask != none) else '' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.spl.spldpl.nic2.ipv6_pool if (environment_definition.drvm_setting.spl.spldpl.nic2.ipv6_pool is defined and environment_definition.drvm_setting.spl.spldpl.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.spl.spldpl.nic2.ipv6_gtw if (environment_definition.drvm_setting.spl.spldpl.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.spl.spldpl.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.spl.spldpl.nic2.netname if (environment_definition.drvm_setting.spl.spldpl.nic2.netname is defined and environment_definition.drvm_setting.spl.spldpl.nic2.netname != none) else '' }}"
@@ -512,6 +572,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.spl.splind.nic1.netmask if (environment_definition.drvm_setting.spl.splind.nic1.netmask is defined and environment_definition.drvm_setting.spl.splind.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.spl.splind.nic1.ipv6_pool if (environment_definition.drvm_setting.spl.splind.nic1.ipv6_pool is defined and environment_definition.drvm_setting.spl.splind.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.spl.splind.nic1.ipv6_gtw if (environment_definition.drvm_setting.spl.splind.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.spl.splind.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.spl.splind.nic1.netname if (environment_definition.drvm_setting.spl.splind.nic1.netname is defined and environment_definition.drvm_setting.spl.splind.nic1.netname != none) else '' }}"
 
@@ -539,6 +605,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.spl.splind.nic2.netmask if (environment_definition.drvm_setting.spl.splind.nic2.netmask is defined and environment_definition.drvm_setting.spl.splind.nic2.netmask != none) else '' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.spl.splind.nic2.ipv6_pool if (environment_definition.drvm_setting.spl.splind.nic2.ipv6_pool is defined and environment_definition.drvm_setting.spl.splind.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.spl.splind.nic2.ipv6_gtw if (environment_definition.drvm_setting.spl.splind.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.spl.splind.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.spl.splind.nic2.netname if (environment_definition.drvm_setting.spl.splind.nic2.netname is defined and environment_definition.drvm_setting.spl.splind.nic2.netname != none) else '' }}"
@@ -601,6 +673,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.spl.splmas.nic1.netmask if (environment_definition.drvm_setting.spl.splmas.nic1.netmask is defined and environment_definition.drvm_setting.spl.splmas.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.spl.splmas.nic1.ipv6_pool if (environment_definition.drvm_setting.spl.splmas.nic1.ipv6_pool is defined and environment_definition.drvm_setting.spl.splmas.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.spl.splmas.nic1.ipv6_gtw if (environment_definition.drvm_setting.spl.splmas.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.spl.splmas.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.spl.splmas.nic1.netname if (environment_definition.drvm_setting.spl.splmas.nic1.netname is defined and environment_definition.drvm_setting.spl.splmas.nic1.netname != none) else '' }}"
 
@@ -628,6 +706,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.spl.splmas.nic2.netmask if (environment_definition.drvm_setting.spl.splmas.nic2.netmask is defined and environment_definition.drvm_setting.spl.splmas.nic2.netmask != none) else '' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.spl.splmas.nic2.ipv6_pool if (environment_definition.drvm_setting.spl.splmas.nic2.ipv6_pool is defined and environment_definition.drvm_setting.spl.splmas.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.spl.splmas.nic2.ipv6_gtw if (environment_definition.drvm_setting.spl.splmas.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.spl.splmas.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.spl.splmas.nic2.netname if (environment_definition.drvm_setting.spl.splmas.nic2.netname is defined and environment_definition.drvm_setting.spl.splmas.nic2.netname != none) else '' }}"
@@ -690,6 +774,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.spl.splsrc.nic1.netmask if (environment_definition.drvm_setting.spl.splsrc.nic1.netmask is defined and environment_definition.drvm_setting.spl.splsrc.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.spl.splsrc.nic1.ipv6_pool if (environment_definition.drvm_setting.spl.splsrc.nic1.ipv6_pool is defined and environment_definition.drvm_setting.spl.splsrc.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.spl.splsrc.nic1.ipv6_gtw if (environment_definition.drvm_setting.spl.splsrc.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.spl.splsrc.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.spl.splsrc.nic1.netname if (environment_definition.drvm_setting.spl.splsrc.nic1.netname is defined and environment_definition.drvm_setting.spl.splsrc.nic1.netname != none) else '' }}"
 
@@ -717,6 +807,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.spl.splsrc.nic2.netmask if (environment_definition.drvm_setting.spl.splsrc.nic2.netmask is defined and environment_definition.drvm_setting.spl.splsrc.nic2.netmask != none) else '' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.spl.splsrc.nic2.ipv6_pool if (environment_definition.drvm_setting.spl.splsrc.nic2.ipv6_pool is defined and environment_definition.drvm_setting.spl.splsrc.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.spl.splsrc.nic2.ipv6_gtw if (environment_definition.drvm_setting.spl.splsrc.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.spl.splsrc.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.spl.splsrc.nic2.netname if (environment_definition.drvm_setting.spl.splsrc.nic2.netname is defined and environment_definition.drvm_setting.spl.splsrc.nic2.netname != none) else '' }}"
@@ -779,6 +875,12 @@ drvm_vars:
       # Netmask
       netmask: "{{ environment_definition.drvm_setting.lnxjmp.nic1.netmask if (environment_definition.drvm_setting.lnxjmp.nic1.netmask is defined and environment_definition.drvm_setting.lnxjmp.nic1.netmask != none) else '255.255.255.192' }}"
 
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.drvm_setting.lnxjmp.nic1.ipv6_pool if (environment_definition.drvm_setting.lnxjmp.nic1.ipv6_pool is defined and environment_definition.drvm_setting.lnxjmp.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.drvm_setting.lnxjmp.nic1.ipv6_gtw if (environment_definition.drvm_setting.lnxjmp.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.lnxjmp.nic1.ipv6_gtw != none) else '' }}"
+
       # Net Name
       netname: "{{ environment_definition.drvm_setting.lnxjmp.nic1.netname if (environment_definition.drvm_setting.lnxjmp.nic1.netname is defined and environment_definition.drvm_setting.lnxjmp.nic1.netname != none) else '' }}"
 
@@ -806,6 +908,12 @@ drvm_vars:
 
       # Netmask
       netmask: "{{ environment_definition.drvm_setting.lnxjmp.nic2.netmask if (environment_definition.drvm_setting.lnxjmp.nic2.netmask is defined and environment_definition.drvm_setting.lnxjmp.nic2.netmask != none) else '255.255.255.224' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.drvm_setting.lnxjmp.nic2.ipv6_pool if (environment_definition.drvm_setting.lnxjmp.nic2.ipv6_pool is defined and environment_definition.drvm_setting.lnxjmp.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.drvm_setting.lnxjmp.nic2.ipv6_gtw if (environment_definition.drvm_setting.lnxjmp.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.lnxjmp.nic2.ipv6_gtw != none) else '' }}"
 
       # Net Name
       netname: "{{ environment_definition.drvm_setting.lnxjmp.nic2.netname if (environment_definition.drvm_setting.lnxjmp.nic2.netname is defined and environment_definition.drvm_setting.lnxjmp.nic2.netname != none) else '' }}"
@@ -868,6 +976,12 @@ drvm_vars:
       # Netmask
       netmask: "{{ environment_definition.drvm_setting.rly.nic1.netmask if (environment_definition.drvm_setting.rly.nic1.netmask is defined and environment_definition.drvm_setting.rly.nic1.netmask != none) else '255.255.255.192' }}"
 
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.drvm_setting.rly.nic1.ipv6_pool if (environment_definition.drvm_setting.rly.nic1.ipv6_pool is defined and environment_definition.drvm_setting.rly.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.drvm_setting.rly.nic1.ipv6_gtw if (environment_definition.drvm_setting.rly.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.rly.nic1.ipv6_gtw != none) else '' }}"
+
       # Net Name
       netname: "{{ environment_definition.drvm_setting.rly.nic1.netname if (environment_definition.drvm_setting.rly.nic1.netname is defined and environment_definition.drvm_setting.rly.nic1.netname != none) else '' }}"
 
@@ -895,6 +1009,12 @@ drvm_vars:
 
       # Netmask
       netmask: "{{ environment_definition.drvm_setting.rly.nic2.netmask if (environment_definition.drvm_setting.rly.nic2.netmask is defined and environment_definition.drvm_setting.rly.nic2.netmask != none) else '255.255.255.224' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.drvm_setting.rly.nic2.ipv6_pool if (environment_definition.drvm_setting.rly.nic2.ipv6_pool is defined and environment_definition.drvm_setting.rly.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.drvm_setting.rly.nic2.ipv6_gtw if (environment_definition.drvm_setting.rly.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.rly.nic2.ipv6_gtw != none) else '' }}"
 
       # Net Name
       netname: "{{ environment_definition.drvm_setting.rly.nic2.netname if (environment_definition.drvm_setting.rly.nic2.netname is defined and environment_definition.drvm_setting.rly.nic2.netname != none) else '' }}"
@@ -959,6 +1079,12 @@ drvm_vars:
       # Netmask
       netmask: "{{ environment_definition.drvm_setting.atarly.nic1.netmask if (environment_definition.drvm_setting.atarly.nic1.netmask is defined and environment_definition.drvm_setting.atarly.nic1.netmask != none) else '255.255.255.192' }}"
 
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.drvm_setting.atarly.nic1.ipv6_pool if (environment_definition.drvm_setting.atarly.nic1.ipv6_pool is defined and environment_definition.drvm_setting.atarly.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.drvm_setting.atarly.nic1.ipv6_gtw if (environment_definition.drvm_setting.atarly.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.atarly.nic1.ipv6_gtw != none) else '' }}"
+
       # Net Name
       netname: "{{ environment_definition.drvm_setting.atarly.nic1.netname if (environment_definition.drvm_setting.atarly.nic1.netname is defined and environment_definition.drvm_setting.atarly.nic1.netname != none) else '' }}"
 
@@ -986,6 +1112,12 @@ drvm_vars:
 
       # Netmask
       netmask: "{{ environment_definition.drvm_setting.atarly.nic2.netmask if (environment_definition.drvm_setting.atarly.nic2.netmask is defined and environment_definition.drvm_setting.atarly.nic2.netmask != none) else '255.255.255.224' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.drvm_setting.atarly.nic2.ipv6_pool if (environment_definition.drvm_setting.atarly.nic2.ipv6_pool is defined and environment_definition.drvm_setting.atarly.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.drvm_setting.atarly.nic2.ipv6_gtw if (environment_definition.drvm_setting.atarly.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.atarly.nic2.ipv6_gtw != none) else '' }}"
 
       # Net Name
       netname: "{{ environment_definition.drvm_setting.atarly.nic2.netname if (environment_definition.drvm_setting.atarly.nic2.netname is defined and environment_definition.drvm_setting.atarly.nic2.netname != none) else '' }}"
@@ -1046,6 +1178,12 @@ drvm_vars:
         # Netmask
         netmask: ''
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.csr.nic1.ipv6_pool if (environment_definition.drvm_setting.infra.csr.nic1.ipv6_pool is defined and environment_definition.drvm_setting.infra.csr.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.csr.nic1.ipv6_gtw if (environment_definition.drvm_setting.infra.csr.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.infra.csr.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.csr.nic1.netname if (environment_definition.drvm_setting.infra.csr.nic1.netname is defined and environment_definition.drvm_setting.infra.csr.nic1.netname != none) else '' }}"
 
@@ -1073,6 +1211,12 @@ drvm_vars:
 
         # Netmask
         netmask: ''
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.csr.nic2.ipv6_pool if (environment_definition.drvm_setting.infra.csr.nic2.ipv6_pool is defined and environment_definition.drvm_setting.infra.csr.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.csr.nic2.ipv6_gtw if (environment_definition.drvm_setting.infra.csr.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.infra.csr.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.csr.nic2.netname if (environment_definition.drvm_setting.infra.csr.nic2.netname is defined and environment_definition.drvm_setting.infra.csr.nic1.netname != none) else '' }}"
@@ -1102,6 +1246,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.infra.csr.nic3.netmask if (environment_definition.drvm_setting.infra.csr.nic3.netmask is defined and environment_definition.drvm_setting.infra.csr.nic3.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.csr.nic3.ipv6_pool if (environment_definition.drvm_setting.infra.csr.nic3.ipv6_pool is defined and environment_definition.drvm_setting.infra.csr.nic3.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.csr.nic3.ipv6_gtw if (environment_definition.drvm_setting.infra.csr.nic3.ipv6_gtw is defined and environment_definition.drvm_setting.infra.csr.nic3.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.csr.nic3.netname if (environment_definition.drvm_setting.infra.csr.nic3.netname is defined and environment_definition.drvm_setting.infra.csr.nic3.netname != none) else '' }}"
 
@@ -1130,6 +1280,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.infra.csr.nic4.netmask if (environment_definition.drvm_setting.infra.csr.nic4.netmask is defined and environment_definition.drvm_setting.infra.csr.nic4.netmask != none) else '255.255.255.224' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.csr.nic4.ipv6_pool if (environment_definition.drvm_setting.infra.csr.nic4.ipv6_pool is defined and environment_definition.drvm_setting.infra.csr.nic4.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.csr.nic4.ipv6_gtw if (environment_definition.drvm_setting.infra.csr.nic4.ipv6_gtw is defined and environment_definition.drvm_setting.infra.csr.nic4.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.csr.nic4.netname if (environment_definition.drvm_setting.infra.csr.nic4.netname is defined and environment_definition.drvm_setting.infra.csr.nic4.netname != none) else '' }}"
 
@@ -1157,6 +1313,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.infra.csr.nic5.netmask if (environment_definition.drvm_setting.infra.csr.nic5.netmask is defined and environment_definition.drvm_setting.infra.csr.nic5.netmask != none) else '255.255.255.224' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.csr.nic5.ipv6_pool if (environment_definition.drvm_setting.infra.csr.nic5.ipv6_pool is defined and environment_definition.drvm_setting.infra.csr.nic5.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.csr.nic5.ipv6_gtw if (environment_definition.drvm_setting.infra.csr.nic5.ipv6_gtw is defined and environment_definition.drvm_setting.infra.csr.nic5.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.csr.nic5.netname if (environment_definition.drvm_setting.infra.csr.nic5.netname is defined and environment_definition.drvm_setting.infra.csr.nic5.netname != none) else '' }}"
@@ -1210,6 +1372,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.infra.nsvpx.nic1.netmask if (environment_definition.drvm_setting.infra.nsvpx.nic1.netmask is defined and environment_definition.drvm_setting.infra.nsvpx.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.nsvpx.nic1.ipv6_pool if (environment_definition.drvm_setting.infra.nsvpx.nic1.ipv6_pool is defined and environment_definition.drvm_setting.infra.nsvpx.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.nsvpx.nic1.ipv6_gtw if (environment_definition.drvm_setting.infra.nsvpx.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.infra.nsvpx.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.nsvpx.nic1.netname if (environment_definition.drvm_setting.infra.nsvpx.nic1.netname is defined and environment_definition.drvm_setting.infra.nsvpx.nic1.netname != none) else '' }}"
 
@@ -1237,6 +1405,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.infra.nsvpx.nic2.netmask if (environment_definition.drvm_setting.infra.nsvpx.nic2.netmask is defined and environment_definition.drvm_setting.infra.nsvpx.nic2.netmask != none) else '' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.nsvpx.nic2.ipv6_pool if (environment_definition.drvm_setting.infra.nsvpx.nic2.ipv6_pool is defined and environment_definition.drvm_setting.infra.nsvpx.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.nsvpx.nic2.ipv6_gtw if (environment_definition.drvm_setting.infra.nsvpx.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.infra.nsvpx.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.nsvpx.nic2.netname if (environment_definition.drvm_setting.infra.nsvpx.nic2.netname is defined and environment_definition.drvm_setting.infra.nsvpx.nic2.netname != none) else '' }}"
@@ -1302,6 +1476,12 @@ drvm_vars:
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.infra.winjmp.nic1.netmask if (environment_definition.drvm_setting.infra.winjmp.nic1.netmask is defined and environment_definition.drvm_setting.infra.winjmp.nic1.netmask != none) else '255.255.255.192' }}"
 
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.winjmp.nic1.ipv6_pool if (environment_definition.drvm_setting.infra.winjmp.nic1.ipv6_pool is defined and environment_definition.drvm_setting.infra.winjmp.nic1.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.winjmp.nic1.ipv6_gtw if (environment_definition.drvm_setting.infra.winjmp.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.infra.winjmp.nic1.ipv6_gtw != none) else '' }}"
+
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.winjmp.nic1.netname if (environment_definition.drvm_setting.infra.winjmp.nic1.netname is defined and environment_definition.drvm_setting.infra.winjmp.nic1.netname != none) else '' }}"
 
@@ -1331,6 +1511,12 @@ drvm_vars:
 
         # Netmask
         netmask: "{{ environment_definition.drvm_setting.infra.winjmp.nic2.netmask if (environment_definition.drvm_setting.infra.winjmp.nic2.netmask is defined and environment_definition.drvm_setting.infra.winjmp.nic2.netmask != none) else '255.255.255.224' }}"
+
+        # IPV6 pool
+        ipv6_pool: {{ environment_definition.drvm_setting.infra.winjmp.nic2.ipv6_pool if (environment_definition.drvm_setting.infra.winjmp.nic2.ipv6_pool is defined and environment_definition.drvm_setting.infra.winjmp.nic2.ipv6_pool != none) else [] }}
+
+        # IPV6 Gateway
+        ipv6_gtw: "{{ environment_definition.drvm_setting.infra.winjmp.nic2.ipv6_gtw if (environment_definition.drvm_setting.infra.winjmp.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.infra.winjmp.nic2.ipv6_gtw != none) else '' }}"
 
         # Net Name
         netname: "{{ environment_definition.drvm_setting.infra.winjmp.nic2.netname if (environment_definition.drvm_setting.infra.winjmp.nic2.netname is defined and environment_definition.drvm_setting.infra.winjmp.nic2.netname != none) else '' }}"

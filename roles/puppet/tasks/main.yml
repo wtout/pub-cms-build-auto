@@ -30,11 +30,9 @@
           - pp_vm_creds1 is failed
           - pp_vm_creds1.msg is search('Invalid/incorrect username/password')
       when:
-        - ansible_ssh_pass != postppp
         - inventory_hostname is not search('em7') or customer.version.release is search('9.2')
     - include_tasks: task_em7_check_license.yml
       when:
-        - ansible_ssh_pass != postppp
         - group_names | select('regex', 'stack|dr') | list | length >=1
         - inventory_hostname is search('em7')
     - block:
