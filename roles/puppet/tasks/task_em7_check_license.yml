@@ -14,17 +14,18 @@
       warn: no
     check_mode: no
     ignore_errors: yes
+    run_once: yes
   - name: define status_message
     ansible.builtin.set_fact:
       status_message: "{{ status_message|default([]) | union([db_item + ': ' + reg_lic_state.results|selectattr('db_item','equalto',db_item)|map(attribute='stdout')|list|join if reg_lic_state.results|selectattr('db_item','equalto',db_item)|select('search', 'stdout')|length > 0 else reg_lic_state.results|selectattr('db_item','equalto',db_item)|map(attribute='msg')|list|join]) }}"
     loop: "{{ db_list }}"
     loop_control:
       loop_var: db_item
+    run_once: yes
   - ansible.builtin.assert:
       that:
         - status_message|default([]) == []
       fail_msg: "{{ status_message|default([]) }}"
-  run_once: yes
   vars:
     db_list: "{{ groups['em7db']|default(groups['em7'])|union(groups['drem7db']|default([])) }}"
   tags: puppet
