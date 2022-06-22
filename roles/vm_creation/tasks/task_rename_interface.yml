@@ -29,5 +29,5 @@
     when: int_file.stat.exists
   become: "{{ true if ansible_user != 'root' else false }}"
   when:
-    - netconfig.ipaddress2 != ''
+    - netconfig.nic2.ipaddress != ''
   tags: vm_creation

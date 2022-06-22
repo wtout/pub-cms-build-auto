@@ -9,32 +9,32 @@ ova_names:
 winjmp:
   interface_configuration:
     - name: Rename interface 1
-      command: interface set interface name = "{{ netconfig.default_netname1 }}" newname = "{{ netconfig.intname1 }}"
+      command: interface set interface name = "{{ netconfig.nic1.default_netname }}" newname = "{{ netconfig.nic1.intname }}"
       shell: c:\windows\system32\netsh.exe
       ignore_errors: yes
 
     - name: Set IP Address for QS Head-end connection
-      command: interface ip set address "{{ netconfig.intname1 }}" static {{ netconfig.ipaddress1 }} {{ netconfig.netmask1 }}
+      command: interface ip set address "{{ netconfig.nic1.intname }}" static {{ netconfig.nic1.ipaddress }} {{ netconfig.nic1.netmask }}
       shell: c:\windows\system32\netsh.exe
       ignore_errors: no
 
     - name: Set primary DNS entry for interface 1
-      command: interface ip set dns "{{ netconfig.intname1 }}" static {{ sysconfig.secondary.dns_servers[0] if 'dr' in group_names else sysconfig.primary.dns_servers[0] }} primary
+      command: interface ip set dns "{{ netconfig.nic1.intname }}" static {{ sysconfig.secondary.dns_servers[0] if 'dr' in group_names else sysconfig.primary.dns_servers[0] }} primary
       shell: c:\windows\system32\netsh.exe
       ignore_errors: no
 
     - name: Add secondary DNS entry for interface 1
-      command: interface ip add dns "{{ netconfig.intname1 }}" {{ sysconfig.secondary.dns_servers[1] if 'dr' in group_names else sysconfig.primary.dns_servers[1] }} index=2
+      command: interface ip add dns "{{ netconfig.nic1.intname }}" {{ sysconfig.secondary.dns_servers[1] if 'dr' in group_names else sysconfig.primary.dns_servers[1] }} index=2
       shell: c:\windows\system32\netsh.exe
       ignore_errors: yes
 
     - name: Rename interface 2
-      command: interface set interface name = "{{ netconfig.default_netname2 }}" newname = "{{ netconfig.intname2 }}"
+      command: interface set interface name = "{{ netconfig.nic2.default_netname }}" newname = "{{ netconfig.nic2.intname }}"
       shell: c:\windows\system32\netsh.exe
       ignore_errors: yes
 
     - name: Set IP address for interface 2
-      command: interface ip set address "{{ netconfig.intname2 }}" static {{ netconfig.ipaddress2 }} {{ netconfig.netmask2 }} {{ netconfig.gateway2 }}
+      command: interface ip set address "{{ netconfig.nic2.intname }}" static {{ netconfig.nic2.ipaddress }} {{ netconfig.nic2.netmask }} {{ netconfig.nic2.gateway }}
       shell: c:\windows\system32\netsh.exe
       ignore_errors: no
 

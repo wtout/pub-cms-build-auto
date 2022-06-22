@@ -12,7 +12,7 @@
       vm_username: "{{ credentials.username }}"
       vm_password: "{{ credentials.password }}"
       vm_shell: c:\windows\system32\route.exe
-      vm_shell_args: "add {{ route_ip_item.ip }} mask {{ route_ip_item.netmask }} {{ netconfig.gateway1 }} metric 1 -p"
+      vm_shell_args: "add {{ route_ip_item.ip }} mask {{ route_ip_item.netmask }} {{ netconfig.nic1.gateway }} metric 1 -p"
       validate_certs: no
       wait_for_process: yes
     register: add_routes

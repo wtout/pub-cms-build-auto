@@ -16,7 +16,7 @@
 
   - block:
     - set_fact:
-        ipaddress1: "{{ netconfig.ippool1[index|int - 1] if netconfig.ippool1 != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.octetpool1[index|int - 1]|string if (netconfig.octetpool1 != [] and index|int <= netconfig.octetpool1|length) else '' }}"
+        ipaddress1: "{{ netconfig.nic1.ippool[index|int - 1] if netconfig.nic1.ippool != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic1.octetpool[index|int - 1]|string if (netconfig.nic1.octetpool != [] and index|int <= netconfig.nic1.octetpool|length) else '' }}"
       vars:
         index: "{{ inventory_hostname[-2:] }}"
 

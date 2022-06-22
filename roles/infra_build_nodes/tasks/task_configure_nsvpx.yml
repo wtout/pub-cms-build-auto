@@ -17,13 +17,13 @@
       datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
       cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
       networks:
-        - name: "{{ netconfig.network1 }}"
+        - name: "{{ netconfig.nic1.network }}"
           device_type: e1000
-        - name: "{{ netconfig.network2 }}"
+        - name: "{{ netconfig.nic2.network }}"
           device_type: e1000
       advanced_settings:
         - key: 'machine.id'
-          value: "ip={{ netconfig.ipaddress1 }}&netmask={{ netconfig.netmask1 }}&gateway={{ netconfig.gateway1 }}"
+          value: "ip={{ netconfig.nic1.ipaddress }}&netmask={{ netconfig.nic1.netmask }}&gateway={{ netconfig.nic1.gateway }}"
       customization:
         dns_servers: "{{ sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers }}"
         hostname: "{{ vm.name }}"
@@ -40,7 +40,7 @@
     register: power
 
   - name: Define Netscaler key
-    shell: ssh-keyscan -t rsa -T 240 {{ netconfig.ipaddress1 }}
+    shell: ssh-keyscan -t rsa -T 240 {{ netconfig.nic1.ipaddress }}
     register: host_key
     until: host_key.stdout != ''
     retries: 7
@@ -67,12 +67,12 @@
 
   - name: Add Netscaler key to known_hosts
     known_hosts:
-      name: "{{ netconfig.ipaddress1 }}"
+      name: "{{ netconfig.nic1.ipaddress }}"
       key: "{{ host_key.stdout }}"
       state: present
 
   - name: Check credentials
-    shell: sshpass -p {{ credentials.default_password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'exit'
+    shell: sshpass -p {{ credentials.default_password }} ssh {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'exit'
     register: login_result
     ignore_errors: yes
     no_log: true
@@ -90,7 +90,7 @@
 
   - name: Retry add Netscaler key to known_hosts
     known_hosts:
-      name: "{{ netconfig.ipaddress1 }}"
+      name: "{{ netconfig.nic1.ipaddress }}"
       key: "{{ host_key.stdout }}"
       state: present
     when: login_result.rc == 6
@@ -109,7 +109,7 @@
     vars:
       conf_file: files/{{ vm.name }}.conf
     uri:
-      url: "http://{{ netconfig.ipaddress1 }}/nitro/v1/config/systemfile"
+      url: "http://{{ netconfig.nic1.ipaddress }}/nitro/v1/config/systemfile"
       method: POST
       status_code: 201
       return_content: yes
@@ -140,7 +140,7 @@
     when: upload is succeeded
 
   - name: read sshd process ID
-    ansible.builtin.shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell cat /var/run/sshd.pid 2>/dev/null" | tail -n 2
+    ansible.builtin.shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell cat /var/run/sshd.pid 2>/dev/null" | tail -n 2
     register: sshd_pid
     check_mode: no
     no_log: yes
@@ -151,8 +151,8 @@
 
   - name: Apply ssh configuration
     shell: |
-      sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell \"grep '# SSH Hardending' /etc/sshd_config &>/dev/null || echo -e '\n\n# SSH Hardending' >> /etc/sshd_config; grep 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' /etc/sshd_config &>/dev/null || echo -e 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' >> /etc/sshd_config; grep 'MACs hmac-sha2-256,hmac-sha2-512' /etc/sshd_config &>/dev/null || echo -e 'MACs hmac-sha2-256,hmac-sha2-512' >> /etc/sshd_config; grep 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' /etc/sshd_config &>/dev/null || echo -e 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' >> /etc/sshd_config\""
-      sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} "shell \"cp -f /etc/sshd_config /nsconfig/; kill -1 {{ sshd_pid.stdout_lines|first }}\""
+      sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell \"grep '# SSH Hardending' /etc/sshd_config &>/dev/null || echo -e '\n\n# SSH Hardending' >> /etc/sshd_config; grep 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' /etc/sshd_config &>/dev/null || echo -e 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' >> /etc/sshd_config; grep 'MACs hmac-sha2-256,hmac-sha2-512' /etc/sshd_config &>/dev/null || echo -e 'MACs hmac-sha2-256,hmac-sha2-512' >> /etc/sshd_config; grep 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' /etc/sshd_config &>/dev/null || echo -e 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' >> /etc/sshd_config\""
+      sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell \"cp -f /etc/sshd_config /nsconfig/; kill -1 {{ sshd_pid.stdout_lines|first }}\""
     register: ssh_config
     no_log: yes
     ignore_errors: true
@@ -169,7 +169,7 @@
 
   - block:
     - name: Apply Netscaler configuration
-      shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
+      shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'batch -f /tmp/config'
       register: config01
       no_log: yes
       ignore_errors: true
@@ -185,7 +185,7 @@
 
   - block:
     - name: Apply Netscaler configuration
-      shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'batch -f /tmp/config'
+      shell: sshpass -p {{ password }} ssh {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'batch -f /tmp/config'
       register: config02
       no_log: yes
       ignore_errors: true
@@ -201,7 +201,7 @@
 
   - name: Define Netscaler serial number
     block:
-    - shell: sshpass -p {{ credentials.password }} ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" {{ credentials.username }}@{{ netconfig.ipaddress1 }} 'shell lmutil lmhostid'
+    - shell: sshpass -p {{ credentials.password }} ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'shell lmutil lmhostid'
       register: hostid
       no_log: yes
     - set_fact:

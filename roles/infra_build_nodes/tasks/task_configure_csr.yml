@@ -5,36 +5,36 @@
     - name: define csr NICs
       ansible.builtin.set_fact:
         nic1:
-          - name: "{{ netconfig.network1 }}"
-            ip: "{{ netconfig.ipaddress1 }}"
-            netmask: "{{ netconfig.netmask1 }}"
-            gateway: "{{ netconfig.gateway1 }}"
+          - name: "{{ netconfig.nic1.network }}"
+            ip: "{{ netconfig.nic1.ipaddress }}"
+            netmask: "{{ netconfig.nic1.netmask }}"
+            gateway: "{{ netconfig.nic1.gateway }}"
             device_type: vmxnet3
         nic2:
-          - name: "{{ netconfig.network2 }}"
-            ip: "{{ netconfig.ipaddress2 }}"
-            netmask: "{{ netconfig.netmask2 }}"
-            gateway: "{{ netconfig.gateway2 }}"
+          - name: "{{ netconfig.nic2.network }}"
+            ip: "{{ netconfig.nic2.ipaddress }}"
+            netmask: "{{ netconfig.nic2.netmask }}"
+            gateway: "{{ netconfig.nic2.gateway }}"
             device_type: vmxnet3
         nic3:
-          - name: "{{ netconfig.network3 }}"
-            ip: "{{ netconfig.ipaddress3 }}"
-            netmask: "{{ netconfig.netmask3 }}"
-            gateway: "{{ netconfig.gateway3 }}"
+          - name: "{{ netconfig.nic3.network }}"
+            ip: "{{ netconfig.nic3.ipaddress }}"
+            netmask: "{{ netconfig.nic3.netmask }}"
+            gateway: "{{ netconfig.nic3.gateway }}"
             device_type: vmxnet3
         nic4:
-          - name: "{{ netconfig.network4 }}"
-            ip: "{{ netconfig.ipaddress4 }}"
-            netmask: "{{ netconfig.netmask4 }}"
-            gateway: "{{ netconfig.gateway4 }}"
+          - name: "{{ netconfig.nic4.network }}"
+            ip: "{{ netconfig.nic4.ipaddress }}"
+            netmask: "{{ netconfig.nic4.netmask }}"
+            gateway: "{{ netconfig.nic4.gateway }}"
             device_type: vmxnet3
     - name: define csr NIC5
       ansible.builtin.set_fact:
         nic5:
-          - name: "{{ netconfig.network5 }}"
-            ip: "{{ netconfig.ipaddress5 }}"
-            netmask: "{{ netconfig.netmask5 }}"
-            gateway: "{{ netconfig.gateway5 }}"
+          - name: "{{ netconfig.nic5.network }}"
+            ip: "{{ netconfig.nic5.ipaddress }}"
+            netmask: "{{ netconfig.nic5.netmask }}"
+            gateway: "{{ netconfig.nic5.gateway }}"
             device_type: vmxnet3
     - name: Update VM hardware settings with correct NICs
       vmware_guest:

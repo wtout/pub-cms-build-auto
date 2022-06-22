@@ -25,27 +25,27 @@
   - name: define nic1
     ansible.builtin.set_fact:
       nic1:
-        - name: "{{ netconfig.network1 }}"
-          ip: "{{ netconfig.ipaddress1 }}"
-          netmask: "{{ netconfig.netmask1 }}"
-          gateway: "{{ netconfig.gateway1 }}"
+        - name: "{{ netconfig.nic1.network }}"
+          ip: "{{ netconfig.nic1.ipaddress }}"
+          netmask: "{{ netconfig.nic1.netmask }}"
+          gateway: "{{ netconfig.nic1.gateway }}"
           device_type: vmxnet3
           start_connected: true
           allow_guest_control: true
     when:
-      - netconfig.intname1 != ''
+      - netconfig.nic1.intname != ''
   - name: define nic2
     ansible.builtin.set_fact:
       nic2:
-        - name: "{{ netconfig.network2 }}"
-          ip: "{{ netconfig.ipaddress2 }}"
-          netmask: "{{ netconfig.netmask2 }}"
-          gateway: "{{ netconfig.gateway2 }}"
+        - name: "{{ netconfig.nic2.network }}"
+          ip: "{{ netconfig.nic2.ipaddress }}"
+          netmask: "{{ netconfig.nic2.netmask }}"
+          gateway: "{{ netconfig.nic2.gateway }}"
           device_type: vmxnet3
           start_connected: true
           allow_guest_control: true
     when:
-      - netconfig.intname2 != ''
+      - netconfig.nic2.intname != ''
   - name: define list of nics
     ansible.builtin.set_fact:
       nics_list: "{{ nic1 + nic2|default([]) }}"
@@ -63,7 +63,7 @@
       validate_certs: no
     when:
       - vm_nics.instance.hw_interfaces|length >= 2
-      - netconfig.intname2 == ''
+      - netconfig.nic2.intname == ''
 
   - name: Update VM hardware settings
     community.vmware.vmware_guest:
@@ -144,7 +144,7 @@
       when: inventory_hostname is not search('em7')
     when:
       - vm_nics.instance.hw_interfaces|length >= 2
-      - netconfig.intname2 == ''
+      - netconfig.nic2.intname == ''
       - vmguest_net is succeeded
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_creation

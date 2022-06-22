@@ -27,7 +27,7 @@
   - block:
     - include_tasks: task_poweron_vm.yml
     - name: check EM7 VM reachable
-      command: ping {{ netconfig.ipaddress1 }} -c 1
+      command: ping {{ netconfig.nic1.ipaddress }} -c 1
       register: em7_vm_reachable1
       ignore_errors: true
       check_mode: no
@@ -37,7 +37,7 @@
     - block:
       - include_tasks: task_reboot_guest_vm.yml
       - name: recheck EM7 VM reachable
-        command: ping {{ netconfig.ipaddress1 }} -c 1
+        command: ping {{ netconfig.nic1.ipaddress }} -c 1
         register: em7_vm_reachable2
         ignore_errors: true
         check_mode: no
@@ -54,7 +54,7 @@
             loop_var: loop_item
         - include_tasks: task_poweron_vm.yml
         - name: check EM7 VM reachable
-          command: ping {{ netconfig.ipaddress1 }} -c 1
+          command: ping {{ netconfig.nic1.ipaddress }} -c 1
           register: em7_vm_reachable3
           ignore_errors: true
           check_mode: no
@@ -64,7 +64,7 @@
         - block:
           - include_tasks: task_reboot_guest_vm.yml
           - name: recheck EM7 VM reachable
-            command: ping {{ netconfig.ipaddress1 }} -c 1
+            command: ping {{ netconfig.nic1.ipaddress }} -c 1
             register: em7_vm_reachable4
             ignore_errors: true
             check_mode: no
@@ -78,7 +78,7 @@
     - name: Wait for port 22 to become open and contain "OpenSSH"
       wait_for:
         port: 22
-        host: "{{ netconfig.ipaddress1 }}"
+        host: "{{ netconfig.nic1.ipaddress }}"
         search_regex: OpenSSH
         delay: 10
         timeout: 90

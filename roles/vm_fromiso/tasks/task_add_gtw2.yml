@@ -28,7 +28,7 @@
         vm_username: "{{ ansible_user }}"
         vm_password: "{{ ansible_ssh_pass }}"
         vm_shell: '/usr/bin/sudo'
-        vm_shell_args: '-S sh -c "grep \"GATEWAY={{ netconfig.gateway2 }}\" /etc/sysconfig/network-scripts/ifcfg-ens192 || /bin/echo -e \"GATEWAY={{ netconfig.gateway2 }}\" >> /etc/sysconfig/network-scripts/ifcfg-ens192" <<< {{ ansible_ssh_pass }}'
+        vm_shell_args: '-S sh -c "grep \"GATEWAY={{ netconfig.nic2.gateway }}\" /etc/sysconfig/network-scripts/ifcfg-ens192 || /bin/echo -e \"GATEWAY={{ netconfig.nic2.gateway }}\" >> /etc/sysconfig/network-scripts/ifcfg-ens192" <<< {{ ansible_ssh_pass }}'
         wait_for_process: true
       register: em7_intfile192
       until: em7_intfile192 is succeeded
@@ -75,7 +75,7 @@
         vm_username: "{{ ansible_user }}"
         vm_password: "{{ ansible_ssh_pass }}"
         vm_shell: '/bin/sh'
-        vm_shell_args: '-c "grep \"GATEWAY={{ netconfig.gateway2 }}\" /etc/sysconfig/network-scripts/ifcfg-ens192 || /bin/echo -e \"GATEWAY={{ netconfig.gateway2 }}\" >> /etc/sysconfig/network-scripts/ifcfg-ens192"'
+        vm_shell_args: '-c "grep \"GATEWAY={{ netconfig.nic2.gateway }}\" /etc/sysconfig/network-scripts/ifcfg-ens192 || /bin/echo -e \"GATEWAY={{ netconfig.nic2.gateway }}\" >> /etc/sysconfig/network-scripts/ifcfg-ens192"'
         wait_for_process: true
       register: intfile192
       until: intfile192 is succeeded
@@ -97,6 +97,6 @@
     when:
       - inventory_hostname is not search('em7')
   when:
-    - netconfig.gateway1 == ''
+    - netconfig.nic1.gateway == ''
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_creation

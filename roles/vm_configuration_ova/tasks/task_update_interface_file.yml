@@ -42,5 +42,5 @@
     notify: restart network
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   vars:
-    file_path: "{{ ['/etc/sysconfig/network-scripts/ifcfg-ens160'] + ['/etc/sysconfig/network-scripts/ifcfg-ens192'] if netconfig.ipaddress2 != '' else ['/etc/sysconfig/network-scripts/ifcfg-ens160'] }}"
+    file_path: "{{ ['/etc/sysconfig/network-scripts/ifcfg-ens160'] + ['/etc/sysconfig/network-scripts/ifcfg-ens192'] if netconfig.nic2.ipaddress != '' else ['/etc/sysconfig/network-scripts/ifcfg-ens160'] }}"
   tags: vm_configuration

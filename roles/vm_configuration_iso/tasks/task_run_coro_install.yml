@@ -8,12 +8,12 @@
 
   - name: define the answers for DB01
     set_fact:
-      answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n1\\ny\\ny\\n1\\n{{ vm.name | regex_replace('01$', '02') }}\\n{{ netconfig.ipaddress2 | regex_replace('[\\.]9$', '.10') }}\\n{{ netconfig.ipaddress1 | regex_replace('[\\.]13$', '.14') }}\\n{{ vip.db }}\\n26\\ny"
+      answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n1\\ny\\ny\\n1\\n{{ vm.name | regex_replace('01$', '02') }}\\n{{ netconfig.nic2.ipaddress | regex_replace('[\\.]9$', '.10') }}\\n{{ netconfig.nic1.ipaddress | regex_replace('[\\.]13$', '.14') }}\\n{{ vip.db }}\\n26\\ny"
     when: inventory_hostname is search('01')
 
   - name: define the answers for DB02
     set_fact:
-      answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n2\\ny\\ny\\n1\\n{{ vm.name | regex_replace('02$', '01') }}\\n{{ netconfig.ipaddress2 | regex_replace('[\\.]10$', '.9') }}\\n{{ netconfig.ipaddress1 | regex_replace('[\\.]14$', '.13') }}\\ny"
+      answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n2\\ny\\ny\\n1\\n{{ vm.name | regex_replace('02$', '01') }}\\n{{ netconfig.nic2.ipaddress | regex_replace('[\\.]10$', '.9') }}\\n{{ netconfig.nic1.ipaddress | regex_replace('[\\.]14$', '.13') }}\\ny"
     when: inventory_hostname is search('02')
 
   - name: run coro_install script

@@ -16,15 +16,15 @@
         - 'IPV6_AUTOCONF=no'
         - 'IPV6_DEFROUTE=yes'
         - 'IPV6_FAILURE_FATAL=no'
-        - 'IPV6ADDR={{ netconfig.ipv6_pool1[inventory_hostname[-2:]|int - 1] }}'
-        - 'IPV6_DEFAULTGW={{ netconfig.ipv6_gtw1 }}'
+        - 'IPV6ADDR={{ netconfig.nic1.ipv6_pool[inventory_hostname[-2:]|int - 1] }}'
+        - 'IPV6_DEFAULTGW={{ netconfig.nic1.ipv6_gtw }}'
         - 'IPV6_PRIVACY=no'
       loop_control:
         loop_var: line_item
       register: reg_nic1_update
     when:
-      - netconfig.ipv6_pool1|length >= inventory_hostname[-2:]|int
-      - netconfig.ipv6_pool1[inventory_hostname[-2:]|int - 1] != ''
+      - netconfig.nic1.ipv6_pool|length >= inventory_hostname[-2:]|int
+      - netconfig.nic1.ipv6_pool[inventory_hostname[-2:]|int - 1] != ''
   - block:
     - name: Enable NIC2 IPV6INIT
       ansible.builtin.replace:
@@ -40,15 +40,15 @@
         - 'IPV6_AUTOCONF=no'
         - 'IPV6_DEFROUTE=yes'
         - 'IPV6_FAILURE_FATAL=no'
-        - 'IPV6ADDR={{ netconfig.ipv6_pool2[inventory_hostname[-2:]|int - 1] }}'
-        - 'IPV6_DEFAULTGW={{ netconfig.ipv6_gtw2 }}'
+        - 'IPV6ADDR={{ netconfig.nic2.ipv6_pool[inventory_hostname[-2:]|int - 1] }}'
+        - 'IPV6_DEFAULTGW={{ netconfig.nic2.ipv6_gtw }}'
         - 'IPV6_PRIVACY=no'
       loop_control:
         loop_var: line_item
       register: reg_nic2_update
     when:
-      - netconfig.ipv6_pool2|length >= inventory_hostname[-2:]|int
-      - netconfig.ipv6_pool2[inventory_hostname[-2:]|int - 1] != ''
+      - netconfig.nic2.ipv6_pool|length >= inventory_hostname[-2:]|int
+      - netconfig.nic2.ipv6_pool[inventory_hostname[-2:]|int - 1] != ''
   - name: restart the network on the EM7 VM
     vmware_vm_shell:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"

@@ -9,8 +9,8 @@ interfaces:
   - name: interface GigabitEthernet3
     properties:
       - description ****Internal Net****
-      - ip address {{ netconfig.ipaddress3 }} {{ netconfig.netmask3 }}
-      - standby {{ 13 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 3 }} ip {{ netconfig.gateway3 }}
+      - ip address {{ netconfig.nic3.ipaddress }} {{ netconfig.nic3.netmask }}
+      - standby {{ 13 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 3 }} ip {{ netconfig.nic3.gateway }}
       - standby use-bia
       - standby {{ 13 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 3 }} priority 130
       - standby {{ 13 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 3 }} preempt
@@ -21,8 +21,8 @@ interfaces:
   - name: interface GigabitEthernet4
     properties: 
       - description ***Customer Inside Net*** 
-      - ip address {{ netconfig.ipaddress4 }} {{ netconfig.netmask4 }}
-      - standby {{ 14 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 4 }} ip {{ netconfig.gateway4 }}
+      - ip address {{ netconfig.nic4.ipaddress }} {{ netconfig.nic4.netmask }}
+      - standby {{ 14 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 4 }} ip {{ netconfig.nic4.gateway }}
       - standby use-bia
       - standby {{ 14 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 4 }} priority 130
       - standby {{ 14 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 4 }} preempt
@@ -33,8 +33,8 @@ interfaces:
   - name: interface GigabitEthernet5
     properties:
       - description ****Loadbalancer Net****
-      - ip address {{ netconfig.ipaddress5 }} {{ netconfig.netmask5 }}
-      - standby {{ 15 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 5 }} ip {{ netconfig.gateway5 }}
+      - ip address {{ netconfig.nic5.ipaddress }} {{ netconfig.nic5.netmask }}
+      - standby {{ 15 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 5 }} ip {{ netconfig.nic5.gateway }}
       - standby use-bia
       - standby {{ 15 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 5 }} priority 130
       - standby {{ 15 if hostvars[groups['drvcenter']|first]['information']['resources']|length > 1 else 5 }} preempt

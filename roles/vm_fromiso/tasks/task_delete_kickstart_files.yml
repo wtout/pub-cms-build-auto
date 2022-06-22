@@ -16,7 +16,7 @@
       delay: 10
       when: vcr_vm_reachable is succeeded
     - name: check created VM reachable
-      command: ping {{ netconfig.ipaddress1 if netconfig.gateway1 != '' else netconfig.ipaddress2 }} -c 1
+      command: ping {{ netconfig.nic1.ipaddress if netconfig.nic1.gateway != '' else netconfig.nic2.ipaddress }} -c 1
       register: vcr_vm_reachable2
       ignore_errors: true
       check_mode: no

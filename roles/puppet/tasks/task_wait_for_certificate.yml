@@ -3,7 +3,7 @@
 - block:
   - name: get list of created certificates
     shell: >
-      puppet cert list --all | egrep '{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}' || echo 'Found no certificate'
+      puppet cert list --all | grep -E '{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}' || echo 'Found no certificate'
     become: true
     ignore_errors: true
     register: certs_on_puppet1
@@ -38,7 +38,7 @@
     - include_tasks: task_generate_cert_for_em7.yml
     - name: get list of created certificates
       shell: >
-        puppet cert list --all | egrep '{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}' || echo 'Found no certificate'
+        puppet cert list --all | grep -E '{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}' || echo 'Found no certificate'
       become: true
       ignore_errors: true
       register: certs_on_puppet2

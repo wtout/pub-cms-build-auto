@@ -17,23 +17,23 @@
   - name: define nic1
     ansible.builtin.set_fact:
       nic1:
-        - name: "{{ netconfig.network1 }}"
-          ip: "{{ netconfig.ipaddress1 }}"
-          netmask: "{{ netconfig.netmask1 }}"
-          gateway: "{{ netconfig.gateway1 }}"
+        - name: "{{ netconfig.nic1.network }}"
+          ip: "{{ netconfig.nic1.ipaddress }}"
+          netmask: "{{ netconfig.nic1.netmask }}"
+          gateway: "{{ netconfig.nic1.gateway }}"
           device_type: vmxnet3
     when:
-      - netconfig.intname1 != ''
+      - netconfig.nic1.intname != ''
   - name: define nic2
     ansible.builtin.set_fact:
       nic2:
-        - name: "{{ netconfig.network2 }}"
-          ip: "{{ netconfig.ipaddress2 }}"
-          netmask: "{{ netconfig.netmask2 }}"
-          gateway: "{{ netconfig.gateway2 }}"
+        - name: "{{ netconfig.nic2.network }}"
+          ip: "{{ netconfig.nic2.ipaddress }}"
+          netmask: "{{ netconfig.nic2.netmask }}"
+          gateway: "{{ netconfig.nic2.gateway }}"
           device_type: vmxnet3
     when:
-      - netconfig.intname2 != ''
+      - netconfig.nic2.intname != ''
   - name: define list of nics
     ansible.builtin.set_fact:
       nics_list: "{{ nic1 + nic2|default([]) }}"
@@ -84,7 +84,7 @@
     - name: Wait for port 22 to become open and contain "OpenSSH"
       wait_for:
         port: 22
-        host: "{{ netconfig.ipaddress1 }}"
+        host: "{{ netconfig.nic1.ipaddress }}"
         search_regex: OpenSSH
         delay: 10
         timeout: 1800

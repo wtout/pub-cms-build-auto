@@ -3,9 +3,9 @@ CurrentVersion={{ customer.version.release|replace('R', '') }}
 TargetVersion={{ customer.version.release|replace('R', '') }}
 primary_relay_server_IP={{ drrly_ip1_list[0] }}
 secondary_relay_server_IP={{ drrly_ip1_list[1] if drrly_ip1_list|length >= 2 else '' }}
-mcIP={{ netconfig.ipaddress1 }}
-ipaddress1={{ netconfig.ipaddress1 }}
-ipaddress2={{ netconfig.ipaddress2 }}
+mcIP={{ netconfig.nic1.ipaddress }}
+ipaddress1={{ netconfig.nic1.ipaddress }}
+ipaddress2={{ netconfig.nic2.ipaddress }}
 isGeoServer=False
 netscalar_ip_list={{ customer.secondary.octets }}.53,{{ customer.secondary.octets }}.54,{{ customer.secondary.octets }}.55
 netscaler_ip1={{ customer.secondary.octets }}.53

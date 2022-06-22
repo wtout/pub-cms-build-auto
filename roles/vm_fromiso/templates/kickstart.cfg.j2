@@ -15,8 +15,8 @@ keyboard --vckeymap=us --xlayouts='us'
 lang en_US.UTF-8
 
 # Network information
-network --bootproto=static --device={{ netconfig.intname1 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway1 if netconfig.gateway1 != '' else (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62' }} --ip={{ netconfig.ipaddress1 }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.netmask1 }} {% if netconfig.ipv6_pool1|length >= inventory_hostname[-2:]|int and netconfig.ipv6_pool1[inventory_hostname[-2:]|int - 1] != '' -%} --ipv6={{ netconfig.ipv6_pool1[inventory_hostname[-2:]|int - 1] }} --ipv6gateway={{ netconfig.ipv6_gtw1 }} {% else -%} --noipv6 {% endif -%} --activate
-network --bootproto=static --device={{ netconfig.intname2 }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.gateway2 if netconfig.gateway2 != '' else (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62' }} --ip={{ netconfig.ipaddress2 }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.netmask2 }} {% if netconfig.ipv6_pool2|length >= inventory_hostname[-2:]|int and netconfig.ipv6_pool2[inventory_hostname[-2:]|int - 1] != '' -%} --ipv6={{ netconfig.ipv6_pool2[inventory_hostname[-2:]|int - 1] }} --ipv6gateway={{ netconfig.ipv6_gtw2 }} {% else -%} --noipv6 {% endif -%} --activate
+network --bootproto=static --device={{ netconfig.nic1.intname }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.nic1.gateway if netconfig.nic1.gateway != '' else ((customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62') if (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) is defined else '' }} --ip={{ netconfig.nic1.ipaddress }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.nic1.netmask }} {% if netconfig.nic1.ipv6_pool is defined and netconfig.nic1.ipv6_pool|length >= inventory_hostname[-2:]|int and netconfig.nic1.ipv6_pool[inventory_hostname[-2:]|int - 1] != '' -%} --ipv6={{ netconfig.nic1.ipv6_pool[inventory_hostname[-2:]|int - 1] }} --ipv6gateway={{ netconfig.nic1.ipv6_gtw }} {% else -%} --noipv6 {% endif -%} --activate
+network --bootproto=static --device={{ netconfig.nic2.intname }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.nic2.gateway if netconfig.nic2.gateway != '' else ((customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62') if (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) is defined else '' }} --ip={{ netconfig.nic2.ipaddress }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.nic2.netmask }} {% if netconfig.nic2.ipv6_pool is defined and netconfig.nic2.ipv6_pool|length >= inventory_hostname[-2:]|int and netconfig.nic2.ipv6_pool[inventory_hostname[-2:]|int - 1] != '' -%} --ipv6={{ netconfig.nic2.ipv6_pool[inventory_hostname[-2:]|int - 1] }} --ipv6gateway={{ netconfig.nic2.ipv6_gtw }} {% else -%} --noipv6 {% endif -%} --activate
 network --hostname={{ vm.name }}
 
 # Root password
@@ -89,10 +89,10 @@ sssd-tools
 
 %post
 # Add search domain
-echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname1 }}
-{% if netconfig.intname2 != '' %}
+echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.nic1.intname }}
+{% if netconfig.nic2.intname != '' %}
 {% block nic2_domain %}
-echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.intname2 }}
+echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.nic2.intname }}
 {% endblock nic2_domain %}
 {% endif %}
 
@@ -157,7 +157,7 @@ grep proxy /etc/yum.conf || sed -i 's|^\(\[main\]\)$|\1\nproxy={{ proxy_address 
 
 # Configure Chrony
 sed -i '/^server.*iburst$/d' /etc/chrony.conf
-sed -i 's/^\(# Please consider.*\)$/\1\n{% if customer.name|lower is search('mdr') %} {{ 'server ' + netconfig.ipaddress1.split('.')[:-1] | join('.') + '.254 iburst\\n' }} {% elif 'dr' in group_names %} {%- if sysconfig.secondary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.secondary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.secondary.ntp_server + ' iburst\\n' -}} {% endif -%} {% else %} {%- if sysconfig.primary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.primary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.primary.ntp_server + ' iburst\\n' -}} {% endif -%} {% endif %}/' /etc/chrony.conf
+sed -i 's/^\(# Please consider.*\)$/\1\n{% if customer.name|lower is search('mdr') %} {{ 'server ' + netconfig.nic1.ipaddress.split('.')[:-1] | join('.') + '.254 iburst\\n' }} {% elif 'dr' in group_names %} {%- if sysconfig.secondary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.secondary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.secondary.ntp_server + ' iburst\\n' -}} {% endif -%} {% else %} {%- if sysconfig.primary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.primary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.primary.ntp_server + ' iburst\\n' -}} {% endif -%} {% endif %}/' /etc/chrony.conf
 
 # Configure SNMP
 /usr/bin/net-snmp-create-v3-user -ro -A "C1s20A798hPwec" -X "m91K0sl1ux9bsp" -a MD5 -x DES cmsmomuser

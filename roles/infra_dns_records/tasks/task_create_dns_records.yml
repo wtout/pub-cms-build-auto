@@ -6,16 +6,16 @@
       community.general.nsupdate:
         server: "{{ sysconfig.primary.dns_servers[0] }}"
         record: "{{ vm.name }}"
-        value: "{{ netconfig.ipaddress1 if  inventory_hostname is not search('csr') else netconfig.ipaddress3 }}"
+        value: "{{ netconfig.nic1.ipaddress if  inventory_hostname is not search('csr') else netconfig.nic3.ipaddress }}"
         zone: "{{ sysconfig.primary.domain_name }}"
         state: present
     - name: Add primary reverse DNS records
       community.general.nsupdate:
         server: "{{ sysconfig.primary.dns_servers[0] }}"
-        record: "{{ (netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3).split('.') | reverse | join('.') + '.in-addr.arpa' }}"
+        record: "{{ (netconfig.nic1.ipaddress if inventory_hostname is not search('csr') else netconfig.nic3.ipaddress).split('.') | reverse | join('.') + '.in-addr.arpa' }}"
         value: "{{ vm.name + '.' + sysconfig.primary.domain_name }}"
         type: "PTR"
-        zone: "{{ (netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3).split('.')[:-1] | reverse | join('.') + '.in-addr.arpa' }}"
+        zone: "{{ (netconfig.nic1.ipaddress if inventory_hostname is not search('csr') else netconfig.nic3.ipaddress).split('.')[:-1] | reverse | join('.') + '.in-addr.arpa' }}"
         state: present
       ignore_errors: true
     when:
@@ -26,16 +26,16 @@
       community.general.nsupdate:
         server: "{{ sysconfig.secondary.dns_servers[0] }}"
         record: "{{ vm.name }}"
-        value: "{{ netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3 }}"
+        value: "{{ netconfig.nic1.ipaddress if inventory_hostname is not search('csr') else netconfig.nic3.ipaddress }}"
         zone: "{{ sysconfig.secondary.domain_name }}"
         state: present
     - name: Add secondary reverse DNS records
       community.general.nsupdate:
         server: "{{ sysconfig.secondary.dns_servers[0] }}"
-        record: "{{ (netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3).split('.') | reverse | join('.') + '.in-addr.arpa' }}"
+        record: "{{ (netconfig.nic1.ipaddress if inventory_hostname is not search('csr') else netconfig.nic3.ipaddress).split('.') | reverse | join('.') + '.in-addr.arpa' }}"
         value: "{{ vm.name + '.' + sysconfig.secondary.domain_name }}"
         type: "PTR"
-        zone: "{{ (netconfig.ipaddress1 if inventory_hostname is not search('csr') else netconfig.ipaddress3).split('.')[:-1] | reverse | join('.') + '.in-addr.arpa' }}"
+        zone: "{{ (netconfig.nic1.ipaddress if inventory_hostname is not search('csr') else netconfig.nic3.ipaddress).split('.')[:-1] | reverse | join('.') + '.in-addr.arpa' }}"
         state: present
       ignore_errors: true
     when:

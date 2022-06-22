@@ -17,7 +17,7 @@
       when:
         - deploy_ovf is not changed
     when:
-      - netconfig.gateway1 != ''
+      - netconfig.nic1.gateway != ''
 
   - name: Upgrade VMWare Tools
     vmware_guest_tools_upgrade:
