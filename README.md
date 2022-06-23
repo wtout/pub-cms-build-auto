@@ -23,11 +23,11 @@ On a newly installed Linux **CentOS 7.7+** VM that has docker installed and conf
 
 6- Download the Ansible automation package
 
-    $> git clone https://www-github3.cisco.com/cms-build-team/cmsp-auto-deploy.git
+    $> git clone https://www-github3.cisco.com/cms-build-team/cms-auto-deploy.git
 
-7- Go to the newly cloned cmsp-auto-deploy directory
+7- Go to the newly cloned cms-auto-deploy directory
 
-    $> cd cmsp-auto-deploy
+    $> cd cms-auto-deploy
 
 ***Note**: you might need to disable the proxy to be able to clone the repository*
 
@@ -67,7 +67,7 @@ The system definition file name **must match the customer name** as defined in t
 
 Non-standard host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file must match the name of the host as defined in the hosts.yml file. This can only be done after the system inventory has been created.
 
-To create the system inventory without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
+To create the system inventory without deploying the system, issue the following command from the automation root directory (cms-auto-deploy):
 
     $> sh Bash/play_deploy.sh –-envname <system-name> --tags none
 
@@ -78,14 +78,14 @@ The tool automatically downloads and checks the CMSP software package(s) to the 
 
 If the automated procedure is preferred, the user must ensure that the correct and complete package is available at the location the Ansible code expects it to be, _``http://engci-maven-master.cisco.com/artifactory/cms-quicksilver-release/<release_version>/Puppet/``_
 
-To download the artifacts without deploying the system, issue the following command from the automation root directory (cmsp-auto-deploy):
+To download the artifacts without deploying the system, issue the following command from the automation root directory (cms-auto-deploy):
 
     $> sh Bash/play_deploy.sh –-envname <system-name> --tags get_release
 
 
 ### System Deployment ###
 
-1- From the automation root directory (cmsp-auto-deploy), run one of the bash scripts under the Bash folder depending on what you want to do. 
+1- From the automation root directory (cms-auto-deploy), run one of the bash scripts under the Bash folder depending on what you want to do. 
 
     $> sh Bash/<script name> --envname <system-name>
 

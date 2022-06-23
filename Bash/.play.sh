@@ -90,7 +90,7 @@ function start_container() {
 		then
 			$(docker_cmd) run --rm -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CONTAINERNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${PWD}:${CONTAINERWD}:z --name ${CONTAINERNAME} -it -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION}
 		else
-			$(docker_cmd) run --rm -e ANSIBLE_LOG_PATH=${ANSIBLE_LOG_PATH} -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CONTAINERNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${PWD}:${CONTAINERWD}:z --name ${CONTAINERNAME} -it -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION}
+			$(docker_cmd) run --rm -e ANSIBLE_LOG_PATH=${ANSIBLE_LOG_PATH} -e ANSIBLE_FORKS=${NUM_HOSTSINPLAY} -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CONTAINERNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${PWD}:${CONTAINERWD}:z --name ${CONTAINERNAME} -it -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION}
 		fi
 		[[ ${debug} == 1 ]] && set -x
 		[[ $(check_container; echo "${?}") -ne 0 ]] && echo "Unable to start container ${CONTAINERNAME}" && exit 1
@@ -153,10 +153,6 @@ function check_hosts_limit() {
 		NEWARGS="${MYARGS}"
 	fi
 	echo "${NEWARGS}"
-}
-
-function check_concurrency() {
-	ps aux | grep "$(basename "${0}")" | grep -vwE "${ENAME}|grep"
 }
 
 function clean_arguments() {
@@ -520,18 +516,6 @@ function check_updates() {
 	fi
 }
 
-function get_hostsinplay() {
-	local ENVS
-	local HN
-	ENVS="$(ps aux | grep -E 'play.*\.sh' | grep envname | grep -vw "${ENAME}" | awk -F 'envname ' '{print $NF}' | cut -d'-' -f1 | sort -u)"
-	HN=""
-	for env in ${ENVS}
-	do
-		HN="${HN}$($(docker_cmd) exec -i ${CONTAINERNAME} ansible all -i "${INVENTORY_PATH}"/../${env} --list-hosts | grep -v host | sed -e 's/^\s*\(\w.*\)$/\1/g' | sort)"
-	done
-	echo "${HN}" | wc -l
-}
-
 function get_inventory() {
 	sed -i "/^vault_password_file.*$/,+d" "${ANSIBLE_CFG}"
 	if [[ -f ${SYS_DEF} ]]
@@ -549,23 +533,23 @@ function get_inventory() {
 	fi
 }
 
-function get_sleeptime() {
-	local HOSTNUM
-	HOSTNUM=$(get_hostsinplay)
-	echo $((HOSTNUM + HOSTNUM / 4))
-}
-
 function get_hosts() {
 	local ARG_NAME
 	local MYACTION
+	local HOSTS_LIST
 	[[ "$(echo "${@}" | grep -Ew '\-\-limit')" != "" ]] && ARG_NAME="--limit" && MYACTION="get"
 	[[ "$(echo "${@}" | grep -Ew '\-l')" != "" ]] && ARG_NAME="-l" && MYACTION="get"
 	if [[ ${MYACTION} == "get" ]]
 	then
-		HOST_LIST=$(echo "${@}" | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}' | sed -e 's/,/ /g')
+		HOSTS_LIST=$(echo "${@}" | awk -F "${ARG_NAME} " '{print $NF}' | awk -F ' -' '{print $1}' | sed -e 's/,/ /g')
 	else
-		HOST_LIST=$($(docker_cmd) exec -i ${CONTAINERNAME} ansible all -i "${INVENTORY_PATH}" --list-hosts | grep -v host | sed -e 's/^\s*\(\w.*\)$/\1/g' | sort)
+		HOSTS_LIST=$($(docker_cmd) exec -i ${CONTAINERNAME} ansible all -i "${INVENTORY_PATH}" --list-hosts | grep -v host | sed -e 's/^\s*\(\w.*\)$/\1/g' | sort)
 	fi
+	[ "$(echo "${HOSTS_LIST}" | wc -w)" -gt 1 ] && HL="${HOSTS_LIST// /,}" || HL="${HOSTS_LIST}"
+}
+
+function get_hostsinplay() {
+	echo $($(docker_cmd) exec -i ${CONTAINERNAME} ansible "${1}" -i "${INVENTORY_PATH}" -m debug -a msg="{{ ansible_play_hosts }}" | grep -Ev "\[|\]|\{|\}" | sort -u)
 }
 
 function check_mode() {
@@ -633,7 +617,6 @@ function run_playbook() {
 	if [[ ${GET_INVENTORY_STATUS} == 0 && (( $(get_bastion_address) != '[]' && (${GET_CREDS_STATUS} == 0 || -f ${CRVAULT}) ) || $(get_bastion_address) == '[]' ) ]]
 	then
 		### Begin: Determine if ASK_PASS is required
-		[ "$(echo "${HOST_LIST}" | wc -w)" -gt 1 ] && HL="${HOST_LIST// /,}" || HL="${HOST_LIST}"
 		$(docker_cmd) exec -it ${CONTAINERNAME} ansible "${HL}" -m debug -a 'msg={{ ansible_ssh_pass }}' &>/dev/null && [[ ${?} == 0 ]] && ASK_PASS=''
 		### End
 		### Begin: Define the extra-vars argument list and bastion credentials vault name and password file
@@ -677,17 +660,15 @@ function send_notification() {
 	if [[ "$(check_mode "${@}")" == " " ]]
 	then
 		SCRIPT_ARG="${@//-/dash}"
-		[ "$(echo "${HOST_LIST}" | wc -w)" -gt 1 ] && HL="${HOST_LIST// /,}" || HL="${HOST_LIST}"
-		NUM_HOSTS=$($(docker_cmd) exec -i ${CONTAINERNAME} ansible "${HL}" -i "${INVENTORY_PATH}" -m debug -a msg="{{ ansible_play_hosts }}" | grep -Ev "\[|\]|\{|\}" | sort -u | wc -l)
 		if [[ -z ${MYINVOKER+x} ]]
 		then
 			# Send playbook status notification
-			$(docker_cmd) exec -it ${CONTAINERNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}'}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v &>/dev/null
+			$(docker_cmd) exec -it ${CONTAINERNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTSINPLAY}'}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v &>/dev/null
 		else
 			local INVOKED
 			INVOKED=true
 			# Send playbook status notification
-			$(docker_cmd) exec -it ${CONTAINERNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTS}', INVOKED: ${INVOKED}}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v
+			$(docker_cmd) exec -it ${CONTAINERNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTSINPLAY}', INVOKED: ${INVOKED}}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v
 		fi
 	fi
 }
@@ -701,7 +682,7 @@ ANSIBLE_VERSION='4.10.0'
 ANSIBLE_VARS="vars/datacenters.yml"
 PASSVAULT="vars/passwords.yml"
 REPOVAULT="vars/.repovault.yml"
-CONTAINERWD="/home/ansible/cmsp-auto-deploy"
+CONTAINERWD="/home/ansible/cms-auto-deploy"
 CONTAINERREPO="containers.cisco.com/watout/ansible"
 MDR_AUTO_LOCATION="imp_auto"
 SECON=true
@@ -718,7 +699,6 @@ set -- && set -- "${@}" "${NEW_ARGS}"
 ORIG_ARGS="${@}"
 ENAME=$(get_envname "${ORIG_ARGS}")
 check_repeat_job && echo -e "\nRunning multiple instances of ${BOLD}$(basename "${0}")${NORMAL} is prohibited. Aborting!\n\n" && exit 1
-CC=$(check_concurrency)
 INVENTORY_PATH="inventories/${ENAME}"
 CRVAULT="${INVENTORY_PATH}/group_vars/vault.yml"
 SYS_DEF="Definitions/${ENAME}.yml"
@@ -749,9 +729,9 @@ encrypt_vault "${SVCVAULT}" Bash/get_common_vault_pass.sh
 sudo chown "$(stat -c '%U' "$(pwd)")":"$(stat -c '%G' "$(pwd)")" "${SVCVAULT}"
 sudo chmod 644 "${SVCVAULT}"
 get_inventory "${@}"
-[[ "${CC}" != "" ]] && SLEEPTIME=$(get_sleeptime) && [[ ${SLEEPTIME} != 0 ]] && echo "Sleeping for ${SLEEPTIME}" && sleep "${SLEEPTIME}"
 get_hosts "${@}"
 get_credentials "${@}"
+NUM_HOSTSINPLAY=$(echo $(get_hostsinplay "${HL}") | wc -w)
 stop_container
 create_symlink
 add_write_permission "${PWD}/roles"

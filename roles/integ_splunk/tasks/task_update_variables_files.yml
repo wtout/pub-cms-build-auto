@@ -11,7 +11,7 @@
       loop_var: tmpl_item
   - name: Decrypt ssh_passwords vault
     shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       export ANSIBLE_LOG_PATH
       head -1 ssh_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt ssh_passwords.yml --vault-password-file ssh-vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
     args:
@@ -26,14 +26,14 @@
       loop_var: tmpl_item
   - name: Encrypt ssh_passwords vault
     shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       export ANSIBLE_LOG_PATH
       ansible-vault encrypt ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Decrypt phantom config assets file
     shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       export ANSIBLE_LOG_PATH
       head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt phantom_config_assets.yml --vault-password-file vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
     args:
@@ -51,7 +51,7 @@
     no_log: true
   - name: Encrypt phantom config assets file
     shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       export ANSIBLE_LOG_PATH
       head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt phantom_config_assets.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
     args:
@@ -60,7 +60,7 @@
   - block:
     - name: Decrypt default_core_passwords vault
       shell: |
-        ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+        ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
         export ANSIBLE_LOG_PATH
         head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt default_core_passwords.yml --vault-password-file vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
       args:
@@ -82,7 +82,7 @@
       when: reg_tq_in_vault is changed
     - name: Encrypt default core passwords file
       shell: |
-        ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/cmsp-auto-deploy/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+        ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
         export ANSIBLE_LOG_PATH
         head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt default_core_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
       args:

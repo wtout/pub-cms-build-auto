@@ -4,7 +4,7 @@
   command: ./setup-env.sh
   register: setup_env
   args:
-    chdir: "{{ spl_wd }}/dev/mdr-splunk-env"
+    chdir: "{{ spl_wd }}/dev/{{ mdr_splunkenv_reponame }}"
   when: clone_repos is succeeded
   delegate_to: localhost
   run_once: true

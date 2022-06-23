@@ -1,8 +1,11 @@
 ---
 # vars file for integ_splunk
+automation_reponame: 'cms-auto-deploy'
+mdr_automation_reponame: 'cms-mdr-automation'
+mdr_splunkenv_reponame: 'cms-mdr-splunk-env'
 keeper_token_path: '~/certificates'
 spl_wd: "{{ auto_dir }}/imp_auto/splunk_install"
-spl_ansible_path: "{{ spl_wd + '/dev/mdr-automation/splunk-ansible' }}"
+spl_ansible_path: "{{ spl_wd + '/dev/' + mdr_automation_reponame + '/splunk-ansible' }}"
 spl_inventory_path: "{{ spl_ansible_path + '/environments/' + customer.env_identifier }}"
 vm_svc_user: "{{ user.name if user.name != '' else vars[('S' if 'dr' in group_names else 'P') + 'SVC_USER'] if credentials.username == 'root' else credentials.username }}"
 vm_svc_pass: "{{ user.password if user.name != '' else credentials.password }}"

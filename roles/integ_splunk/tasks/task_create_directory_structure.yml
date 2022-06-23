@@ -14,7 +14,7 @@
   - name: create the splunkApps symolic link
     file:
       path: "{{ spl_wd }}/deploy/splunkApps"
-      src: "{{ spl_wd }}/dev/mdr-splunk-env"
+      src: "{{ spl_wd }}/dev/{{ mdr_splunkenv_reponame }}"
       state: link
       force: yes
   - name: Ensure {{ auto_dir }}/Packages/Splunk exists

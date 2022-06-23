@@ -48,6 +48,7 @@
       netconfig: "{{ netconfig|default({}) | combine(new_item, recursive=true) }}"
     vars:
       new_item: "{'{{ task_item.interface }}': {'{{ task_item.key }}': '{{ task_item.value }}'}}"
+    when: vars['netconfig'][task_item.interface] is defined
     loop:
       - { interface: 'nic1', key: 'ipaddress', value: '{{ ipaddress1 }}'}
       - { interface: 'nic2', key: 'ipaddress', value: '{{ ipaddress2 }}'}

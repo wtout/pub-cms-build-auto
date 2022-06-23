@@ -6,8 +6,8 @@
     regexp: '//.*@'
     replace: '//'
   loop:
-    - mdr-automation
-    - mdr-splunk-env
+    - "{{ mdr_automation_reponame }}"
+    - "{{ mdr_splunkenv_reponame }}"
   loop_control:
     loop_var: repo_item
   delegate_to: localhost
