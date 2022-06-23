@@ -3,5 +3,5 @@ if [[ "$(pwd | grep -i 'cdra')" == "" ]]
 then
 	git config remote.origin.url | awk -F '/' '{print $NF}'
 else
-	echo "cms-auto-deploy.git"
+	echo "cms-build-auto-deploy.git"
 fi
