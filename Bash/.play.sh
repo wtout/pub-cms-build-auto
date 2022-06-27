@@ -415,12 +415,12 @@ function get_repo_creds() {
 		local REPOPWD
 		local REMOTEID
 		local SET_PROXY
-		[[ $(git config --get remote.origin.url | grep "github") != "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
+		[[ "$(git config --get remote.origin.url | grep 'github')" != "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
 		for i in {1..3}
 		do
 			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 			REPOPWD="${REPOPASS//@/%40}"
-			REMOTEID=$([[ ${SET_PROXY} ]] && export https_proxy=${PROXY_ADDRESS}; git ls-remote "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|")" refs/heads/"$(git branch | grep '*' | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
+			REMOTEID=$([[ ${SET_PROXY} ]] && export https_proxy=${PROXY_ADDRESS} && unset no_proxy; git ls-remote "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|")" refs/heads/"$(git branch | grep '*' | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
 			[[ ${debug} == 1 ]] && set -x
 			[[ ${REMOTEID} == "" ]] && sleep 3 || break
 		done
@@ -478,12 +478,12 @@ function check_updates() {
 				local REMOTEID
 				local SET_PROXY
 				LOCALID=$(git rev-parse --short HEAD)
-				[[ $(git config --get remote.origin.url | grep "github") == "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
+				[[ "$(git config --get remote.origin.url | grep 'github')" != "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
 				for i in {1..3}
 				do
 					[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 					REPOPWD="${REPOPASS//@/%40}"
-					REMOTEID=$([[ ${SET_PROXY} ]] && export https_proxy=${PROXY_ADDRESS}; git ls-remote "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|")" refs/heads/"$(git branch | grep '*' | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
+					REMOTEID=$([[ ${SET_PROXY} ]] && export https_proxy=${PROXY_ADDRESS} && unset no_proxy; git ls-remote "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|")" refs/heads/"$(git branch | grep '*' | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
 					[[ ${debug} == 1 ]] && set -x
 					[[ ${REMOTEID} == "" ]] && sleep 3 || break
 				done
@@ -682,7 +682,7 @@ ANSIBLE_VERSION='4.10.0'
 ANSIBLE_VARS="vars/datacenters.yml"
 PASSVAULT="vars/passwords.yml"
 REPOVAULT="vars/.repovault.yml"
-CONTAINERWD="/home/ansible/cms-build-auto-deploy"
+CONTAINERWD="/home/ansible/$(basename ${PWD})"
 CONTAINERREPO="containers.cisco.com/watout/ansible"
 MDR_AUTO_LOCATION="imp_auto"
 SECON=true

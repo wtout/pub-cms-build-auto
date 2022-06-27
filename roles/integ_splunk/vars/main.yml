@@ -1,6 +1,6 @@
 ---
 # vars file for integ_splunk
-automation_reponame: 'cms-build-auto-deploy'
+automation_reponame: "{{ auto_dir|basename }}"
 mdr_automation_reponame: 'cms-mdr-automation'
 mdr_splunkenv_reponame: 'cms-mdr-splunk-env'
 keeper_token_path: '~/certificates'
