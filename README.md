@@ -23,7 +23,7 @@ On a newly installed Linux **CentOS 7.7+** VM that has docker installed and conf
 
 6- Download the Ansible automation package
 
-    $> git clone https://www-github3.cisco.com/cms-build-team/cms-build-auto-deploy.git
+    $> git clone https://github.com/CXEPI/cms-build-auto-deploy.git
 
 7- Go to the newly cloned cms-build-auto-deploy directory
 
