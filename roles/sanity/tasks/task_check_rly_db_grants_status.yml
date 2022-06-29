@@ -12,6 +12,13 @@
       msg: "{{ reg_db_grants|replace(rly_db_pass, 'obfuscated') }}"
   - name: define rly_db_grants_status
     ansible.builtin.set_fact:
+      rly_db_grants_status: "{{ reg_db_grants.stderr }}"
+    when:
+      - reg_db_grants is failed
+      - reg_db_grants.stderr is defined
+      - reg_db_grants is search('Access denied')
+  - name: define rly_db_grants_status
+    ansible.builtin.set_fact:
       rly_db_grants_status: "{{ 'The following DB grants are missing: ' + req_db_grants|difference(reg_db_grants.stdout_lines[1:])|join(',') }}"
     when: req_db_grants | difference(reg_db_grants.stdout_lines[1:]) | length != 0
   vars:
