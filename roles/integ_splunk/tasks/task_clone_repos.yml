@@ -8,8 +8,8 @@
       version: "{{ repo_item.release }}"
       force: yes
     loop:
-      - { name: 'https://www-github3.cisco.com/cms-mdr/{{ mdr_automation_reponame }}.git', release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
-      - { name: 'https://www-github3.cisco.com/cms-mdr/{{ mdr_splunkenv_reponame }}.git', release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
+      - { name: "{{ automation_site }}/{{ mdr_automation_reponame }}.git", release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
+      - { name: "{{ automation_site }}/{{ mdr_splunkenv_reponame }}.git", release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
     loop_control:
       loop_var: repo_item
     register: reg_clone_repos1
@@ -23,8 +23,8 @@
       version: "{{ repo_item.release }}"
       force: yes
     loop:
-      - { name: 'https://www-github3.cisco.com/cms-mdr/{{ mdr_automation_reponame }}.git', release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
-      - { name: 'https://www-github3.cisco.com/cms-mdr/{{ mdr_splunkenv_reponame }}.git', release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
+      - { name: "{{ automation_site }}/{{ mdr_automation_reponame }}.git", release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
+      - { name: "{{ automation_site }}/{{ mdr_splunkenv_reponame }}.git", release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
     loop_control:
       loop_var: repo_item
     register: reg_clone_repos2

@@ -1,5 +1,6 @@
 ---
 # vars file for integ_splunk
+automation_site: 'https://github.com/CXEPI'
 automation_reponame: "{{ auto_dir|basename }}"
 mdr_automation_reponame: 'cms-mdr-automation'
 mdr_splunkenv_reponame: 'cms-mdr-splunk-env'
