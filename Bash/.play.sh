@@ -15,6 +15,7 @@ function create_dir() {
 }
 
 function get_envname() {
+	local envname
 	[[ "$(echo "${@}" | grep -Ew '\-\-envname')" != "" ]] && envname="$(echo "${@}" | awk -F 'envname ' '{print $NF}' | cut -d'-' -f1 | xargs)"
 	echo "${envname}"
 }
@@ -175,15 +176,23 @@ function clean_arguments() {
 function git_config() {
 	if [[ "$(which git 2>/dev/null)" != "" ]]
 	then
-		git config remote.origin.url &>/dev/null || echo "You are not authorized to use this automation. Aborting!"
-		git config remote.origin.url &>/dev/null || exit 1
+		local NAME
+		local SURNAME
+		local GIT_EMAIL_ADDRESS
+		local EC
+		if ! git config remote.origin.url &>/dev/null
+		then
+			echo "You are not authorized to use this automation. Aborting!"
+			exit 1
+		fi
 		if [[ "$(git config user.name)" == "" ]]
 		then
+			IFS=' ' read -rp "Enter your full name [ENTER]: " NAME SURNAME
 			if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]]
 			then
-				IFS=' ' read -rp "Enter your full name [ENTER]: " NAME SURNAME && git config user.name "${NAME} ${SURNAME}" || EC=1
+				git config user.name "${NAME} ${SURNAME}" || EC=1
 			else
-				IFS=' ' read -rp "Enter your full name [ENTER]: " NAME SURNAME && [[ "${SURNAME}" != "" ]] && [[ "$(git config remote.origin.url | sed -e 's/.*\/\/\(.*\)@.*/\1/')" == *"$(echo ${SURNAME:0:5} | tr '[:upper:]' '[:lower:]')"* ]] && git config user.name "${NAME} ${SURNAME}" || EC=1
+				[[ "${SURNAME}" != "" ]] && [[ "$(git config remote.origin.url | sed -e 's/.*\/\/\(.*\)@.*/\1/')" == *"$(echo ${SURNAME:0:5} | tr '[:upper:]' '[:lower:]')"* ]] && git config user.name "${NAME} ${SURNAME}" || EC=1
 			fi
 		fi
 		[[ ${EC} -eq 1 ]] && echo "Invalid full name. Aborting!" && exit ${EC}
@@ -191,16 +200,12 @@ function git_config() {
 		then
 			NAME=$(git config user.name | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
 			SURNAME=$(git config user.name | awk '{print $NF}' | tr '[:upper:]' '[:lower:]')
-			if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]]
+			read -rp "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS
+			if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]] && [[ "${GIT_EMAIL_ADDRESS}" != "" ]] && [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${NAME:0:2} | tr '[:upper:]' '[:lower:]')"* ]] && [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${SURNAME:0:5} | tr '[:upper:]' '[:lower:]')"* ]]
 			then
-				read -rp "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" ]] && [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${NAME:0:2} | tr '[:upper:]' '[:lower:]')"* ]] && [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${SURNAME:0:5} | tr '[:upper:]' '[:lower:]')"* ]] && git config user.email "${GIT_EMAIL_ADDRESS}" && git config remote.origin.url "$(git config remote.origin.url | sed -e "s|//\(\w\)|//$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)@\1|")" || EC=1
+				git config user.email "${GIT_EMAIL_ADDRESS}" && git config remote.origin.url "$(git config remote.origin.url | sed -e "s|//\(\w\)|//$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)@\1|")" || EC=1
 			else
-				read -rp "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS && [[ "${GIT_EMAIL_ADDRESS}" != "" ]] && [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${NAME:0:2} | tr '[:upper:]' '[:lower:]')"* ]] && [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${SURNAME:0:5} | tr '[:upper:]' '[:lower:]')"* ]] && [[ "$(git config remote.origin.url)" == *"$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)"* ]] && git config user.email "${GIT_EMAIL_ADDRESS}" || EC=1
-			fi
-		else
-			if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]]
-			then
-				git config remote.origin.url "$(git config remote.origin.url | sed -e "s|//\(\w\)|//$(git config user.email | cut -d '@' -f1)@\1|")"
+				[[ "$(git config remote.origin.url)" == *"$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)"* ]] && git config user.email "${GIT_EMAIL_ADDRESS}" || EC=1
 			fi
 		fi
 		[[ ${EC} -eq 1 ]] && echo "Invalid email address. Aborting!" && exit ${EC}
@@ -373,30 +378,12 @@ function get_repo_creds() {
 	[[ -f ${1} ]] && grep 'REPOPASS=' "${1}" 1>/dev/null && rm -f "${1}"
 	local REPOUSER
 	local REPOPASS
-	if [[ -f ${1} ]]
+	if [[ ! -f ${1} ]]
 	then
-		local i
-		local retries
-		i=0
-		retries=3
-		while [[ ${i} -lt ${retries} ]]
-		do
-			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-			if [[ ${REPOUSER} == "" || ${REPOPASS} == "" ]]
-			then
-				read -r REPOUSER <<< "$(view_vault "${1}" "${2}" | grep USER | cut -d "'" -f2)"
-				read -r REPOPASS <<< "$(view_vault "${1}" "${2}" | grep PASS | cut -d "'" -f2)"
-			else
-				break
-				[[ ${debug} == 1 ]] && set -x
-			fi
-			i=$((++i))
-			[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
-		done
-	else
 		echo
 		read -rp "Enter your Repository username [ENTER]: " REPOUSER
 		read -rsp "Enter your Repository password [ENTER]: " REPOPASS
+		echo
 		if [[ ${REPOUSER} != "" && ${REPOPASS} != "" ]]
 		then
 			[[ -f ${1} ]] && rm -f "${1}"
@@ -407,54 +394,30 @@ function get_repo_creds() {
 			[[ ${debug} == 1 ]] && set -x
 			sudo chown "$(stat -c '%U' "$(pwd)")":"$(stat -c '%G' "$(pwd)")" "${1}"
 			sudo chmod 644 "${1}"
-		fi
-		echo
-	fi
-	if [[ ${REPOUSER} != "" && ${REPOPASS} != "" ]]
-	then
-		local REPOPWD
-		local REMOTEID
-		local SET_PROXY
-		[[ "$(git config --get remote.origin.url | grep 'github')" != "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
-		for i in {1..3}
-		do
-			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-			REPOPWD="${REPOPASS//@/%40}"
-			REMOTEID=$([[ ${SET_PROXY} ]] && export https_proxy=${PROXY_ADDRESS} && unset no_proxy; git ls-remote "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|")" refs/heads/"$(git branch | grep '*' | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
-			[[ ${debug} == 1 ]] && set -x
-			[[ ${REMOTEID} == "" ]] && sleep 3 || break
-		done
-		if [[ "${REMOTEID}" == "" ]]
-		then
-			local REPO_ERR
-			REPO_ERR="$(grep -i maintenance "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr)"
-			if [[ "${REPO_ERR}" == "" ]]
-			then
-			 	printf "\nYour Repository credentials are invalid!\n\n" && rm -f "${1}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit 1
-			else
-			 	printf "\n%s" "${REPO_ERR}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit 1
-			fi
 		else
-			rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr
+			echo
+			echo "Unable to get repo credentials"
+			echo
+			[[ -z ${MYINVOKER+x} ]] && stop_container && exit 1
 		fi
-	else
-		echo "Unable to get repo credentials"
-		[[ "$(basename ${0})" == *"deploy"* && "${ENAME}" == *"mdr"* ]] && stop_container && exit 1
 	fi
 }
 
 function check_updates() {
 	if [[ -f ${1} && "$(git config user.name)" != "" ]]
 	then
+		local EC
 		local localbranch
 		local remotebranchlist
 		localbranch=$(git branch|grep '^*'|awk '{print $NF}')
 		remotebranchlist=$(git branch -r)
 		if [[ $(echo ${remotebranchlist}|grep '/'${localbranch}) ]]
 		then
-			git rev-parse --short HEAD &>/dev/null
+			local LOCALID
+			LOCALID=$(git rev-parse --short HEAD)
 			if [[ ${?} -eq 0 ]]
 			then
+				local REPOUSER
 				local REPOPASS
 				local i
 				local retries
@@ -463,34 +426,46 @@ function check_updates() {
 				while [[ ${i} -lt ${retries} ]]
 				do
 					[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
-					if [[ ${REPOPASS} == "" ]]
+					if [[ ${REPOUSER} == "" || ${REPOPASS} == "" ]]
 					then
 						[[ ${debug} == 1 ]] && set -x
+						read -r REPOUSER <<< "$(view_vault "${1}" "${2}" | grep USER | cut -d "'" -f2)"
 						read -r REPOPASS <<< "$(view_vault "${1}" "${2}" | grep PASS | cut -d "'" -f2)"
 					else
 						break
 					fi
 					i=$((++i))
-					[[ ${i} -eq ${retries} ]] && echo "Unable to decrypt Repository password vault. Exiting!" && exit 1
+					[[ ${i} -eq ${retries} ]] && echo "Unable to view Repository password vault. Exiting!" && exit 1
 				done
-				local LOCALID
-				local REPOPWD
-				local REMOTEID
 				local SET_PROXY
-				LOCALID=$(git rev-parse --short HEAD)
+				local REPOPWD
+				local REMOTEURL
+				local REMOTEID
 				[[ "$(git config --get remote.origin.url | grep 'github')" != "" ]] && [[ ${PROXY_ADDRESS} != "" ]] && SET_PROXY="true"
 				for i in {1..3}
 				do
 					[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 					REPOPWD="${REPOPASS//@/%40}"
-					REMOTEID=$([[ ${SET_PROXY} ]] && export https_proxy=${PROXY_ADDRESS} && unset no_proxy; git ls-remote "$(git config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPWD}@|")" refs/heads/"$(git branch | grep '*' | awk '{print $NF}')" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
+					[[ "$(git config --get remote.origin.url | grep '\/\/.*@')" == "" ]] && REMOTEURL=$(git config --get remote.origin.url | sed -e "s|//\(\w\)|//${REPOUSER}:${REPOPWD}@\1|") || REMOTEURL=$(git config --get remote.origin.url | sed -e "s|//.*@|//${REPOUSER}:${REPOPWD}@|")
+					REMOTEID=$([[ ${SET_PROXY} ]] && export https_proxy=${PROXY_ADDRESS} && unset no_proxy; git ls-remote "${REMOTEURL}" refs/heads/"${localbranch}" 2>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr | cut -c1-7)
 					[[ ${debug} == 1 ]] && set -x
 					[[ ${REMOTEID} == "" ]] && sleep 3 || break
 				done
 				if [[ "${REMOTEID}" == "" ]]
 				then
-					echo "Unable to get the remote revision ID"
+					local REPO_ERR
+					REPO_ERR="$(grep -i maintenance "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr)"
+					if [[ "${REPO_ERR}" == "" ]]
+					then
+					 	printf "\nYour Repository credentials are invalid!\n\n" && rm -f "${1}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit 1
+					else
+					 	printf "\n%s" "${REPO_ERR}" && rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr && exit 1
+					fi
 				else
+					if [[ "$(git config remote.origin.url | grep "\/\/.*@")" == "" ]]
+					then
+						git config remote.origin.url "$(git config remote.origin.url | sed -e "s|//\(\w\)|//${REPOUSER}@\1|")"
+					fi
 					rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-remoteid.stderr
 				fi
 				if [[ "${REMOTEID}" != "" && "${LOCALID}" != "${REMOTEID}" ]]
@@ -549,7 +524,9 @@ function get_hosts() {
 }
 
 function get_hostsinplay() {
-	echo $($(docker_cmd) exec -i ${CONTAINERNAME} ansible "${1}" -i "${INVENTORY_PATH}" -m debug -a msg="{{ ansible_play_hosts }}" | grep -Ev "\[|\]|\{|\}" | sort -u)
+	local hip
+	hip=$($(docker_cmd) exec -i ${CONTAINERNAME} ansible "${1}" -i "${INVENTORY_PATH}" -m debug -a msg="{{ ansible_play_hosts }}" | grep -Ev "\[|\]|\{|\}" | sort -u)
+	echo ${hip}
 }
 
 function check_mode() {
@@ -713,7 +690,7 @@ PROXY_ADDRESS=$(get_proxy) || PA=${?}
 [[ ${debug} == 1 ]] && set -x
 git_config
 add_write_permission ${PWD}/vars
-stop_container
+check_container && stop_container
 image_prune
 start_container
 get_repo_creds "${REPOVAULT}" Bash/get_repo_vault_pass.sh
