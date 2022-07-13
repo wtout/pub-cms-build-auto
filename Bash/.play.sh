@@ -386,7 +386,6 @@ function get_repo_creds() {
 		echo
 		if [[ ${REPOUSER} != "" && ${REPOPASS} != "" ]]
 		then
-			[[ -f ${1} ]] && rm -f "${1}"
 			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 			printf "REPOUSER='%s'\nREPOPASS='%s'\n" "${REPOUSER}" "${REPOPASS}" > "${1}"
 			add_write_permission "${1}"
