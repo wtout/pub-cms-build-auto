@@ -8,7 +8,7 @@ add route 172.19.248.0 255.255.248.0 {{ customer.primary.octets }}.62
 add ns ip {{ customer.primary.octets }}.55 255.255.255.192 -vServer DISABLED
 add ns ip {{ customer.primary.octets }}.123 255.255.255.224 -vServer DISABLED -gui DISABLED -mgmtAccess ENABLED
 add route 172.30.100.0 255.255.255.0 {{ customer.primary.octets }}.62
-add route 0.0.0.0 0.0.0.0 {{ customer.primary.octets }}.123
+add route 0.0.0.0 0.0.0.0 {{ customer.primary.octets }}.126
 
 set rsskeytype -rsstype ASYMMETRIC
 set lacp -sysPriority 32768 -mac 00:50:56:8d:4f:78

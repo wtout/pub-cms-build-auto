@@ -1,29 +1,53 @@
 ---
 # tasks file to delete datastores
 - block:
-  - name: Define existing datastores on {{ resource }}
-    vmware_datastore_info:
+  - name: Get VM info
+    vmware_vm_info:
       hostname: "{{ resource }}"
       username: "{{ information.hostuser }}"
       password: "{{ information.hostpass }}"
+      vm_type: vm
       validate_certs: no
-    register: detected_datastores
-
-  - name: Unmount datastore on {{ resource }}
-    vmware_host_datastore:
-      hostname: "{{ resource }}"
-      username: "{{ information.hostuser }}"
-      password: "{{ information.hostpass }}"
-      datastore_name: "{{ datastore_item.name }}"
-      validate_certs: no
-      state: absent
-    register: response
-    ignore_errors: yes
-    loop: "{{ detected_datastores.datastores }}"
-    loop_control:
-      loop_var: datastore_item
-    when:
-      - detected_datastores.datastores != []
-      - datastore_item is search(customer.primary.name_prefix) or (datastore_item is search(customer.secondary.name_prefix) if customer.disaster_recovery) or datastore_item is search('datastore1')
+    check_mode: no
+    register: reg_vm_info
+  - name: define vm names list
+    set_fact:
+      host_vm_names: "{{ reg_vm_info.virtual_machines|map(attribute='guest_name')|list }}"
+  - block:
+    - name: Delete vCLS VM
+      community.vmware.vmware_guest:
+        hostname: "{{ resource }}"
+        username: "{{ information.hostuser }}"
+        password: "{{ information.hostpass }}"
+        name: "{{ reg_vm_info.virtual_machines|map(attribute='guest_name')|select('search', 'vCLS-')|list|first }}"
+        delete_from_inventory: True
+        state: absent
+        force: yes
+        validate_certs: no
+      when: reg_vm_info.virtual_machines|map(attribute='guest_name')|select('search', 'vCLS-')|list|length > 0
+    - name: Define existing datastores on {{ resource }}
+      vmware_datastore_info:
+        hostname: "{{ resource }}"
+        username: "{{ information.hostuser }}"
+        password: "{{ information.hostpass }}"
+        validate_certs: no
+      register: detected_datastores
+    - name: Unmount datastore on {{ resource }}
+      vmware_host_datastore:
+        hostname: "{{ resource }}"
+        username: "{{ information.hostuser }}"
+        password: "{{ information.hostpass }}"
+        datastore_name: "{{ datastore_item.name }}"
+        validate_certs: no
+        state: absent
+      register: response
+      ignore_errors: yes
+      loop: "{{ detected_datastores.datastores }}"
+      loop_control:
+        loop_var: datastore_item
+      when:
+        - detected_datastores.datastores != []
+        - datastore_item is search(customer.primary.name_prefix) or (datastore_item is search(customer.secondary.name_prefix) if customer.disaster_recovery) or datastore_item is search('datastore1')
+    when: reg_vm_info.virtual_machines|map(attribute='guest_name')|reject('search', 'vCLS-')|list|length == 0
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

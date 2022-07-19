@@ -54,7 +54,9 @@
       loop_control:
         loop_var: vm_item
         label: "{{ vm_item }}"
-      when: vm_names != []
+      when:
+        - vm_names != []
+        - vm_item is not search('vCLS-')
 
     - name: define delete_cluster
       set_fact:
