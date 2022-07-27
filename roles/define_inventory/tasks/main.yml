@@ -193,7 +193,7 @@
     - name: verify that primary resources are valid
       assert:
         that:
-          - ip_item | ipaddr
+          - ip_item | ansible.utils.ipaddr
         fail_msg: "The primary resources list {{ environment_definition.datacenter.primary.resources }} is not a valid IP address list. Aborting!"
       loop: "{{ environment_definition.datacenter.primary.resources.split(separator) }}"
       loop_control:
@@ -203,7 +203,7 @@
     - name: verify that secondary resources are valid
       assert:
         that:
-          - ip_item | ipaddr
+          - ip_item | ansible.utils.ipaddr
         fail_msg: "The secondary resources list {{ environment_definition.datacenter.secondary.resources }} is not a valid IP address list. Aborting!"
       loop: "{{ environment_definition.datacenter.secondary.resources.split(separator) }}"
       loop_control:

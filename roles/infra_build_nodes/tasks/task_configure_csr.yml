@@ -78,7 +78,7 @@
 
   - block:
     - name: Apply Primary CSR configuration
-      ios_config:
+      cisco.ios.ios_config:
         lines: "{{ interface_item.properties }}"
         parents: "{{ interface_item.name }}"
       loop: "{{ interfaces }}"
@@ -86,13 +86,15 @@
         loop_var: interface_item
 
     - name: Set NTP server
-      ios_ntp:
-        server: "{{ ntp_server }}"
-        source_int: "{{ ntp_source }}"
-        state: present
+      cisco.ios.ios_ntp_global:
+        config:
+          servers:
+            - server: "{{ ntp_server }}"
+          source: "{{ ntp_source }}"
+        state: merged
 
     - name: Save Primary CSR configuration
-      ios_command:
+      cisco.ios.ios_command:
         commands:
           - command: Copy running-config startup-config
             prompt: '[confirm]'
@@ -101,7 +103,7 @@
 
   - block:
     - name: Apply Secondary CSR configuration
-      ios_config:
+      cisco.ios.ios_config:
         lines: "{{ interface_item.properties }}"
         parents: "{{ interface_item.name }}"
       loop: "{{ interfaces }}"
@@ -109,7 +111,7 @@
         loop_var: interface_item
 
     - name: Save Secondary CSR configuration
-      ios_command:
+      cisco.ios.ios_command:
         commands:
           - command: Copy running-config startup-config
             prompt: '[confirm]'
@@ -118,7 +120,7 @@
 
   - name: Define CSR serial number
     block:
-    - ios_facts:
+    - cisco.ios.ios_facts:
         gather_subset: min
   tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
   
