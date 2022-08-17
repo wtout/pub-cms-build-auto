@@ -1,97 +1,58 @@
 ---
 # tasks to deploy VM from ISO
 - block:
-  - name: Get VM info
-    vmware_guest_info:
+  - name: Deploy VM from ISO
+    vmware_guest:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
       folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      guest_id: centos7_64Guest
       name: "{{ vm.name }}"
+      state: poweredon
       validate_certs: no
-    check_mode: no
-    ignore_errors: true
-    register: vmguest_info
-
-  - name: define nic1
-    ansible.builtin.set_fact:
-      nic1:
-        - name: "{{ netconfig.nic1.network }}"
-          ip: "{{ netconfig.nic1.ipaddress }}"
-          netmask: "{{ netconfig.nic1.netmask }}"
-          gateway: "{{ netconfig.nic1.gateway }}"
-          device_type: vmxnet3
-    when:
-      - netconfig.nic1.intname != ''
-  - name: define nic2
-    ansible.builtin.set_fact:
-      nic2:
-        - name: "{{ netconfig.nic2.network }}"
-          ip: "{{ netconfig.nic2.ipaddress }}"
-          netmask: "{{ netconfig.nic2.netmask }}"
-          gateway: "{{ netconfig.nic2.gateway }}"
-          device_type: vmxnet3
-    when:
-      - netconfig.nic2.intname != ''
-  - name: define list of nics
-    ansible.builtin.set_fact:
-      nics_list: "{{ nic1 + nic2|default([]) }}"
-
-  - block:
-    - name: Deploy VM from ISO
-      vmware_guest:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        guest_id: centos7_64Guest
-        name: "{{ vm.name }}"
-        state: poweredon
-        validate_certs: no
-        disk:
-          - size_gb: "{{ vm.disk0 }}"
-            type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
-            datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
-            controller_number: 0
-            controller_type: 'lsilogic'
-            unit_number: 0
-        hardware:
-          memory_mb: "{{ vm.memory|int * 1024 }}"
-          num_cpus: "{{ vm.cpu|int }}"
-          boot_firmware: "bios"
-          version: 'latest'
-        networks: "{{ nics_list }}"
-        cdrom:
-          - type: iso
-            iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ iso_installer }}"
-            controller_number: 0
-            unit_number: 0
-          - type: iso
-            iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ vm.name }}-kickstart.iso"
-            controller_number: 1
-            unit_number: 0
-      register: deploy_iso
-      environment:
-        http_proxy: ''
-        https_proxy: ''
-      throttle: "{{ 5 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
-      until: deploy_iso is succeeded
-      retries: 5
+      disk:
+        - size_gb: "{{ vm.disk0 }}"
+          type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
+          datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
+          controller_number: 0
+          controller_type: 'lsilogic'
+          unit_number: 0
+      hardware:
+        memory_mb: "{{ vm.memory|int * 1024 }}"
+        num_cpus: "{{ vm.cpu|int }}"
+        boot_firmware: "bios"
+        version: 'latest'
+      networks: "{{ nics_list }}"
+      cdrom:
+        - type: iso
+          iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ iso_installer }}"
+          controller_number: 0
+          unit_number: 0
+        - type: iso
+          iso_path: "[{{ iso_datastore }}] {{ iso_path }}/{{ vm.name }}-kickstart.iso"
+          controller_number: 1
+          unit_number: 0
+    register: deploy_iso
+    environment:
+      http_proxy: ''
+      https_proxy: ''
+    throttle: "{{ 5 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
+    until: deploy_iso is succeeded
+    retries: 5
+    delay: 10
+  - name: Wait for port 22 to become open and contain "OpenSSH"
+    wait_for:
+      port: 22
+      host: "{{ netconfig.nic1.ipaddress }}"
+      search_regex: OpenSSH
       delay: 10
-    - name: Wait for port 22 to become open and contain "OpenSSH"
-      wait_for:
-        port: 22
-        host: "{{ netconfig.nic1.ipaddress }}"
-        search_regex: OpenSSH
-        delay: 10
-        timeout: 1800
-        sleep: 10
-      when:
+      timeout: 1800
+      sleep: 10
+    when:
       - deploy_iso is succeeded
       - vmguest_info is failed
-
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_creation

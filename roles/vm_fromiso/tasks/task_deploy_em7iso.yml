@@ -29,21 +29,21 @@
     - name: check EM7 VM reachable
       command: ping {{ netconfig.nic1.ipaddress }} -c 1
       register: em7_vm_reachable1
-      ignore_errors: true
       check_mode: no
       until: em7_vm_reachable1 is succeeded
       retries: 5
       delay: 10
+    rescue:
     - block:
       - include_tasks: task_reboot_guest_vm.yml
       - name: recheck EM7 VM reachable
         command: ping {{ netconfig.nic1.ipaddress }} -c 1
         register: em7_vm_reachable2
-        ignore_errors: true
         check_mode: no
         until: em7_vm_reachable2 is succeeded
         retries: 5
         delay: 10
+      rescue:
       - block:
         - name: enable VM building
           set_fact:
@@ -56,25 +56,19 @@
         - name: check EM7 VM reachable
           command: ping {{ netconfig.nic1.ipaddress }} -c 1
           register: em7_vm_reachable3
-          ignore_errors: true
           check_mode: no
           until: em7_vm_reachable3 is succeeded
           retries: 5
           delay: 10
-        - block:
+        rescue:
           - include_tasks: task_reboot_guest_vm.yml
           - name: recheck EM7 VM reachable
             command: ping {{ netconfig.nic1.ipaddress }} -c 1
             register: em7_vm_reachable4
-            ignore_errors: true
             check_mode: no
             until: em7_vm_reachable4 is succeeded
             retries: 5
             delay: 10
-          when: em7_vm_reachable3 is failed
-        when: em7_vm_reachable2 is failed
-      when:
-        - em7_vm_reachable1 is failed
     - name: Wait for port 22 to become open and contain "OpenSSH"
       wait_for:
         port: 22
@@ -87,5 +81,8 @@
     when:
     - vmguest_info is succeeded or deploy_em7iso is succeeded
 
+  - ansible.builtin.assert:
+      that:
+        - "deploy_em7iso|default({'failed': false}) is succeeded"
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_creation

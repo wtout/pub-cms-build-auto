@@ -1,0 +1,24 @@
+---
+# Tasks to delete the nic1 gateway setting from interface file with self healing
+- name: Delete GTW
+  block:
+    - include_tasks: task_delete_gtw_nic1.yml
+  rescue:
+    - include_tasks: task_delete_ssh_key.yml
+    - name: "vm_creation: Delete VM"
+      include_role:
+        name: vm_creation
+        tasks_from: task_delete_vm.yml
+    - include_tasks: task_deploy_iso.yml
+    - include_tasks: task_delete_gtw_nic1.yml
+  always:
+    - name: define gtw_rebuild
+      set_fact:
+        gtw_rebuild: "{{ delete_nic1gtw|default({'failed': false}) is failed }}"
+    - name: check if rebuild is still required
+      ansible.builtin.assert:
+        that:
+          - not gtw_rebuild|default(false)
+        success_msg: 'Deleted the NIC1 gateway successfully'
+        fail_msg: 'Unable to delete NIC1 gateway successfully'
+  tags: vm_creation

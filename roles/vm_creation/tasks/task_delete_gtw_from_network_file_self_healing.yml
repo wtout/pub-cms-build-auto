@@ -1,0 +1,23 @@
+---
+# Tasks to delete the gateway from network file with self healing
+- name: Delete GTW
+  block:
+    - include_tasks: task_delete_gtw_from_network_file.yml
+  rescue:
+    - include_tasks: task_delete_vm.yml
+    - include_tasks: task_deploy_ova.yml
+    - include_tasks: task_update_disks_self_healing.yml
+    - include_tasks: task_update_hardware.yml
+    - include_tasks: task_enable_root_login.yml
+    - include_tasks: task_delete_gtw_from_network_file.yml
+  always:
+    - name: define gtw_rebuild
+      set_fact:
+        gtw_rebuild: "{{ delete_em7gtw|default({'failed': false}) is failed or delete_gtw|default({'failed': false}) is failed }}"
+    - name: check if rebuild is still required
+      ansible.builtin.assert:
+        that:
+          - not gtw_rebuild|default(false)
+        success_msg: 'Deleted the gateway from the network file successfully'
+        fail_msg: 'Unable to delete the gateway from the network file successfully'
+  tags: vm_creation

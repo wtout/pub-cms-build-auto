@@ -3,7 +3,7 @@
 - block:
   - name: Check licensed state
     ansible.builtin.shell: |
-      licensed_state
+      /opt/em7/bin/licensed_state
     register: reg_lic_state
     loop: "{{ db_list }}"
     loop_control:
@@ -24,8 +24,12 @@
     run_once: yes
   - ansible.builtin.assert:
       that:
-        - status_message|default([]) == []
-      fail_msg: "{{ status_message|default([]) }}"
+        - msg_item is search('Appliance is licensed')
+      fail_msg: "{{ msg_item }}"
+    loop: "{{ status_message }}"
+    loop_control:
+      loop_var: msg_item
+    when: status_message != []
   vars:
     db_list: "{{ groups['em7db']|default(groups['em7'])|union(groups['drem7db']|default([])) }}"
   tags: puppet

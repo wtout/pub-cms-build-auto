@@ -1,0 +1,50 @@
+---
+# tasks to deploy VM from ISO
+- block:
+  - name: Get VM info
+    vmware_guest_info:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      name: "{{ vm.name }}"
+      validate_certs: no
+    check_mode: no
+    ignore_errors: true
+    register: vmguest_info
+
+  - name: define nic1
+    ansible.builtin.set_fact:
+      nic1:
+        - name: "{{ netconfig.nic1.network }}"
+          ip: "{{ netconfig.nic1.ipaddress }}"
+          netmask: "{{ netconfig.nic1.netmask }}"
+          gateway: "{{ netconfig.nic1.gateway }}"
+          device_type: vmxnet3
+    when:
+      - netconfig.nic1.intname != ''
+  - name: define nic2
+    ansible.builtin.set_fact:
+      nic2:
+        - name: "{{ netconfig.nic2.network }}"
+          ip: "{{ netconfig.nic2.ipaddress }}"
+          netmask: "{{ netconfig.nic2.netmask }}"
+          gateway: "{{ netconfig.nic2.gateway }}"
+          device_type: vmxnet3
+    when:
+      - netconfig.nic2.intname != ''
+  - name: define list of nics
+    ansible.builtin.set_fact:
+      nics_list: "{{ nic1 + nic2|default([]) }}"
+
+  - block:
+    - include_tasks: task_deploy_iso.yml
+    rescue:
+    - include_role:
+        name: vm_creation
+        tasks_from: task_delete_vm.yml
+    - include_tasks: task_deploy_iso.yml
+
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vm_creation

@@ -6,24 +6,27 @@
       splunk_status: "{{ user_expiry_status }}"
     when: user_expiry_status|default('') is search('does not exist')
   - block:
-    - name: check splunk service status
-      ansible.builtin.shell: |
-        $(which su) splunk -c '/opt/splunk/bin/splunk status'
-      check_mode: no
-      register: spl_status
-      ignore_errors: true
-    - name: define splunk status
-      ansible.builtin.set_fact:
-        splunk_status: 'splunk service is not running'
-      when:
-        - inventory_hostname is search('spl(dpl01|mas01|src|ind)')
-        - spl_status is failed
-    - name: define splunk status
-      ansible.builtin.set_fact:
-        splunk_status: 'splunk service is running'
-      when:
-        - inventory_hostname is search('spl(dpl|mas)02')
-        - spl_status is succeeded
+    - name: Checking splunk status
+      block:
+        - name: check splunk service status
+          ansible.builtin.shell: |
+            $(which su) splunk -c '/opt/splunk/bin/splunk status'
+          check_mode: no
+          register: spl_status
+        - name: define splunk status
+          ansible.builtin.set_fact:
+            splunk_status: 'splunk service is running'
+          when: 
+            - inventory_hostname is search('spl(dpl|mas)02')
+      rescue:
+        - name: define splunk status
+          ansible.builtin.set_fact:
+            splunk_status: 'splunk service is not running'
+          when:
+            - inventory_hostname is search('spl(dpl01|mas01|src|ind)')
+      always:
+        - debug:
+            msg: "{{ spl_status }}"
     when: user_expiry_status|default('') is not search('does not exist')
   when: inventory_hostname is search('spl')
   tags: sanity

@@ -1,8 +1,10 @@
 ---
 # tasks file for vm_fromiso
 - block:
-  - include_tasks: task_purge_known_hosts.yml
-    when: "'stack' in group_names or 'dr' in group_names"
+  - name: "vm_creation: Delete SSH key"
+    include_role:
+      name: vm_creation
+      tasks_from: task_delete_ssh_key.yml
   - name: "vm_creation: Define folder name"
     include_role:
       name: vm_creation

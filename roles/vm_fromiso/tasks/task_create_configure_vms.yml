@@ -14,42 +14,19 @@
   - block:
     - include_tasks: task_create_kickstart_iso.yml
     - include_tasks: task_copy_kickstart_iso_to_vsphere.yml
+    - include_tasks: task_deploy_iso_self_healing.yml
+    - include_tasks: task_delete_gtw_nic1_self_healing.yml
+    - include_tasks: task_update_disks_self_healing.yml
+    - include_tasks: task_delete_kickstart_files.yml
     when: inventory_hostname is not search('em7')
 
   - block:
     - include_tasks: task_deploy_em7iso.yml
-    - ansible.builtin.assert:
-        that:
-          - "deploy_em7iso|default({'failed': false}) is succeeded"
     - include_tasks: task_update_em7prt_disk0.yml
     - include_tasks: task_reboot_vm.yml
     - include_tasks: task_rename_nic2.yml
       when: inventory_hostname is not search('em7mc')
     when: inventory_hostname is search('em7')
-
-  - block:
-    - include_tasks: task_deploy_iso.yml
-    - include_tasks: task_delete_gtw_nic1.yml
-    - block:
-      - include_tasks: task_recreate_vm.yml
-      - name: check if rebuild is still required
-        ansible.builtin.assert:
-          that:
-            - not gtw_rebuild|default(false)
-          fail_msg: 'Unable to delete NIC1 gateway successfully'
-      when: gtw_rebuild|default(false)
-    - include_tasks: task_update_disks.yml
-    - block:
-      - include_tasks: task_recreate_vm.yml
-      - include_tasks: task_update_disks.yml
-      - name: check if rebuild is still required
-        ansible.builtin.assert:
-          that:
-            - not disk_rebuild|default(false)
-          fail_msg: 'Unable to update the disks successfully'
-      when: disk_rebuild|default(false)
-    - include_tasks: task_delete_kickstart_files.yml
-    when: inventory_hostname is not search('em7')
 
   - include_tasks: task_update_default_route.yml
   - include_tasks: task_add_gtw2.yml

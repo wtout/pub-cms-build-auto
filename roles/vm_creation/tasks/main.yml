@@ -1,8 +1,7 @@
 ---
 # tasks file for vm_creation
 - block:
-  - include_tasks: task_purge_known_hosts.yml
-    when: "'stack' in group_names or 'dr' in group_names"
+  - include_tasks: task_delete_ssh_key.yml
   - include_tasks: task_define_folder_name.yml
 
   - block:
@@ -18,28 +17,27 @@
           wait_for_connection:
             timeout: 3
           register: vcr_vm_creds
-          ignore_errors: true
           check_mode: no
+        rescue:
         - name: Update SSH password
           set_fact:
             ansible_ssh_pass: "{{ postppp }}"
             ansible_become_pass: "{{ postppp }}"
           no_log: true
           when:
-            - vcr_vm_creds is failed
             - vcr_vm_creds.msg is search('Invalid/incorrect username/password')
-        - name: check updated VM credentials
-          wait_for_connection:
-            timeout: 3
-          register: vcr_connection_status
-          ignore_errors: true
-          check_mode: no
-        - name: reset SSH password
-          set_fact:
-            ansible_ssh_pass: "{{ preppp }}"
-            ansible_become_pass: "{{ preppp }}"
-          no_log: true
-          when: vcr_connection_status is failed
+        - block:
+          - name: check updated VM credentials
+            wait_for_connection:
+              timeout: 3
+            register: vcr_connection_status
+            check_mode: no
+          rescue:
+          - name: reset SSH password
+            set_fact:
+              ansible_ssh_pass: "{{ preppp }}"
+              ansible_become_pass: "{{ preppp }}"
+            no_log: true
         when: vcr_vm_reachable is succeeded
 
     - include_tasks: task_create_vms.yml

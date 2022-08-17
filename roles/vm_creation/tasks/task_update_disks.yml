@@ -90,7 +90,6 @@
       validate_certs: no
     register: vmguest_disk0
     until: vmguest_disk0 is succeeded
-    ignore_errors: true
     when:
       - vm.disk0 is defined
       - vm.disk0|float > 0
@@ -112,7 +111,6 @@
       validate_certs: no
     register: vmguest_disk1
     until: vmguest_disk1 is succeeded
-    ignore_errors: true
     when:
       - vm.disk1 is defined
       - vm.disk1|float > 0
@@ -134,7 +132,6 @@
       validate_certs: no
     register: vmguest_disk2
     until: vmguest_disk2 is succeeded
-    ignore_errors: true
     when:
       - vm.disk2 is defined
       - vm.disk2 != ''
@@ -157,14 +154,10 @@
       validate_certs: no
     register: vmguest_disk3
     until: vmguest_disk3 is succeeded
-    ignore_errors: true
     when:
       - vm.disk3 is defined
       - vm.disk3 != ''
       - vm.disk3|float > 0
-  - name: define disk_rebuild
-    set_fact:
-      disk_rebuild: "{{ vmguest_disk0|default({'failed': false}) is failed or vmguest_disk1|default({'failed': false}) is failed or vmguest_disk2|default({'failed': false}) is failed or vmguest_disk3|default({'failed': false}) is failed }}"
   when:
     - not ansible_check_mode
     - vm.disk1|float > 0 or vm.disk2|float > 0 or vm.disk3|float > 0

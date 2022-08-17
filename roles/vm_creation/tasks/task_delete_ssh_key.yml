@@ -1,15 +1,15 @@
 ---
-# tasks to purge the known hosts file
+# tasks to ssh key from known_hosts file
 - block:
   - name: check if known hosts file exists
-    stat:
+    ansible.builtin.stat:
       path: ~/.ssh
     register: ssh_dir
-  - name: purge known hosts file
-    copy:
-      dest: ~/.ssh/known_hosts
-      content: ''
+  - name: delete ssh key
+    ansible.builtin.lineinfile:
+      path: ~/.ssh/known_hosts
+      regex: '^{{ ansible_host }}.*$'
+      state: absent
     when: ssh_dir.stat.exists
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  run_once: true
   tags: vm_creation

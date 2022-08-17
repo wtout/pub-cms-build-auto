@@ -30,7 +30,6 @@
       register: delete_em7gtw
       until: delete_em7gtw is succeeded
       delay: 10
-      ignore_errors: true
     - name: restart the network on the EM7 VM
       vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
@@ -65,7 +64,6 @@
       register: delete_gtw
       until: delete_gtw is succeeded
       delay: 10
-      ignore_errors: true
     - name: restart the network on the non-EM7 VM
       vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
@@ -82,9 +80,6 @@
         wait_for_process: true
       when: delete_gtw is succeeded
     when: inventory_hostname is not search('em7')
-  - name: define gtw_rebuild
-    set_fact:
-      gtw_rebuild: "{{ delete_em7gtw|default({'failed': false}) is failed or delete_gtw|default({'failed': false}) is failed }}"
   when:
     - netconfig.nic2.ipaddress != ''
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

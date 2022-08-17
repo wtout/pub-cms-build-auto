@@ -1,53 +1,50 @@
 ---
 # tasks to check connectivity and credentials for non EM7 hosts
-- block:
-  - name: check VM reachable
-    command: ping {{ ansible_host }} -c 1
-    register: vcr_vm_reachable
-    ignore_errors: true
-    check_mode: no
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  - block:
-    - name: switch to {{ vm_svc_user }} user
-      set_fact:
-        ansible_user: "{{ vm_svc_user }}"
-        ansible_ssh_pass: "{{ vm_svc_pass }}"
-      no_log: true
-    - name: check connection
-      wait_for_connection:
-        timeout: 15
-      register: vcr_vm_connection
-      ignore_errors: true
+- name: check connection credentials
+  block:
+    - name: check VM reachable
+      command: ping {{ ansible_host }} -c 1
+      register: vcr_vm_reachable
       check_mode: no
-    - debug:
-        msg: "VM hardening is enabled. Nothing to do"
-      when: vcr_vm_connection is succeeded
-    - name: set flag to not create and configure the VMs
-      set_fact:
-        crecon: false
-      when: vcr_vm_connection is succeeded
-    - name: revert user
-      set_fact:
-        ansible_user: "{{ credentials.username }}"
-        ansible_ssh_pass: "{{ credentials.password }}"
-      no_log: true
-      when: vcr_vm_connection is failed
-    when: vcr_vm_reachable is failed
-  - block:
-    - name: check VM credentials
-      wait_for_connection:
-        timeout: 15
-      register: vcr_vm_creds
-      ignore_errors: true
-      check_mode: no
-    - name: Update SSH credentials
-      set_fact:
-        ansible_user: "{{ vm_svc_user }}"
-        ansible_ssh_pass: "{{ vm_svc_pass }}"
-        ansible_become_pass: "{{ vm_svc_pass }}"
-      no_log: true
-      when:
-        - vcr_vm_creds is failed
-        - vcr_vm_creds.msg is search('Invalid/incorrect')
-    when: vcr_vm_reachable is succeeded
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - name: check original credentials
+      block:
+        - name: check VM credentials
+          wait_for_connection:
+            timeout: 3
+          register: vcr_vm_creds
+          check_mode: no
+      rescue:
+        - name: Update SSH credentials
+          set_fact:
+            ansible_user: "{{ vm_svc_user }}"
+            ansible_ssh_pass: "{{ vm_svc_pass }}"
+            ansible_become_pass: "{{ vm_svc_pass }}"
+          no_log: true
+          when:
+            - vcr_vm_creds.msg is search('Invalid/incorrect')
+  rescue:
+    - name: check service user credentials
+      block:
+        - name: switch to {{ vm_svc_user }} user
+          set_fact:
+            ansible_user: "{{ vm_svc_user }}"
+            ansible_ssh_pass: "{{ vm_svc_pass }}"
+          no_log: true
+        - name: check connection
+          wait_for_connection:
+            timeout: 3
+          register: vcr_vm_connection
+          check_mode: no
+        - debug:
+            msg: "VM hardening is enabled. Nothing to do"
+        - name: set flag to not create and configure the VMs
+          set_fact:
+            crecon: false
+      rescue:
+        - name: revert user
+          set_fact:
+            ansible_user: "{{ credentials.username }}"
+            ansible_ssh_pass: "{{ credentials.password }}"
+          no_log: true
   tags: vm_creation

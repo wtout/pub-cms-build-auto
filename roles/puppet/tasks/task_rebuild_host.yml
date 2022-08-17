@@ -10,6 +10,10 @@
     include_role:
       name: vm_configuration_ova
       tasks_from: task_detect_datastore.yml
+  - name: "vm_creation: delete ssh key"
+    include_role:
+      name: vm_creation
+      tasks_from: task_delete_ssh_key.yml
   - name: "vm_creation: rollback vms"
     include_role:
       name: vm_creation

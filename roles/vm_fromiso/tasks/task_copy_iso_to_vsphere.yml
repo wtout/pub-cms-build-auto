@@ -12,10 +12,9 @@
       state: file
       validate_certs: false
     register: iso_present
-    ignore_errors: true
     when: ds_folder is succeeded
     run_once: "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else false }}"
-
+  rescue:
   - name: copy installer ISO file to vsphere
     vsphere_copy:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
@@ -30,7 +29,6 @@
     poll: 30
     run_once: "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else false }}"
     when:
-      - iso_present is failed
       - not ansible_check_mode
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   environment:
