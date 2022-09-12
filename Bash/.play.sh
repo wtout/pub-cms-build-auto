@@ -497,7 +497,7 @@ function get_inventory() {
 		$(docker_cmd) exec -it ${CONTAINERNAME} ansible-playbook playbooks/getinventory.yml --extra-vars "{SYS_NAME: '${SYS_DEF}'}" -e @"${ANSIBLE_VARS}" -e "{auto_dir: '${CONTAINERWD}'}" $(remove_extra_vars_arg "$(remove_hosts_arg "${@}")") -v
 		GET_INVENTORY_STATUS=${?}
 		[[ ${GET_INVENTORY_STATUS} != 0 ]] && exit 1
-	elif [[ $(echo "${ENAME}" | grep -i mdr) != '' ]]
+	elif [[ $(echo "${ENAME}" | grep -i "mdr") != '' ]]
 	then
 		[[ -d ${INVENTORY_PATH} ]] && GET_INVENTORY_STATUS=0 || GET_INVENTORY_STATUS=1
 		[[ ${GET_INVENTORY_STATUS} -ne 0 ]] && echo -e "\nInventory for ${BOLD}${ENAME}${NORMAL} system is not found. Aborting!" && exit 1
@@ -654,7 +654,7 @@ ANSIBLE_CFG="ansible.cfg"
 ANSIBLE_LOG_LOCATION="Logs"
 BOLD=$(tput bold)
 NORMAL=$(tput sgr0)
-ANSIBLE_VERSION='6.1.0'
+ANSIBLE_VERSION='6.2.0'
 ANSIBLE_VARS="vars/datacenters.yml"
 PASSVAULT="vars/passwords.yml"
 REPOVAULT="vars/.repovault.yml"
@@ -708,8 +708,8 @@ get_inventory "${@}"
 get_hosts "${@}"
 get_credentials "${@}"
 NUM_HOSTSINPLAY=$(echo $(get_hostsinplay "${HL}") | wc -w)
+[[ $(get_bastion_address) == "[]" ]] && create_symlink
 stop_container
-create_symlink
 add_write_permission "${PWD}/roles"
 add_write_permission "${PWD}/roles/*"
 add_write_permission "${PWD}/roles/*/files"

@@ -4,7 +4,10 @@
   block:
     - include_tasks: task_delete_gtw_nic1.yml
   rescue:
-    - include_tasks: task_delete_ssh_key.yml
+    - name: "vm_creation: Delete SSH key"
+      include_role:
+        name: vm_creation
+        tasks_from: task_delete_ssh_key.yml
     - name: "vm_creation: Delete VM"
       include_role:
         name: vm_creation

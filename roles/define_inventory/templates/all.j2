@@ -1,5 +1,11 @@
 #jinja2: trim_blocks: False
-{% include environment_definition.customer.version.release[1:4].split('.')|join + '-all.yml.tmpl' %}
+{% include (environment_definition.customer.version.release or 'R9.2.17')[1:4].split('.')|join + '-all.yml.tmpl' %}
+{% if environment_definition.customer.deployment_model is search('sa|sh') %}
+{% include 'templates/alls.yml.tmpl' %}
+{% if environment_definition.customer.disaster_recovery %}
+{% include 'templates/dralls.yml.tmpl' %}
+{% endif %}
+{% else %}
 {% if environment_definition.customer.deployment_model is search('aio') %}
 {% if environment_definition.customer.deployment_model[-1:] is search('a') %}
 {% include 'templates/allaioa.yml.tmpl' %}
@@ -17,6 +23,7 @@
 {% include 'templates/allh.yml.tmpl' %}
 {% if environment_definition.customer.disaster_recovery %}
 {% include 'templates/drallh.yml.tmpl' %}
+{% endif %}
 {% endif %}
 {% endif %}
 {% endif %}

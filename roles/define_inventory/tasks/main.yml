@@ -14,23 +14,23 @@
       dm: "{{ 'Deployment model is not defined' if (environment_definition.customer.deployment_model is not defined or environment_definition.customer.deployment_model == none) else '' }}"
       ar: "{{ 'ATA relay is not defined' if (environment_definition.customer.ata is not defined or environment_definition.customer.ata == none) else '' }}"
       dr: "{{ 'Disaster recovery is not defined' if (environment_definition.customer.disaster_recovery is not defined or environment_definition.customer.disaster_recovery == none) else '' }}"
-      np: "{{ 'Primary number of Portals is not defined' if (environment_definition.customer.primary.number_of_prts is not defined or environment_definition.customer.primary.number_of_prts == none) else '' }}"
-      nm: "{{ 'Primary number of Message Collectors is not defined' if (environment_definition.customer.primary.number_of_mcs is not defined or environment_definition.customer.primary.number_of_mcs == none) else '' }}"
-      nd: "{{ 'Primary number of Data Collectors is not defined' if (environment_definition.customer.primary.number_of_dcs is not defined or environment_definition.customer.primary.number_of_dcs == none) else '' }}"
+      np: "{{ 'Primary number of Portals is not defined' if environment_definition.customer.name|lower is not search('stdal') and (environment_definition.customer.primary.number_of_prts is not defined or environment_definition.customer.primary.number_of_prts == none) else '' }}"
+      nm: "{{ 'Primary number of Message Collectors is not defined' if environment_definition.customer.name|lower is not search('stdal') and (environment_definition.customer.primary.number_of_mcs is not defined or environment_definition.customer.primary.number_of_mcs == none) else '' }}"
+      nd: "{{ 'Primary number of Data Collectors is not defined' if environment_definition.customer.name|lower is not search('stdal') and (environment_definition.customer.primary.number_of_dcs is not defined or environment_definition.customer.primary.number_of_dcs == none) else '' }}"
       pn: "{{ 'Primary name_prefix is not defined' if (environment_definition.customer.primary.name_prefix is not defined or  environment_definition.customer.primary.name_prefix == none) else '' }}"
       po: "{{ 'Primary octets is not defined' if (environment_definition.customer.primary.octets is not defined or environment_definition.customer.primary.octets == none) else '' }}"
       sn: "{{ 'Secondary name_prefix is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.name_prefix is not defined or environment_definition.customer.secondary.name_prefix == none)) else '' }}"
       so: "{{ 'Secondary octets is not defined' if (environment_definition.customer.disaster_recovery and (environment_definition.customer.secondary.octets is not defined or environment_definition.customer.secondary.octets == none)) else '' }}"
-      rv: "{{ 'Release version is not defined' if (environment_definition.customer.version.release is not defined or environment_definition.customer.version.release == none) else '' }}"
+      rv: "{{ 'Release version is not defined' if environment_definition.customer.name|lower is not search('stdal') and (environment_definition.customer.version.release is not defined or environment_definition.customer.version.release == none) else '' }}"
       pdn: "{{ 'Datacenter name is not defined' if (environment_definition.datacenter.primary.name is not defined or environment_definition.datacenter.primary.name == none) else '' }}"
       pdh: "{{ 'Primary Datacenter resources is not defined' if (environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and (environment_definition.datacenter.primary.resources is not defined or environment_definition.datacenter.primary.resources == none)) else '' }}"
       pdc: "{{ 'Primary Datacenter cluster is not defined. Will use esxi hosts IPs to define the primary cluster name' if (environment_definition.datacenter.primary.cluster == none and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
       sdn: "{{ 'Secondary Datacenter name is not defined' if environment_definition.customer.disaster_recovery and (environment_definition.datacenter.secondary.name is not defined or environment_definition.datacenter.secondary.name == none) else '' }}"
       sdh: "{{ 'Secondary Datacenter resources is not defined' if (environment_definition.customer.disaster_recovery and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h') and (environment_definition.datacenter.secondary.resources is not defined or environment_definition.datacenter.secondary.resources == none)) else '' }}"
       sdc: "{{ 'Secondary Datacenter cluster is not defined. Will use esxi hosts IPs to define the secondary cluster name' if (environment_definition.customer.disaster_recovery and environment_definition.datacenter.secondary.cluster == none and environment_definition.customer.deployment_model != none and environment_definition.customer.deployment_model is search('a') and environment_definition.customer.deployment_model is not search('h')) else '' }}"
-      pps: "{{ 'Primary Puppet server_name is not defined' if (environment_definition.puppet is not defined or environment_definition.puppet.primary.server_name is not defined or environment_definition.puppet.primary.server_name == none) else '' }}"
+      pps: "{{ 'Primary Puppet server_name is not defined' if environment_definition.customer.name|lower is not search('stdal') and (environment_definition.puppet is not defined or environment_definition.puppet.primary.server_name is not defined or environment_definition.puppet.primary.server_name == none) else '' }}"
       pys: "{{ 'Primary Yum server_name is not defined' if (environment_definition.yum is not defined or environment_definition.yum.primary.server_name is not defined or environment_definition.yum.primary.server_name == none) else '' }}"
-      sps: "{{ 'Secondary Puppet server_name is not defined' if environment_definition.customer.disaster_recovery and (environment_definition.puppet is not defined or environment_definition.puppet.secondary.server_name is not defined or environment_definition.puppet.secondary.server_name == none) else '' }}"
+      sps: "{{ 'Secondary Puppet server_name is not defined' if environment_definition.customer.disaster_recovery and environment_definition.customer.name|lower is not search('stdal') and (environment_definition.puppet is not defined or environment_definition.puppet.secondary.server_name is not defined or environment_definition.puppet.secondary.server_name == none) else '' }}"
       sys: "{{ 'Secondary Yum server_name is not defined' if environment_definition.customer.disaster_recovery and (environment_definition.yum is not defined or environment_definition.yum.secondary.server_name is not defined or environment_definition.yum.secondary.server_name == none) else '' }}"
 
   - debug:
@@ -51,41 +51,52 @@
   - name: check if deployment model value is valid
     assert:
       that:
-        - not environment_definition.customer.deployment_model | lower | regex_search('a|aioa|aioh|h') == none
-      fail_msg: "deployment_model is not valid. Only a, h, aioa and aioh are valid"
+        - not environment_definition.customer.deployment_model | lower | regex_search('a|aioa|aioh|h|sh|sa') == none
+      fail_msg: "deployment_model is not valid. Only a, h, aioa, aioh, sa and sh are valid"
 
   - debug:
       msg:
-        - "environment_definition.customer.primary.number_of_{{ loop_item.name }}"
-        - "{{ environment_definition['customer']['primary']['number_of_' + loop_item.name] }}"
+        - "environment_definition.customer.{{ loop_item.name }}"
+        - "{{ environment_definition['customer'][loop_item.name|split('.')|first][loop_item.name|split('.')|last] }}"
     loop:
-      - { 'name': 'prts', 'max_value': 4 }
-      - { 'name': 'mcs', 'max_value': 6 }
-      - { 'name': 'dcs', 'max_value': 12 }
-    loop_control:
-      loop_var: loop_item
-
-  - name: check if number of EM7 Portals, MCs and DCs value is valid
-    assert:
-      that:
-        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int >= {{ 2 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}"
-        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int <= loop_item.max_value|int"
-        - "environment_definition.customer.primary.number_of_{{ loop_item.name }} | int % 2 == 0"
-      fail_msg: "The value {{ environment_definition['customer']['primary']['number_of_' + loop_item.name] }} for environment_definition.customer.primary.number_of_{{ loop_item.name }} is not valid. Only {{ 'even numbers in [2-' + loop_item.max_value|string + '] are valid' if environment_definition.customer.deployment_model | lower is not search('aio') else '0 is valid' }}"
-    loop:
-      - { 'name': 'prts', 'max_value': "{{ 4 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}" }
-      - { 'name': 'mcs', 'max_value': "{{ 6 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}" }
-      - { 'name': 'dcs', 'max_value': "{{ 12 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}" }
+      - { 'name': 'primary.number_of_prts', 'max_value': "{{ 4 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is not search('stdal') else 'disabled' }}" }
+      - { 'name': 'primary.number_of_mcs', 'max_value': "{{ 6 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is not search('stdal') else 'disabled' }}" }
+      - { 'name': 'primary.number_of_dcs', 'max_value': "{{ 12 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is not search('stdal') else 'disabled' }}" }
+      - { 'name': 'primary.number_of_stdalvms', 'max_value': "{{ 100 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is search('stdal') else 'disabled' }}" }
+      - { 'name': 'secondary.number_of_stdalvms', 'max_value': "{{ 100 if environment_definition.customer.disaster_recovery and environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.disaster_recovery and environment_definition.customer.name|lower is search('stdal') else 'disabled' }}" }
     loop_control:
       loop_var: loop_item
       label: "{{ 'number_of_' + loop_item.name }}"
+    when:
+      - loop_item.state == 'active'
+
+  - name: check if number of VMs value is valid
+    assert:
+      that:
+        - "environment_definition.customer.{{ loop_item.name }} | int >= {{ 1 if environment_definition.customer.name|lower is search('stdal') else 2 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}"
+        - "environment_definition.customer.{{ loop_item.name }} | int <= loop_item.max_value|int"
+        - "environment_definition.customer.{{ loop_item.name }} | int % 2 {{ '>= 0' if environment_definition.customer.name|lower is search('stdal') else '== 0' }}"
+      fail_msg: "The value {{ environment_definition['customer'][loop_item.name|split('.')|first][loop_item.name|split('.')|last] }} for environment_definition.customer.{{ loop_item.name }} is not valid. Only {{ 'numbers >= 1 are valid' if environment_definition.customer.name|lower is search('stdal') else 'even numbers in [2-' + loop_item.max_value|string + '] are valid' if environment_definition.customer.deployment_model | lower is not search('aio') else '0 is valid' }}"
+    loop:
+      - { 'name': 'primary.number_of_prts', 'max_value': "{{ 4 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is not search('stdal') else 'disabled' }}" }
+      - { 'name': 'primary.number_of_mcs', 'max_value': "{{ 6 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is not search('stdal') else 'disabled' }}" }
+      - { 'name': 'primary.number_of_dcs', 'max_value': "{{ 12 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is not search('stdal') else 'disabled' }}" }
+      - { 'name': 'primary.number_of_stdalvms', 'max_value': "{{ 100 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is search('stdal') else 'disabled' }}" }
+      - { 'name': 'secondary.number_of_stdalvms', 'max_value': "{{ 100 if environment_definition.customer.disaster_recovery and environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.disaster_recovery and environment_definition.customer.name|lower is search('stdal') else 'disabled' }}" }
+    loop_control:
+      loop_var: loop_item
+      label: "{{ 'number_of_' + loop_item.name }}"
+    when:
+      - loop_item.state == 'active'
 
   - name: check if ata value is valid
     assert:
       that:
         - not environment_definition.customer.ata | lower | regex_search('yes|no|true|false') == none
       fail_msg: "ATA is not valid. Only yes/no/true/false are valid"
-    when: environment_definition.customer.deployment_model | lower is not search('aio')
+    when:
+      - environment_definition.customer.name|lower is not search('stdal')
+      - environment_definition.customer.deployment_model | lower is not search('aio')
 
   - name: check if disaster recovery value is valid
     assert:
@@ -113,12 +124,16 @@
       that:
         - not environment_definition.customer.version.release | upper | regex_search('R\d+') == none
       fail_msg: "customer.version.release is not valid. Only R followed by version number (Ex. R9.1.3) format is valid"
+    when:
+      - environment_definition.customer.name|lower is not search('stdal')
 
   - name: check if primary puppet server name value is valid
     assert:
       that:
         - not environment_definition.puppet.primary.server_name | lower | regex_search('alln1qspupp0[1-4]|sastgpupp01') == none
       fail_msg: "Primary Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
+    when:
+      - environment_definition.customer.name|lower is not search('stdal')
 
   - name: check if secondary puppet server name value is valid
     assert:
@@ -127,6 +142,7 @@
       fail_msg: "Secondary Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
     when:
       - environment_definition.customer.disaster_recovery
+      - environment_definition.customer.name|lower is not search('stdal')
 
   - name: check if primary yum server name value is valid
     assert:

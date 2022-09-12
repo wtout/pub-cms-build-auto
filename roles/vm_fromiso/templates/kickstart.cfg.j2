@@ -98,7 +98,7 @@ echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sys
 
 # Yum repos
 rm -f /etc/yum.repos.d/*
-{% if customer.primary.name_prefix is not search('mdr') %}
+{% if customer.primary.name_prefix is not search('mdr|stdal') %}
 {% block QS_repo %}
 cat <<EOF > /etc/yum.repos.d/QS.repo
 [QS-PROD]
@@ -114,7 +114,7 @@ EOF
 {% endblock QS_repo %}
 {% endif %}
 
-{% if customer.primary.name_prefix is search('mdr') %}
+{% if customer.primary.name_prefix is search('mdr|stdal') %}
 {% block artifactory_repo %}
 cat <<EOF > /etc/yum.repos.d/artifactory.repo
 [EpelArtifactory]
@@ -157,7 +157,7 @@ grep proxy /etc/yum.conf || sed -i 's|^\(\[main\]\)$|\1\nproxy={{ proxy_address 
 
 # Configure Chrony
 sed -i '/^server.*iburst$/d' /etc/chrony.conf
-sed -i 's/^\(# Please consider.*\)$/\1\n{% if customer.name|lower is search('mdr') %} {{ 'server ' + netconfig.nic1.ipaddress.split('.')[:-1] | join('.') + '.254 iburst\\n' }} {% elif 'dr' in group_names %} {%- if sysconfig.secondary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.secondary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.secondary.ntp_server + ' iburst\\n' -}} {% endif -%} {% else %} {%- if sysconfig.primary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.primary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.primary.ntp_server + ' iburst\\n' -}} {% endif -%} {% endif %}/' /etc/chrony.conf
+sed -i 's/^\(# Please consider.*\)$/\1\n{% if customer.name|lower is search('mdr|stdal') %} {{ 'server ' + netconfig.nic1.ipaddress.split('.')[:-1] | join('.') + '.254 iburst\\n' }} {% elif 'dr' in group_names %} {%- if sysconfig.secondary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.secondary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.secondary.ntp_server + ' iburst\\n' -}} {% endif -%} {% else %} {%- if sysconfig.primary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.primary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.primary.ntp_server + ' iburst\\n' -}} {% endif -%} {% endif %}/' /etc/chrony.conf
 
 # Configure SNMP
 /usr/bin/net-snmp-create-v3-user -ro -A "C1s20A798hPwec" -X "m91K0sl1ux9bsp" -a MD5 -x DES cmsmomuser

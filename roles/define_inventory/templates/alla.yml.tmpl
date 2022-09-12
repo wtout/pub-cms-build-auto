@@ -36,7 +36,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.em7.em7db.disk_provisioning if (environment_definition.vm_setting.em7.em7db.disk_provisioning is defined and environment_definition.vm_setting.em7.em7db.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.em7.em7db.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.em7.em7db.hostmap is search(',') else [environment_definition.vm_setting.em7.em7db.hostmap|string]) if (environment_definition.vm_setting.em7.em7db.hostmap is defined and environment_definition.vm_setting.em7.em7db.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.em7.em7db.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.em7.em7db.hostmap is search(',') else [environment_definition.vm_setting.em7.em7db.hostmap|string]) if (environment_definition.vm_setting.em7.em7db.hostmap is defined and environment_definition.vm_setting.em7.em7db.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.em7.em7db.vmname if (environment_definition.vm_setting.em7.em7db.vmname is defined and environment_definition.vm_setting.em7.em7db.vmname != none) else '' }}"
 
@@ -48,10 +48,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.em7.em7db.nic1.intname if (environment_definition.vm_setting.em7.em7db.nic1.intname is defined and environment_definition.vm_setting.em7.em7db.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.em7.em7db.nic1.ip_pool if (environment_definition.vm_setting.em7.em7db.nic1.ip_pool is defined and environment_definition.vm_setting.em7.em7db.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.em7.em7db.nic1.ip_pool if (environment_definition.vm_setting.em7.em7db.nic1.ip_pool is defined and environment_definition.vm_setting.em7.em7db.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.em7.em7db.nic1.ip_octetpool if (environment_definition.vm_setting.em7.em7db.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.em7db.nic1.ip_octetpool != none) else range(13, 14 + 1)|list }}"
+        ip_octetpool: {{ environment_definition.vm_setting.em7.em7db.nic1.ip_octetpool if (environment_definition.vm_setting.em7.em7db.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.em7db.nic1.ip_octetpool != none) else range(13, 14 + 1)|list }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.em7.em7db.nic1.gtw if (environment_definition.vm_setting.em7.em7db.nic1.gtw is defined and environment_definition.vm_setting.em7.em7db.nic1.gtw != none) else '' }}"
@@ -82,10 +82,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.em7.em7db.nic2.intname if (environment_definition.vm_setting.em7.em7db.nic2.intname is defined and environment_definition.vm_setting.em7.em7db.nic2.intname != none) else 'ens192' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.em7.em7db.nic2.ip_pool if (environment_definition.vm_setting.em7.em7db.nic2.ip_pool is defined and environment_definition.vm_setting.em7.em7db.nic2.ip_pool != none) else [ '192.170.170.9', '192.170.170.10' ] }}"
+        ip_pool: {{ environment_definition.vm_setting.em7.em7db.nic2.ip_pool if (environment_definition.vm_setting.em7.em7db.nic2.ip_pool is defined and environment_definition.vm_setting.em7.em7db.nic2.ip_pool != none) else [ '192.170.170.9', '192.170.170.10' ] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.em7.em7db.nic2.ip_octetpool if (environment_definition.vm_setting.em7.em7db.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.em7db.nic2.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.em7.em7db.nic2.ip_octetpool if (environment_definition.vm_setting.em7.em7db.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.em7db.nic2.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.em7.em7db.nic2.gtw if (environment_definition.vm_setting.em7.em7db.nic2.gtw is defined and environment_definition.vm_setting.em7.em7db.nic2.gtw != none) else '' }}"
@@ -137,7 +137,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.em7.em7dc.disk_provisioning if (environment_definition.vm_setting.em7.em7dc.disk_provisioning is defined and environment_definition.vm_setting.em7.em7dc.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.em7.em7dc.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.em7.em7dc.hostmap is search(',') else [environment_definition.vm_setting.em7.em7dc.hostmap|string]) if (environment_definition.vm_setting.em7.em7dc.hostmap is defined and environment_definition.vm_setting.em7.em7dc.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.em7.em7dc.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.em7.em7dc.hostmap is search(',') else [environment_definition.vm_setting.em7.em7dc.hostmap|string]) if (environment_definition.vm_setting.em7.em7dc.hostmap is defined and environment_definition.vm_setting.em7.em7dc.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.em7.em7dc.vmname if (environment_definition.vm_setting.em7.em7dc.vmname is defined and environment_definition.vm_setting.em7.em7dc.vmname != none) else '' }}"
 
@@ -149,10 +149,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.em7.em7dc.nic1.intname if (environment_definition.vm_setting.em7.em7dc.nic1.intname is defined and environment_definition.vm_setting.em7.em7dc.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.em7.em7dc.nic1.ip_pool if (environment_definition.vm_setting.em7.em7dc.nic1.ip_pool is defined and environment_definition.vm_setting.em7.em7dc.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.em7.em7dc.nic1.ip_pool if (environment_definition.vm_setting.em7.em7dc.nic1.ip_pool is defined and environment_definition.vm_setting.em7.em7dc.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.em7.em7dc.nic1.ip_octetpool if (environment_definition.vm_setting.em7.em7dc.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.em7dc.nic1.ip_octetpool != none) else [ '9', '11', '10', '12', '15', '17', '16', '18', '26', '27', '28', '29' ] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.em7.em7dc.nic1.ip_octetpool if (environment_definition.vm_setting.em7.em7dc.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.em7dc.nic1.ip_octetpool != none) else [ '9', '11', '10', '12', '15', '17', '16', '18', '26', '27', '28', '29' ] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.em7.em7dc.nic1.gtw if (environment_definition.vm_setting.em7.em7dc.nic1.gtw is defined and environment_definition.vm_setting.em7.em7dc.nic1.gtw != none) else '' }}"
@@ -183,10 +183,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.em7.em7dc.nic2.intname if (environment_definition.vm_setting.em7.em7dc.nic2.intname is defined and environment_definition.vm_setting.em7.em7dc.nic2.intname != none) else 'ens192' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.em7.em7dc.nic2.ip_pool if (environment_definition.vm_setting.em7.em7dc.nic2.ip_pool is defined and environment_definition.vm_setting.em7.em7dc.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.em7.em7dc.nic2.ip_pool if (environment_definition.vm_setting.em7.em7dc.nic2.ip_pool is defined and environment_definition.vm_setting.em7.em7dc.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.em7.em7dc.nic2.ip_octetpool if (environment_definition.vm_setting.em7.em7dc.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.em7dc.nic2.ip_octetpool != none) else [ '65', '66', '67', '68', '69', '70', '71', '72', '86', '87', '88', '89' ] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.em7.em7dc.nic2.ip_octetpool if (environment_definition.vm_setting.em7.em7dc.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.em7dc.nic2.ip_octetpool != none) else [ '65', '66', '67', '68', '69', '70', '71', '72', '86', '87', '88', '89' ] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.em7.em7dc.nic2.gtw if (environment_definition.vm_setting.em7.em7dc.nic2.gtw is defined and environment_definition.vm_setting.em7.em7dc.nic2.gtw != none) else '' }}"
@@ -238,7 +238,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.em7.em7mc.disk_provisioning if (environment_definition.vm_setting.em7.em7mc.disk_provisioning is defined and environment_definition.vm_setting.em7.em7mc.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.em7.em7mc.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.em7.em7mc.hostmap is search(',') else [environment_definition.vm_setting.em7.em7mc.hostmap|string]) if (environment_definition.vm_setting.em7.em7mc.hostmap is defined and environment_definition.vm_setting.em7.em7mc.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.em7.em7mc.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.em7.em7mc.hostmap is search(',') else [environment_definition.vm_setting.em7.em7mc.hostmap|string]) if (environment_definition.vm_setting.em7.em7mc.hostmap is defined and environment_definition.vm_setting.em7.em7mc.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.em7.em7mc.vmname if (environment_definition.vm_setting.em7.em7mc.vmname is defined and environment_definition.vm_setting.em7.em7mc.vmname != none) else '' }}"
 
@@ -250,10 +250,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.em7.em7mc.nic1.intname if (environment_definition.vm_setting.em7.em7mc.nic1.intname is defined and environment_definition.vm_setting.em7.em7mc.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.em7.em7mc.nic1.ip_pool if (environment_definition.vm_setting.em7.em7mc.nic1.ip_pool is defined and environment_definition.vm_setting.em7.em7mc.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.em7.em7mc.nic1.ip_pool if (environment_definition.vm_setting.em7.em7mc.nic1.ip_pool is defined and environment_definition.vm_setting.em7.em7mc.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.em7.em7mc.nic1.ip_octetpool if (environment_definition.vm_setting.em7.em7mc.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.em7mc.nic1.ip_octetpool != none) else [ '5', '7', '30', '31', '32', '33' ] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.em7.em7mc.nic1.ip_octetpool if (environment_definition.vm_setting.em7.em7mc.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.em7mc.nic1.ip_octetpool != none) else [ '5', '7', '30', '31', '32', '33' ] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.em7.em7mc.nic1.gtw if (environment_definition.vm_setting.em7.em7mc.nic1.gtw is defined and environment_definition.vm_setting.em7.em7mc.nic1.gtw != none) else '' }}"
@@ -284,10 +284,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.em7.em7mc.nic2.intname if (environment_definition.vm_setting.em7.em7mc.nic2.intname is defined and environment_definition.vm_setting.em7.em7mc.nic2.intname != none) else '' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.em7.em7mc.nic2.ip_pool if (environment_definition.vm_setting.em7.em7mc.nic2.ip_pool is defined and environment_definition.vm_setting.em7.em7mc.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.em7.em7mc.nic2.ip_pool if (environment_definition.vm_setting.em7.em7mc.nic2.ip_pool is defined and environment_definition.vm_setting.em7.em7mc.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.em7.em7mc.nic2.ip_octetpool if (environment_definition.vm_setting.em7.em7mc.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.em7mc.nic2.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.em7.em7mc.nic2.ip_octetpool if (environment_definition.vm_setting.em7.em7mc.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.em7mc.nic2.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.em7.em7mc.nic2.gtw if (environment_definition.vm_setting.em7.em7mc.nic2.gtw is defined and environment_definition.vm_setting.em7.em7mc.nic2.gtw != none) else '' }}"
@@ -339,7 +339,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.em7.em7prt.disk_provisioning if (environment_definition.vm_setting.em7.em7prt.disk_provisioning is defined and environment_definition.vm_setting.em7.em7prt.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.em7.em7prt.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.em7.em7prt.hostmap is search(',') else [environment_definition.vm_setting.em7.em7prt.hostmap|string]) if (environment_definition.vm_setting.em7.em7prt.hostmap is defined and environment_definition.vm_setting.em7.em7prt.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.em7.em7prt.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.em7.em7prt.hostmap is search(',') else [environment_definition.vm_setting.em7.em7prt.hostmap|string]) if (environment_definition.vm_setting.em7.em7prt.hostmap is defined and environment_definition.vm_setting.em7.em7prt.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.em7.em7prt.vmname if (environment_definition.vm_setting.em7.em7prt.vmname is defined and environment_definition.vm_setting.em7.em7prt.vmname != none) else '' }}"
 
@@ -351,10 +351,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.em7.em7prt.nic1.intname if (environment_definition.vm_setting.em7.em7prt.nic1.intname is defined and environment_definition.vm_setting.em7.em7prt.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.em7.em7prt.nic1.ip_pool if (environment_definition.vm_setting.em7.em7prt.nic1.ip_pool is defined and environment_definition.vm_setting.em7.em7prt.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.em7.em7prt.nic1.ip_pool if (environment_definition.vm_setting.em7.em7prt.nic1.ip_pool is defined and environment_definition.vm_setting.em7.em7prt.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.em7.em7prt.nic1.ip_octetpool if (environment_definition.vm_setting.em7.em7prt.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.em7prt.nic1.ip_octetpool != none) else range(3, 4 + 1)|list + range(47, 48 + 1)|list }}"
+        ip_octetpool: {{ environment_definition.vm_setting.em7.em7prt.nic1.ip_octetpool if (environment_definition.vm_setting.em7.em7prt.nic1.ip_octetpool is defined and environment_definition.vm_setting.em7.em7prt.nic1.ip_octetpool != none) else range(3, 4 + 1)|list + range(47, 48 + 1)|list }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.em7.em7prt.nic1.gtw if (environment_definition.vm_setting.em7.em7prt.nic1.gtw is defined and environment_definition.vm_setting.em7.em7prt.nic1.gtw != none) else '' }}"
@@ -385,10 +385,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.em7.em7prt.nic2.intname if (environment_definition.vm_setting.em7.em7prt.nic2.intname is defined and environment_definition.vm_setting.em7.em7prt.nic2.intname != none) else 'ens192' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.em7.em7prt.nic2.ip_pool if (environment_definition.vm_setting.em7.em7prt.nic2.ip_pool is defined and environment_definition.vm_setting.em7.em7prt.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.em7.em7prt.nic2.ip_pool if (environment_definition.vm_setting.em7.em7prt.nic2.ip_pool is defined and environment_definition.vm_setting.em7.em7prt.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.em7.em7prt.nic2.ip_octetpool if (environment_definition.vm_setting.em7.em7prt.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.em7prt.nic2.ip_octetpool != none) else [ '98', '100', '101', '102' ] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.em7.em7prt.nic2.ip_octetpool if (environment_definition.vm_setting.em7.em7prt.nic2.ip_octetpool is defined and environment_definition.vm_setting.em7.em7prt.nic2.ip_octetpool != none) else [ '98', '100', '101', '102' ] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.em7.em7prt.nic2.gtw if (environment_definition.vm_setting.em7.em7prt.nic2.gtw is defined and environment_definition.vm_setting.em7.em7prt.nic2.gtw != none) else '' }}"
@@ -445,7 +445,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.spl.spldpl.disk_provisioning if (environment_definition.vm_setting.spl.spldpl.disk_provisioning is defined and environment_definition.vm_setting.spl.spldpl.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.spl.spldpl.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.spl.spldpl.hostmap is search(',') else [environment_definition.vm_setting.spl.spldpl.hostmap|string]) if (environment_definition.vm_setting.spl.spldpl.hostmap is defined and environment_definition.vm_setting.spl.spldpl.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.spl.spldpl.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.spl.spldpl.hostmap is search(',') else [environment_definition.vm_setting.spl.spldpl.hostmap|string]) if (environment_definition.vm_setting.spl.spldpl.hostmap is defined and environment_definition.vm_setting.spl.spldpl.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.spl.spldpl.vmname if (environment_definition.vm_setting.spl.spldpl.vmname is defined and environment_definition.vm_setting.spl.spldpl.vmname != none) else '' }}"
 
@@ -457,10 +457,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.spl.spldpl.nic1.intname if (environment_definition.vm_setting.spl.spldpl.nic1.intname is defined and environment_definition.vm_setting.spl.spldpl.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.spl.spldpl.nic1.ip_pool if (environment_definition.vm_setting.spl.spldpl.nic1.ip_pool is defined and environment_definition.vm_setting.spl.spldpl.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.spl.spldpl.nic1.ip_pool if (environment_definition.vm_setting.spl.spldpl.nic1.ip_pool is defined and environment_definition.vm_setting.spl.spldpl.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.spl.spldpl.nic1.ip_octetpool if (environment_definition.vm_setting.spl.spldpl.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.spldpl.nic1.ip_octetpool != none) else [ '23', '39' ] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.spl.spldpl.nic1.ip_octetpool if (environment_definition.vm_setting.spl.spldpl.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.spldpl.nic1.ip_octetpool != none) else [ '23', '39' ] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.spl.spldpl.nic1.gtw if (environment_definition.vm_setting.spl.spldpl.nic1.gtw is defined and environment_definition.vm_setting.spl.spldpl.nic1.gtw != none) else '' }}"
@@ -491,10 +491,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.spl.spldpl.nic2.intname if (environment_definition.vm_setting.spl.spldpl.nic2.intname is defined and environment_definition.vm_setting.spl.spldpl.nic2.intname != none) else '' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.spl.spldpl.nic2.ip_pool if (environment_definition.vm_setting.spl.spldpl.nic2.ip_pool is defined and environment_definition.vm_setting.spl.spldpl.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.spl.spldpl.nic2.ip_pool if (environment_definition.vm_setting.spl.spldpl.nic2.ip_pool is defined and environment_definition.vm_setting.spl.spldpl.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.spl.spldpl.nic2.ip_octetpool if (environment_definition.vm_setting.spl.spldpl.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.spldpl.nic2.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.spl.spldpl.nic2.ip_octetpool if (environment_definition.vm_setting.spl.spldpl.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.spldpl.nic2.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.spl.spldpl.nic2.gtw if (environment_definition.vm_setting.spl.spldpl.nic2.gtw is defined and environment_definition.vm_setting.spl.spldpl.nic2.gtw != none) else '' }}"
@@ -546,7 +546,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.spl.splind.disk_provisioning if (environment_definition.vm_setting.spl.splind.disk_provisioning is defined and environment_definition.vm_setting.spl.splind.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.spl.splind.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.spl.splind.hostmap is search(',') else [environment_definition.vm_setting.spl.splind.hostmap|string]) if (environment_definition.vm_setting.spl.splind.hostmap is defined and environment_definition.vm_setting.spl.splind.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.spl.splind.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.spl.splind.hostmap is search(',') else [environment_definition.vm_setting.spl.splind.hostmap|string]) if (environment_definition.vm_setting.spl.splind.hostmap is defined and environment_definition.vm_setting.spl.splind.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.spl.splind.vmname if (environment_definition.vm_setting.spl.splind.vmname is defined and environment_definition.vm_setting.spl.splind.vmname != none) else '' }}"
 
@@ -558,10 +558,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.spl.splind.nic1.intname if (environment_definition.vm_setting.spl.splind.nic1.intname is defined and environment_definition.vm_setting.spl.splind.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.spl.splind.nic1.ip_pool if (environment_definition.vm_setting.spl.splind.nic1.ip_pool is defined and environment_definition.vm_setting.spl.splind.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.spl.splind.nic1.ip_pool if (environment_definition.vm_setting.spl.splind.nic1.ip_pool is defined and environment_definition.vm_setting.spl.splind.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.spl.splind.nic1.ip_octetpool if (environment_definition.vm_setting.spl.splind.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.splind.nic1.ip_octetpool != none) else range(24, 25 + 1)|list }}"
+        ip_octetpool: {{ environment_definition.vm_setting.spl.splind.nic1.ip_octetpool if (environment_definition.vm_setting.spl.splind.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.splind.nic1.ip_octetpool != none) else range(24, 25 + 1)|list }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.spl.splind.nic1.gtw if (environment_definition.vm_setting.spl.splind.nic1.gtw is defined and environment_definition.vm_setting.spl.splind.nic1.gtw != none) else '' }}"
@@ -592,10 +592,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.spl.splind.nic2.intname if (environment_definition.vm_setting.spl.splind.nic2.intname is defined and environment_definition.vm_setting.spl.splind.nic2.intname != none) else '' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.spl.splind.nic2.ip_pool if (environment_definition.vm_setting.spl.splind.nic2.ip_pool is defined and environment_definition.vm_setting.spl.splind.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.spl.splind.nic2.ip_pool if (environment_definition.vm_setting.spl.splind.nic2.ip_pool is defined and environment_definition.vm_setting.spl.splind.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.spl.splind.nic2.ip_octetpool if (environment_definition.vm_setting.spl.splind.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.splind.nic2.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.spl.splind.nic2.ip_octetpool if (environment_definition.vm_setting.spl.splind.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.splind.nic2.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.spl.splind.nic2.gtw if (environment_definition.vm_setting.spl.splind.nic2.gtw is defined and environment_definition.vm_setting.spl.splind.nic2.gtw != none) else '' }}"
@@ -647,7 +647,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.spl.splmas.disk_provisioning if (environment_definition.vm_setting.spl.splmas.disk_provisioning is defined and environment_definition.vm_setting.spl.splmas.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.spl.splmas.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.spl.splmas.hostmap is search(',') else [environment_definition.vm_setting.spl.splmas.hostmap|string]) if (environment_definition.vm_setting.spl.splmas.hostmap is defined and environment_definition.vm_setting.spl.splmas.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.spl.splmas.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.spl.splmas.hostmap is search(',') else [environment_definition.vm_setting.spl.splmas.hostmap|string]) if (environment_definition.vm_setting.spl.splmas.hostmap is defined and environment_definition.vm_setting.spl.splmas.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.spl.splmas.vmname if (environment_definition.vm_setting.spl.splmas.vmname is defined and environment_definition.vm_setting.spl.splmas.vmname != none) else '' }}"
 
@@ -659,10 +659,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.spl.splmas.nic1.intname if (environment_definition.vm_setting.spl.splmas.nic1.intname is defined and environment_definition.vm_setting.spl.splmas.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.spl.splmas.nic1.ip_pool if (environment_definition.vm_setting.spl.splmas.nic1.ip_pool is defined and environment_definition.vm_setting.spl.splmas.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.spl.splmas.nic1.ip_pool if (environment_definition.vm_setting.spl.splmas.nic1.ip_pool is defined and environment_definition.vm_setting.spl.splmas.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.spl.splmas.nic1.ip_octetpool if (environment_definition.vm_setting.spl.splmas.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.splmas.nic1.ip_octetpool != none) else [ '22', '38' ] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.spl.splmas.nic1.ip_octetpool if (environment_definition.vm_setting.spl.splmas.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.splmas.nic1.ip_octetpool != none) else [ '22', '38' ] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.spl.splmas.nic1.gtw if (environment_definition.vm_setting.spl.splmas.nic1.gtw is defined and environment_definition.vm_setting.spl.splmas.nic1.gtw != none) else '' }}"
@@ -693,10 +693,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.spl.splmas.nic2.intname if (environment_definition.vm_setting.spl.splmas.nic2.intname is defined and environment_definition.vm_setting.spl.splmas.nic2.intname != none) else '' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.spl.splmas.nic2.ip_pool if (environment_definition.vm_setting.spl.splmas.nic2.ip_pool is defined and environment_definition.vm_setting.spl.splmas.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.spl.splmas.nic2.ip_pool if (environment_definition.vm_setting.spl.splmas.nic2.ip_pool is defined and environment_definition.vm_setting.spl.splmas.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.spl.splmas.nic2.ip_octetpool if (environment_definition.vm_setting.spl.splmas.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.splmas.nic2.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.spl.splmas.nic2.ip_octetpool if (environment_definition.vm_setting.spl.splmas.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.splmas.nic2.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.spl.splmas.nic2.gtw if (environment_definition.vm_setting.spl.splmas.nic2.gtw is defined and environment_definition.vm_setting.spl.splmas.nic2.gtw != none) else '' }}"
@@ -748,7 +748,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.spl.splsrc.disk_provisioning if (environment_definition.vm_setting.spl.splsrc.disk_provisioning is defined and environment_definition.vm_setting.spl.splsrc.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.spl.splsrc.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.spl.splsrc.hostmap is search(',') else [environment_definition.vm_setting.spl.splsrc.hostmap|string]) if (environment_definition.vm_setting.spl.splsrc.hostmap is defined and environment_definition.vm_setting.spl.splsrc.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.spl.splsrc.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.spl.splsrc.hostmap is search(',') else [environment_definition.vm_setting.spl.splsrc.hostmap|string]) if (environment_definition.vm_setting.spl.splsrc.hostmap is defined and environment_definition.vm_setting.spl.splsrc.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.spl.splsrc.vmname if (environment_definition.vm_setting.spl.splsrc.vmname is defined and environment_definition.vm_setting.spl.splsrc.vmname != none) else '' }}"
 
@@ -760,10 +760,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.spl.splsrc.nic1.intname if (environment_definition.vm_setting.spl.splsrc.nic1.intname is defined and environment_definition.vm_setting.spl.splsrc.nic1.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.spl.splsrc.nic1.ip_pool if (environment_definition.vm_setting.spl.splsrc.nic1.ip_pool is defined and environment_definition.vm_setting.spl.splsrc.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.spl.splsrc.nic1.ip_pool if (environment_definition.vm_setting.spl.splsrc.nic1.ip_pool is defined and environment_definition.vm_setting.spl.splsrc.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.spl.splsrc.nic1.ip_octetpool if (environment_definition.vm_setting.spl.splsrc.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.splsrc.nic1.ip_octetpool != none) else range(20, 21 + 1)|list }}"
+        ip_octetpool: {{ environment_definition.vm_setting.spl.splsrc.nic1.ip_octetpool if (environment_definition.vm_setting.spl.splsrc.nic1.ip_octetpool is defined and environment_definition.vm_setting.spl.splsrc.nic1.ip_octetpool != none) else range(20, 21 + 1)|list }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.spl.splsrc.nic1.gtw if (environment_definition.vm_setting.spl.splsrc.nic1.gtw is defined and environment_definition.vm_setting.spl.splsrc.nic1.gtw != none) else '' }}"
@@ -794,10 +794,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.spl.splsrc.nic2.intname if (environment_definition.vm_setting.spl.splsrc.nic2.intname is defined and environment_definition.vm_setting.spl.splsrc.nic2.intname != none) else '' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.spl.splsrc.nic2.ip_pool if (environment_definition.vm_setting.spl.splsrc.nic2.ip_pool is defined and environment_definition.vm_setting.spl.splsrc.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.spl.splsrc.nic2.ip_pool if (environment_definition.vm_setting.spl.splsrc.nic2.ip_pool is defined and environment_definition.vm_setting.spl.splsrc.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.spl.splsrc.nic2.ip_octetpool if (environment_definition.vm_setting.spl.splsrc.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.splsrc.nic2.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.spl.splsrc.nic2.ip_octetpool if (environment_definition.vm_setting.spl.splsrc.nic2.ip_octetpool is defined and environment_definition.vm_setting.spl.splsrc.nic2.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.spl.splsrc.nic2.gtw if (environment_definition.vm_setting.spl.splsrc.nic2.gtw is defined and environment_definition.vm_setting.spl.splsrc.nic2.gtw != none) else '' }}"
@@ -849,7 +849,7 @@ vm_vars:
 
     disk_provisioning: "{{ environment_definition.vm_setting.lnxjmp.disk_provisioning if (environment_definition.vm_setting.lnxjmp.disk_provisioning is defined and environment_definition.vm_setting.lnxjmp.disk_provisioning != none) else '' }}"
 
-    hostmap: "{{ (environment_definition.vm_setting.lnxjmp.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.lnxjmp.hostmap is search(',') else [environment_definition.vm_setting.lnxjmp.hostmap|string]) if (environment_definition.vm_setting.lnxjmp.hostmap is defined and environment_definition.vm_setting.lnxjmp.hostmap != none) else [] }}"
+    hostmap: {{ (environment_definition.vm_setting.lnxjmp.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.lnxjmp.hostmap is search(',') else [environment_definition.vm_setting.lnxjmp.hostmap|string]) if (environment_definition.vm_setting.lnxjmp.hostmap is defined and environment_definition.vm_setting.lnxjmp.hostmap != none) else [] }}
 
     vmname: "{{ environment_definition.vm_setting.lnxjmp.vmname if (environment_definition.vm_setting.lnxjmp.vmname is defined and environment_definition.vm_setting.lnxjmp.vmname != none) else '' }}"
 
@@ -861,10 +861,10 @@ vm_vars:
       intname: "{{ environment_definition.vm_setting.lnxjmp.nic1.intname if (environment_definition.vm_setting.lnxjmp.nic1.intname is defined and environment_definition.vm_setting.lnxjmp.nic1.intname != none) else 'ens160' }}"
 
       # IP pool
-      ip_pool: "{{ environment_definition.vm_setting.lnxjmp.nic1.ip_pool if (environment_definition.vm_setting.lnxjmp.nic1.ip_pool is defined and environment_definition.vm_setting.lnxjmp.nic1.ip_pool != none) else [] }}"
+      ip_pool: {{ environment_definition.vm_setting.lnxjmp.nic1.ip_pool if (environment_definition.vm_setting.lnxjmp.nic1.ip_pool is defined and environment_definition.vm_setting.lnxjmp.nic1.ip_pool != none) else [] }}
 
       # IP fourth octet pool
-      ip_octetpool: "{{ environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool if (environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool is defined and environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool != none) else [ '58', '56' ] }}"
+      ip_octetpool: {{ environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool if (environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool is defined and environment_definition.vm_setting.lnxjmp.nic1.ip_octetpool != none) else [ '58', '56' ] }}
 
       # Gateway
       gtw: "{{ environment_definition.vm_setting.lnxjmp.nic1.gtw if (environment_definition.vm_setting.lnxjmp.nic1.gtw is defined and environment_definition.vm_setting.lnxjmp.nic1.gtw != none) else '' }}"
@@ -895,10 +895,10 @@ vm_vars:
       intname: "{{ environment_definition.vm_setting.lnxjmp.nic2.intname if (environment_definition.vm_setting.lnxjmp.nic2.intname is defined and environment_definition.vm_setting.lnxjmp.nic2.intname != none) else 'ens192' }}"
 
       # IP pool
-      ip_pool: "{{ environment_definition.vm_setting.lnxjmp.nic2.ip_pool if (environment_definition.vm_setting.lnxjmp.nic2.ip_pool is defined and environment_definition.vm_setting.lnxjmp.nic2.ip_pool != none) else [] }}"
+      ip_pool: {{ environment_definition.vm_setting.lnxjmp.nic2.ip_pool if (environment_definition.vm_setting.lnxjmp.nic2.ip_pool is defined and environment_definition.vm_setting.lnxjmp.nic2.ip_pool != none) else [] }}
 
       # IP fourth octet pool
-      ip_octetpool: "{{ environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool if (environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool is defined and environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool != none) else [ '76', '74' ] }}"
+      ip_octetpool: {{ environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool if (environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool is defined and environment_definition.vm_setting.lnxjmp.nic2.ip_octetpool != none) else [ '76', '74' ] }}
 
       # Gateway
       gtw: "{{ environment_definition.vm_setting.lnxjmp.nic2.gtw if (environment_definition.vm_setting.lnxjmp.nic2.gtw is defined and environment_definition.vm_setting.lnxjmp.nic2.gtw != none) else '' }}"
@@ -950,7 +950,7 @@ vm_vars:
 
     disk_provisioning: "{{ environment_definition.vm_setting.rly.disk_provisioning if (environment_definition.vm_setting.rly.disk_provisioning is defined and environment_definition.vm_setting.rly.disk_provisioning != none) else '' }}"
 
-    hostmap: "{{ (environment_definition.vm_setting.rly.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.rly.hostmap is search(',') else [environment_definition.vm_setting.rly.hostmap|string]) if (environment_definition.vm_setting.rly.hostmap is defined and environment_definition.vm_setting.rly.hostmap != none) else [] }}"
+    hostmap: {{ (environment_definition.vm_setting.rly.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.rly.hostmap is search(',') else [environment_definition.vm_setting.rly.hostmap|string]) if (environment_definition.vm_setting.rly.hostmap is defined and environment_definition.vm_setting.rly.hostmap != none) else [] }}
 
     vmname: "{{ environment_definition.vm_setting.rly.vmname if (environment_definition.vm_setting.rly.vmname is defined and environment_definition.vm_setting.rly.vmname != none) else '' }}"
 
@@ -962,10 +962,10 @@ vm_vars:
       intname: "{{ environment_definition.vm_setting.rly.nic1.intname if (environment_definition.vm_setting.rly.nic1.intname is defined and environment_definition.vm_setting.rly.nic1.intname != none) else 'ens160' }}"
 
       # IP pool
-      ip_pool: "{{ environment_definition.vm_setting.rly.nic1.ip_pool if (environment_definition.vm_setting.rly.nic1.ip_pool is defined and environment_definition.vm_setting.rly.nic1.ip_pool != none) else [] }}"
+      ip_pool: {{ environment_definition.vm_setting.rly.nic1.ip_pool if (environment_definition.vm_setting.rly.nic1.ip_pool is defined and environment_definition.vm_setting.rly.nic1.ip_pool != none) else [] }}
 
       # IP fourth octet pool
-      ip_octetpool: "{{ environment_definition.vm_setting.rly.nic1.ip_octetpool if (environment_definition.vm_setting.rly.nic1.ip_octetpool is defined and environment_definition.vm_setting.rly.nic1.ip_octetpool != none) else range(1, 2 + 1)|list }}"
+      ip_octetpool: {{ environment_definition.vm_setting.rly.nic1.ip_octetpool if (environment_definition.vm_setting.rly.nic1.ip_octetpool is defined and environment_definition.vm_setting.rly.nic1.ip_octetpool != none) else range(1, 2 + 1)|list }}
 
       # Gateway
       gtw: "{{ environment_definition.vm_setting.rly.nic1.gtw if (environment_definition.vm_setting.rly.nic1.gtw is defined and environment_definition.vm_setting.rly.nic1.gtw != none) else '' }}"
@@ -996,10 +996,10 @@ vm_vars:
       intname: "{{ environment_definition.vm_setting.rly.nic2.intname if (environment_definition.vm_setting.rly.nic2.intname is defined and environment_definition.vm_setting.rly.nic2.intname != none) else 'ens192' }}"
 
       # IP pool
-      ip_pool: "{{ environment_definition.vm_setting.rly.nic2.ip_pool if (environment_definition.vm_setting.rly.nic2.ip_pool is defined and environment_definition.vm_setting.rly.nic2.ip_pool != none) else [] }}"
+      ip_pool: {{ environment_definition.vm_setting.rly.nic2.ip_pool if (environment_definition.vm_setting.rly.nic2.ip_pool is defined and environment_definition.vm_setting.rly.nic2.ip_pool != none) else [] }}
 
       # IP fourth octet pool
-      ip_octetpool: "{{ environment_definition.vm_setting.rly.nic2.ip_octetpool if (environment_definition.vm_setting.rly.nic2.ip_octetpool is defined and environment_definition.vm_setting.rly.nic2.ip_octetpool != none) else [ '97', '99' ] }}"
+      ip_octetpool: {{ environment_definition.vm_setting.rly.nic2.ip_octetpool if (environment_definition.vm_setting.rly.nic2.ip_octetpool is defined and environment_definition.vm_setting.rly.nic2.ip_octetpool != none) else [ '97', '99' ] }}
 
       # Gateway
       gtw: "{{ environment_definition.vm_setting.rly.nic2.gtw if (environment_definition.vm_setting.rly.nic2.gtw is defined and environment_definition.vm_setting.rly.nic2.gtw != none) else '' }}"
@@ -1053,7 +1053,7 @@ vm_vars:
 
     disk_provisioning: "{{ environment_definition.vm_setting.atarly.disk_provisioning if (environment_definition.vm_setting.atarly.disk_provisioning is defined and environment_definition.vm_setting.atarly.disk_provisioning != none) else '' }}"
 
-    hostmap: "{{ (environment_definition.vm_setting.atarly.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.atarly.hostmap is search(',') else [environment_definition.vm_setting.atarly.hostmap|string]) if (environment_definition.vm_setting.atarly.hostmap is defined and environment_definition.vm_setting.atarly.hostmap != none) else [] }}"
+    hostmap: {{ (environment_definition.vm_setting.atarly.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.atarly.hostmap is search(',') else [environment_definition.vm_setting.atarly.hostmap|string]) if (environment_definition.vm_setting.atarly.hostmap is defined and environment_definition.vm_setting.atarly.hostmap != none) else [] }}
 
     vmname: "{{ environment_definition.vm_setting.atarly.vmname if (environment_definition.vm_setting.atarly.vmname is defined and environment_definition.vm_setting.atarly.vmname != none) else '' }}"
 
@@ -1065,10 +1065,10 @@ vm_vars:
       intname: "{{ environment_definition.vm_setting.atarly.nic1.intname if (environment_definition.vm_setting.atarly.nic1.intname is defined and environment_definition.vm_setting.atarly.nic1.intname != none) else 'ens160' }}"
 
       # IP pool
-      ip_pool: "{{ environment_definition.vm_setting.atarly.nic1.ip_pool if (environment_definition.vm_setting.atarly.nic1.ip_pool is defined and environment_definition.vm_setting.atarly.nic1.ip_pool != none) else [] }}"
+      ip_pool: {{ environment_definition.vm_setting.atarly.nic1.ip_pool if (environment_definition.vm_setting.atarly.nic1.ip_pool is defined and environment_definition.vm_setting.atarly.nic1.ip_pool != none) else [] }}
 
       # IP fourth octet pool
-      ip_octetpool: "{{ environment_definition.vm_setting.atarly.nic1.ip_octetpool if (environment_definition.vm_setting.atarly.nic1.ip_octetpool is defined and environment_definition.vm_setting.atarly.nic1.ip_octetpool != none) else [ '34' ] }}"
+      ip_octetpool: {{ environment_definition.vm_setting.atarly.nic1.ip_octetpool if (environment_definition.vm_setting.atarly.nic1.ip_octetpool is defined and environment_definition.vm_setting.atarly.nic1.ip_octetpool != none) else [ '34' ] }}
 
       # Gateway
       gtw: "{{ environment_definition.vm_setting.atarly.nic1.gtw if (environment_definition.vm_setting.atarly.nic1.gtw is defined and environment_definition.vm_setting.atarly.nic1.gtw != none) else '' }}"
@@ -1099,10 +1099,10 @@ vm_vars:
       intname: "{{ environment_definition.vm_setting.atarly.nic2.intname if (environment_definition.vm_setting.atarly.nic2.intname is defined and environment_definition.vm_setting.atarly.nic2.intname != none) else 'ens192' }}"
 
       # IP pool
-      ip_pool: "{{ environment_definition.vm_setting.atarly.nic2.ip_pool if (environment_definition.vm_setting.atarly.nic2.ip_pool is defined and environment_definition.vm_setting.atarly.nic2.ip_pool != none) else [] }}"
+      ip_pool: {{ environment_definition.vm_setting.atarly.nic2.ip_pool if (environment_definition.vm_setting.atarly.nic2.ip_pool is defined and environment_definition.vm_setting.atarly.nic2.ip_pool != none) else [] }}
 
       # IP fourth octet pool
-      ip_octetpool: "{{ environment_definition.vm_setting.atarly.nic2.ip_octetpool if (environment_definition.vm_setting.atarly.nic2.ip_octetpool is defined and environment_definition.vm_setting.atarly.nic2.ip_octetpool != none) else [ '103' ] }}"
+      ip_octetpool: {{ environment_definition.vm_setting.atarly.nic2.ip_octetpool if (environment_definition.vm_setting.atarly.nic2.ip_octetpool is defined and environment_definition.vm_setting.atarly.nic2.ip_octetpool != none) else [ '103' ] }}
 
       # Gateway
       gtw: "{{ environment_definition.vm_setting.atarly.nic2.gtw if (environment_definition.vm_setting.atarly.nic2.gtw is defined and environment_definition.vm_setting.atarly.nic2.gtw != none) else '' }}"
@@ -1152,7 +1152,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.infra.csr.disk_provisioning if (environment_definition.vm_setting.infra.csr.disk_provisioning is defined and environment_definition.vm_setting.infra.csr.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.infra.csr.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.infra.csr.hostmap is search(',') else [environment_definition.vm_setting.infra.csr.hostmap|string]) if (environment_definition.vm_setting.infra.csr.hostmap is defined and environment_definition.vm_setting.infra.csr.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.infra.csr.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.infra.csr.hostmap is search(',') else [environment_definition.vm_setting.infra.csr.hostmap|string]) if (environment_definition.vm_setting.infra.csr.hostmap is defined and environment_definition.vm_setting.infra.csr.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.infra.csr.vmname if (environment_definition.vm_setting.infra.csr.vmname is defined and environment_definition.vm_setting.infra.csr.vmname != none) else '' }}"
 
@@ -1164,10 +1164,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.csr.nic1.intname if (environment_definition.vm_setting.infra.csr.nic1.intname is defined and environment_definition.vm_setting.infra.csr.nic1.intname != none) else '' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic1.ip_pool if (environment_definition.vm_setting.infra.csr.nic1.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.csr.nic1.ip_pool if (environment_definition.vm_setting.infra.csr.nic1.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.csr.nic1.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic1.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic1.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.csr.nic1.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic1.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic1.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.csr.nic1.gtw if (environment_definition.vm_setting.infra.csr.nic1.gtw is defined and environment_definition.vm_setting.infra.csr.nic1.gtw != none) else '' }}"
@@ -1198,10 +1198,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.csr.nic2.intname if (environment_definition.vm_setting.infra.csr.nic2.intname is defined and environment_definition.vm_setting.infra.csr.nic2.intname != none) else '' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic2.ip_pool if (environment_definition.vm_setting.infra.csr.nic2.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.csr.nic2.ip_pool if (environment_definition.vm_setting.infra.csr.nic2.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.csr.nic2.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic2.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic2.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.csr.nic2.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic2.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic2.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.csr.nic2.gtw if (environment_definition.vm_setting.infra.csr.nic2.gtw is defined and environment_definition.vm_setting.infra.csr.nic2.gtw != none) else '' }}"
@@ -1232,10 +1232,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.csr.nic3.intname if (environment_definition.vm_setting.infra.csr.nic3.intname is defined and environment_definition.vm_setting.infra.csr.nic3.intname != none) else 'ens160' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic3.ip_pool if (environment_definition.vm_setting.infra.csr.nic3.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic3.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.csr.nic3.ip_pool if (environment_definition.vm_setting.infra.csr.nic3.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic3.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.csr.nic3.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic3.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic3.ip_octetpool != none) else range(60, 61 + 1)|list }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.csr.nic3.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic3.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic3.ip_octetpool != none) else range(60, 61 + 1)|list }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.csr.nic3.gtw if (environment_definition.vm_setting.infra.csr.nic3.gtw is defined and environment_definition.vm_setting.infra.csr.nic3.gtw != none) else '' }}"
@@ -1266,10 +1266,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.csr.nic4.intname if (environment_definition.vm_setting.infra.csr.nic4.intname is defined and environment_definition.vm_setting.infra.csr.nic4.intname != none) else 'ens192' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic4.ip_pool if (environment_definition.vm_setting.infra.csr.nic4.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic4.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.csr.nic4.ip_pool if (environment_definition.vm_setting.infra.csr.nic4.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic4.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.csr.nic4.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic4.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic4.ip_octetpool != none) else range(92, 93 + 1)|list }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.csr.nic4.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic4.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic4.ip_octetpool != none) else range(92, 93 + 1)|list }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.csr.nic4.gtw if (environment_definition.vm_setting.infra.csr.nic4.gtw is defined and environment_definition.vm_setting.infra.csr.nic4.gtw != none) else '' }}"
@@ -1300,10 +1300,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.csr.nic5.intname if (environment_definition.vm_setting.infra.csr.nic5.intname is defined and environment_definition.vm_setting.infra.csr.nic5.intname != none) else 'ens224' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.csr.nic5.ip_pool if (environment_definition.vm_setting.infra.csr.nic5.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic5.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.csr.nic5.ip_pool if (environment_definition.vm_setting.infra.csr.nic5.ip_pool is defined and environment_definition.vm_setting.infra.csr.nic5.ip_pool != none) else [] }}
         
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.csr.nic5.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic5.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic5.ip_octetpool != none) else range(124, 125 + 1)|list }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.csr.nic5.ip_octetpool if (environment_definition.vm_setting.infra.csr.nic5.ip_octetpool is defined and environment_definition.vm_setting.infra.csr.nic5.ip_octetpool != none) else range(124, 125 + 1)|list }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.csr.nic5.gtw if (environment_definition.vm_setting.infra.csr.nic5.gtw is defined and environment_definition.vm_setting.infra.csr.nic5.gtw != none) else '' }}"
@@ -1345,7 +1345,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.infra.nsvpx.disk_provisioning if (environment_definition.vm_setting.infra.nsvpx.disk_provisioning is defined and environment_definition.vm_setting.infra.nsvpx.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.infra.nsvpx.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.infra.nsvpx.hostmap is search(',') else [environment_definition.vm_setting.infra.nsvpx.hostmap|string]) if (environment_definition.vm_setting.infra.nsvpx.hostmap is defined and environment_definition.vm_setting.infra.nsvpx.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.infra.nsvpx.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.infra.nsvpx.hostmap is search(',') else [environment_definition.vm_setting.infra.nsvpx.hostmap|string]) if (environment_definition.vm_setting.infra.nsvpx.hostmap is defined and environment_definition.vm_setting.infra.nsvpx.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.infra.nsvpx.vmname if (environment_definition.vm_setting.infra.nsvpx.vmname is defined and environment_definition.vm_setting.infra.nsvpx.vmname != none) else '' }}"
 
@@ -1357,10 +1357,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.intname if (environment_definition.vm_setting.infra.nsvpx.nic1.intname is defined and environment_definition.vm_setting.infra.nsvpx.nic1.intname != none) else '0/1' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool if (environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool if (environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.ip_octetpool if (environment_definition.vm_setting.infra.nsvpx.nic1.ip_octetpool is defined and environment_definition.vm_setting.infra.nsvpx.nic1.ip_octetpool != none) else range(53, 54 + 1)|list }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.nsvpx.nic1.ip_octetpool if (environment_definition.vm_setting.infra.nsvpx.nic1.ip_octetpool is defined and environment_definition.vm_setting.infra.nsvpx.nic1.ip_octetpool != none) else range(53, 54 + 1)|list }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.nsvpx.nic1.gtw if (environment_definition.vm_setting.infra.nsvpx.nic1.gtw is defined and environment_definition.vm_setting.infra.nsvpx.nic1.gtw != none) else '' }}"
@@ -1391,10 +1391,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.intname if (environment_definition.vm_setting.infra.nsvpx.nic2.intname is defined and environment_definition.vm_setting.infra.nsvpx.nic2.intname != none) else '1/1' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool if (environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool if (environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool is defined and environment_definition.vm_setting.infra.nsvpx.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.ip_octetpool if (environment_definition.vm_setting.infra.nsvpx.nic2.ip_octetpool is defined and environment_definition.vm_setting.infra.nsvpx.nic2.ip_octetpool != none) else [] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.nsvpx.nic2.ip_octetpool if (environment_definition.vm_setting.infra.nsvpx.nic2.ip_octetpool is defined and environment_definition.vm_setting.infra.nsvpx.nic2.ip_octetpool != none) else [] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.nsvpx.nic2.gtw if (environment_definition.vm_setting.infra.nsvpx.nic2.gtw is defined and environment_definition.vm_setting.infra.nsvpx.nic2.gtw != none) else '' }}"
@@ -1436,7 +1436,7 @@ vm_vars:
 
       disk_provisioning: "{{ environment_definition.vm_setting.infra.winjmp.disk_provisioning if (environment_definition.vm_setting.infra.winjmp.disk_provisioning is defined and environment_definition.vm_setting.infra.winjmp.disk_provisioning != none) else '' }}"
 
-      hostmap: "{{ (environment_definition.vm_setting.infra.winjmp.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.infra.winjmp.hostmap is search(',') else [environment_definition.vm_setting.infra.winjmp.hostmap|string]) if (environment_definition.vm_setting.infra.winjmp.hostmap is defined and environment_definition.vm_setting.infra.winjmp.hostmap != none) else [] }}"
+      hostmap: {{ (environment_definition.vm_setting.infra.winjmp.hostmap.split(',')|map('trim')|list if environment_definition.vm_setting.infra.winjmp.hostmap is search(',') else [environment_definition.vm_setting.infra.winjmp.hostmap|string]) if (environment_definition.vm_setting.infra.winjmp.hostmap is defined and environment_definition.vm_setting.infra.winjmp.hostmap != none) else [] }}
 
       vmname: "{{ environment_definition.vm_setting.infra.winjmp.vmname if (environment_definition.vm_setting.infra.winjmp.vmname is defined and environment_definition.vm_setting.infra.winjmp.vmname != none) else '' }}"
 
@@ -1461,10 +1461,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.winjmp.nic1.intname if (environment_definition.vm_setting.infra.winjmp.nic1.intname is defined and environment_definition.vm_setting.infra.winjmp.nic1.intname != none) else 'QS Head-end' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.winjmp.nic1.ip_pool if (environment_definition.vm_setting.infra.winjmp.nic1.ip_pool is defined and environment_definition.vm_setting.infra.winjmp.nic1.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.winjmp.nic1.ip_pool if (environment_definition.vm_setting.infra.winjmp.nic1.ip_pool is defined and environment_definition.vm_setting.infra.winjmp.nic1.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.winjmp.nic1.ip_octetpool if (environment_definition.vm_setting.infra.winjmp.nic1.ip_octetpool is defined and environment_definition.vm_setting.infra.winjmp.nic1.ip_octetpool != none) else [ '59', '57' ] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.winjmp.nic1.ip_octetpool if (environment_definition.vm_setting.infra.winjmp.nic1.ip_octetpool is defined and environment_definition.vm_setting.infra.winjmp.nic1.ip_octetpool != none) else [ '59', '57' ] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.winjmp.nic1.gtw if (environment_definition.vm_setting.infra.winjmp.nic1.gtw is defined and environment_definition.vm_setting.infra.winjmp.nic1.gtw != none) else '' }}"
@@ -1497,10 +1497,10 @@ vm_vars:
         intname: "{{ environment_definition.vm_setting.infra.winjmp.nic2.intname if (environment_definition.vm_setting.infra.winjmp.nic2.intname is defined and environment_definition.vm_setting.infra.winjmp.nic2.intname != none) else 'Customer Inner-net' }}"
 
         # IP pool
-        ip_pool: "{{ environment_definition.vm_setting.infra.winjmp.nic2.ip_pool if (environment_definition.vm_setting.infra.winjmp.nic2.ip_pool is defined and environment_definition.vm_setting.infra.winjmp.nic2.ip_pool != none) else [] }}"
+        ip_pool: {{ environment_definition.vm_setting.infra.winjmp.nic2.ip_pool if (environment_definition.vm_setting.infra.winjmp.nic2.ip_pool is defined and environment_definition.vm_setting.infra.winjmp.nic2.ip_pool != none) else [] }}
 
         # IP fourth octet pool
-        ip_octetpool: "{{ environment_definition.vm_setting.infra.winjmp.nic2.ip_octetpool if (environment_definition.vm_setting.infra.winjmp.nic2.ip_octetpool is defined and environment_definition.vm_setting.infra.winjmp.nic2.ip_octetpool != none) else [ '75', '73' ] }}"
+        ip_octetpool: {{ environment_definition.vm_setting.infra.winjmp.nic2.ip_octetpool if (environment_definition.vm_setting.infra.winjmp.nic2.ip_octetpool is defined and environment_definition.vm_setting.infra.winjmp.nic2.ip_octetpool != none) else [ '75', '73' ] }}
 
         # Gateway
         gtw: "{{ environment_definition.vm_setting.infra.winjmp.nic2.gtw if (environment_definition.vm_setting.infra.winjmp.nic2.gtw is defined and environment_definition.vm_setting.infra.winjmp.nic2.gtw != none) else '' }}"

@@ -1,0 +1,41 @@
+---
+# Variables for standalone VMs
+credentials:
+  username: "{{ NONEM7_USER|default('') }}"
+  password: "{{ NONEM7_PASS|default('') }}"
+
+user:
+  name: "{{ vm_vars.stdalvm.user.name if vm_vars.stdalvm.user.name is defined else '' }}"
+  password: "{{ vm_vars.stdalvm.user.password if vm_vars.stdalvm.user.password is defined else '' }}"
+
+vm:
+  cpu: "{{ vm_vars.stdalvm.cpu }}"
+  memory: "{{ vm_vars.stdalvm.memory }}"
+  disk0: "{{ vm_vars.stdalvm.disk0 }}"
+  disk1: "{{ vm_vars.stdalvm.disk1 | default(0) }}"
+  disk2: "{{ vm_vars.stdalvm.disk2 | default(0) }}"
+  disk3: "{{ vm_vars.stdalvm.disk3 | default(0) }}"
+  disk_provisioning: "{{ vm_vars.stdalvm.disk_provisioning if vm_vars.stdalvm.disk_provisioning != '' else '' }}"
+  hostmap: "{{ vm_vars.stdalvm.hostmap | default([]) }}"
+  name: "{{ vm_vars.stdalvm.vmname if vm_vars.stdalvm.vmname != '' else (customer.primary.name_prefix + inventory_hostname[-2:]) }}"
+
+netconfig:
+  nic1:
+    intname: "{{ vm_vars.stdalvm.nic1.intname }}"
+    ippool: "{{ vm_vars.stdalvm.nic1.ip_pool | default([]) }}"
+    octetpool: "{{ vm_vars.stdalvm.nic1.ip_octetpool | default([]) }}"
+    gateway: "{{ vm_vars.stdalvm.nic1.gtw if vm_vars.stdalvm.nic1.gtw != '' else (customer.primary.octets + '.' + vm_vars.stdalvm.nic1.gtw_octet) if vm_vars.stdalvm.nic1.gtw_octet != '' else '' }}"
+    netmask: "{{ vm_vars.stdalvm.nic1.netmask }}"
+    network: "{{ vm_vars.stdalvm.nic1.netname if vm_vars.stdalvm.nic1.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.stdalvm.nic1.netbase) if vm_vars.stdalvm.nic1.netbase != '' else '' }}"
+    ipv6_pool: "{{ vm_vars.stdalvm.nic1.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ vm_vars.stdalvm.nic1.ipv6_gtw | default('') }}"
+
+  nic2:
+    intname: "{{ vm_vars.stdalvm.nic2.intname }}"
+    ippool: "{{ vm_vars.stdalvm.nic2.ip_pool | default([]) }}"
+    octetpool: "{{ vm_vars.stdalvm.nic2.ip_octetpool | default([]) }}"
+    gateway: "{{ vm_vars.stdalvm.nic2.gtw if vm_vars.stdalvm.nic2.gtw != '' else (customer.primary.octets + '.' + vm_vars.stdalvm.nic2.gtw_octet) if vm_vars.stdalvm.nic2.gtw_octet != '' else '' }}"
+    netmask: "{{ vm_vars.stdalvm.nic2.netmask }}"
+    network: "{{ vm_vars.stdalvm.nic2.netname if vm_vars.stdalvm.nic2.netname != '' else (customer.primary.name_prefix + '-' + vm_vars.stdalvm.nic2.netbase) if vm_vars.stdalvm.nic2.netbase != '' else '' }}"
+    ipv6_pool: "{{ vm_vars.stdalvm.nic2.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ vm_vars.stdalvm.nic2.ipv6_gtw | default('') }}"

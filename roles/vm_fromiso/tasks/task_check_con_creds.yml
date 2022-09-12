@@ -3,7 +3,7 @@
 - name: check connection credentials
   block:
     - name: check VM reachable
-      command: ping {{ ansible_host }} -c 1
+      ansible.builtin.command: ping {{ ansible_host }} -c 1
       register: vcr_vm_reachable
       check_mode: no
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
@@ -16,7 +16,7 @@
           check_mode: no
       rescue:
         - name: Update SSH credentials
-          set_fact:
+          ansible.builtin.set_fact:
             ansible_user: "{{ vm_svc_user }}"
             ansible_ssh_pass: "{{ vm_svc_pass }}"
             ansible_become_pass: "{{ vm_svc_pass }}"
@@ -27,7 +27,7 @@
     - name: check service user credentials
       block:
         - name: switch to {{ vm_svc_user }} user
-          set_fact:
+          ansible.builtin.set_fact:
             ansible_user: "{{ vm_svc_user }}"
             ansible_ssh_pass: "{{ vm_svc_pass }}"
           no_log: true
@@ -39,11 +39,11 @@
         - debug:
             msg: "VM hardening is enabled. Nothing to do"
         - name: set flag to not create and configure the VMs
-          set_fact:
+          ansible.builtin.set_fact:
             crecon: false
       rescue:
         - name: revert user
-          set_fact:
+          ansible.builtin.set_fact:
             ansible_user: "{{ credentials.username }}"
             ansible_ssh_pass: "{{ credentials.password }}"
           no_log: true

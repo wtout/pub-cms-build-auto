@@ -1,3 +1,9 @@
+{% if environment_definition.customer.deployment_model is search('sa|sh') %}
+{% include 'templates/hostss.yml.tmpl' %}
+{% if environment_definition.customer.disaster_recovery %}
+{% include 'templates/drhostss.yml.tmpl' %}
+{% endif %}
+{% else %}
 {% if environment_definition.customer.deployment_model is search('aio') %}
 {% if environment_definition.customer.deployment_model[-1:] is search('a') %}
 {% include 'templates/hostsaioa.yml.tmpl' %}
@@ -14,6 +20,7 @@
 {% include 'templates/hostsh.yml.tmpl' %}
 {% if environment_definition.customer.disaster_recovery %}
 {% include 'templates/drhostsh.yml.tmpl' %}
+{% endif %}
 {% endif %}
 {% endif %}
 {% endif %}

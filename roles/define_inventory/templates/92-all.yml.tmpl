@@ -86,14 +86,15 @@ datacenter:
     customer_net_inside_vlan_id: '{{ environment_definition.datacenter.secondary.customer_net_inside_vlan_id if environment_definition.datacenter.secondary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.secondary.customer_net_inside_vlan_id != none else environment_definition.datacenter.primary.customer_net_inside_vlan_id if environment_definition.datacenter.primary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.primary.customer_net_inside_vlan_id != none else "" }}'
     em7db_heartbeat_link_vlan_id: '{{ environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id != none else environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id != none else "" }}'
 
-
+{% if environment_definition.customer.deployment_model is not search('sa|sh') %}
+{% block nexus %}
 ##################################################################################
 # Nexus information
 ##################################################################################
 nexus:
   address: [ '172.30.240.253', '172.30.240.254' ]
-
-
+{% endblock nexus %}
+{% endif %}
 ##################################################################################
 # If a bastion server (a.k.a linux jump server) is to be used, the address must be provided
 ##################################################################################
@@ -115,7 +116,7 @@ sysconfig:
     domain_name: "{{ ('staging.' if environment_definition.datacenter.primary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com' }}"
 
     # NTP server
-    ntp_server: {{ [environment_definition.vm_setting.sysconfig.ntp_server|join(', ')] if environment_definition.vm_setting.sysconfig.ntp_server is defined else "'{{ customer.primary.octets }}.62'" }}
+    ntp_server: {{ [environment_definition.vm_setting.sysconfig.ntp_server|join(', ')] if environment_definition.vm_setting.sysconfig.ntp_server is defined else "'{{ customer.primary.octets }}.254'" if environment_definition.customer.deployment_model is search('sa|sh') else "'{{ customer.primary.octets }}.62'" }}
 
   secondary:
   
@@ -126,9 +127,10 @@ sysconfig:
     domain_name: "{{ (('staging.' if environment_definition.datacenter.secondary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else '' }}"
 
     # NTP server
-    ntp_server: {{ [environment_definition.drvm_setting.sysconfig.ntp_server|join(', ')] if environment_definition.drvm_setting.sysconfig.ntp_server is defined else "'{{ customer.secondary.octets }}.62'" if environment_definition.customer.disaster_recovery else '' }}
+    ntp_server: {{ ([environment_definition.drvm_setting.sysconfig.ntp_server|join(', ')] if environment_definition.drvm_setting.sysconfig.ntp_server is defined else "'{{ customer.secondary.octets }}.254'" if environment_definition.customer.deployment_model is search('sa|sh') else "'{{ customer.secondary.octets }}.62'") if environment_definition.customer.disaster_recovery else '' }}
 
-
+{% if environment_definition.customer.deployment_model is not search('sa|sh') %}
+{% block puppet %}
 ##################################################################################
 # Puppet server information: ensure you are pointing to the correct puppet server
 ##################################################################################
@@ -164,7 +166,8 @@ artifactory:
 
   # baseurl
   baseurl: 'https://engci-maven-master.cisco.com'
-
+{% endblock puppet %}
+{% endif %}
 
 ##################################################################################
 # Yum server information
@@ -198,7 +201,8 @@ yum:
 
     # ip address
     ipaddress: '{{ ("172.23.251.39" if environment_definition.datacenter.secondary.name == 'RTP-Staging' else [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.secondary.server_name[-1:]|int-1]) if environment_definition.customer.disaster_recovery else "" }}'
-
+{% if environment_definition.customer.deployment_model is not search('sa|sh') %}
+{% block splunk %}
 
 ##################################################################################
 # Splunk information. Although the values in this section do not typically change from one customer to another, ensure they are correct 
@@ -270,4 +274,5 @@ vip:
 
   # NFS mount VIP
   nfs_mnt: "{{ '{{' }} customer.primary.octets {{ '}}' }}.1"
-
+{% endblock splunk %}
+{% endif %}
