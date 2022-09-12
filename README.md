@@ -41,17 +41,19 @@ Create your own system definition file under the _``Definitions``_ folder to con
 The system definition file name **must match the customer name** as defined in the system definition file. The system definition file consists of the following variables:
 
   - **customer.name** (_String_): Customer Name. Required
-  - **customer.version.release** (_String_): Required. Must start with **R** to match the naming convention in Maven
+  - **customer.version.release** (_String_): Required for CMSP stack build. Must start with **R** to match the naming convention in Maven
   - **customer.version.centos_iso** (_String_): CentOS ISO file name
   - **customer.version.em7_iso** (_String_): EM7 ISO file name
-  - **customer.deployment_model** (_String_): Required. Valid values are: **a** and **h**, where **a** represents “**a**ppliance” and **h** represents “**h**osted”
+  - **customer.deployment_model** (_String_): Required. Valid values are: **a**, **h**, **sa**, **sh**, **aioa**, **aioh**, where **a** represents “**a**ppliance”, **h** represents “**h**osted”, **s** represents “**s**tandalone” and **aio** represents “**a**ll **i**n **o**ne**”
   - **customer.ata** (_Boolean_ **yes**/**no**): Required. Indicates whether or not to build an ATA relay
   - **customer.disaster_recovery** (_Boolean_ **yes**/**no**): Required. Indicates whether or not to build a geo-redundant stack
+  - **customer.primary.number_of_stdalvms** (_String_): Required. Number of standalone VMs in primary stack. Valid values are numbers in [0-100]
   - **customer.primary.number_of_prts** (_String_): Required. Number of EM7 portals in primary stack. Valid values are even numbers in [2-4]
   - **customer.primary.number_of_mcs** (_String_): Required. Number of EM7 message collectors in primary stack. Valid values are even numbers in [2-6]
   - **customer.primary.number_of_dcs** (_String_): Required. Number of EM7 data collectors in primary stack. Valid values are even numbers in [2-12]
   - **customer.primary.name_prefix** (_String_): Required. Name prefix for primary stack
   - **customer.primary.octets** (_String_): Required. First three octets for primary stack
+  - **customer.secondary.number_of_stdalvms** (_String_): Required. Number of standalone VMs in secondary stack. Valid values are numbers in [0-100]
   - **customer.secondary.name_prefix** (_String_): Required when disaster_recovery is “yes”. Name prefix for secondary stack
   - **customer.secondary.octets** (_String_): Required when disaster_recovery is “yes”. First three octets for secondary stack
   - **datacenter.primary.name** (_String_): Required. Primary Datacenter name

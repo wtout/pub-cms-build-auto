@@ -8,7 +8,7 @@ customer:
   version:
 
     # Platform Release version (string)
-    release: R9.2.17
+    release: 
 
     # EM7 ISO (string)
     em7_iso: 
@@ -16,40 +16,45 @@ customer:
     # CentOS ISO (string)
     centos_iso: 
 
+  # Deployment model (string a/h/aioa/aioh/sa/sh)
+  deployment_model: sa
+
   # ATA relay (boolean yes/no)
   ata: no
-
-  # Deployment model (string a/h/aioa/aioh)
-  deployment_model: a
 
   # Disaster recovery (boolean yes/no)
   disaster_recovery: yes
 
   primary:
 
+  # Number of primary standalone VMs (integer)
+    number_of_stdalvms: 3
+
   # Number of primary EM7 Portals (integer, even) [2 - 4]
-    number_of_prts: 2
+    number_of_prts: 
 
   # Number of primary EM7 Message Collectors (integer, even) [2 - 6]
-    number_of_mcs: 2
+    number_of_mcs: 
 
   # Number of primary EM7 Data Collectors (integer, even) [2 - 12]
-    number_of_dcs: 8
+    number_of_dcs: 
 
   # Primary site name prefix (string)
-    name_prefix: ac01a
+    name_prefix: rtp5daautop
 
   # Primary site first 3 octets (string)
-    octets: 172.19.112
+    octets: 172.19.135
 
   secondary:
 
+  # Number of secondary standalone VMs (integer)
+    number_of_stdalvms: 2
+
   # Secondary site name prefix (string)
-    name_prefix: ac01b
+    name_prefix: drrtp5daautop
 
   # Secondary site first 3 octets (string)
-    octets: 172.19.115
-
+    octets: 172.19.134
 
 ##################################################################################
 # Datacenter where the stack is to be built
@@ -63,12 +68,12 @@ datacenter:
 
     # Required if a custom cluster name is to be used
     # The primary cluster to host the customer's primary stack
-    cluster: acma
+    cluster: testa
 
     # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
     # For hosted deployments DO NOT TOUCH
     # Use ',', ';' or space as separator when you have more than one host
-    resources: 172.30.240.205, 172.30.240.206
+    resources: 172.30.240.200, 172.30.240.201, 172.30.240.205, 172.30.240.206, 172.30.240.207, 172.30.240.210
 
     # ONLY for on-premise deployments, define the primary VLAN IDs to use (integer) [1 - 4094]
     # For hosted deployments DO NOT TOUCH
@@ -84,19 +89,19 @@ datacenter:
 
     # Required if a custom cluster name is to be used
     # The secondary cluster to host the customer's secondary stack
-    cluster: acmb
+    cluster: testb
 
     # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
     # For hosted deployments DO NOT TOUCH
     # Use ',', ';' or space as separator when you have more than one host
-    resources: 172.30.240.207
+    resources: 172.30.240.211, 172.30.240.212, 172.30.240.213
 
     # ONLY for on-premise deployments, define the secondary VLAN IDs to use (integer) [1 - 4094]. If not specified, they will be the same as the primary VLAN IDs
     # For hosted deployments DO NOT TOUCH
-    internal_net_vlan_id: 101
-    loadbalancer_net_vlan_id: 121
-    customer_net_inside_vlan_id: 201
-    em7db_heartbeat_link_vlan_id: 301
+    internal_net_vlan_id: #101
+    loadbalancer_net_vlan_id: #121
+    customer_net_inside_vlan_id: #201
+    em7db_heartbeat_link_vlan_id: #301
 
 ##################################################################################
 # Puppet server to be used
@@ -106,12 +111,12 @@ puppet:
   primary:
 
     # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03, alln1qspupp04 (string)
-    server_name: alln1qspupp02
+    server_name: 
 
   secondary:
     
     # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03, alln1qspupp04 (string)
-    server_name: alln1qspupp02
+    server_name: 
 
 ##################################################################################
 # Yum server to be used
@@ -127,3 +132,31 @@ yum:
 
     # Available yum servers: alln1qsyumrpp01, alln1qsyumrpp02 (string)
     server_name: alln1qsyumrpp01
+
+vm_setting:
+  stdalvm:
+    cpu: 2
+    memory: 4
+    disk0: 40
+    disk1: 25
+    hostmap: 3, 4, 5
+    nic1:
+      ip_pool: ['172.30.252.162','172.30.252.163','172.30.252.164']
+      gtw: '172.19.135.62'
+      netmask: '255.255.255.0'
+      netname: 'testa-Internal-Net'
+      intname: 'ens160'
+
+drvm_setting:
+  stdalvm:
+    cpu: 2
+    memory: 4
+    disk0: 40
+    disk1: 25
+    hostmap: 2, 3
+    nic1:
+      ip_pool: ['172.30.210.123', '172.30.210.124']
+      gtw: '172.19.134.62'
+      netmask: '255.255.255.0'
+      netname: 'testb-Internal-Net'
+      intname: 'ens160'
