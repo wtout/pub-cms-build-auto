@@ -18,7 +18,7 @@
   - block:
     - name: define coral container name
       ansible.builtin.set_fact:
-        container_name: "{{ (reg_docker_ps.stdout_lines|select('search', 'coral-service')|list|last).split(' ')|last }}"
+        container_name: "{{ (reg_docker_ps.stdout_lines|select('search', 'coral-services ')|list|last).split(' ')|last }}"
     - name: get coral version
       ansible.builtin.shell: |
         {{ 'sudo -S' if ansible_user != 'root' else '' }} $(which docker) exec {{ container_name }} cat VERSION {{ '<<< ' + ansible_password if ansible_user != 'root' else '' }}

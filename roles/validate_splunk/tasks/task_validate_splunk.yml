@@ -1,0 +1,15 @@
+---
+# Tasks to validate Splunk
+- block:
+  - block:
+    - include_tasks: task_validate_splunk_status.yml
+    - include_tasks: task_validate_passwordless_ssh_to_peer.yml
+    - include_tasks: task_validate_crontab.yml
+    when: 
+      - inventory_hostname is search('spl(dpl|mas)02')
+  - include_tasks: task_validate_passwordless_ssh_to_relay.yml
+    when: 
+      - "inventory_hostname is search('splsrc') or groups['spl']|length == 1 and 'spl' in group_names"
+  - include_tasks: task_validate_splunk_logrotate.yml
+  - include_tasks: task_validate_splunk_deployment.yml
+  tags: [ 'validate_splunk', 'never' ]

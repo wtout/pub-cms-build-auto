@@ -43,7 +43,13 @@
       - { name: '/data01/CMSData/*', user: 'splunk', group: 'splunk' }
       - { name: '/data01/syslogs/', user: 'splunk', group: 'splunk' }
       - { name: '/data01/commands/', user: 'commands', group: 'commands' }
-      - { name: '/data01/commands/*', user: 'commands', group: 'commands' }
+      - { name: '/data01/commands/app', user: 'commands', group: 'commands' }
+      - { name: '/data01/commands/app/*', user: 'commands', group: 'commands' }
+      - { name: '/data01/commands/db', user: 'commands', group: 'commands' }
+      - { name: '/data01/commands/db/*', user: 'commands', group: 'commands' }
+      - { name: '/data01/commands/logs', user: 'commands', group: 'commands' }
+      - { name: '/data01/commands/logrotate.app.d', user: 'commands', group: 'commands' }
+      - { name: '/data01/commands/logrotate.app.d/*', user: 'commands', group: 'commands' }
     splsrc_list:
       - { name: '/opt/splunk/etc/apps/*', user: 'splunk', group: 'splunk' }
       - { name: '/opt/splunk/var/log/', user: 'splunk', group: 'splunk' }

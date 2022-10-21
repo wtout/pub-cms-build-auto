@@ -1,0 +1,11 @@
+---
+# Tasks to disable puppet agent
+- name: disable puppet agent
+  ansible.builtin.shell: |
+    /usr/local/bin/puppet agent --disable
+    /usr/local/bin/puppet resource service puppet ensure=stopped enable=false
+  become: "{{ true if ansible_user != 'root' else false }}"
+  register: reg_disable_agent
+  until: reg_disable_agent is succeeded
+  ignore_errors: true
+  tags: [ 'post_install_configuration', 'never' ]

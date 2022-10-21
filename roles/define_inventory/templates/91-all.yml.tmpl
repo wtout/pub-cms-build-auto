@@ -115,7 +115,7 @@ sysconfig:
     domain_name: "{{ ('staging.' if environment_definition.datacenter.primary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com' }}"
 
     # NTP server
-    ntp_server: {{ [environment_definition.vm_setting.sysconfig.ntp_server|join(', ')] if environment_definition.vm_setting.sysconfig.ntp_server is defined else "'{{ customer.primary.octets }}.62'" }}
+    ntp_server: {{ ([environment_definition.vm_setting.sysconfig.ntp_server|join(', ')] if environment_definition.vm_setting.sysconfig.ntp_server|type_debug == 'list' else ("'" + environment_definition.vm_setting.sysconfig.ntp_server|string + "'")) if environment_definition.vm_setting.sysconfig.ntp_server is defined else "'{{ customer.primary.octets }}.254'" if environment_definition.customer.deployment_model is search('sa|sh') else "'{{ customer.primary.octets }}.62'" }}
 
   secondary:
   
@@ -126,7 +126,7 @@ sysconfig:
     domain_name: "{{ (('staging.' if environment_definition.datacenter.secondary.name == 'RTP-Staging' else '') + 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else '' }}"
 
     # NTP server
-    ntp_server: {{ [environment_definition.drvm_setting.sysconfig.ntp_server|join(', ')] if environment_definition.drvm_setting.sysconfig.ntp_server is defined else "'{{ customer.secondary.octets }}.62'" if environment_definition.customer.disaster_recovery else '' }}
+    ntp_server: {{ (([environment_definition.drvm_setting.sysconfig.ntp_server|join(', ')] if environment_definition.drvm_setting.sysconfig.ntp_server|type_debug == 'list' else ("'" + environment_definition.drvm_setting.sysconfig.ntp_server|string + "'")) if environment_definition.drvm_setting.sysconfig.ntp_server is defined else "'{{ customer.secondary.octets }}.254'" if environment_definition.customer.deployment_model is search('sa|sh') else "'{{ customer.secondary.octets }}.62'") if environment_definition.customer.disaster_recovery else '' }}
 
 
 ##################################################################################

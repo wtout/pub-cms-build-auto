@@ -28,7 +28,9 @@
     loop: "{{ ansible_play_batch | intersect(myhosts) }}"
     loop_control:
       loop_var: host_item
-    when: hostvars[host_item]['cert_exists1'] is defined
+    when:
+      - hostvars[host_item]['cert_exists1'] is defined
+      - hostvars[host_item] is not search('em7')
     run_once: true
   - block:
     - include_tasks: task_rebuild_host.yml
@@ -66,5 +68,9 @@
     ignore_errors: true
     delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
     when: cert_exists1|default(false) or cert_exists2|default(false)
+  - name: check cert signed successfully
+    ansible.builtin.assert:
+      that: "psc is not skipped"
+      fail_msg: "{{ 'No certificate for ' + inventory_hostname }}"
   tags: puppet
 

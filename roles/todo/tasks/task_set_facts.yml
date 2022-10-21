@@ -281,6 +281,53 @@
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: [ 'sanity' ]
 
+- name: define validate_em7
+  set_fact:
+    validate_em7: true
+  when:
+    - deploy | default(false) | bool
+    - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
+    - "'em7' in group_names or (customer.disaster_recovery and 'drem7' in group_names)"
+    - customer.name | lower is not search('mdr|stdal')
+    - invoker is not search('cdra')
+    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: [ 'validate_em7', 'never' ]
+
+- name: define validate_splunk
+  set_fact:
+    validate_splunk: true
+  when:
+    - deploy | default(false) | bool
+    - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
+    - "'spl' in group_names or (customer.disaster_recovery and 'drspl' in group_names)"
+    - customer.name | lower is not search('mdr|stdal')
+    - invoker is not search('cdra')
+    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: [ 'validate_splunk', 'never' ]
+
+- name: define validate_relay
+  set_fact:
+    validate_relay: true
+  when:
+    - deploy | default(false) | bool
+    - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
+    - "'rly' in group_names or (customer.disaster_recovery and 'drrly' in group_names)"
+    - customer.name | lower is not search('mdr|stdal')
+    - invoker is not search('cdra')
+    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: [ 'validate_relay', 'never' ]
+
+- name: define post_install_configuration
+  set_fact:
+    post_install_configuration: true
+  when:
+    - deploy | default(false) | bool
+    - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
+    - customer.name | lower is not search('mdr|stdal')
+    - invoker is not search('cdra')
+    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: [ 'post_install_configuration', 'never' ]
+
 #- name: define check_requiretty
 #  set_fact:
 #    check_requiretty: true

@@ -2,13 +2,7 @@
 # Tasks to check service status
 - block:
   - block:
-    - name: get primary DB
-      shell: cat /proc/drbd | grep ro | awk -F 'ro:' '{print $NF}' | cut -d '/' -f1
-      register: primary_check
-      check_mode: no
-    - name: define primary DB
-      set_fact:
-        primary_db: "{{ true if primary_check.stdout is search('Primary') else false }}"
+    - include_tasks: task_check_primary_db.yml
     when: vm.name is search('em7db')
   - name: check backup RPM version on relays
     shell: rpm -qa | grep -i csco-cms-backup | sed 's/^.*backup-//;s/\.noarch$//'

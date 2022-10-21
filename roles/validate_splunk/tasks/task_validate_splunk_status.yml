@@ -1,0 +1,30 @@
+---
+# Tasks to check splunk service status
+- block:
+  - name: Checking splunk status
+    block:
+      - name: check splunk service status
+        ansible.builtin.shell: |
+          $(which su) splunk -c '/opt/splunk/bin/splunk status'
+        check_mode: no
+        register: reg_spl_status
+      - name: define splunk status
+        ansible.builtin.set_fact:
+          val_splunk_status: 'splunk service is running'
+        when: 
+          - inventory_hostname is search('spl(dpl|mas)02')
+    rescue:
+      - name: define splunk status
+        ansible.builtin.set_fact:
+          val_splunk_status: 'splunk service is not running'
+        when:
+          - inventory_hostname is search('spl(dpl01|mas01|src|ind)')
+    always:
+      - debug:
+          msg: "{{ reg_spl_status }}"
+        when: reg_spl_status is failed
+  - ansible.builtin.assert:
+      that: val_splunk_status|default('') == ''
+      fail_msg: "{{ val_splunk_status|default('') }}"
+  when: inventory_hostname is search('spl')
+  tags: [ 'validate_splunk', 'never' ]
