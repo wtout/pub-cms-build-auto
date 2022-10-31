@@ -10,10 +10,15 @@
     - name: check original credentials
       block:
         - name: check VM credentials
-          wait_for_connection:
-            timeout: 3
-          register: vcr_vm_creds
+          ansible.builtin.wait_for:
+            port: 22
+            host: "{{ netconfig.nic1.ipaddress }}"
+            search_regex: OpenSSH
+            delay: 3
+            timeout: 10
+          register: vcr_vm_connection
           check_mode: no
+          delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
       rescue:
         - name: Update SSH credentials
           ansible.builtin.set_fact:
@@ -32,10 +37,15 @@
             ansible_ssh_pass: "{{ vm_svc_pass }}"
           no_log: true
         - name: check connection
-          wait_for_connection:
-            timeout: 3
+          ansible.builtin.wait_for:
+            port: 22
+            host: "{{ netconfig.nic1.ipaddress }}"
+            search_regex: OpenSSH
+            delay: 3
+            timeout: 10
           register: vcr_vm_connection
           check_mode: no
+          delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
         - debug:
             msg: "VM hardening is enabled. Nothing to do"
         - name: set flag to not create and configure the VMs
