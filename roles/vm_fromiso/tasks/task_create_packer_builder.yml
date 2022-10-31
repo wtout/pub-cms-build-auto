@@ -8,6 +8,9 @@
       get_checksum: yes
     register: iso_info
     run_once: true
+  - ansible.builtin.assert:
+      that: iso_info.stat.exists
+      fail_msg: "{{ auto_dir }}/{{ iso_dir }}/{{ iso_installer }} is not found" 
   - name: Create Packer builder
     template:
       src: "templates/build-{{ inventory_hostname[:-2] | regex_replace('drem7', 'em7') }}.json.j2"
