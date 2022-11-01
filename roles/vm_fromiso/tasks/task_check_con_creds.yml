@@ -14,9 +14,8 @@
             port: 22
             host: "{{ netconfig.nic1.ipaddress }}"
             search_regex: OpenSSH
-            delay: 3
             timeout: 10
-          register: vcr_vm_connection
+          register: vcr_vm_creds
           check_mode: no
           delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
       rescue:
@@ -41,7 +40,6 @@
             port: 22
             host: "{{ netconfig.nic1.ipaddress }}"
             search_regex: OpenSSH
-            delay: 3
             timeout: 10
           register: vcr_vm_connection
           check_mode: no
