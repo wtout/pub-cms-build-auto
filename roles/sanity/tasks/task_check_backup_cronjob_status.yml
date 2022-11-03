@@ -31,6 +31,9 @@
       - set_fact:
           reg_bk_cronjob: "{{ reg_bk_cronjob2 }}"
       when: curver is version('2.0', '>')
+    - debug:
+        msg: "{{ reg_bk_cronjob|replace(ansible_ssh_pass, 'obfuscated') }}"
+      when: ansible_user != 'root'
     - name: define rly_backup_cronjob_status
       ansible.builtin.set_fact:
         rly_backup_cronjob_status: 'No backup cronjob found'
@@ -40,13 +43,9 @@
     when: curver != ''
     vars:
       curver: "{{ reg_bk_rpm.stdout.split('-')|last|replace('.noarch', '') }}"
-  - debug:
-      msg: "{{ reg_bk_cronjob|replace(ansible_ssh_pass, 'obfuscated') }}"
-    when: ansible_user != 'root'
   - name: define rly_backup_cronjob_status
     ansible.builtin.set_fact:
       rly_backup_cronjob_status: 'No backup rpm found'
     when:
       - reg_bk_rpm.stdout == ''
   tags: sanity
-  

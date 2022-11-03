@@ -15,6 +15,10 @@
     - include_tasks: task_create_kickstart_iso.yml
     - include_tasks: task_copy_kickstart_iso_to_vsphere.yml
     - include_tasks: task_deploy_iso_self_healing.yml
+    - name: "vm_creation: Add custom attributes"
+      include_role:
+        name: vm_creation
+        tasks_from: task_update_custom_attributes.yml
     - include_tasks: task_delete_gtw_nic1_self_healing.yml
     - include_tasks: task_update_disks_self_healing.yml
     - include_tasks: task_delete_kickstart_files.yml
@@ -22,6 +26,10 @@
 
   - block:
     - include_tasks: task_deploy_em7iso.yml
+    - name: "vm_creation: Add custom attributes"
+      include_role:
+        name: vm_creation
+        tasks_from: task_update_custom_attributes.yml
     - include_tasks: task_update_em7prt_disk0.yml
     - include_tasks: task_reboot_vm.yml
     - include_tasks: task_rename_nic2.yml

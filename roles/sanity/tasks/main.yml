@@ -84,7 +84,7 @@
         when: inventory_hostname is search('atarly')
       - include_tasks: task_lnxjmp_sanity.yml
         when: inventory_hostname is search('lnxjmp')
-      when: "sc_vm_creds2|default({'failed': false}) is succeeded"
+      when: "sc_vm_creds2|default({'failed': false}) is succeeded or sc_vm_creds3|default({'failed': false}) is succeeded"
     - include_tasks: task_print_report.yml
 #    when: sc_vm_reachable is succeeded
   when:

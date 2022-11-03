@@ -59,7 +59,7 @@
 
   - name: define delete_default_datastore on {{ resource }}
     set_fact:
-      delete_default_datastore: "{{ delete_default_datastore|default(false) or (true if ds_item.info.name is search('datastore1') else false) }}"
+      delete_default_datastore: "{{ delete_default_datastore|default(false) or (true if ds_item.info.name is regex('(d|D)atastore') else false) }}"
     loop: "{{ existing_datastores.datastores }}"
     loop_control:
       loop_var: ds_item
