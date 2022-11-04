@@ -1,15 +1,6 @@
 ---
 # Tasks to validate Splunk deployment
 - block:
-  - name: Disable requiretty on host
-    replace:
-      path: '/etc/sudoers'
-      regexp: '^(Defaults.*requiretty)$'
-      replace: '#\g<1>'
-    register: reg_disable_rtty
-    become: true
-    vars:
-      ansible_ssh_pipelining: no
   - name: run checklist script
     ansible.builtin.shell: |
       ./splunk_cli_checklist.sh {{ splvm_type }} {{ SPL_ADMIN_PASS }}
@@ -21,13 +12,6 @@
     no_log: yes
     vars:
       splvm_type: "{{ 'aio' if groups['spl']|length == 1 else 'searchhead' if inventory_hostname is search('splsrc') else 'indexer' if inventory_hostname is search('splind') else 'clustermaster' if inventory_hostname is search('splmas') else 'deployer' }}"
-  - name: Re-enable requiretty on host
-    replace:
-      path: '/etc/sudoers'
-      regexp: '^#(Defaults.*requiretty)$'
-      replace: '\g<1>'
-    become: true
-    when: reg_disable_rtty is changed
   - name: define splstatus
     ansible.builtin.set_fact:
       splstatus: "{{ splstatus|default([]) | union([loop_item|regex_replace('^.*(FAIL.*)\\\u001b.*$', '\\1')]) }}"
