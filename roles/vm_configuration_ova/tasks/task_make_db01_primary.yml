@@ -56,6 +56,8 @@
     - em7_play_hosts_list | length > 0
     - inventory_hostname == em7_play_hosts_list|first
     - groups['em7db'] is defined
+    - ansible_play_hosts|reject('search', 'dr|bastion|puppet|vcenter|nexus')|select('search','em7db')|list|length > 0
+
   vars:
     em7_play_hosts_list: "{{ ansible_play_hosts | select('search', 'em7.*') | list }}"
   tags: vm_configuration
