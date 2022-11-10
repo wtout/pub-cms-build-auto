@@ -1,0 +1,63 @@
+[common]
+CurrentVersion={{ customer.version.release|replace('R', '') }}
+TargetVersion={{ customer.version.release|replace('R', '') }}
+primary_relay_server_IP={{ drrly_ip1_list[0] }}
+secondary_relay_server_IP={{ drrly_ip1_list[1] if drrly_ip1_list|length >= 2 else '' }}
+mcIP={{ netconfig.nic1.ipaddress }}
+ipaddress1={{ netconfig.nic1.ipaddress }}
+ipaddress2={{ netconfig.nic2.ipaddress }}
+isGeoServer=False
+netscalar_ip_list={{ customer.secondary.octets }}.53,{{ customer.secondary.octets }}.54,{{ customer.secondary.octets }}.55
+netscaler_ip1={{ customer.secondary.octets }}.53
+netscaler_ip2={{ customer.secondary.octets }}.54
+netscaler_snip={{ customer.secondary.octets }}.55
+is4_ip_01={{ customer.secondary.octets }}.6
+isSNOWEnabled=No
+isATAEnabled=False
+{{ 'isCommonRelayServer=False' if inventory_hostname is search('rly') else '' }}
+customer_name={{ customer.name }}
+custNamePrefix={{ customer.secondary.name_prefix }}
+em7_db_vip={{ customer.secondary.octets + '.40' }}
+em7_AdminPortalVIP={{ customer.secondary.octets + '.49' }}
+em7_AdminPortalVIPHostName={{ drprt_hst_list[0] | regex_replace('[a-z]01', 'v01') }}
+em7_AdminPortalVIPFQDN={{ drprt_hst_list[0] | regex_replace('[a-z]01', 'v01') }}.{{ sysconfig.domain_name }}
+living_objects_ip=
+splunk_search_head_vip={{ customer.secondary.octets + '.41' }}
+relay_server_vip={{ customer.secondary.octets + '.120' }}
+relayServerDBVIP={{ customer.secondary.octets + '.1' }}
+relay_ip_list={{ drrly_ip1_list|join(',') }}
+relay1_hostname={{ drrly_hst_list[0] }}
+relay2_hostname={{ drrly_hst_list[1] if drrly_hst_list|length >= 2 else '' }}
+primary_db_server_ip={{ drdb_ip1_list[0] }}
+secondary_db_server2_ip={{ drdb_ip1_list[1] if drdb_ip1_list|length >= 2 else '' }}
+primary_em7_portal_server_ip={{ drprt_ip1_list[0] }}
+secondary_em7_portal_server_ip={{ drprt_ip1_list[1] if drprt_ip1_list|length >=2 else '' }}
+server_type={{ 'primary' if inventory_hostname is search('rly01') else 'secondary' }}
+em7_user_name={{ ansible_user }}
+splunk_user_name=admin
+em7_access_portal_cpu_core_count={{ drprt_cpu_list[0] }}
+em7_access_portal_ram_gb={{ drprt_mem_list[0] }}
+ntp_source_ip={{ sysconfig.secondary_ntp_server }}
+domain_name={{ sysconfig.domain_name }}
+[headend]
+indexer01_ip={{ splunk.he_indexer01_ip }}
+indexer02_ip=None
+searchhead01_ip={{ splunk.he_searchhead01_ip }}
+searchhead02_ip={{ splunk.he_searchhead02_ip }}
+deployment_server_ip={{ splunk.he_deployment_server_ip }}
+tile_server_ip={{ splunk.tile_server }}
+[em7]
+appliances={{ drappliances_list|join(',') }}
+admin_portal_ip_list={{ drprt_ip1_list|join(',') }}
+primary_db_ip={{ drdb_ip1_list[0] }}
+secondary_db_ip={{ drdb_ip1_list[1] if drdb_ip1_list|length >=2 else ''  }}
+dc_ip_list={{ drdc_ip1_list|join(',') }}
+mc_ip_list={{ drmc_ip1_list|join(',') }}
+all_dc_ip_list={{ drdc_ip1_list|join(',') }}
+all_mc_ip_list={{ drmc_ip1_list|join(',') }}
+splunk_proxy={{ customer.secondary.name_prefix }}em7splproxy.{{ sysconfig.domain_name }}
+beta_proxy={{ customer.secondary.name_prefix }}em7splbetaproxy.{{ sysconfig.domain_name }}
+ondemand_proxy={{ customer.secondary.name_prefix }}em7splodproxy.{{ sysconfig.domain_name }}
+lo_proxy={{ customer.secondary.name_prefix }}em7loproxy.{{ sysconfig.domain_name }}
+[is4]
+is4_region=IS4_build

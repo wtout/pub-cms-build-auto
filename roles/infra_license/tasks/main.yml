@@ -68,6 +68,8 @@
       - name: Transfer license from Packages to CSR
         shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.nic3.ipaddress }}:/bootflash:{{ license_file_name }}"
         delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+        register: reg_lic_transfer
+        until: reg_lic_transfer is succeeded
       - name: install license
         ios_command:
           commands:

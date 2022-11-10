@@ -24,7 +24,7 @@
     ansible.builtin.copy:
       src: "{{ role_path }}/files/{{ 'dr' if inventory_hostname is search('dr') else '' }}hosts"
       dest: '/etc/hosts'
-    become: "{{ true if inventory_hostname is search('em7') else false }}"
+    become: "{{ true if ansible_user != 'root' else false }}"
     when: not ansible_check_mode
 
   - block:

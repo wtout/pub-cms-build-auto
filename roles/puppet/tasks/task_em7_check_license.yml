@@ -1,11 +1,33 @@
 ---
 # tasks to get the license status for the EM7 DBs
 - block:
+  - name: check list of primary DBs
+    block:
+      - name: get primary DB
+        shell: cat /proc/drbd | grep 'ro:' | awk -F 'ro:' '{print $NF}' | cut -d '/' -f1
+        register: reg_primary_check
+        loop: "{{ db_list }}"
+        loop_control:
+          loop_var: db_item
+        delegate_to: "{{ db_item }}"
+        become: yes
+        args:
+          warn: no
+        ignore_errors: yes
+      - name: define primary DB list
+        set_fact:
+          primary_db_list: "{{ primary_db_list|default([]) | union([db_item]) }}"
+        when: reg_primary_check.results|selectattr('db_item','equalto',db_item)|map(attribute='stdout')|list|first == 'Primary'
+        loop: "{{ db_list }}"
+        loop_control:
+          loop_var: db_item
+    check_mode: no
+    run_once: yes
   - name: Check licensed state
     ansible.builtin.shell: |
       /opt/em7/bin/licensed_state
     register: reg_lic_state
-    loop: "{{ db_list }}"
+    loop: "{{ primary_db_list }}"
     loop_control:
       loop_var: db_item
     delegate_to: "{{ db_item }}"
@@ -18,7 +40,7 @@
   - name: define status_message
     ansible.builtin.set_fact:
       status_message: "{{ status_message|default([]) | union([db_item + ': ' + reg_lic_state.results|selectattr('db_item','equalto',db_item)|map(attribute='stdout')|list|join if reg_lic_state.results|selectattr('db_item','equalto',db_item)|select('search', 'stdout')|length > 0 else reg_lic_state.results|selectattr('db_item','equalto',db_item)|map(attribute='msg')|list|join]) }}"
-    loop: "{{ db_list }}"
+    loop: "{{ primary_db_list }}"
     loop_control:
       loop_var: db_item
     run_once: yes

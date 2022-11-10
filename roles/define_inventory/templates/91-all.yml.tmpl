@@ -233,6 +233,15 @@ splunk:
   tile_server: 'alln1spltlsp01'
 
 
+##################################################################################
+# IS4 information. Although the values in this section do not typically change from one customer to another, ensure they are correct 
+##################################################################################
+is4:
+
+  # vip
+  vip: '{{ '172.23.254.100' if environment_definition.datacenter.secondary.name == 'RTP-Staging' else '172.19.254.100' }}'
+
+
 #@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
 ##################################################################################
 # Do NOT change anything below this line

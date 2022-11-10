@@ -185,7 +185,7 @@
     "vm-disk-size1": "{{ vm.disk1|int * 1024 }}",
     "vm-disk-size2": "{{ vm.disk2|int * 1024 }}",
     "vm-disk-size3": "{{ vm.disk3|int * 1024 }}",
-    "vm-thin-provisioning": "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC' else false }}",
+    "vm-thin-provisioning": "{{ true if (vm.disk_provisioning == 'thin') or (hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] == 'PAE-HX-DC') else false }}",
     "vm-name": "{{ vm.name }}",
     "vm-username": "root",
     "vm-ipaddress1": "{{ netconfig.nic1.ipaddress }}",

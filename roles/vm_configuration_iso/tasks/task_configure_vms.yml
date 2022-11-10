@@ -3,10 +3,12 @@
 - block:
   - include_tasks: task_add_users.yml
   - include_tasks: task_add_qs_scripts.yml
+  - include_tasks: task_add_ngx_cert_script.yml
   - include_tasks: task_update_rp_filter.yml
   - include_tasks: task_configure_snmp.yml
   - include_tasks: task_update_chrony.yml
   - include_tasks: task_update_repo.yml
+  - include_tasks: task_update_puppet_data_file.yml
   - include_tasks: task_update_hosts_file.yml
   - include_tasks: task_coro_install.yml
   - name: time laps

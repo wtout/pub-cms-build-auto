@@ -90,7 +90,8 @@
 
     - block:
       - name: puppet push 1
-        shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
+        shell: |
+          {{ 'sleep 300;' if inventory_hostname is search('em7prt') else '' }}/usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
         register: puppet_agent
         async: 4000
         poll: 10

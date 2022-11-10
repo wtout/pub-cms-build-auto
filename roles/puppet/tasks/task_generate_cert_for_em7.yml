@@ -54,12 +54,26 @@
       shell: ./generate-ngx-cert.sh
       args:
         chdir: '/opt/em7/share/ssl'
+    - name: create /home/em7release/.puppetlabs/etc/puppet if it doesn't exist
+      ansible.builtin.file:
+        path: '/home/em7release/.puppetlabs/etc/puppet'
+        state: directory
+        mode: 0775
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+    - name: create /home/em7release/.puppetlabs/etc/puppet/puppet.conf if it doesn't exist
+      ansible.builtin.file:
+        path: '/home/em7release/.puppetlabs/etc/puppet/puppet.conf'
+        state: touch
+        mode: 0664
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
     - name: update puppet.conf
       lineinfile:
         path: '/home/em7release/.puppetlabs/etc/puppet/puppet.conf'
         line: "{{ line_item }}"
-        group: em7release
-        owner: em7release
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
       loop:
         - '[agent]'
         - "certname = em7release.{{ vm.name }}.{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"
