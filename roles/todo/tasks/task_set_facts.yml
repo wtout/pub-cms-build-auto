@@ -105,7 +105,7 @@
   when:
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-    - customer.name | lower is search('mdr|stdal') or customer.version.release[1:]|replace('.', '')|int > 9217 #or not bfova | default(false) | bool
+    - customer.name | lower is search('mdr|stdal') or customer.version.release[1:]|replace('.', '')|int > 9217 or not bfova | default(false) | bool
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_creation
 
@@ -125,7 +125,7 @@
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - inventory_hostname is not search('em7')
-    - customer.name | lower is search('mdr|stdal') or customer.version.release[1:]|replace('.', '')|int > 9217 #or not bfova | default(false) | bool
+    - customer.name | lower is search('mdr|stdal') or customer.version.release[1:]|replace('.', '')|int > 9217 or not bfova | default(false) | bool
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_hardening
 
@@ -146,7 +146,7 @@
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
     - customer.version.release[1:]|replace('.', '')|int <= 9217
-#    - bfova | default(false) | bool
+    - bfova | default(false) | bool
     - invoker is not search('cdra')
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_creation
@@ -198,7 +198,7 @@
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
-    - customer.version.release[1:]|replace('.', '')|int > 9217 #or not bfova | default(false) | bool
+    - customer.version.release[1:]|replace('.', '')|int > 9217 or not bfova | default(false) | bool
     - invoker is not search('cdra')
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: [ 'vm_configuration' ]
@@ -211,7 +211,7 @@
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
     - customer.version.release[1:]|replace('.', '')|int <= 9217
-#    - bfova | default(false) | bool
+    - bfova | default(false) | bool
     - invoker is not search('cdra')
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: [ 'vm_configuration' ]
@@ -316,6 +316,18 @@
     - invoker is not search('cdra')
     - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: [ 'validate_relay', 'never' ]
+
+- name: define drdb_configure
+  set_fact:
+    drdb_configure: true
+  when:
+    - deploy | default(false) | bool
+    - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
+    - inventory_hostname is search('em7db')
+    - customer.name | lower is not search('mdr|stdal')
+    - invoker is not search('cdra')
+    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: [ 'drdb_configuration', 'never' ]
 
 - name: define post_install_configuration
   set_fact:
