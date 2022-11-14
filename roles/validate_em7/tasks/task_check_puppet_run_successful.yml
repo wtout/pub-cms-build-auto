@@ -51,14 +51,14 @@
       loop_control:
         loop_var: file_item
       delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'em7db']|first }}"
-#    - name: re-push puppet {{ loop_num }}
-#      ansible.builtin.shell: |
-#        /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
-#      register: reg_repush_puppet
-#      no_log: true
-#      failed_when:
-#        - reg_repush_puppet.stdout is not search('Run of Puppet configuration client already in progress')
-#        - reg_repush_puppet.stdout is not search('Applied catalog in')
+    - name: re-push puppet {{ loop_num }}
+      ansible.builtin.shell: |
+        /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
+      register: reg_repush_puppet
+      no_log: true
+      failed_when:
+        - reg_repush_puppet.stdout is not search('Run of Puppet configuration client already in progress')
+        - reg_repush_puppet.stdout is not search('Applied catalog in')
     when: repush_puppet
   vars:
     em7_files:
