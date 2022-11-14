@@ -45,6 +45,8 @@
       - "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}"
     loop_control:
       loop_var: user_item
-    when: user_item != ''
+    when:
+      - customer.version.release[1:]|replace('.', '')|int > 9217
+      - user_item != ''
   become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration
