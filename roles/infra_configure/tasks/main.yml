@@ -91,9 +91,12 @@
           apply:
             vars:
               resource: "{{ resource_item }}"
+              customer_prefix: "{{ customer.primary.name_prefix }}"
+              count: "{{ count_idx }}"
         loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
+          index_var: count_idx
       - name: Delete HA VSwitches
         include_tasks:
           file: task_remove_vswitches.yml
@@ -126,9 +129,12 @@
           apply:
             vars:
               resource: "{{ resource_item }}"
+              customer_prefix: "{{ customer.secondary.name_prefix }}"
+              count: "{{ count_idx }}"
         loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
         loop_control:
           loop_var: resource_item
+          index_var: count_idx
       - name: Delete DR VSwitches
         include_tasks:
           file: task_remove_vswitches.yml
