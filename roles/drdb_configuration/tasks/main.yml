@@ -1,0 +1,32 @@
+---
+# tasks file for roles/drdb_configuration
+- block:
+  - name: check VM reachable
+    shell: ping {{ ansible_host }} -c 1
+    register: db_vm_reachable
+    ignore_errors: true
+    check_mode: no
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - block:
+    - name: determine credentials
+      block:
+        - name: check VM credentials
+          wait_for_connection:
+            timeout: 3
+          register: db_vm_creds
+          check_mode: no
+      rescue:
+        - name: Update SSH password
+          set_fact:
+            ansible_ssh_pass: "{{ postppp }}"
+            ansible_become_pass: "{{ postppp }}"
+          no_log: true
+        - name: check updated VM credentials
+          wait_for_connection:
+            timeout: 3
+          check_mode: no
+    - include_tasks: task_drdb_configure.yml
+      when: ansible_ssh_pass == postppp
+    when: db_vm_reachable is succeeded
+  when: drdb_configure | default(false) | bool
+  tags: [ 'drdb_configuration', 'never' ]

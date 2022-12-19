@@ -1,0 +1,12 @@
+---
+# tasks file to configure DR DB
+- block:
+  - include_tasks: task_check_dbpeer_reachable.yml
+  - include_role:
+      name: puppet
+      tasks_from: task_em7_check_license.yml
+  - include_tasks: task_copy_proxy_license.yml
+  - include_tasks: task_stop_services.yml
+  - include_tasks: task_coro_install.yml
+  - include_tasks: task_update_dbpassword_silo_conf.yml
+  tags: [ 'drdb_configuration', 'never' ]

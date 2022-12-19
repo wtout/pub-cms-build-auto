@@ -1,0 +1,30 @@
+---
+# Tasks to copy drbd-proxy.license to DB VMs
+- block:
+  - name: check if {{ lic_src }}/{{ lic_file }} file exists locally
+    ansible.builtin.stat:
+      path: "{{ lic_src }}/{{ lic_file }}"
+    register: reg_local_lic
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - name: copy {{ lic_src }}/{{ lic_file }} file to DBs
+    ansible.builtin.copy:
+      dest: "/etc/{{ lic_file }}"
+      src: "{{ lic_src }}/{{ lic_file }}"
+      mode: 0644
+      owner: em7admin
+      group: em7admin
+    become: "{{ true if ansible_user != 'root' else false }}"
+    when: reg_local_lic.stat.exists
+
+  - name: check if {{ lic_file }} file exists on the db
+    ansible.builtin.stat:
+      path: "/etc/{{ lic_file }}"
+    register: reg_drbd_lic
+  - name: ensure {{ lic_file }} file is present on the db
+    ansible.builtin.assert:
+      that: reg_drbd_lic.stat.exists
+      fail_msg: "The /etc/{{ lic_file }} file is not present on the DB"
+  vars:
+    lic_src: "{{ auto_dir }}/Packages/licenses"
+    lic_file: 'drbd-proxy.license'
+  tags: [ 'drdb_configuration', 'never' ]
