@@ -8,26 +8,23 @@
     check_mode: no
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
-    - name: check VM credentials
-      wait_for_connection:
-        timeout: 3
-      register: vr_vm_creds
-      ignore_errors: true
-      check_mode: no
-    - block:
-      - name: Update SSH password
-        set_fact:
-          ansible_ssh_pass: "{{ postppp }}"
-          ansible_become_pass: "{{ postppp }}"
-        no_log: true
-      - name: check updated VM credentials
-        wait_for_connection:
-          timeout: 3
-        check_mode: no
-      when:
-        - vr_vm_creds is failed
-        - vr_vm_creds.msg is search('Invalid/incorrect username/password')
-
+    - name: determine VM credentials
+      block:
+        - name: check VM credentials
+          wait_for_connection:
+            timeout: 3
+          register: vr_vm_creds
+          check_mode: no
+      rescue:
+        - name: Update SSH password
+          set_fact:
+            ansible_ssh_pass: "{{ postppp }}"
+            ansible_become_pass: "{{ postppp }}"
+          no_log: true
+        - name: check updated VM credentials
+          wait_for_connection:
+            timeout: 3
+          check_mode: no
     - include_tasks: task_validate_relay.yml
       when: ansible_ssh_pass == postppp
     when: vr_vm_reachable is succeeded

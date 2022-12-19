@@ -14,18 +14,22 @@
     ignore_errors: true
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
-  - assert:
+  - ansible.builtin.assert:
       that:
         - csr_info is succeeded
       fail_msg: 'The CSR VM is not found. Aborting playbook execution!'
       
-  - set_fact:
+  - ansible.builtin.set_fact:
       ansible_host: "{{ csr_info.instance.ipv4 }}"
       dhcp_address: "{{ csr_info.instance.ipv4 }}"
 
   - name: Define CSR key
-    shell: ssh-keyscan -t rsa {{ netconfig.nic3.ipaddress }}
+    ansible.builtin.shell: ssh-keyscan -t rsa {{ netconfig.nic3.ipaddress }}
     register: reg_ssh_key
+    async: 30
+    poll: 5
+    until: reg_ssh_key.stdout != ''
+    failed_when: reg_ssh_key.stdout == ''
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
   - name: create ~/.ssh directory
@@ -48,25 +52,34 @@
     vars:
       ignore: yes
 
+  - name: Define CSR serial number
+    ios_facts:
+      gather_subset: min
+  - name: List Licenses directory
+    ansible.builtin.shell: "ls {{ auto_dir }}/Packages/licenses"
+    register: license_file_names
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - name: Define CSR license file name
+    ansible.builtin.set_fact:
+      license_file_name: "{{ license_file_names.stdout_lines|select('search', ansible_net_serialnum)|list|sort(reverse=true)|first if license_file_names.stdout_lines|select('search', ansible_net_serialnum)|list|length >= 1 else '' }}"
+  - ansible.builtin.debug:
+      msg: 'No CSR license file found!'
+    when:
+      - license_file_name == ''
   - block:
-    - name: Define CSR serial number
-      ios_facts:
-        gather_subset: min
-    - name: List Licenses directory
-      shell: "ls {{ auto_dir }}/Packages/licenses"
-      register: license_file_names
+    - name: get new license expiration date
+      ansible.builtin.shell: grep -i end_date {{ auto_dir }}/Packages/licenses/{{ license_file_name }}|awk -F 'END_DATE' '{print $2}'|sed 's|^>\(.*\)T.*$|\1|'
+      register: reg_new_lic_exp_date
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    - name: Define CSR license file name
-      set_fact:
-        license_file_name: "{{ license_file_names.stdout_lines | select('search', ansible_net_serialnum) | list | first if license_file_names.stdout_lines | select('search', ansible_net_serialnum) | list | length >= 1 else '' }}"
-    - assert:
-        that:
-          - license_file_name != ''
-        fail_msg: 'CSR license file not found. Aborting playbook execution!'
-      ignore_errors: yes
+      check_mode: no
+      when: curr_exp_date|default('') != ''
     - block:
+      - name: enable scp server
+        ios_config:
+          lines:
+            - ip scp server enable
       - name: Transfer license from Packages to CSR
-        shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.nic3.ipaddress }}:/bootflash:{{ license_file_name }}"
+        ansible.builtin.shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.nic3.ipaddress }}:/bootflash:{{ license_file_name }}"
         delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
         register: reg_lic_transfer
         until: reg_lic_transfer is succeeded
@@ -78,12 +91,10 @@
               answer: 'yes'
         register: csr_license_details_1
         failed_when: csr_license_details_1 is search('1/1 licenses were failed to install')
-      - name: disable scp server
-        ios_config:
-          lines:
-            - no ip scp server enable
-      when: license_file_name != ''
-    when: not is_licensed
+      when:
+        - not is_licensed or (reg_new_lic_exp_date.stdout|to_datetime('%Y-%m-%d') - curr_exp_date|to_datetime('%Y-%m-%d')).days > 0
+    when:
+      - license_file_name != ''
   - name: Remove CSR key from known_hosts
     known_hosts:
       name: "{{ netconfig.nic3.ipaddress }}"

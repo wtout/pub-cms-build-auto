@@ -23,6 +23,9 @@
     - name: Define CSR key
       shell: ssh-keyscan -t rsa {{ netconfig.nic3.ipaddress }}
       register: host_key
+      async: 30
+      poll: 5
+      until: host_key.stdout != ''
       failed_when: host_key.stdout == ''
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     - name: create ~/.ssh directory
@@ -39,14 +42,25 @@
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     when: not ignore|default(false)
 
-  - name: Check if CSR is licensed
-    ios_command:
-      commands: "show license detail"
-    register: lic_detail
-    ignore_errors: "{{ ignore|default(false) }}"
-
-  - set_fact:
-      is_licensed: "{{ lic_detail is succeeded }}"
+  - name: check licensed state
+    block:
+      - name: Check if CSR is licensed
+        ios_command:
+          commands: "show license detail"
+        register: lic_detail
+      - setup:
+        run_once: yes
+      - set_fact:
+          curr_exp_date: "{{ numdate }}"
+          is_licensed: "{{ (numdate|to_datetime('%Y-%m-%d') - ansible_date_time.date|to_datetime('%Y-%m-%d')).days|int > 0 }}"
+        vars:
+          strdate: "{{ lic_detail.stdout_lines|first|select('search','End Date:')|first|split('End Date: ')|last }}"
+          strmnth: "{{ strdate|split(' ')|first }}"
+          nummnth: "{{ '1' if strmnth|lower is search('jan') else '2' if strmnth|lower is search('feb') else '3' if strmnth|lower is search('mar') else '4' if strmnth|lower is search('apr') else '5' if strmnth|lower is search('may') else'6' if strmnth|lower is search('jun') else '7' if strmnth|lower is search('jul') else '8' if strmnth|lower is search('aug') else '9' if strmnth|lower is search('sep') else '10' if strmnth|lower is search('oct') else '11' if strmnth|lower is search('nov') else '12' }}"
+          numdate: "{{ strdate|split(' ')|last + '-' + '%02d' | format(nummnth|int) + '-' + (strdate|split(' '))[1] }}"
+    rescue:
+      - set_fact:
+          is_licensed: false
 
   - name: Remove CSR key from known_hosts
     known_hosts:
