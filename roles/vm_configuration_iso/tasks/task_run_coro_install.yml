@@ -7,12 +7,12 @@
     register: res_file
 
   - name: define the answers for DB01
-    set_fact:
+    ansible.builtin.set_fact:
       answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n1\\ny\\ny\\n1\\n{{ vm.name | regex_replace('01$', '02') }}\\n{{ netconfig.nic2.ipaddress | regex_replace('[\\.]9$', '.10') }}\\n{{ netconfig.nic1.ipaddress | regex_replace('[\\.]13$', '.14') }}\\n{{ vip.db }}\\n26\\ny"
     when: inventory_hostname is search('01')
 
   - name: define the answers for DB02
-    set_fact:
+    ansible.builtin.set_fact:
       answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n2\\ny\\ny\\n1\\n{{ vm.name | regex_replace('02$', '01') }}\\n{{ netconfig.nic2.ipaddress | regex_replace('[\\.]10$', '.9') }}\\n{{ netconfig.nic1.ipaddress | regex_replace('[\\.]14$', '.13') }}\\ny"
     when: inventory_hostname is search('02')
 
@@ -28,13 +28,10 @@
       - coro_install_status1.rc != 32
 
   - block:
-    - name: "{{ auto_dir + '/roles/vm_fromiso' }}: reboot VM"
+    - name: "vm_fromiso: Reboot VM"
       include_role:
-        name: "{{ auto_dir + '/roles/vm_fromiso' }}"
+        name: vm_fromiso
         tasks_from: task_reboot_vm.yml
-      loop: "{{ range(1, 3 + 1)|list }}"
-      loop_control:
-        loop_var: loop_item
     - name: re-run coro_install script
       ansible.builtin.shell: |
         echo -e "{{ answers }}" | /opt/em7/bin/coro_install

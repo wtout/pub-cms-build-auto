@@ -35,5 +35,6 @@
       object_name: "{{ existing_dsname }}"
       object_type: Datastore
       validate_certs: no
-    when: existing_dsname|default('') != ''
+    when:
+      - existing_dsname|default('') is search('datastore')
   tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

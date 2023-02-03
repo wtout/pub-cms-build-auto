@@ -1,6 +1,9 @@
 ---
 # tasks file to configure_vms
 - block:
+  - include_tasks: task_check_silo_patch.yml
+  - include_tasks: task_delete_docker0_self_healing.yml
+    when: groups['em7']|length == 1 and 'em7' in group_names
   - include_tasks: task_add_users.yml
   - include_tasks: task_add_qs_scripts.yml
   - include_tasks: task_add_ngx_cert_script.yml
@@ -11,6 +14,7 @@
   - include_tasks: task_update_puppet_data_file.yml
   - include_tasks: task_update_hosts_file.yml
   - include_tasks: task_coro_install.yml
+    when: ansible_ssh_pass != postppp
   - name: time laps
     ansible.builtin.wait_for:
       timeout: 30
@@ -18,6 +22,7 @@
     poll: 0
     register: reg_time_laps
     when: inventory_hostname is search('em7db')
+  - include_tasks: task_increase_sync_rate.yml
   - include_tasks: task_update_silo_file.yml
   - include_tasks: task_install_packages.yml
   - name: flush handlers

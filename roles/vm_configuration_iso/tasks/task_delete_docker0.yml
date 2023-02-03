@@ -1,0 +1,39 @@
+---
+# tasks to remove docker0 interface from the EM7 VMs
+- block:
+  - name: Removing docker0 block
+    block:
+      - name: check if docker0 exists {{ loop_counter }}
+        ansible.builtin.shell: |
+          ip a | grep docker0
+        check_mode: no
+        register: reg_docker0_name
+        failed_when: reg_docker0_name.stdout != ''
+      - name: disable docker0 removal {{ loop_counter }}
+        ansible.builtin.set_fact:
+          delete_docker0: false
+    rescue:
+      - name: stop docker service
+        ansible.builtin.systemd:
+          name: docker
+          enabled: false
+          state: stopped
+      - name: Set docker0 down {{ loop_counter }}
+        ansible.builtin.command: |
+          ip link set docker0 down
+        register: int_down
+        failed_when: int_down.rc == 1 and int_down.stderr is not search('Cannot find device')
+      - name: delete docker0 on the VM {{ loop_counter }}
+        ansible.builtin.command: |
+          ip link delete docker0
+        register: int_delete
+        failed_when: int_delete.rc == 1 and int_delete.stderr is not search('Cannot find device')
+      - name: restart network {{ loop_counter }}
+        ansible.builtin.systemd:
+          name: network
+          state: restarted
+          daemon_reload: yes
+        when: int_delete is succeeded
+  become: "{{ true if ansible_user != 'root' else false }}"
+  when: delete_docker0
+  tags: vm_configuration

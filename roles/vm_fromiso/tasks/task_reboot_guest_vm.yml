@@ -1,7 +1,7 @@
 ---
 # tasks to reboot the guest on VMs
 - name: Reboot guest VM
-  vmware_guest:
+  community.vmware.vmware_guest:
     hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
     username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
     password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"

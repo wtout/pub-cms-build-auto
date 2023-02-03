@@ -1,0 +1,17 @@
+---
+# tasks to rename nic2 on the EM7 VMs with self healing mechanism
+- block:
+  - name: enable NIC2 renaming
+    ansible.builtin.set_fact:
+      rename_nic2: true
+  - ansible.builtin.include_tasks:
+      file: task_rename_nic2.yml
+      apply:
+        vars:
+          loop_counter: "{{ nic_idx|int + 1 }}"
+    loop: "{{ range(1, 3 + 1)|list }}"
+    loop_control:
+      loop_var: nic_item
+      index_var: nic_idx
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_creation

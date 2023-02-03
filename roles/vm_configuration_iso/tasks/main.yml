@@ -28,9 +28,21 @@
                 timeout: 3
               check_mode: no
           rescue:
-            - name: define creds_status
-              ansible.builtin.set_fact:
-                creds_status: 'The VM credentials are invalid'
+            - name: checking post puppet push credentials
+              block:
+                - name: Switch to post puppet push password
+                  set_fact:
+                    ansible_ssh_pass: "{{ postppp }}"
+                    ansible_become_pass: "{{ postppp }}"
+                  no_log: true
+                - name: check post puppet push credentials
+                  wait_for_connection:
+                    timeout: 3
+                  check_mode: no
+              rescue:
+                - name: define creds_status
+                  ansible.builtin.set_fact:
+                    creds_status: 'The VM credentials are invalid'
         when:
           - vco_vm_creds.msg is search('Invalid/incorrect')
   - assert:

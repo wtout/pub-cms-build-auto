@@ -1,0 +1,18 @@
+---
+# tasks to copy RPM file to EM7 DB VM
+- name: checking for RPM file locally
+  block:
+    - name: check that the {{ loop_rpm_file }} rpm is available locally
+      ansible.builtin.stat:
+        path: "{{ loop_rpm_src }}/{{ loop_rpm_file }}"
+      register: reg_local_rpm
+      failed_when: not reg_local_rpm.stat.exists
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - name: copy {{ loop_rpm_src }}/{{ loop_rpm_file }} file to DB
+      ansible.builtin.copy:
+        dest: "/tmp/{{ loop_rpm_file }}"
+        src: "{{ loop_rpm_src }}/{{ loop_rpm_file }}"
+  rescue:
+    - ansible.builtin.debug:
+        msg: "{{ loop_rpm_src }}/{{ loop_rpm_file }} is not found"
+  tags: vm_creation

@@ -10,21 +10,31 @@
     - name: check original credentials
       block:
         - name: check VM credentials
-          ansible.builtin.wait_for:
-            port: 22
-            host: "{{ netconfig.nic1.ipaddress }}"
-            search_regex: OpenSSH
+          ansible.builtin.wait_for_connection:
             timeout: 10
           register: vcr_vm_creds
           check_mode: no
-          delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
       rescue:
-        - name: Update SSH credentials
-          ansible.builtin.set_fact:
-            ansible_user: "{{ vm_svc_user }}"
-            ansible_ssh_pass: "{{ vm_svc_pass }}"
-            ansible_become_pass: "{{ vm_svc_pass }}"
-          no_log: true
+        - name: determine good credentials
+          block:
+            - name: update credentials
+              ansible.builtin.set_fact:
+                ansible_ssh_pass: "{{ postppp }}"
+                ansible_become_pass: "{{ postppp }}"
+              no_log: true
+            - name: check post puppet push credentials
+              ansible.builtin.wait_for_connection:
+                timeout: 10
+          rescue:
+            - name: switch to {{ vm_svc_user }} user
+              ansible.builtin.set_fact:
+                ansible_user: "{{ vm_svc_user }}"
+                ansible_ssh_pass: "{{ vm_svc_pass }}"
+                ansible_become_pass: "{{ vm_svc_pass }}"
+              no_log: true
+            - name: check {{ vm_svc_user }} credentials
+              ansible.builtin.wait_for_connection:
+                timeout: 10
           when:
             - vcr_vm_creds.msg is search('Invalid/incorrect')
   rescue:

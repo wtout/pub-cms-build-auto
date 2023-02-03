@@ -45,13 +45,13 @@
         "{{ '{{' }} user `em7root-passwd` {{ '}}' }}",
         "<enter>",
         "<wait1s>",
-        "INTFILE2=/etc/sysconfig/network-scripts/ifcfg-ens224; grep \"^BOOTPROTO\" ${INTFILE2} &>/dev/null && sed -i \"s|^\\(BOOTPROTO=\\).*$|\\1none|\" ${INTFILE2} || echo \"BOOTPROTO=none\" >> ${INTFILE2}",
+        "INTFILE2=/etc/sysconfig/network-scripts/ifcfg-ens192; grep \"^BOOTPROTO\" ${INTFILE2} &>/dev/null && sed -i \"s|^\\(BOOTPROTO=\\).*$|\\1none|\" ${INTFILE2} || echo \"BOOTPROTO=none\" >> ${INTFILE2}",
         "<enter>",
         "<wait1s>",
-        "INTFILE2=/etc/sysconfig/network-scripts/ifcfg-ens224; grep \"^ONBOOT\" ${INTFILE2} &>/dev/null && sed -i \"s|^\\(ONBOOT=\\).*$|\\1yes|\" ${INTFILE2} || echo \"ONBOOT=yes\" >> ${INTFILE2}",
+        "INTFILE2=/etc/sysconfig/network-scripts/ifcfg-ens192; grep \"^ONBOOT\" ${INTFILE2} &>/dev/null && sed -i \"s|^\\(ONBOOT=\\).*$|\\1yes|\" ${INTFILE2} || echo \"ONBOOT=yes\" >> ${INTFILE2}",
         "<enter>",
         "<wait1s>",
-        "IPADDRESS={{ '{{' }} user `vm-ipaddress2` {{ '}}' }}; NETMASK={{ '{{' }} user `vm-netmask2` {{ '}}' }}; echo -e \"IPADDR=${IPADDRESS}\\nNETMASK=${NETMASK}\" >> /etc/sysconfig/network-scripts/ifcfg-ens224",
+        "IPADDRESS={{ '{{' }} user `vm-ipaddress2` {{ '}}' }}; NETMASK={{ '{{' }} user `vm-netmask2` {{ '}}' }}; echo -e \"IPADDR=${IPADDRESS}\\nNETMASK=${NETMASK}\" >> /etc/sysconfig/network-scripts/ifcfg-ens192",
         "<enter>",
         "<wait1s>",
         "grep \"^PermitRootLogin\" /etc/ssh/sshd_config &>/dev/null && sed -i \"s|^\\(PermitRootLogin.*\\)$|#\\1|\" /etc/ssh/sshd_config",
@@ -75,6 +75,11 @@
       "insecure_connection": "true",
       "iso_url": "{{ '{{' }} user `iso_url` {{ '}}' }}",
       "iso_checksum": "{{ '{{' }} user `iso_checksum` {{ '}}' }}",
+      "configuration_parameters": {
+        "scsi0.pciSlotNumber": "16",
+        "ethernet0.pciSlotNumber": "160",
+        "ethernet1.pciSlotNumber": "192"
+      },
       "network_adapters": [
         {
           "network": "{{ '{{' }} user `vsphere-network1` {{ '}}' }}",
@@ -90,23 +95,23 @@
       "ssh_username": "{{ '{{' }} user `vm-username` {{ '}}' }}",
       "ssh_password": "{{ '{{' }} user `em7root-passwd` {{ '}}' }}",      
       "disk_controller_type": [
-        "pvscsi"
+        "lsilogic"
 {%- if vm.disk1|int != 0 -%}
 {%- block dskcntlr1 -%}
 ,
-        "pvscsi"
+        "lsilogic"
 {%- endblock dskcntlr1 %}
 {%- endif %}
 {%- if vm.disk2|int != 0 -%}
 {%- block dskcntlr2 -%}
 ,
-        "pvscsi"
+        "lsilogic"
 {%- endblock dskcntlr2 %}
 {%- endif %}
 {%- if vm.disk3|int != 0 -%}
 {%- block dskcntlr3 -%}
 ,
-        "pvscsi"
+        "lsilogic"
 {%- endblock dskcntlr3 %}
 {%- endif %}
       ],
@@ -154,16 +159,12 @@
    {
       "type": "shell",
       "inline": [
-        "DOMAIN={{ '{{' }} user `domain` {{ '}}' }}; DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; echo -e \"DOMAIN=${DOMAIN}\\nDNS2=${DNS2}\\nPEERDNS=no\" >> /etc/sysconfig/network-scripts/ifcfg-ens192",
-        "DOMAIN={{ '{{' }} user `domain` {{ '}}' }}; DNS1={{ '{{' }} user `name-server1` {{ '}}' }}; DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; echo -e \"DOMAIN=${DOMAIN}\\nDNS1=${DNS1}\\nDNS2=${DNS2}\\nPEERDNS=no\" >> /etc/sysconfig/network-scripts/ifcfg-ens224",
+        "DOMAIN={{ '{{' }} user `domain` {{ '}}' }}; DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; echo -e \"DOMAIN=${DOMAIN}\\nDNS2=${DNS2}\\nPEERDNS=no\\nUSERCTL=no\" >> /etc/sysconfig/network-scripts/ifcfg-ens160",
+        "DOMAIN={{ '{{' }} user `domain` {{ '}}' }}; DNS1={{ '{{' }} user `name-server1` {{ '}}' }}; DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; echo -e \"DOMAIN=${DOMAIN}\\nDNS1=${DNS1}\\nDNS2=${DNS2}\\nPEERDNS=no\\nUSERCTL=no\" >> /etc/sysconfig/network-scripts/ifcfg-ens192",
         "grep \"^#PermitRootLogin\" /etc/ssh/sshd_config &>/dev/null && sed -i \"s|^#\\(PermitRootLogin.*\\)$|\\1|\" /etc/ssh/sshd_config",
          "CIPHERSTR='Ciphers aes256-ctr,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com'; MACSTR='MACS hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1,hmac-sha2-256,hmac-sha2-512'; grep \"^${CIPHERSTR}$\" /etc/ssh/sshd_config &>/dev/null || sed -i \"s|^\\(# Ciphers and keying\\)$|\\1${CIPHERSTR}\\n${MACSTR}|\" /etc/ssh/sshd_config",
+        "echo -e \"HWADDR=$(cat /sys/class/net/ens160/address)\" >> /etc/sysconfig/network-scripts/ifcfg-ens160",
         "echo -e \"HWADDR=$(cat /sys/class/net/ens192/address)\" >> /etc/sysconfig/network-scripts/ifcfg-ens192",
-        "echo -e \"HWADDR=$(cat /sys/class/net/ens224/address)\" >> /etc/sysconfig/network-scripts/ifcfg-ens224",
-        "mv /etc/sysconfig/network-scripts/ifcfg-ens192 /etc/sysconfig/network-scripts/ifcfg-ens160",
-        "sed -i \"s|ens192|ens160|g\" /etc/sysconfig/network-scripts/ifcfg-ens160",
-        "mv /etc/sysconfig/network-scripts/ifcfg-ens224 /etc/sysconfig/network-scripts/ifcfg-ens192",
-        "sed -i \"s|ens224|ens192|g\" /etc/sysconfig/network-scripts/ifcfg-ens192",
         "sed -i 's|^\\(IPV6INIT=\\).*$|\\1no|g' /etc/sysconfig/network-scripts/ifcfg-ens160 /etc/sysconfig/network-scripts/ifcfg-ens192",
         "sed -i '/^IPV6_.*$/,+d' /etc/sysconfig/network-scripts/ifcfg-ens160 /etc/sysconfig/network-scripts/ifcfg-ens192",
         "groupadd -g 60005 {{ ansible_user }}",

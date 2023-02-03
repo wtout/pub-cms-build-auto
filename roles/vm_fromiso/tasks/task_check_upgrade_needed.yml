@@ -1,0 +1,16 @@
+---
+# tasks to check RPM version on EM7 DB VM
+- block:
+  - name: Get {{ mypkg }} version
+    ansible.builtin.shell: |
+      rpm -qa | grep -i {{ mypkg }} | cut -d '-' -f3
+    check_mode: no
+    register: reg_rpm_version
+  - name: define upgrade_needed
+    ansible.builtin.set_fact:
+      upgrade_needed: "{{ upgrade_needed|default({}) | combine({mypkg: mystatus}, recursive=true) }}"
+    vars:
+      mystatus: "{{ true if reg_rpm_version.stdout == '' or reg_rpm_version.stdout is version('10.1.40', '<') else false }}"
+  vars:
+    mypkg: "{{ (loop_rpm_file|split('-'))[:2]|join('-') }}"
+  tags: vm_creation

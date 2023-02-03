@@ -14,6 +14,8 @@
     - name: set user password
       set_fact:
         ansible_ssh_pass: em7admin
+      no_log: yes
+      when: ansible_parent_role_names|default([role_name])|first != 'drdb_configuration'
     - name: copy the SSH keys to primary DB
       authorized_key:
         user: em7admin
@@ -25,5 +27,7 @@
     - name: reset user password
       set_fact:
         ansible_ssh_pass: em7release
+      no_log: yes
+      when: ansible_parent_role_names|default([role_name])|first != 'drdb_configuration'
     delegate_to: "{{ groups['em7db']|first }}"
   tags: vm_configuration

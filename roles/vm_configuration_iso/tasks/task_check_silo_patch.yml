@@ -1,0 +1,16 @@
+---
+# Tasks to check if the patch has been installed on the EM7 DBs
+- block:
+  - name: get the version of EM7 release
+    ansible.builtin.shell: cat /etc/em7-release
+    register: reg_em7_version
+    check_mode: no
+  - name: check that silo patch is installed
+    ansible.builtin.assert:
+      that: myver is version('8.12.1.4', '>=')
+      fail_msg: "{{ 'silo patch is not installed. EM7 version is ' + myver }}"
+    vars:
+      myver: "{{ reg_em7_version.stdout.split(' ')[1] }}"
+  when: inventory_hostname is search('em7db') or (groups['em7']|length == 1 and 'em7' in group_names)
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: vm_configuration

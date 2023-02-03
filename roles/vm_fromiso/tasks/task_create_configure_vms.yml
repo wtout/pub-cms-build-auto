@@ -15,7 +15,7 @@
     - include_tasks: task_create_kickstart_iso.yml
     - include_tasks: task_copy_kickstart_iso_to_vsphere.yml
     - include_tasks: task_deploy_iso_self_healing.yml
-    - name: "vm_creation: Add custom attributes"
+    - name: "vm_creation: Update custom attributes"
       include_role:
         name: vm_creation
         tasks_from: task_update_custom_attributes.yml
@@ -26,13 +26,14 @@
 
   - block:
     - include_tasks: task_deploy_em7iso.yml
-    - name: "vm_creation: Add custom attributes"
+    - name: "vm_creation: Update custom attributes"
       include_role:
         name: vm_creation
         tasks_from: task_update_custom_attributes.yml
     - include_tasks: task_update_em7prt_disk0.yml
     - include_tasks: task_reboot_vm.yml
-    - include_tasks: task_rename_nic2.yml
+      when: vmguest_disk0 is changed
+    - include_tasks: task_rename_nic2_self_healing.yml
       when: inventory_hostname is not search('em7mc')
     when: inventory_hostname is search('em7')
 
@@ -43,6 +44,8 @@
     - include_tasks: task_add_ipv6.yml
     - include_tasks: task_expand_fs.yml
     - include_tasks: task_delete_packer_builder.yml
+    - include_tasks: task_upgrade_mariadb.yml
+      when: groups['em7']|length > 1 and inventory_hostname is search('em7db') or groups['em7']|length == 1
     when: inventory_hostname is search('em7')
   
   - name: flush handlers

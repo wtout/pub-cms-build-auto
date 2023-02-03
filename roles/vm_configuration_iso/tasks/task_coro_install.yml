@@ -50,6 +50,15 @@
     register: crm_status
     until: crm_status is succeeded
     delay: 10
+  - name: wait until DB sync starts
+    ansible.builtin.shell: |
+      grep finish: /proc/drbd
+    register: reg_sync_start
+    until: reg_sync_start is succeeded
+    retries: 9
+    delay: 10
+    check_mode: no
+    when: "'em7db' in group_names"
   when: inventory_hostname is search('em7db')
   become: "{{ true if ansible_user != 'root' else false }}"
   tags: vm_configuration

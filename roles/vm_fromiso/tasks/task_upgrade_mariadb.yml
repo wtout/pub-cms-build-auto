@@ -1,0 +1,66 @@
+---
+# tasks to upgrade MariaDB-server on EM7 DB VM
+- block:
+  - include_tasks:
+      file: task_check_upgrade_needed.yml
+      apply:
+        vars:
+          loop_rpm_file: "{{ rpm_item }}"
+    loop: "{{ rpm_list }}"
+    loop_control:
+      loop_var: rpm_item
+  - name: define rpm_upgrade_list
+    ansible.builtin.set_fact:
+      rpm_upgrade_list: "{{ rpm_upgrade_list|default([]) | union([rpm_item] if upgrade_needed[(rpm_item|split('-'))[:2]|join('-')] else []) }}"
+    loop: "{{ rpm_list }}"
+    loop_control:
+      loop_var: rpm_item
+  - block:
+    - include_tasks:
+        file: task_copy_rpm_to_db.yml
+        apply:
+          vars:
+            loop_rpm_src: "{{ rpm_src }}"
+            loop_rpm_file: "{{ rpm_item }}"
+      loop: "{{ rpm_upgrade_list }}"
+      loop_control:
+        loop_var: rpm_item
+    - include_tasks:
+        file: task_check_rpm_on_db.yml
+        apply:
+          vars:
+              loop_rpm_file: "{{ rpm_item }}"
+      loop: "{{ rpm_upgrade_list }}"
+      loop_control:
+        loop_var: rpm_item
+    - name: stop services
+      systemd:
+        name: "{{ service_item}}"
+        state: stopped
+      loop:
+        - em7
+        - mariadb
+      loop_control:
+        loop_var: service_item
+    - name: Upgrade Mariadb RPM(s)
+      ansible.builtin.yum:
+        name: "{{ rpm_upgrade_list|map('regex_replace','^','/tmp/') }}"
+        state: present
+    - name: Start the new MariaDB service
+      ansible.builtin.systemd:
+        name: mariadb
+        daemon-reload: yes
+        state: started
+    - name: run the mysql_upgrade script
+      ansible.builtin.shell: mysql_upgrade -u root -p$(grep dbpasswd /etc/silo.conf | awk -F '= ' '{print $NF}' | uniq)
+    - name: Start the EM7 service
+      ansible.builtin.systemd:
+        name: em7
+        daemon-reload: yes
+        state: started
+    when: rpm_upgrade_list != []
+  become: "{{ true if ansible_user != 'root' else false }}"
+  vars:
+    rpm_src: "{{ auto_dir }}/Packages/RPM"
+    rpm_list: "{{ ['MariaDB-client-10.1.40-1.el7.centos.x86_64.rpm','MariaDB-common-10.1.40-1.el7.centos.x86_64.rpm','MariaDB-server-10.1.40-1.el7.centos.x86_64.rpm','MariaDB-shared-10.1.40-1.el7.centos.x86_64.rpm'] }}"
+  tags: vm_creation

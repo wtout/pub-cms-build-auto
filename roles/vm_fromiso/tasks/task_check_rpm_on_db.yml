@@ -1,0 +1,15 @@
+---
+# tasks to check for RPM file on EM7 DB VM
+- name: checking for RPM file on the DB
+  block:
+    - name: check if {{ loop_rpm_file }} file exists on the db
+      ansible.builtin.stat:
+        path: "/tmp/{{ loop_rpm_file }}"
+      register: reg_loop_rpm_file
+      failed_when: not reg_loop_rpm_file.stat.exists
+  rescue:
+    - name: Fail if {{ loop_rpm_file }} file is not present on the db
+      ansible.builtin.assert:
+        that: reg_loop_rpm_file.stat.exists
+        fail_msg: "The /tmp/{{ loop_rpm_file }} file is not present on the DB"
+  tags: vm_creation

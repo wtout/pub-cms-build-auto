@@ -1,0 +1,56 @@
+---
+# tasks to check the sync status for the EM7 DBs
+- block:
+  - name: Checking sync status
+    block:
+      - name: Check sync status 1
+        shell: grep 'ds:' /proc/drbd
+        register: reg_sync_status1
+        failed_when: reg_sync_status1.stdout is not search('UpToDate/UpToDate')
+        check_mode: no
+        args:
+          warn: no
+      - name: define sync_status 1
+        ansible.builtin.set_fact:
+          sync_status: 'UpToDate'
+      - name: Reset the sync rate
+        ansible.builtin.shell: /sbin/drbdadm adjust all
+    rescue:
+      - name: get the sync complete delay
+        ansible.builtin.shell: grep 'finish:' /proc/drbd
+        register: reg_sync_delay
+        check_mode: no
+      - name: define polling_intervals
+        ansible.builtin.set_fact:
+          polling_intervals: "{{ (mydelaysecs|int / 30)|round|int }}"
+        vars:
+          mydelay: "{{ reg_sync_delay.stdout|regex_replace('^.*finish: (.+) speed:.*$', '\\1')|split(':') }}"
+          mydelaysecs: "{{ (mydelay[0]|int * 3600) + (mydelay[1]|int * 60) +  mydelay[2]|int}}"
+      - name: Checking sync status 2
+        block:
+          - name: Check sync status 2
+            shell: grep 'ds:' /proc/drbd
+            register: reg_sync_status2
+            failed_when: reg_sync_status2.stdout is not search('UpToDate/UpToDate')
+            until: reg_sync_status2 is succeeded
+            retries: "{{ polling_intervals }}"
+            delay: 60
+            check_mode: no
+            args:
+              warn: no
+          - name: define sync_status 2
+            ansible.builtin.set_fact:
+              sync_status: 'UpToDate'
+          - name: Reset the sync rate
+            ansible.builtin.shell: /sbin/drbdadm adjust all
+        rescue:
+          - name: define sync_status 2
+            ansible.builtin.set_fact:
+              sync_status: 'Inconsistent'
+    always:
+      - name: Ensure sync is complete
+        ansible.builtin.assert:
+          that: sync_status == 'UpToDate'    
+  when: "'em7db' in group_names"
+  become: "{{ true if ansible_user != 'root' else false }}"
+  tags: puppet
