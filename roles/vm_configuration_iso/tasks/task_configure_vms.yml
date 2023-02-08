@@ -35,6 +35,15 @@
     retries: 3
     delay: 12
     when: inventory_hostname is search('em7db')
-  - include_tasks: task_set_max_connections.yml
+  - include_tasks:
+      file: task_update_conf_file.yml
+      apply:
+        vars:
+          conf_file: "{{ file_item }}"
+    loop:
+      - /etc/siteconfig/mysql.siteconfig
+      - /etc/my.cnf.d/silo_mysql.cnf
+    loop_control:
+      loop_var: file_item
   - include_tasks: task_update_exports_file.yml
   tags: vm_configuration

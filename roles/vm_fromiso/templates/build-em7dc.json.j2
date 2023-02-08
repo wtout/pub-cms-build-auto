@@ -161,6 +161,9 @@
       "inline": [
         "DOMAIN={{ '{{' }} user `domain` {{ '}}' }}; DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; echo -e \"DOMAIN=${DOMAIN}\\nDNS2=${DNS2}\\nPEERDNS=no\\nUSERCTL=no\" >> /etc/sysconfig/network-scripts/ifcfg-ens160",
         "DOMAIN={{ '{{' }} user `domain` {{ '}}' }}; DNS1={{ '{{' }} user `name-server1` {{ '}}' }}; DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; echo -e \"DOMAIN=${DOMAIN}\\nDNS1=${DNS1}\\nDNS2=${DNS2}\\nPEERDNS=no\\nUSERCTL=no\" >> /etc/sysconfig/network-scripts/ifcfg-ens192",
+{%- if (sysconfig.secondary.dns_servers[1] if 'dr' in group_names else sysconfig.primary.dns_servers[1]) != '' -%}
+        "DNS2={{ '{{' }} user `name-server2` {{ '}}' }}; grep ${DNS2} /etc/resolv.conf || echo -e \"nameserver ${DNS2}\" >> /etc/resolv.conf",
+{%- endif %}
         "grep \"^#PermitRootLogin\" /etc/ssh/sshd_config &>/dev/null && sed -i \"s|^#\\(PermitRootLogin.*\\)$|\\1|\" /etc/ssh/sshd_config",
          "CIPHERSTR='Ciphers aes256-ctr,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com'; MACSTR='MACS hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha1,hmac-sha2-256,hmac-sha2-512'; grep \"^${CIPHERSTR}$\" /etc/ssh/sshd_config &>/dev/null || sed -i \"s|^\\(# Ciphers and keying\\)$|\\1${CIPHERSTR}\\n${MACSTR}|\" /etc/ssh/sshd_config",
         "echo -e \"HWADDR=$(cat /sys/class/net/ens160/address)\" >> /etc/sysconfig/network-scripts/ifcfg-ens160",
