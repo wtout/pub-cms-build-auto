@@ -55,7 +55,7 @@
           - cert_exists2
         fail_msg: "Certificate could not be created for host. Aborting!"
     when:
-      - inventory_hostname is not search('em7')
+      - inventory_hostname is not search('em7db') or (groups['em7']|length == 1 and 'em7' not in group_names)
       - not cert_exists1|default(false)
   - name: puppet sign certs
     shell: >
