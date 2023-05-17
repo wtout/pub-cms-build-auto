@@ -73,4 +73,3 @@
       that: "psc is not skipped"
       fail_msg: "{{ 'No certificate for ' + inventory_hostname }}"
   tags: puppet
-
