@@ -1,15 +1,27 @@
 ---
 # tasks to ssh key from known_hosts file
 - block:
+  - name: define home_dir
+    ansible.builtin.set_fact:
+      home_dir: "{{ lookup('env', 'HOME') }}"
   - name: check if known hosts file exists
     ansible.builtin.stat:
-      path: ~/.ssh
-    register: ssh_dir
+      path: "{{ home_dir }}/.ssh/known_hosts"
   - name: delete ssh key
     ansible.builtin.lineinfile:
-      path: ~/.ssh/known_hosts
+      path: "{{ home_dir }}/.ssh/known_hosts"
       regex: '^{{ ansible_host }}.*$'
       state: absent
-    when: ssh_dir.stat.exists
+  rescue:
+  - name: check if known hosts file exists
+    ansible.builtin.stat:
+      path: "{{ home_dir }}/.ssh/known_hosts"
+    become: yes
+  - name: delete ssh key
+    ansible.builtin.lineinfile:
+      path: "{{ home_dir }}/.ssh/known_hosts"
+      regex: '^{{ ansible_host }}.*$'
+      state: absent
+    become: yes
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   tags: vm_creation

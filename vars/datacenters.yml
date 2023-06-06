@@ -6,6 +6,15 @@ proxy_address: "{{ lookup('env', 'MYPROXY') }}"
 # Do not modify anything below this line
 ##########################################
 datacenters:
+  STG-HX-DC:
+    vsphere: 'sastgvcap01.staging.cisco-cms.com'
+    deptype: 'h'
+    folder: 'Hosted Customers'
+    cluster: 'STGHX'
+    datastore_cluster: 'STGHXCLUS'
+    storage_datastore: 'STG-HX-DS1'
+    storage_path: ''
+
   RTP-Staging:
     vsphere: 'sastgvcap01.staging.cisco-cms.com'
     deptype: 'h'
