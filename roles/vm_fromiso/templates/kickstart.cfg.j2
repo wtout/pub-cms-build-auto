@@ -107,7 +107,7 @@ baseurl={{ (yum.secondary.baseurl if 'dr' in group_names else yum.primary.baseur
 enabled=1
 gpgcheck=0
 sslverify=False
-{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging') %}
+{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging|STG') %}
 proxy=_none_
 {% endif %}
 EOF

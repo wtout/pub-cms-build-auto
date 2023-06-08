@@ -1,4 +1,4 @@
-{% if hostvars[groups['vcenter'][0]]['information']['datacenter']|lower is search('staging') %}
+{% if hostvars[groups['vcenter'][0]]['information']['datacenter'] is search('Staging|STG') %}
 {% block staging %}
 ADDRESS0=172.23.251.0
 GATEWAY0={{ customer.secondary.octets }}.62
