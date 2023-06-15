@@ -7,7 +7,7 @@
       regexp: '^({{ task_item.param }}) (.*)$'
       replace: '\g<1> {{ task_item.value }}'
     loop:
-      - { param: 'dbpasswd =', value: "{{ vars[('STG' if datacenter.primary.name == 'RTP-Staging' else '') + 'EM7DBPPP_PASS'] }}" }
+      - { param: 'dbpasswd =', value: "{{ vars[('STG' if datacenter.primary.name is search('RTP-Staging|STG') else '') + 'EM7DBPPP_PASS'] }}" }
     loop_control:
       loop_var: task_item
     no_log: true
