@@ -11,7 +11,7 @@
     when:
       - ds_item.freeSpace >= (hostvars[ansible_play_hosts|select('search', vm_group)|list|first]['vm']['disk']|int + hostvars[ansible_play_hosts|select('search', vm_group)|list|first]['vm']['memory']|int) * 1024|pow(3)
       - ds_item.name|lower is not regex('do not use|donotuse|backup')
-      - (information.datacenter is search('RTP-Staging|STG') and ds_item.name is regex('^stg-ds-[0-9]+$')) or ds_item.name is regex('^.*-DS-*[0-9]+$')
+      - (information.datacenter == 'RTP-Staging' and ds_item.name is regex('^stg-ds-[0-9]+$')) or ds_item.name is regex('^.*-DS-*[0-9]+$')
       - ds_item.maintenanceMode is search('normal')
 
   - name: check if there is at least 2 datastores to host {{ vm_group }}
