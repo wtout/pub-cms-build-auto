@@ -2,7 +2,7 @@
 # tasks to deploy VM from ISO
 - block:
   - name: Deploy VM from ISO
-    vmware_guest:
+    community.vmware.vmware_guest:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -15,7 +15,7 @@
       validate_certs: no
       disk:
         - size_gb: "{{ vm.disk0 }}"
-          type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging') else 'thick' }}"
+          type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging|STG') else 'thick' }}"
           datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
           controller_number: 0
           controller_type: 'lsilogic'
@@ -44,7 +44,7 @@
     retries: 5
     delay: 10
   - name: Wait for port 22 to become open and contain "OpenSSH"
-    wait_for:
+    ansible.builtin.wait_for:
       port: 22
       host: "{{ netconfig.nic1.ipaddress }}"
       search_regex: OpenSSH
@@ -55,4 +55,3 @@
       - deploy_iso is succeeded
       - vmguest_info is failed
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation

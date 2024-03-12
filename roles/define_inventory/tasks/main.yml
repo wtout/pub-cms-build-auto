@@ -6,10 +6,10 @@
       file: "{{ auto_dir + '/' + SYS_NAME }}"
       name: 'environment_definition'
 
-  - debug: var=environment_definition
+  - ansible.builtin.debug: var=environment_definition
 
   - name: check if required variables are defined
-    set_fact:
+    ansible.builtin.set_fact:
       cn: "{{ 'Customer name is not defined' if (environment_definition.customer.name is not defined or environment_definition.customer.name == none) else '' }}"
       dm: "{{ 'Deployment model is not defined' if (environment_definition.customer.deployment_model is not defined or environment_definition.customer.deployment_model == none) else '' }}"
       ar: "{{ 'ATA relay is not defined' if (environment_definition.customer.ata is not defined or environment_definition.customer.ata == none) else '' }}"
@@ -33,28 +33,28 @@
       sps: "{{ 'Secondary Puppet server_name is not defined' if environment_definition.customer.disaster_recovery and environment_definition.customer.name|lower is not search('stdal') and (environment_definition.puppet is not defined or environment_definition.puppet.secondary.server_name is not defined or environment_definition.puppet.secondary.server_name == none) else '' }}"
       sys: "{{ 'Secondary Yum server_name is not defined' if environment_definition.customer.disaster_recovery and (environment_definition.yum is not defined or environment_definition.yum.secondary.server_name is not defined or environment_definition.yum.secondary.server_name == none) else '' }}"
 
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ pdc }}"
     when: pdc != ''
 
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ sdc }}"
     when: sdc != ''
 
   - name: verify that all variables are defined
-    assert:
+    ansible.builtin.assert:
       that:
         - vars[item] == ''
       fail_msg: "{{ vars[item] }}"
     loop: [ cn, dm, ar, dr, np, nm, nd, pn, po, sn, so, rv, pdn, pdh, sdn, sdh, pps, pys, sps, sys ]
 
   - name: check if deployment model value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.customer.deployment_model | lower | regex_search('a|aioa|aioh|h|sh|sa') == none
       fail_msg: "deployment_model is not valid. Only a, h, aioa, aioh, sa and sh are valid"
 
-  - debug:
+  - ansible.builtin.debug:
       msg:
         - "environment_definition.customer.{{ loop_item.name }}"
         - "{{ environment_definition['customer'][loop_item.name|split('.')|first][loop_item.name|split('.')|last] }}"
@@ -71,12 +71,15 @@
       - loop_item.state == 'active'
 
   - name: check if number of VMs value is valid
-    assert:
+    ansible.builtin.assert:
       that:
-        - "environment_definition.customer.{{ loop_item.name }} | int >= {{ 1 if environment_definition.customer.name|lower is search('stdal') else 2 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}"
-        - "environment_definition.customer.{{ loop_item.name }} | int <= loop_item.max_value|int"
-        - "environment_definition.customer.{{ loop_item.name }} | int % 2 {{ '>= 0' if environment_definition.customer.name|lower is search('stdal') else '== 0' }}"
-      fail_msg: "The value {{ environment_definition['customer'][loop_item.name|split('.')|first][loop_item.name|split('.')|last] }} for environment_definition.customer.{{ loop_item.name }} is not valid. Only {{ 'numbers >= 1 are valid' if environment_definition.customer.name|lower is search('stdal') else 'even numbers in [2-' + loop_item.max_value|string + '] are valid' if environment_definition.customer.deployment_model | lower is not search('aio') else '0 is valid' }}"
+        - parval|int >= (1 if environment_definition.customer.name|lower is search('stdal') else 2 if environment_definition.customer.deployment_model | lower is not search('aio') else 0)
+        - parval|int <= loop_item.max_value|int
+        - condition
+      fail_msg: "The value {{ parval }} for environment_definition.customer.{{ loop_item.name }} is not valid. Only {{ 'numbers >= 1 are valid' if environment_definition.customer.name|lower is search('stdal') else 'even numbers in [2-' + loop_item.max_value|string + '] are valid' if environment_definition.customer.deployment_model | lower is not search('aio') else '0 is valid' }}"
+    vars:
+      parval: "{{ environment_definition['customer'][loop_item.name|split('.')|first][loop_item.name|split('.')|last] }}"
+      condition: "{{ 'parval|int % 2 >= 0' if environment_definition.customer.name|lower is search('stdal') else 'parval|int % 2 == 0' }}"
     loop:
       - { 'name': 'primary.number_of_prts', 'max_value': "{{ 4 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is not search('stdal') else 'disabled' }}" }
       - { 'name': 'primary.number_of_mcs', 'max_value': "{{ 6 if environment_definition.customer.deployment_model | lower is not search('aio') else 0 }}", 'state': "{{ 'active' if environment_definition.customer.name|lower is not search('stdal') else 'disabled' }}" }
@@ -90,7 +93,7 @@
       - loop_item.state == 'active'
 
   - name: check if ata value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.customer.ata | lower | regex_search('yes|no|true|false') == none
       fail_msg: "ATA is not valid. Only yes/no/true/false are valid"
@@ -99,19 +102,19 @@
       - environment_definition.customer.deployment_model | lower is not search('aio')
 
   - name: check if disaster recovery value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.customer.disaster_recovery | lower | regex_search('yes|no|true|false') == none
       fail_msg: "disaster_recovery is not valid. Only yes/no/true/false are valid"
 
   - name: check if primary octets value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.customer.primary.octets | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}$') == none
       fail_msg: "primary octets is not valid. Only three octets (xxx.xxx.xxx) format is valid"
 
   - name: check if secondary octets value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.customer.secondary.octets | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}$') == none
       fail_msg: "secondary octets is not valid. Only three octets (xxx.xxx.xxx) format is valid"
@@ -120,7 +123,7 @@
       - environment_definition.customer.secondary.octets != none
 
   - name: check if release version value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.customer.version.release | upper | regex_search('R\d+') == none
       fail_msg: "customer.version.release is not valid. Only R followed by version number (Ex. R9.1.3) format is valid"
@@ -128,7 +131,7 @@
       - environment_definition.customer.name|lower is not search('stdal')
 
   - name: check if primary puppet server name value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.puppet.primary.server_name | lower | regex_search('alln1qspupp0[1-4]|sastgpupp01') == none
       fail_msg: "Primary Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
@@ -136,7 +139,7 @@
       - environment_definition.customer.name|lower is not search('stdal')
 
   - name: check if secondary puppet server name value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.puppet.secondary.server_name | lower | regex_search('alln1qspupp0[1-4]|sastgpupp01') == none
       fail_msg: "Secondary Puppet server_name is not valid. Only alln1qspupp01 through 04 are valid"
@@ -145,13 +148,13 @@
       - environment_definition.customer.name|lower is not search('stdal')
 
   - name: check if primary yum server name value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.yum.primary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]|sastgyrep01') == none
       fail_msg: "Primary Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
 
   - name: check if secondary yum server name value is valid
-    assert:
+    ansible.builtin.assert:
       that:
         - not environment_definition.yum.secondary.server_name | lower | regex_search('alln1qsyumrpp0[1-2]|sastgyrep01') == none
       fail_msg: "Secondary Yum server_name is not valid. Only alln1qsyumrpp01 through 02 are valid"
@@ -159,13 +162,13 @@
       - environment_definition.customer.disaster_recovery
 
   - name: verify that primary datacenter is supported
-    assert:
+    ansible.builtin.assert:
       that:
         - "datacenters[environment_definition.datacenter.primary.name] is defined"
       fail_msg: "The primary datacenter selected, {{ environment_definition.datacenter.primary.name }}, is not in the list of supported datacenters. Aborting!"
 
   - name: verify that secondary datacenter is supported
-    assert:
+    ansible.builtin.assert:
       that:
         - "datacenters[environment_definition.datacenter.secondary.name] is defined"
       fail_msg: "The secondary datacenter selected, {{ environment_definition.datacenter.secondary.name }}, is not in the list of supported datacenters. Aborting!"
@@ -173,13 +176,13 @@
       - environment_definition.customer.disaster_recovery
 
   - name: verify if selected primary datacenter supports deployment model
-    assert:
+    ansible.builtin.assert:
       that:
         - "datacenters[environment_definition.datacenter.primary.name]['deptype'] is search(environment_definition.customer.deployment_model[-1:])"
       fail_msg: "The datacenter selected, {{ environment_definition.datacenter.primary.name }}, only supports the {{ 'on-prem' if datacenters[environment_definition.datacenter.primary.name]['deptype'] is search('a') else 'hosted' }} deployment model. Aborting!"
 
   - name: verify if selected secondary datacenter supports deployment model
-    assert:
+    ansible.builtin.assert:
       that:
         - "datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search(environment_definition.customer.deployment_model[-1:])"
       fail_msg: "The datacenter selected, {{ environment_definition.datacenter.secondary.name }}, only supports the {{ 'on-prem' if datacenters[environment_definition.datacenter.secondary.name]['deptype'] is search('a') else 'hosted' }} deployment model. Aborting!"
@@ -187,7 +190,7 @@
       - environment_definition.customer.disaster_recovery
 
   - name: check if ata and disaster_recovery values are in conflict
-    assert:
+    ansible.builtin.assert:
       that:
         - environment_definition.customer.ata != environment_definition.customer.disaster_recovery
       fail_msg: "Geo-redundancy and ATA Relay are mutually exclusive. Aborting!"
@@ -197,17 +200,17 @@
 
   - block:
     - name: verify that primary resources are separated
-      assert:
+      ansible.builtin.assert:
         that:
           - environment_definition.datacenter.primary.resources | regex_search('\d{1,3}[,|;|\s]\s?\d{1,3}')
         fail_msg: "The primary resources list {{ environment_definition.datacenter.primary.resources }} is not a valid IP address list. Aborting!"
       when:
         - environment_definition.datacenter.primary.resources | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}.*\d{1,3}\.')
     - name: define the primary resources list separator
-      set_fact:
+      ansible.builtin.set_fact:
         separator: "{{ ', ' if environment_definition.datacenter.primary.resources is search(', ') else ',' if environment_definition.datacenter.primary.resources is search(',') else '; ' if environment_definition.datacenter.primary.resources is search('; ') else ';' if environment_definition.datacenter.primary.resources is search(';') else ' ' }}"
     - name: verify that primary resources are valid
-      assert:
+      ansible.builtin.assert:
         that:
           - ip_item | ansible.utils.ipaddr
         fail_msg: "The primary resources list {{ environment_definition.datacenter.primary.resources }} is not a valid IP address list. Aborting!"
@@ -217,7 +220,7 @@
       when: ip_item | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
 
     - name: verify that secondary resources are valid
-      assert:
+      ansible.builtin.assert:
         that:
           - ip_item | ansible.utils.ipaddr
         fail_msg: "The secondary resources list {{ environment_definition.datacenter.secondary.resources }} is not a valid IP address list. Aborting!"
@@ -229,14 +232,14 @@
         - ip_item | regex_search('^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
 
     - name: verify that there are enough primary resources
-      assert:
+      ansible.builtin.assert:
         that:
           - environment_definition.datacenter.primary.resources.split(separator) | length >= required_number_resources|int
         fail_msg: "The resources list contains {{ environment_definition.datacenter.primary.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
       vars:
         required_number_resources: "{{ 1 if environment_definition.customer.deployment_model | lower is search('aio') else 2 }}"
     - name: verify that there are enough secondary resources
-      assert:
+      ansible.builtin.assert:
         that:
           - environment_definition.datacenter.secondary.resources.split(separator) | length >= required_number_resources|int
         fail_msg: "The resources list contains {{ environment_definition.datacenter.secondary.resources.split(separator) | length }} hosts. Required number of resources is {{ required_number_resources }}. Aborting!"
@@ -246,13 +249,13 @@
         - environment_definition.customer.disaster_recovery
 
     - name: reformat primary resources list
-      set_fact:
+      ansible.builtin.set_fact:
         primary_resources: "{{ primary_resources|default([]) + [ip_item] }}"
       loop: "{{ environment_definition.datacenter.primary.resources.split(separator) }}"
       loop_control:
         loop_var: ip_item
     - name: reformat secondary resources list
-      set_fact:
+      ansible.builtin.set_fact:
         secondary_resources: "{{ secondary_resources|default([]) + [ip_item] }}"
       loop: "{{ environment_definition.datacenter.secondary.resources.split(separator) }}"
       loop_control:
@@ -261,10 +264,10 @@
         - environment_definition.customer.disaster_recovery
 
     - name: verify that primary VLAN IDs are valid
-      assert:
+      ansible.builtin.assert:
         that:
-          - "{{ vlan_item.value|int >= 1 }}"
-          - "{{ vlan_item.value|int <= 4094 }}"
+          - vlan_item.value|int >= 1
+          - vlan_item.value|int <= 4094
         fail_msg: "{{ vlan_item.value }} is not a valid VLAN ID value for {{ vlan_item.name }}. It must be in [1-4094] range. Aborting!"
       loop:
         - { name: 'internal_net_vlan_id', value: "{{ environment_definition.datacenter.primary.internal_net_vlan_id }}" }
@@ -278,7 +281,7 @@
         - vlan_item.value != ''
 
     - name: verify that secondary VLAN IDs are valid
-      assert:
+      ansible.builtin.assert:
         that:
           - "{{ vlan_item.value|int >= 1 }}"
           - "{{ vlan_item.value|int <= 4094 }}"
@@ -299,7 +302,7 @@
 
   - block:
     - name: verify that primary resources are not provided
-      assert:
+      ansible.builtin.assert:
         that:
           - environment_definition.datacenter.primary.resources == none
         fail_msg: "The resources list {{ environment_definition.datacenter.primary.resources }} is not valid for a hosted deployment. Aborting!"
@@ -307,26 +310,26 @@
       - environment_definition.customer.deployment_model is search('h')
 
   - name: check if host's IP address is private
-    shell: echo {{ lookup('env', 'MYIP') }} | grep '192\.168\.' || echo 'Not local'
+    ansible.builtin.shell: echo {{ lookup('env', 'MYIP') }} | grep '192\.168\.' || echo 'Not local'
     register: localhost_ip
   
   - name: define template variables
-    set_fact:
+    ansible.builtin.set_fact:
       use_bastion: "{{ true if localhost_ip.stdout is search('192.168.') else false }}"
       number_of_prts: "{{ environment_definition.customer.primary.number_of_prts }}"
       number_of_mcs: "{{ environment_definition.customer.primary.number_of_mcs }}"
       number_of_dcs: "{{ environment_definition.customer.primary.number_of_dcs }}"
 
   - name: detect directory owner
-    shell: ls -ld {{ auto_dir }}/Bash | awk '{print $3}' | xargs
+    ansible.builtin.shell: ls -ld {{ auto_dir }}/Bash | awk '{print $3}' | xargs
     register: dir_owner
 
   - name: detect directory group
-    shell: ls -ld {{ auto_dir }}/Bash | awk '{print $4}' | xargs
+    ansible.builtin.shell: ls -ld {{ auto_dir }}/Bash | awk '{print $4}' | xargs
     register: dir_group
 
   - name: generate customer inventory
-    copy:
+    ansible.builtin.copy:
       src: "files/inventory{{ environment_definition.customer.deployment_model }}/"
       dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower }}"
       owner: "{{ dir_owner.stdout }}"
@@ -334,7 +337,7 @@
     become: yes
 
   - name: add disaster recovery to customer inventory
-    copy:
+    ansible.builtin.copy:
       src: "files/drinventory{{ environment_definition.customer.deployment_model }}/"
       dest: "{{ auto_dir + '/inventories/' + SYS_NAME|basename|splitext|first|lower }}"
       owner: "{{ dir_owner.stdout }}"
@@ -343,7 +346,7 @@
     when: environment_definition.customer.disaster_recovery
 
   - name: customize inventory
-    template:
+    ansible.builtin.template:
       src: "{{ tmpl_item.name }}"
       dest: "{{ tmpl_item.dest }}"
       owner: "{{ dir_owner.stdout }}"

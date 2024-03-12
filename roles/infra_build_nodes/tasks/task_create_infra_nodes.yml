@@ -70,11 +70,12 @@
     include_tasks: task_configure_winjmp.yml
     when: inventory_hostname is search('winjmp')
 
-  - name: "vm_creation: Add custom attributes"
+  - name: "vm_creation: Define folder name"
+    include_role:
+      name: vm_creation
+      tasks_from: task_define_folder_name.yml
+
+  - name: "vm_creation: Update custom attributes"
     include_role:
       name: vm_creation
       tasks_from: task_update_custom_attributes.yml
-    when: inventory_hostname is regex('csr|nsvpx|winjmp')
-
-  tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
-  

@@ -2,7 +2,7 @@
 # tasks to get cluster name
 - block:
   - name: Get host info
-    vmware_host_facts:
+    community.vmware.vmware_host_facts:
       hostname: "{{ information.address }}"
       username: "{{ credentials.username }}"
       password: "{{ credentials.password }}"
@@ -15,14 +15,14 @@
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
   - name: define host cluster
-    set_fact:
+    ansible.builtin.set_fact:
       host_cluster: "{{ host_cluster|default({}) | combine( {loop_item.host_item: loop_item.ansible_facts.cluster} ) }}"
     loop: "{{ host_facts.results }}"
     loop_control:
       loop_var: loop_item
       label: "{{ loop_item.ansible_facts.ansible_hostname }}"
 
-  - debug:
+  - ansible.builtin.debug:
       msg:
         - "{{ host_cluster[host_item] }}"
     loop: "{{ information.resources }}"
@@ -30,21 +30,21 @@
       loop_var: host_item
 
   - name: define AIO host cluster
-    set_fact:
+    ansible.builtin.set_fact:
       cluster_host: "{{ cluster_host|default([]) + [host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first] }}"
     when:
       - "'vcenter' in group_names"
       - information.resources|length == 1
 
   - name: define hosts cluster membership
-    set_fact:
+    ansible.builtin.set_fact:
       cluster_host: "{{ cluster_host|default([]) + [host_cluster|dict2items|selectattr('key', 'match', information.resources[loop_item])|map(attribute='value')|list|first] }}"
     loop: "{{ range(0, information.resources|length) }}"
     loop_control:
       loop_var: loop_item
     when: information.resources|length >= 1
   - name: verify that hosts are in the same cluster
-    assert:
+    ansible.builtin.assert:
       that:
         - "cluster_host|unique|length == 1"
       fail_msg: "{{ 'HA' if 'vcenter' in group_names else 'DR' }} hosts cannot be in different clusters. Aborting"
@@ -53,7 +53,7 @@
       - information.resources|length > 1
 
   - name: verify that DR hosts are not in the same cluster as HA hosts
-    assert:
+    ansible.builtin.assert:
       that:
         - "cluster_host|unique != hostvars[groups['vcenter']|first]['cluster_host']|unique"
       fail_msg: "DR hosts cannot be in the same cluster as the HA hosts. Aborting"
@@ -65,7 +65,7 @@
       - cluster_host != []
       - cluster_host|unique|join != 'None'
 
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ myhadr + myhst + myclst }} {{ ('Primary' if 'vcenter' in group_names else 'Secondary') + ' cluster name spcified in definition file will be ignored' if cluster_host|unique|join != 'None' else '' }}"
     vars:
       myhadr: "{{ 'HA' if 'vcenter' in group_names else 'DR' }}"
@@ -77,7 +77,7 @@
       - cluster_host|unique|join != information.cluster
 
   - name: update vcenter's information with cluster names
-    set_fact:
+    ansible.builtin.set_fact:
       information: "{{ information|default({}) | combine(new_item, recursive=true) }}"
     vars:
       new_item: "{'{{ task_item.key }}': '{{ task_item.value }}'}"
@@ -90,4 +90,3 @@
       - task_item.value != ''
       - task_item.value != 'None'
     no_log: true
-  tags: ['always', 'vm_facts']

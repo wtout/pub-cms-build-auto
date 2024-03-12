@@ -12,4 +12,3 @@
       ansible.builtin.assert:
         that: reg_loop_rpm_file.stat.exists
         fail_msg: "The /tmp/{{ loop_rpm_file }} file is not present on the DB"
-  tags: vm_creation

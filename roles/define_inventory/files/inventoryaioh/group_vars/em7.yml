@@ -1,8 +1,8 @@
 ---
 # Variables for em7 hosts
 credentials:
-  username: "{{ EM7_USER|default('') }}"
-  password: "{{ EM7_PASS|default('') }}"
+  username: "{{ PEM7_USER|default('') }}"
+  password: "{{ PEM7_PASS|default('') }}"
 
 user:
   name: "{{ vm_vars.em7.user.name if vm_vars.em7.user.name is defined else '' }}"

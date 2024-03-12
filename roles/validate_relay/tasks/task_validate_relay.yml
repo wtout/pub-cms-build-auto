@@ -6,4 +6,3 @@
       - groups['rly']|length > 1
   - include_tasks: task_create_probe_file.yml
   - include_tasks: task_validate_relay_deployment.yml
-  tags: [ 'validate_relay', 'never' ]

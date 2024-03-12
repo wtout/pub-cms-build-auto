@@ -10,4 +10,3 @@
   - ansible.builtin.assert:
       that: reg_conf_edit is succeeded
       fail_msg: "{{ reg_conf_edit }}"
-  tags: [ 'validate_em7', 'never' ]

@@ -23,4 +23,3 @@
       insertafter: '^# Please consider.*$'
     notify: restart chrony
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: vm_configuration

@@ -22,4 +22,3 @@
       loop_var: file_item
   when: inventory_hostname is search('em7')
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: vm_configuration

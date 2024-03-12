@@ -3,13 +3,13 @@
 - block:
 ### Bastion ###
 ### prompts ###
-  - pause:
+  - ansible.builtin.pause:
       prompt: "Enter the Bastion username [ENTER]"
     register: bastion_user
     until: bastion_user.user_input != ''
     run_once: true
 
-  - pause:
+  - ansible.builtin.pause:
       prompt: "Enter the Bastion password [ENTER]"
       echo: no
     when:
@@ -18,7 +18,7 @@
     until: bastion_pass.user_input != ''
     run_once: true
 
-  - pause:
+  - ansible.builtin.pause:
       prompt: "Confirm the Bastion password [ENTER]"
       echo: no
     when:
@@ -30,24 +30,24 @@
 ### Set Facts ###
   - block:
     - name: process Bastion credentials
-      set_fact:
+      ansible.builtin.set_fact:
         new_buser: '{{ bastion_user.user_input | regex_replace("\\", "\\\\") }}'
         new_bpass: '{{ bastion_pass.user_input | regex_replace("\\", "\\\\") }}'
     - name: process Bastion password with "
-      set_fact:
+      ansible.builtin.set_fact:
         new_bpass: \'{{ new_bpass }}\'
       when: bastion_pass.user_input is search('"')
     - name: process Bastion password with '
-      set_fact:
+      ansible.builtin.set_fact:
         new_bpass: \"{{ new_bpass | regex_replace("'", "\'") }}\"
       when: bastion_pass.user_input is search("'")
     - name: process Bastion password with no quotes
-      set_fact:
+      ansible.builtin.set_fact:
         new_bpass: "{{ new_bpass }}"
       when: bastion_pass.user_input is not regex("'|\"")
 
     - name: define Bastion credentials
-      set_fact:
+      ansible.builtin.set_fact:
         bastion: "{{ bastion | default({}) | combine(new_item, recursive=true) }}"
       vars:
         new_item: "{'{{ item.key }}': '{{ item.value }}'}"
@@ -56,7 +56,7 @@
         - { key: 'password', value: '{{ new_bpass }}' }
 
     - name: check if Bastion login credentials are defined
-      assert:
+      ansible.builtin.assert:
         that:
           - bastion.username is defined
           - bastion.username != ''
@@ -73,12 +73,12 @@
 ### Write facts ###
 - block:
   - name: create credentials file
-    copy:
+    ansible.builtin.copy:
       content: '# Credentials'
       dest: "{{ VFILE }}"
       force: true
   - name: Save Bastion credentials
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: "{{ VFILE }}"
       line: "{{ task_item.name|upper }}_{{ task_item.key|upper }}: {{ task_item.value }}"
     with_items:
@@ -91,4 +91,3 @@
     - bastion.address != [] and bastion.address != ['']
   no_log: true
   check_mode: no
-  tags: always

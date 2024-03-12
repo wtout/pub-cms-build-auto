@@ -1,7 +1,7 @@
 ---
 # tasks to check if requiretty is set in /etc/sudoers on host
 - name: check if host requires tty
-  command: whoami
+  ansible.builtin.command: whoami
   check_mode: no
   become: true
   ignore_errors: true
@@ -10,7 +10,7 @@
 
 - block:
   - name: Disable requiretty on host
-    replace:
+    ansible.builtin.replace:
       path: '/etc/sudoers'
       regexp: '^(Defaults.*requiretty)$'
       replace: '#\g<1>'
@@ -18,11 +18,10 @@
     vars:
       ansible_ssh_pipelining: no
   - name: check if host requires tty
-    command: whoami
+    ansible.builtin.command: whoami
     check_mode: no
     become: true
   when:
     - requiretty is failed
     - "'waiting for privilege escalation prompt' not in requiretty.msg"
     - "'sorry, you must have a tty to run sudo' in requiretty.module_stderr"
-  tags: check_requiretty

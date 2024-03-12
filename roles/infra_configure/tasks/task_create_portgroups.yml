@@ -2,12 +2,12 @@
 # tasks file to create port groups
 - block:
   - name: get list of network names from inventory
-    shell: |
+    ansible.builtin.shell: |
       echo {{ drvm_vars if customer_prefix == customer.secondary.name_prefix else vm_vars }} | sed -e 's/,/\n/g' | grep netname | awk -F 'netname: ' '{print $NF}' | sort -u | sed -e 's/"//g' -e '/^$/d'
     register: net_names
     check_mode: no
   - name: define network names to create on {{ resource }}
-    set_fact:
+    ansible.builtin.set_fact:
       net1: "{{ mynet1 if mynet1 != '' else customer_prefix + '-Customer-Net-Internet' }}"
       net2: "{{ mynet2 if mynet2 != '' else customer_prefix + '-Customer-Net-Outside' }}"
       net3: "{{ mynet3 if mynet3 != '' else customer_prefix + '-Internal-Net' }}"
@@ -31,7 +31,7 @@
     register: pg_info
 
   - name: define existing vlan_id on {{ resource }}
-    set_fact:
+    ansible.builtin.set_fact:
       exs_int_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net3) | map(attribute='vlan_id') | list | join }}"
       exs_lb_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net4) | map(attribute='vlan_id') | list | join }}"
       exs_custin_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net5) | map(attribute='vlan_id') | list | join }}"
@@ -40,7 +40,7 @@
       my_pg_base: "{{ pg_info.hosts_portgroup_info|dict2items|map(attribute='value')|first }}"
 
   - name: define existing vlan_id lists on {{ resource }}
-    set_fact:
+    ansible.builtin.set_fact:
       exs_int_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Internal-Net') | map(attribute='vlan_id') | list }}"
       exs_lb_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Loadbalancer-Net') | map(attribute='vlan_id') | list }}"
       exs_custin_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Customer-Net-Inside') | map(attribute='vlan_id') | list }}"
@@ -49,7 +49,7 @@
       my_pg_base: "{{ pg_info.hosts_portgroup_info|dict2items|map(attribute='value')|first }}"
 
   - name: define vlan_id to create on {{ resource }}
-    set_fact:
+    ansible.builtin.set_fact:
       int_vlan_id: "{{ information.internal_net_vlan_id if information.internal_net_vlan_id != '' else exs_int_vlan_id if exs_int_vlan_id != '' else exs_int_vlan_id_list|sort|last|int + 1 if exs_int_vlan_id_list != [] else '100' }}"
       lb_vlan_id: "{{ information.loadbalancer_net_vlan_id if information.loadbalancer_net_vlan_id != '' else exs_lb_vlan_id if exs_lb_vlan_id != '' else exs_lb_vlan_id_list|sort|last|int + 1 if exs_lb_vlan_id_list != [] else '120' }}"
       custin_vlan_id: "{{ information.customer_net_inside_vlan_id if information.customer_net_inside_vlan_id != '' else exs_custin_vlan_id if exs_custin_vlan_id != '' else exs_custin_vlan_id_list|sort|last|int + 1 if exs_custin_vlan_id_list != [] else '200' }}"
@@ -87,4 +87,3 @@
       active_adapter: "{{ 'vmnic2' if standby_adapter is search('vmnic3') else portgroup_item.nic_adapter }}"
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

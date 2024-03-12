@@ -32,7 +32,7 @@
       loop_control:
         loop_var: loop_item
         label: "{{ loop_item.file_item.path }}"
-    - assert:
+    - ansible.builtin.assert:
         that: valid_token_list|length >= 1
         fail_msg: "Unable to find a valid keeper token file (.pem) under {{ keeper_token_path }}. Aborting run"
     - name: define keeper_token_filename

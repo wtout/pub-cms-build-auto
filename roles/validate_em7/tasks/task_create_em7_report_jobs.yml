@@ -32,4 +32,3 @@
   - ansible.builtin.assert:
       that: reg_deploy_report is succeeded
       fail_msg: "{{ reg_deploy_report }}"
-  tags: [ 'validate_em7', 'never' ]

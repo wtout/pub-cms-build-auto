@@ -3,7 +3,7 @@
 - block:
   - block:
     - name: Wait on VMware Tools to become available
-      vmware_guest_tools_wait:
+      community.vmware.vmware_guest_tools_wait:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -11,10 +11,10 @@
         validate_certs: false
         name: "{{ vm.name }}"
     - name: Pause for {{ 30 if deploy_ovf is changed else 60 }} seconds to ensure VM finished booting
-      wait_for:
+      ansible.builtin.wait_for:
         timeout: "{{ 30 if deploy_ovf is changed else 60 }}"
     - name: delete gateway from network file on the EM7 VM
-      vmware_vm_shell:
+      community.vmware.vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -31,7 +31,7 @@
       until: delete_em7gtw is succeeded
       delay: 10
     - name: restart the network on the EM7 VM
-      vmware_vm_shell:
+      community.vmware.vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -48,7 +48,7 @@
     when: inventory_hostname is search('em7')
   - block:
     - name: delete gateway from network file on the non-EM7 VM
-      vmware_vm_shell:
+      community.vmware.vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -65,7 +65,7 @@
       until: delete_gtw is succeeded
       delay: 10
     - name: restart the network on the non-EM7 VM
-      vmware_vm_shell:
+      community.vmware.vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -83,4 +83,3 @@
   when:
     - netconfig.nic2.ipaddress != ''
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation

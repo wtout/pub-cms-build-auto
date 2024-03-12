@@ -15,4 +15,3 @@
     when: not reg_stat.stat.exists
   vars:
     fname: '~devcrash/.probe'
-  tags: [ 'validate_relay', 'never' ]

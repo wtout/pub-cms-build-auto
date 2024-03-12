@@ -12,7 +12,7 @@
     no_log: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
     vars:
       userid: "{{ 'rstore' if vm.name is search('rly') else 'splunk' if vm.name is search('spl') else '' }}"
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ reg_acc_status|replace(ansible_ssh_pass, 'obfuscated') }}"
     when:
       - ansible_user != 'root'

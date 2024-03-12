@@ -17,7 +17,7 @@
     - include_tasks: task_update_disks.yml
   always:
     - name: define disk_rebuild
-      set_fact:
+      ansible.builtin.set_fact:
         disk_rebuild: "{{ vmguest_disk0|default({'failed': false}) is failed or vmguest_disk1|default({'failed': false}) is failed or vmguest_disk2|default({'failed': false}) is failed or vmguest_disk3|default({'failed': false}) is failed }}"
     - name: check if rebuild is still required
       ansible.builtin.assert:
@@ -25,4 +25,3 @@
           - not disk_rebuild|default(false)
         success_msg: 'Disks updated successfully'
         fail_msg: 'Unable to update the disks successfully'
-  tags: vm_creation

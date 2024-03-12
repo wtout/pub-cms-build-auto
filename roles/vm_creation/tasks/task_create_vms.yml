@@ -24,7 +24,7 @@
         - inventory_hostname == ansible_play_hosts | intersect(groups['dr']) | first
     - block:
       - name: get list of groups in play
-        set_fact:
+        ansible.builtin.set_fact:
           play_group_list: "{{ play_group_list|default([]) | union([host_item[:-2]]) }}"
         loop: "{{ ansible_play_hosts | reject('search', 'bastion|puppet|vcenter') | list }}"
         loop_control:
@@ -71,5 +71,3 @@
     - include_tasks: task_create_configure_vms.yml
     when:
       - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
-
-  tags: vm_creation

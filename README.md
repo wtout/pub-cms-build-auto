@@ -41,6 +41,9 @@ Create your own system definition file under the _``Definitions``_ folder to con
 The system definition file name **must match the customer name** as defined in the system definition file. The system definition file consists of the following variables:
 
   - **customer.name** (_String_): Customer Name. Required
+  - **team_contact1** (_String_): Email address of the first contact
+  - **team_contact2** (_String_): Email address of the second contact
+  - **team_mailer** (_String_): Email address of the team
   - **customer.version.release** (_String_): Required for CMSP stack build. Must start with **R** to match the naming convention in Maven
   - **customer.version.centos_iso** (_String_): CentOS ISO file name
   - **customer.version.em7_iso** (_String_): EM7 ISO file name
@@ -59,9 +62,17 @@ The system definition file name **must match the customer name** as defined in t
   - **datacenter.primary.name** (_String_): Required. Primary Datacenter name
   - **datacenter.primary.cluster** (_String_): The cluster to host the customer's primary stack
   - **datacenter.primary.resources** (_String_): Required for on-prem deployments. List of ESXI hosts
+  - **datacenter.primary.internal_net_vlan_id**: (_integer_) The VLAN ID to use for Customer-Net-Internet [1 - 4094]. Required for on-prem deployments if a custom VLAN ID is to be used
+  - **datacenter.primary.loadbalancer_net_vlan_id**: (_integer_) Required for on-prem deployments. The VLAN ID to use for Loadbalancer-Net [1 - 4094]. Required for on-prem deployments if a custom VLAN ID is to be used
+  - **datacenter.primary.customer_net_inside_vlan_id**: (_integer_) Required for on-prem deployments. The VLAN ID to use for Customer-Net-Inside [1 - 4094]. Required for on-prem deployments if a custom VLAN ID is to be used
+  - **datacenter.primary.em7db_heartbeat_link_vlan_id**: (_integer_) Required for on-prem deployments. The VLAN ID to use for EM7-DB-Heartbeat-Link [1 - 4094]. Required for on-prem deployments if a custom VLAN ID is to be used
   - **datacenter.secondary.name** (_String_): Required. Secondary Datacenter name
   - **datacenter.secondary.cluster** (_String_): The cluster to host the customer's secondary (DR) stack
   - **datacenter.secondary.resources** (_String_): Required for on-prem deployments. List of ESXI hosts
+  - **datacenter.secondary.internal_net_vlan_id**: (_integer_) The VLAN ID to use for Customer-Net-Internet [1 - 4094]. Required for on-prem deployments if a custom VLAN ID is to be used. The primary value will be used, if omitted
+  - **datacenter.secondary.loadbalancer_net_vlan_id**: (_integer_) Required for on-prem deployments. The VLAN ID to use for Loadbalancer-Net [1 - 4094]. Required for on-prem deployments if a custom VLAN ID is to be used. The primary value will be used, if omitted
+  - **datacenter.secondary.customer_net_inside_vlan_id**: (_integer_) Required for on-prem deployments. The VLAN ID to use for Customer-Net-Inside [1 - 4094]. Required for on-prem deployments if a custom VLAN ID is to be used. The primary value will be used, if omitted
+  - **datacenter.secondary.em7db_heartbeat_link_vlan_id**: (_integer_) Required for on-prem deployments. The VLAN ID to use for EM7-DB-Heartbeat-Link [1 - 4094]. Required for on-prem deployments if a custom VLAN ID is to be used. The primary value will be used, if omitted
   - **puppet.primary.server_name** (_String_): Required. Valid values for Puppet server name are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
   - **puppet.secondary.server_name** (_String_): Required. Valid values for Puppet server name are: **alln1qspupp01**, **alln1qspupp02**, **alln1qspupp03** and **alln1qspupp04**
   - **yum.primary.server_name** (_String_): Required. Valid values for Yum server name are: **alln1qsyumrpp01** and **alln1qsyumrpp02**
@@ -123,16 +134,21 @@ The list of roles used in the playbooks:
   - **infra_check_csr_license**: verifies that CSRs licenses are active
   - **vm_fromiso**: deploys the stack's VMs from ISO
   - **vm_hardening**: enables hardening on the VMS created from ISO
-  - **integ_splunk**: Downloads, configures and runs the MDR-Splunk automation package to install the core and the customer forwarder
   - **vm_creation**: deploys the stack's VMs from OVA
+  - **integ_splunk**: Downloads, configures and runs the MDR-Splunk automation package to install the core and the customer forwarder
   - **drs_creation**: creates the DRS rules
   - **vm_configuration_iso**: configures the stack's VMs created from ISO
-  - **vm_configuration**: configures the stack's VMs created from OVA
+  - **vm_configuration_ova**: configures the stack's VMs created from OVA
   - **puppet**: installs the puppet agent, generates the puppet certificates and triggers the puppet push where applicable in the stack
   - **vm_ppp_configuration**: configures the stack's VMs post initial puppet push
   - **splunk_mop**: implements the datetime fix for splunk VMs
   - **drs_status**: checks the status the DRS rules
+  - **drbd_configuration**: implements the CMS-DR-process configuration on the three DBs
   - **sanity**: runs a comprehensive list of sanity checks
+  - **validate_em7**: runs a list of tasks and checks from the NOBS guide to validate EM7 VMs
+  - **validate_splunk**: runs a list of tasks and checks from the NOBS guide to validate Splunk VMs
+  - **validate_relay**: runs a list of tasks and checks from the NOBS guide to validate relay VMs
+  - **post_install_configuration**: runs a list of tasks from the NOBS guide to finalize the VMs build
   - **notify**: sends a notification via Webex Teams channel indicating the status of the activity
 
 To execute specific role(s), add "_--tags 'role1,role2,etc...'_" as argument to the script.

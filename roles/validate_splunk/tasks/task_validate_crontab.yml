@@ -29,4 +29,3 @@
       - 00 21 * * * rsync -avzh splunk@{{ inventory_hostname[:-2] + '01' }}:~/etc/master-apps/ ~/etc/master-apps/ | tee -a ~/logs/sync.log
     dpl_cronjob_list:
       - 00 21 * * * rsync -avzh splunk@{{ inventory_hostname[:-2] + '01' }}:~/etc/shcluster/ ~/etc/shcluster/ | tee -a ~/logs/sync.log
-  tags: [ 'validate_splunk', 'never' ]

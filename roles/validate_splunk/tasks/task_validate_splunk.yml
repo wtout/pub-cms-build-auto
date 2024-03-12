@@ -2,7 +2,7 @@
 # Tasks to validate Splunk
 - block:
   - name: Disable requiretty on host
-    replace:
+    ansible.builtin.replace:
       path: '/etc/sudoers'
       regexp: '^(Defaults.*requiretty)$'
       replace: '#\g<1>'
@@ -22,10 +22,9 @@
   - include_tasks: task_validate_splunk_logrotate.yml
   - include_tasks: task_validate_splunk_deployment.yml
   - name: Re-enable requiretty on host
-    replace:
+    ansible.builtin.replace:
       path: '/etc/sudoers'
       regexp: '^#(Defaults.*requiretty)$'
       replace: '\g<1>'
     become: true
     when: reg_disable_rtty is changed
-  tags: [ 'validate_splunk', 'never' ]

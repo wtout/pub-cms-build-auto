@@ -2,7 +2,7 @@
 # Tasks to delete DRS anti-affinity rules for hosted VMs
 - block:
   - name: Get the DRS rules info
-    vmware_drs_rule_info:
+    community.vmware.vmware_drs_rule_info:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
@@ -12,13 +12,13 @@
     register: drs_rule_info
     ignore_errors: true
   - name: Get list of DRS rules to delete
-    set_fact:
+    ansible.builtin.set_fact:
       drs_rules_list: "{{ drs_rules_list|default([]) | union(drs_rule_info['drs_rule_info'][hostvars[groups['vcenter'][0]]['information']['cluster']] | selectattr('rule_vms','search',hostvars[host_item]['vm']['name']) | map(attribute='rule_name') | list) }}"
     loop: "{{ ansible_play_hosts | intersect(groups['stack']) }}"
     loop_control:
       loop_var: host_item
   - name: Delete DRS anti-affinity rules
-    vmware_vm_vm_drs_rule:
+    community.vmware.vmware_vm_vm_drs_rule:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
@@ -35,4 +35,3 @@
     poll: 0
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: [ 'drs_creation', 'vm_creation' ]

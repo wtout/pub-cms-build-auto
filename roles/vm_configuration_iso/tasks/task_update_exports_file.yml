@@ -2,12 +2,12 @@
 # tasks to update /etc/exports on VM
 - block:
   - name: purge /etc/exports file
-    copy:
+    ansible.builtin.copy:
       content: ''
       dest: /etc/exports
       mode: 0644
   - name: Add the lines to /etc/exports file
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/exports
       line: "{{ line_item }}"
     loop:
@@ -19,11 +19,10 @@
       loop_var: line_item
     register: exports_update
 #  - name: reload /etc/exports
-#    command: exportfs -ar
+#    ansible.builtin.command: exportfs -ar
 #    when:
 #      - not ansible_check_mode
   become: "{{ true if ansible_user != 'root' else false }}"
   when:
     - inventory_hostname is not search('atarly')
     - inventory_hostname is search('rly')
-  tags: vm_configuration

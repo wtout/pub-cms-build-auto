@@ -56,4 +56,3 @@
       check_mode: no
     when:
       - reg_rsyslog1 is failed or reg_syslog1 is failed
-  tags: [ 'validate_splunk', 'never' ]

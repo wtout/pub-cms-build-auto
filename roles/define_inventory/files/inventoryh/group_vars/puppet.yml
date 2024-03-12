@@ -5,7 +5,7 @@ ssh_address: "{{ hostvars[groups['bastion'][0]]['ansible_host'] if (groups['bast
 ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ ssh_username }}@{{ ssh_address }}"'
 ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else '' }}"
 
-ansible_user: "{{ PSVC_USER | default('') }}"
-ansible_ssh_pass: "{{ PSVC_PASS | default('') }}"
-ansible_become_pass: "{{ PSVC_PASS | default('') }}"
+ansible_user: "{{ PVCENTER_SERVICE_USER | default('') }}"
+ansible_ssh_pass: "{{ PVCENTER_SERVICE_PASS | default('') }}"
+ansible_become_pass: "{{ PVCENTER_SERVICE_PASS | default('') }}"
 ansible_host: "{{ puppet.primary.ipaddress }}"

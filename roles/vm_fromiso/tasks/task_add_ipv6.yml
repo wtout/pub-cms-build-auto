@@ -50,7 +50,7 @@
       - netconfig.nic2.ipv6_pool|length >= inventory_hostname[-2:]|int
       - netconfig.nic2.ipv6_pool[inventory_hostname[-2:]|int - 1] != ''
   - name: restart the network on the EM7 VM
-    vmware_vm_shell:
+    community.vmware.vmware_vm_shell:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -68,4 +68,3 @@
       - reg_nic1_update is changed or reg_nic2_update is changed
   become: "{{ true if ansible_user != 'root' else false }}"
   when: inventory_hostname is search('em7')
-  tags: vm_creation

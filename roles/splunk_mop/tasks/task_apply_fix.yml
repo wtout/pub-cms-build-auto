@@ -1,14 +1,14 @@
 ---
 # Tasks to apply datetime fix
 - block:
-  - find:
+  - ansible.builtin.find:
       patterns: ['datetime.xml.[0-9]{4,}-.*']
       paths: "{{ splunk_dir }}/etc/"
       use_regex: yes
     register: backup_file
 
   - name: copy new datetime.xml to correct location
-    copy:
+    ansible.builtin.copy:
       remote_src: yes
       src: /opt/install/cfg/datetime.xml
       dest: "{{ splunk_dir }}/etc/datetime.xml"
@@ -18,17 +18,17 @@
       mode: 0444
   
   - name: check new datetime file
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: "{{ splunk_dir }}/etc/datetime.xml"
       line: '2023'
       state: present
     check_mode: yes
 
   - name: start splunk
-    command: "{{ splunk_dir }}/bin/splunk start"
+    ansible.builtin.command: "{{ splunk_dir }}/bin/splunk start"
     
   - name: check if splunk was started successfully
-    command: "{{ splunk_dir }}/bin/splunk status"
+    ansible.builtin.command: "{{ splunk_dir }}/bin/splunk status"
     register: splunk_status3
     failed_when: splunk_status3.stdout is search('is not running')
   tags: splunk_mop

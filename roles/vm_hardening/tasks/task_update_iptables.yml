@@ -2,7 +2,7 @@
 # tasks to update iptables on VM
 - block:
   - name: update iptables
-    iptables:
+    ansible.builtin.iptables:
       chain: INPUT
       protocol: udp
       destination_port: "{{ port_item }}"
@@ -16,4 +16,3 @@
       - restart iptables
   become: "{{ true if ansible_user != 'root' else false }}"
   when: not ansible_check_mode
-  tags: vm_hardening

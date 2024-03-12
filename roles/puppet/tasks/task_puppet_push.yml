@@ -49,59 +49,19 @@
     ignore_errors: yes
     check_mode: no
   - block:
-    - name: Define folder name
-      ansible.builtin.set_fact:
-        fldr_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] + '/' + (customer.name if customer.name|lower is search('mdr|stdal') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}"
-    - ansible.builtin.assert:
-        that: fldr_name is defined
-        success_msg: "{{ 'fldr_name is ' + fldr_name }}"
-        fail_msg: 'fldr_name is not defined'
+    - name: "vm_creation: Define fldr_name"
+      include_role:
+        name: vm_creation
+        tasks_from: task_define_folder_name.yml
       when: fldr_name is not defined
-    - name: Power-off VM
-      community.vmware.vmware_guest:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        name: "{{ vm.name }}"
-        state: poweredoff
-        validate_certs: no
-      ignore_errors: true
-      environment:
-        http_proxy: ''
-        https_proxy: ''
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    - name: Power-on VM
-      community.vmware.vmware_guest:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        name: "{{ vm.name }}"
-        state: poweredon
-        validate_certs: no
-      ignore_errors: true
-      environment:
-        http_proxy: ''
-        https_proxy: ''
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-#    - name: "vm_creation: Define fldr_name"
-#      include_role:
-#        name: vm_creation
-#        tasks_from: task_define_folder_name.yml
-#      when: fldr_name is not defined
-#    - name: "vm_fromiso: Poweroff VM"
-#      include_role:
-#        name: vm_fromiso
-#        tasks_from: task_poweroff_vm.yml
-#    - name: "vm_fromiso: Poweron VM"
-#      include_role:
-#        name: vm_fromiso
-#        tasks_from: task_poweron_vm.yml
+    - name: "vm_fromiso: Poweroff VM"
+      include_role:
+        name: vm_fromiso
+        tasks_from: task_poweroff_vm.yml
+    - name: "vm_fromiso: Poweron VM"
+      include_role:
+        name: vm_fromiso
+        tasks_from: task_poweron_vm.yml
     - name: check connection
       ansible.builtin.wait_for_connection:
         timeout: 3
@@ -124,4 +84,3 @@
       - puppet_push.stdout_lines is defined
       - puppet_push.stdout_lines != []
       - puppet_push.stdout_lines|last is search('Applied catalog')
-  tags: puppet

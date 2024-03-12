@@ -11,5 +11,3 @@
       file: task_get_onprem_datastore.yml
     when:
       - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
-
-  tags: vm_creation

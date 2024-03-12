@@ -1,9 +1,8 @@
 ---
 # Tasks to disable automatic puppet sync
 - name: disable automatic puppet push
-  shell: /usr/local/bin/puppet resource service puppet ensure=stopped enable=false
+  ansible.builtin.shell: /usr/local/bin/puppet resource service puppet ensure=stopped enable=false
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   register: disable_auto_push
   until: disable_auto_push is succeeded
   ignore_errors: true
-  tags: puppet

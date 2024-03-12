@@ -3,7 +3,7 @@
 - block:
   - block:
     - name: check the cluster virtual IP
-      shell: cibadmin --query | grep {{ vip.db }} || echo 'Priamry VIP not configured'
+      ansible.builtin.shell: cibadmin --query | grep {{ vip.db }} || echo 'Priamry VIP not configured'
       register: cluster_vip
       check_mode: no
     - name: configure the cluster virtual IP
@@ -15,7 +15,7 @@
       - "'em7db' in group_names"
   - block:
     - name: check the DR cluster virtual IP
-      shell: cibadmin --query | grep {{ vip.db | replace(customer.primary.octets, customer.secondary.octets) }} || echo 'DR VIP not configured'
+      ansible.builtin.shell: cibadmin --query | grep {{ vip.db | replace(customer.primary.octets, customer.secondary.octets) }} || echo 'DR VIP not configured'
       register: drcluster_vip
       check_mode: no
     - name: configure the DR cluster virtual IP
@@ -26,4 +26,3 @@
       - inventory_hostname is search('01')
       - "'drem7db' in group_names"
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: vm_configuration

@@ -22,7 +22,7 @@
         path: '/etc/sysconfig/network-scripts/ifcfg-ens224'
         state: absent
     - name: reboot vm
-      reboot:
+      ansible.builtin.reboot:
         post_reboot_delay: 10
         reboot_timeout: 180
       when: rename_nic is changed
@@ -30,4 +30,3 @@
   become: "{{ true if ansible_user != 'root' else false }}"
   when:
     - netconfig.nic2.ipaddress != ''
-  tags: vm_creation

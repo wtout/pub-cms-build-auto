@@ -1,33 +1,59 @@
 ---
 # tasks to update VM's custom attributes
 - block:
-  - name: get date and user's email address
-    ansible.builtin.shell: |
-      date '+%F'
-      git config user.email
-    register: reg_user_email
-    check_mode: no
-  - name: Add VM's custom attributes
-    community.vmware.vmware_guest_custom_attributes:
+  - name: get VM createDate
+    community.vmware.vmware_guest_info:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
       datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + (('' if fldr_name is regex('^/') else '/') + fldr_name if fldr_name != '' else '') }}"
       name: "{{ vm.name }}"
-      state: present
-      attributes:
-        - name: date-created
-          value: "{{ reg_user_email.stdout_lines|first }}"
-        - name: team-contact1
-          value: "{{ reg_user_email.stdout_lines|last }}"
+      schema: 'vsphere'
+      properties: [
+        "config.createDate"
+      ]
       validate_certs: no
-    register: reg_add_attribute
-    ignore_errors: true
-  - debug:
-      msg:
-        - 'The automation user does not have sufficient privileges to modify custom attributes'
-    when:
-        - reg_add_attribute is search('Permission to perform this operation was denied')
+    register: reg_createdate
+    until: reg_createdate.instance.config.createDate is search('T')
+  - name: get user's email address
+    ansible.builtin.shell: |
+      git config user.email
+    register: reg_user_email
+    check_mode: no
+    when: customer.team_contact1 == ''
+  - name: Update custom attributes
+    block:
+      - name: Update VM's custom attributes
+        community.vmware.vmware_guest_custom_attributes:
+          hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+          username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+          password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+          datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+          folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + (('' if fldr_name is regex('^/') else '/') + fldr_name if fldr_name != '' else '') }}"
+          name: "{{ vm.name }}"
+          state: present
+          attributes: "{{ attribute_list }}"
+          validate_certs: no
+        register: reg_add_attribute
+    rescue:
+      - ansible.builtin.debug:
+          msg:
+            - 'The automation user does not have sufficient privileges to modify custom attributes'
+        when:
+          - reg_add_attribute.module_stderr is search('Permission to perform this operation was denied')
+    vars:
+      attlist1:
+        - name: date-created
+          value: "{{ reg_createdate.instance.config.createDate|split('T')|first }}"
+      attlist2:
+        - name: team-contact1
+          value: "{{ customer.team_contact1 if customer.team_contact1 != '' else reg_user_email.stdout }}"
+        - name: team-contact2
+          value: "{{ customer.team_contact2 if customer.team_contact2 != '' else '' }}"
+        - name: team-mailer
+          value: "{{ customer.team_mailer if customer.team_mailer != '' else '' }}"
+      attribute_list: "{{ (attlist1 + attlist2) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|STG|Staging') else attlist1 }}"
+  when:
+    - "'stack' in group_names or 'dr' in group_names"
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation

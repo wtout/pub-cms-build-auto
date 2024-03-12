@@ -2,7 +2,7 @@
 # Tasks to validate EM7 deployment
 - block:
   - name: Disable requiretty on host
-    replace:
+    ansible.builtin.replace:
       path: '/etc/sudoers'
       regexp: '^(Defaults.*requiretty)$'
       replace: '#\g<1>'
@@ -22,7 +22,7 @@
     vars:
       em7vm_type: "{{ 'aio' if groups['em7']|length == 1 else 'db' if inventory_hostname is search('em7db') else 'ap' if inventory_hostname is search('em7prt') else 'mc' if inventory_hostname is search('em7mc') else 'dc' }}"
   - name: Re-enable requiretty on host
-    replace:
+    ansible.builtin.replace:
       path: '/etc/sudoers'
       regexp: '^#(Defaults.*requiretty)$'
       replace: '\g<1>'
@@ -38,4 +38,3 @@
   - ansible.builtin.assert:
       that: em7status|default([]) == []
       fail_msg: "{{ em7status|default([]) }}"
-  tags: [ 'validate_em7', 'never' ]

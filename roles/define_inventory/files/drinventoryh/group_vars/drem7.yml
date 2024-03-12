@@ -1,5 +1,5 @@
 ---
 # Variables for dr em7 hosts
 credentials:
-  username: "{{ EM7_USER|default('') }}"
-  password: "{{ EM7_PASS|default('') }}"
+  username: "{{ SEM7_USER|default('') }}"
+  password: "{{ SEM7_PASS|default('') }}"

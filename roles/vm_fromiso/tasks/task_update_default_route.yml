@@ -2,7 +2,7 @@
 # Tasks to configure the default route on the VM
 - block:
   - name: Wait on VMware Tools to become available
-    vmware_guest_tools_wait:
+    community.vmware.vmware_guest_tools_wait:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -10,12 +10,12 @@
       validate_certs: false
       name: "{{ vm.name }}"
   - name: render default route file locally
-    template:
+    ansible.builtin.template:
       src: "templates/{{ 'dr' if 'dr' in group_names else '' }}route-ens160.tmpl"
       dest: "/var/tmp/{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}-{{ inventory_hostname }}-route-ens160"
   - block:
     - name: copy default route file to EM7 VM
-      vmware_guest_file_operation:
+      community.vmware.vmware_guest_file_operation:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -36,7 +36,7 @@
         http_proxy: ''
         https_proxy: ''
     - name: restart the network on the EM7 VM
-      vmware_vm_shell:
+      community.vmware.vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -47,13 +47,15 @@
         vm_username: "{{ ansible_user }}"
         vm_password: "{{ ansible_ssh_pass }}"
         vm_shell: '/usr/bin/sudo'
-        vm_shell_args: '-S sh -c "/usr/bin/cp /tmp/route-ens160 /etc/sysconfig/network-scripts/; /bin/systemctl restart network" <<< {{ ansible_ssh_pass }}'
+        vm_shell_args: '-S sh -c "/usr/bin/cp /tmp/route-ens160 /etc/sysconfig/network-scripts/; /bin/systemctl restart {{ net_svc }}" <<< {{ ansible_ssh_pass }}'
         wait_for_process: true
       when: copy_em7file is changed
+      vars:
+        net_svc: "{{ 'NetworkManager' if iso_installer is search('em7_x86_64_12.') else 'network' }}"
     when: inventory_hostname is search('em7')
   - block:
     - name: copy default route file to non-EM7 VM
-      vmware_guest_file_operation:
+      community.vmware.vmware_guest_file_operation:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -74,7 +76,7 @@
         http_proxy: ''
         https_proxy: ''
     - name: restart the network on the non-EM7 VM
-      vmware_vm_shell:
+      community.vmware.vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -97,11 +99,10 @@
   when:
     - netconfig.nic1.gateway == ''
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation
+
 
 - name: wait 600 seconds for VM to become reachable
-  wait_for_connection:
+  ansible.builtin.wait_for_connection:
     timeout: 600
   when:
     - netconfig.nic1.gateway == ''
-  tags: vm_creation

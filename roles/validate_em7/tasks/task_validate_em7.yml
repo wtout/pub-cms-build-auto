@@ -16,4 +16,3 @@
   - include_tasks: task_create_em7_report_jobs.yml
     when: inventory_hostname == 'em7db01' or (groups['em7']|length == 1 and inventory_hostname is search('em7'))
   - include_tasks: task_validate_em7_deployment.yml
-  tags: [ 'validate_em7', 'never' ]

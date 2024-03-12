@@ -2,11 +2,11 @@
 # tasks to update corosync config file on EM7 VM
 - block:
   - name: find string to replace
-    shell: grep ring0_addr /etc/corosync/corosync.conf | head -1
+    ansible.builtin.shell: grep ring0_addr /etc/corosync/corosync.conf | head -1
     check_mode: no
     register: coro_string_to_replace
   - name: Update /etc/corosync/corosync.conf file on VM
-    replace:
+    ansible.builtin.replace:
       path: '/etc/corosync/corosync.conf'
       regexp: '{{ task_item.regexp_string }}'
       replace: '{{ task_item.replace_string }}'
@@ -20,4 +20,3 @@
       - restart corosync
   when: inventory_hostname is search('em7db')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
-  tags: vm_configuration

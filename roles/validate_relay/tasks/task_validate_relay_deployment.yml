@@ -2,7 +2,7 @@
 # Tasks to validate relay deployment
 - block:
   - name: Disable requiretty on host
-    replace:
+    ansible.builtin.replace:
       path: '/etc/sudoers'
       regexp: '^(Defaults.*requiretty)$'
       replace: '#\g<1>'
@@ -12,7 +12,7 @@
       ansible_ssh_pipelining: no
   - name: run validation script
     ansible.builtin.shell: |
-      ./relay_deploy_validate.sh {{ RLY_DB_PASS }} {{ SPL_ADMIN_PASS }}
+      ./relay_deploy_validate.sh {{ vars[('S' if 'dr' in group_names else 'P') + 'RLY_DB_PASS'] }} {{ vars[('S' if 'dr' in group_names else 'P') + 'SPL_ADMIN_PASS'] }}
     register: reg_rly_validate
     args:
       chdir: /opt/qsscripts
@@ -20,7 +20,7 @@
     ignore_errors: yes
     no_log: yes
   - name: Re-enable requiretty on host
-    replace:
+    ansible.builtin.replace:
       path: '/etc/sudoers'
       regexp: '^#(Defaults.*requiretty)$'
       replace: '\g<1>'
@@ -36,4 +36,3 @@
   - ansible.builtin.assert:
       that: rlystatus|default([]) == []
       fail_msg: "{{ rlystatus|default([]) }}"
-  tags: [ 'validate_relay', 'never' ]

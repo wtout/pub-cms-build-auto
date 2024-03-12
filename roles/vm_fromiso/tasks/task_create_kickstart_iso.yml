@@ -2,10 +2,9 @@
 # Tasks to create the kickstart ISO
 - block:
   - name: Create kickstart cfg
-    template:
+    ansible.builtin.template:
       src: templates/kickstart.cfg.j2
       dest: "{{ role_path }}/files/{{ vm.name }}-kickstart.cfg"
   - name: Build kickstart iso
-    command: python3.9 '{{ role_path }}/files/kickstart-iso.py' '{{ role_path }}/files/{{ vm.name }}-kickstart.cfg' '{{ role_path }}/files/{{ vm.name }}-kickstart.iso'
+    ansible.builtin.command: python3.9 '{{ role_path }}/files/kickstart-iso.py' '{{ role_path }}/files/{{ vm.name }}-kickstart.cfg' '{{ role_path }}/files/{{ vm.name }}-kickstart.iso'
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation

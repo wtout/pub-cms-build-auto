@@ -2,7 +2,7 @@
 # Tasks to create the directory structure
 - block:
   - name: create the directory structure
-    file:
+    ansible.builtin.file:
       path: "{{ dir_item }}"
       state: directory
     loop:
@@ -12,7 +12,7 @@
     loop_control:
       loop_var: dir_item
   - name: create the splunkApps symolic link
-    file:
+    ansible.builtin.file:
       path: "{{ spl_wd }}/deploy/splunkApps"
       src: "{{ spl_wd }}/dev/{{ mdr_splunkenv_reponame }}"
       state: link
@@ -24,21 +24,21 @@
       mode: 0777
     become: yes
   - name: get list of Splunk artifacts
-    find:
+    ansible.builtin.find:
       paths: "{{ auto_dir }}/Packages/Splunk"
       file_type: file
       patterns: '*.rpm'
     register: artifacts_list
   - block:
     - name: Download Splunk artifacts
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ spl_rpm_url }}"
         dest: "{{ auto_dir }}/Packages/Splunk/"
       register: download_action
       until: download_action is succeeded
       retries: 7
     - name: get list of Splunk artifacts
-      find:
+      ansible.builtin.find:
         paths: "{{ auto_dir }}/Packages/Splunk"
         file_type: file
         patterns: '*.rpm'
@@ -49,14 +49,14 @@
           - artifacts_list1.matched >= 1
         fail_msg: 'Unable to find Splunk artifacts. Aborting!'
     when: artifacts_list.matched == 0
-  - debug:
+  - ansible.builtin.debug:
       msg:
         - "{{ link_item.path }}"
     loop: "{{ artifacts_list.files if artifacts_list.matched > 0 else artifacts_list1.files }}"
     loop_control:
       loop_var: link_item
   - name: create the splunk artifacts symbolic links
-    file:
+    ansible.builtin.file:
       path: "{{ spl_wd }}/deploy/{{ link_item.path | basename }}"
       src: "{{ link_item.path }}"
       state: link

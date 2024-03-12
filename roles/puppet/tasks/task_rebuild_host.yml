@@ -2,7 +2,7 @@
 # Tasks to rebuild host
 - block:
   - name: reset SSH password
-    set_fact:
+    ansible.builtin.set_fact:
       ansible_ssh_pass: "{{ preppp }}"
       ansible_become_pass: "{{ preppp }}"
     no_log: true
@@ -43,4 +43,3 @@
       name: vm_configuration_ova
     vars:
       configure_vms: true
-  tags: puppet

@@ -44,4 +44,3 @@
     when: block_exists.results | selectattr('loop_item', 'equalto', loop_item) | map(attribute='failed') | list | first
   when: inventory_hostname is regex('em7(dc|mc)')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
-  tags: vm_configuration

@@ -2,28 +2,28 @@
 # tasks to check connectivity and credentials for non EM7 hosts
 - block:
   - name: check VM reachable
-    command: ping {{ ansible_host }} -c 1
+    ansible.builtin.command: ping {{ ansible_host }} -c 1
     register: is_vm_reachable
     ignore_errors: true
     check_mode: no
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
     - name: switch to vm_svc_user user
-      set_fact:
+      ansible.builtin.set_fact:
         ansible_user: "{{ vm_svc_user }}"
         ansible_ssh_pass: "{{ vm_svc_pass }}"
       no_log: true
     - name: check connection
-      wait_for_connection:
+      ansible.builtin.wait_for_connection:
         timeout: 3
       register: is_vm_connection
       ignore_errors: true
       check_mode: no
-    - debug:
+    - ansible.builtin.debug:
         msg: "VM hardening is enabled"
       when: is_vm_connection is succeeded
     - name: revert user
-      set_fact:
+      ansible.builtin.set_fact:
         ansible_user: "{{ credentials.username }}"
         ansible_ssh_pass: "{{ credentials.password }}"
       no_log: true
@@ -31,13 +31,13 @@
     when: is_vm_reachable is failed
   - block:
     - name: check VM credentials
-      wait_for_connection:
+      ansible.builtin.wait_for_connection:
         timeout: 3
       register: is_vm_creds
       ignore_errors: true
       check_mode: no
     - name: Update SSH password
-      set_fact:
+      ansible.builtin.set_fact:
         ansible_ssh_pass: "{{ postppp }}"
         ansible_become_pass: "{{ postppp }}"
       no_log: true

@@ -12,4 +12,3 @@
     loop_control:
       loop_var: list_item
   run_once: true
-  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]

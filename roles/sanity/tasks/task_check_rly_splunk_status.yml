@@ -8,7 +8,7 @@
     register: rly_spl_status
     ignore_errors: true
     no_log: yes
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ rly_spl_status }}"
     when: rly_spl_status is failed
   - name: define rly_splunk status

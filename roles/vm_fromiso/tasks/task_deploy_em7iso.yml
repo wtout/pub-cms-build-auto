@@ -2,7 +2,7 @@
 # tasks to deploy EM7 VM from ISO
 - block:
   - name: Get VM info
-    vmware_guest_info:
+    community.vmware.vmware_guest_info:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -15,62 +15,68 @@
 
   - block:
     - name: enable VM building
-      set_fact:
+      ansible.builtin.set_fact:
         build_vm: true
     - include_tasks: task_packer_build_vm.yml
       loop: "{{ range(1, 3 + 1)|list }}"
       loop_control:
         loop_var: loop_item
+        index_var: loop_idx
     when:
       - vmguest_info is failed
 
   - block:
     - include_tasks: task_poweron_vm.yml
     - name: check EM7 VM reachable
-      command: ping {{ netconfig.nic1.ipaddress }} -c 1
+      ansible.builtin.command: ping {{ netconfig.nic1.ipaddress }} -c 1
       register: em7_vm_reachable1
       check_mode: no
       until: em7_vm_reachable1 is succeeded
       retries: 5
       delay: 10
+      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
     rescue:
     - block:
       - include_tasks: task_reboot_guest_vm.yml
       - name: recheck EM7 VM reachable
-        command: ping {{ netconfig.nic1.ipaddress }} -c 1
+        ansible.builtin.command: ping {{ netconfig.nic1.ipaddress }} -c 1
         register: em7_vm_reachable2
         check_mode: no
         until: em7_vm_reachable2 is succeeded
         retries: 5
         delay: 10
+        become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
       rescue:
       - block:
         - name: enable VM building
-          set_fact:
+          ansible.builtin.set_fact:
             build_vm: true
         - include_tasks: task_packer_build_vm.yml
           loop: "{{ range(1, 3 + 1)|list }}"
           loop_control:
             loop_var: loop_item
+            index_var: loop_idx
         - include_tasks: task_poweron_vm.yml
         - name: check EM7 VM reachable
-          command: ping {{ netconfig.nic1.ipaddress }} -c 1
+          ansible.builtin.command: ping {{ netconfig.nic1.ipaddress }} -c 1
           register: em7_vm_reachable3
           check_mode: no
           until: em7_vm_reachable3 is succeeded
           retries: 5
           delay: 10
+          become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
         rescue:
           - include_tasks: task_reboot_guest_vm.yml
           - name: recheck EM7 VM reachable
-            command: ping {{ netconfig.nic1.ipaddress }} -c 1
+            ansible.builtin.command: ping {{ netconfig.nic1.ipaddress }} -c 1
             register: em7_vm_reachable4
             check_mode: no
             until: em7_vm_reachable4 is succeeded
             retries: 5
             delay: 10
+            become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
     - name: Wait for port 22 to become open and contain "OpenSSH"
-      wait_for:
+      ansible.builtin.wait_for:
         port: 22
         host: "{{ netconfig.nic1.ipaddress }}"
         search_regex: OpenSSH
@@ -85,4 +91,3 @@
       that:
         - "deploy_em7iso|default({'failed': false}) is succeeded"
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation

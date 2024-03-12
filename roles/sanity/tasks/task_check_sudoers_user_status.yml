@@ -10,7 +10,7 @@
     check_mode: no
     ignore_errors: true
     no_log: yes
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ reg_users_list|replace(ansible_ssh_pass, 'obfuscated') }}"
   - block:
     - name: get the missing users list

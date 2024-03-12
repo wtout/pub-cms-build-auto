@@ -12,7 +12,7 @@
       validate_certs: no
     register: disk_info
   - name: Define VM disk0
-    set_fact:
+    ansible.builtin.set_fact:
       disk0_unit_number: "{{ disk_info.guest_disk_info | dict2items | selectattr('key','equalto', '0') | map(attribute='value.unit_number') | list| to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '') }}"
       disk0_size_kb: "{{ (vm.disk0|float * 1024|pow(2))|int if (vm.disk0 != '' and vm.disk0|float * 1024|pow(2)|int > disk0_readsize|int) else disk0_readsize }}"
       disk0_datastore: "{{ disk_info.guest_disk_info | dict2items | selectattr('key','equalto', '0') | map(attribute='value.backing_datastore') | list| to_yaml | regex_replace('[\\[|\\]]', '') | replace('\n', '') }}"
@@ -23,7 +23,7 @@
       - vm.disk0 is defined
       - vm.disk0|float > 0
   - name: Define VM disk1
-    set_fact:
+    ansible.builtin.set_fact:
       disk1_unit_number: "{{ (disk0_unit_number|int + 1) }}"
       disk1_size_kb: "{{ (vm.disk1|float * 1024|pow(2))|int }}"
       disk1_datastore: "{{ disk0_datastore }}"
@@ -32,7 +32,7 @@
       - vm.disk1 != ''
       - vm.disk1|float > 0
   - name: Define datastore to host Disk2 for Splunk Indexers
-    set_fact:
+    ansible.builtin.set_fact:
       splind_datastore: "{{ myssd_names|select('regex', '-%02d'|format(vm.hostmap[inventory_hostname[-2:]|int - 1]|int))|list|join if vm.hostmap|default([]) != [] else myssd_names[1] if inventory_hostname[-2:]|int % 2 == 0 else myssd_names[0] }}"
     vars:
       myssd_names: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first]['ssd_ds_names'] }}"
@@ -40,7 +40,7 @@
       - inventory_hostname is search('splind')
       - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
   - name: Define VM disk2
-    set_fact:
+    ansible.builtin.set_fact:
       disk2_unit_number: "{{ (disk1_unit_number|int + 1) }}"
       disk2_size_kb: "{{ (vm.disk2|float * 1024|pow(2))|int }}"
       disk2_datastore: "{{ splind_datastore if (inventory_hostname is search('splind') and hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a') else disk0_datastore }}"
@@ -49,7 +49,7 @@
       - vm.disk2 != ''
       - vm.disk2|float > 0
   - name: Define VM disk3
-    set_fact:
+    ansible.builtin.set_fact:
       disk3_unit_number: "{{ (disk2_unit_number|int + 1) }}"
       disk3_size_kb: "{{ (vm.disk3|float * 1024|pow(2))|int }}"
       disk3_datastore: "{{ disk1_datastore }}"
@@ -163,4 +163,3 @@
     - not ansible_check_mode
     - vm.disk1|float > 0 or vm.disk2|float > 0 or vm.disk3|float > 0
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation

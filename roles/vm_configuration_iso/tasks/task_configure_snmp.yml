@@ -11,7 +11,7 @@
     notify: restart snmpd service
 
   - name: check if backup file exists
-    stat:
+    ansible.builtin.stat:
       path: '/etc/snmp/snmpd.conf.d/snmpd_default.conf.orig'
     register: bkp_file
   - name: backup snmpd_default.conf file
@@ -35,4 +35,3 @@
     - not ansible_check_mode
     - inventory_hostname is search('em7')
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: vm_configuration

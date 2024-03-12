@@ -3,7 +3,7 @@
 - block:
   - block:
     - name: Gather VM info
-      vmware_guest_info:
+      community.vmware.vmware_guest_info:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -14,43 +14,39 @@
       until: csr_info.instance.ipv4 != None
       ignore_errors: true
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    - assert:
+    - ansible.builtin.assert:
         that:
           - csr_info is succeeded
         fail_msg: 'The CSR VM is not found. Aborting playbook execution!'
     - set_fact:
         ansible_host: "{{ csr_info.instance.ipv4 }}"
     - name: Define CSR key
-      shell: ssh-keyscan -t rsa {{ netconfig.nic3.ipaddress }}
+      ansible.builtin.shell: ssh-keyscan -t rsa {{ netconfig.nic3.ipaddress }}
       register: host_key
       async: 30
       poll: 5
       until: host_key.stdout != ''
       failed_when: host_key.stdout == ''
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    - name: create ~/.ssh directory
-      ansible.builtin.file:
-        path: '~/.ssh'
-        state: directory
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-      run_once: yes
     - name: Add CSR key to known_hosts
-      known_hosts:
+      ansible.builtin.known_hosts:
         name: "{{ netconfig.nic3.ipaddress }}"
         key: "{{ host_key.stdout }}"
+        path: "{{ lookup('env', 'HOME') }}/.ssh/known_hosts"
         state: present
+      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     when: not ignore|default(false)
 
   - name: check licensed state
     block:
       - name: Check if CSR is licensed
-        ios_command:
+        cisco.ios.ios_command:
           commands: "show license detail"
         register: lic_detail
-      - setup:
+      - ansible.builtin.setup:
         run_once: yes
-      - set_fact:
+      - ansible.builtin.set_fact:
           curr_exp_date: "{{ numdate }}"
           is_licensed: "{{ (numdate|to_datetime('%Y-%m-%d') - ansible_date_time.date|to_datetime('%Y-%m-%d')).days|int > 0 }}"
         vars:
@@ -59,15 +55,18 @@
           nummnth: "{{ '1' if strmnth|lower is search('jan') else '2' if strmnth|lower is search('feb') else '3' if strmnth|lower is search('mar') else '4' if strmnth|lower is search('apr') else '5' if strmnth|lower is search('may') else'6' if strmnth|lower is search('jun') else '7' if strmnth|lower is search('jul') else '8' if strmnth|lower is search('aug') else '9' if strmnth|lower is search('sep') else '10' if strmnth|lower is search('oct') else '11' if strmnth|lower is search('nov') else '12' }}"
           numdate: "{{ strdate|split(' ')|last + '-' + '%02d' | format(nummnth|int) + '-' + (strdate|split(' '))[1] }}"
     rescue:
-      - set_fact:
+      - ansible.builtin.set_fact:
           is_licensed: false
 
-  - name: Remove CSR key from known_hosts
-    known_hosts:
-      name: "{{ netconfig.nic3.ipaddress }}"
-      key: "{{ host_key.stdout }}"
-      state: absent
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - block:
+    - name: Remove CSR key from known_hosts
+      ansible.builtin.known_hosts:
+        name: "{{ netconfig.nic3.ipaddress }}"
+        key: "{{ host_key.stdout }}"
+        path: "{{ lookup('env', 'HOME') }}/.ssh/known_hosts"
+        state: absent
+      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
     when: not ignore|default(false)
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   when: inventory_hostname is search('csr')
   tags: [ 'infra_check_csr_license', 'vm_creation' ]

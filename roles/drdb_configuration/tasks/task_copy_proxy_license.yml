@@ -27,4 +27,3 @@
   vars:
     lic_src: "{{ auto_dir }}/Packages/licenses"
     lic_file: 'drbd-proxy.license'
-  tags: [ 'drdb_configuration', 'never' ]

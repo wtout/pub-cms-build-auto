@@ -20,4 +20,3 @@
     loop_control:
       loop_var: group_item
     when:  customer.disaster_recovery
-  tags: ['always', 'vm_facts']

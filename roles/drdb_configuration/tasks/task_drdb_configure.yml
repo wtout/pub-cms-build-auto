@@ -9,4 +9,3 @@
   - include_tasks: task_stop_services.yml
   - include_tasks: task_coro_install.yml
   - include_tasks: task_update_dbpassword_silo_conf.yml
-  tags: [ 'drdb_configuration', 'never' ]

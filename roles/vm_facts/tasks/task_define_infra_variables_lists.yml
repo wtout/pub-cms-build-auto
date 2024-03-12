@@ -2,7 +2,7 @@
 # tasks to define infra IP lists
 - block:
   - name: define hosts info
-    set_fact:
+    ansible.builtin.set_fact:
       ipaddress1: "{{ ipvar1 if ipvar1 != '' else octetvar1 }}"
       ipaddress2: "{{ ipvar2 if ipvar2 != '' else octetvar2 }}"
     vars:
@@ -17,7 +17,7 @@
     register: info
 
   - name: define rly lists
-    set_fact:
+    ansible.builtin.set_fact:
       rly_ip1_list: "{{ rly_ip1_list | default([]) + ipvar1 if (rly_ip1_list is defined and rly_ip1_list != '') else ipvar1 }}"
       rly_ip2_list: "{{ rly_ip2_list | default([]) + ipvar2 if (rly_ip2_list is defined and rly_ip2_list != '') else ipvar2 }}"
     vars:
@@ -31,7 +31,7 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define spl lists
-    set_fact:
+    ansible.builtin.set_fact:
       spl_ip1_list: "{{ spl_ip1_list | default([]) + ipvar1 if (spl_ip1_list is defined and spl_ip1_list != '') else ipvar1 }}"
       spl_ip2_list: "{{ spl_ip2_list | default([]) + ipvar2 if (spl_ip2_list is defined and spl_ip2_list != '') else ipvar2 }}"
     vars:
@@ -46,7 +46,7 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define splsrc lists
-    set_fact:
+    ansible.builtin.set_fact:
       splsrc_ip1_list: "{{ splsrc_ip1_list | default([]) + ipvar1 if (splsrc_ip1_list is defined and splsrc_ip1_list != '') else ipvar1 }}"
       splsrc_ip2_list: "{{ splsrc_ip2_list | default([]) + ipvar2 if (splsrc_ip2_list is defined and splsrc_ip2_list != '') else ipvar2 }}"
     vars:
@@ -60,7 +60,7 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define em7 lists
-    set_fact:
+    ansible.builtin.set_fact:
       em7_ip1_list: "{{ em7_ip1_list | default([]) + ipvar1 if (em7_ip1_list is defined and em7_ip1_list != '') else ipvar1 }}"
       em7_ip2_list: "{{ em7_ip2_list | default([]) + ipvar2 if (em7_ip2_list is defined and em7_ip2_list != '') else ipvar2 }}"
     vars:
@@ -75,7 +75,7 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define em7prt lists
-    set_fact:
+    ansible.builtin.set_fact:
       em7prt_ip1_list: "{{ em7prt_ip1_list | default([]) + ipvar1 if (em7prt_ip1_list is defined and em7prt_ip1_list != '') else ipvar1 }}"
       em7prt_ip2_list: "{{ em7prt_ip2_list | default([]) + ipvar2 if (em7prt_ip2_list is defined and em7prt_ip2_list != '') else ipvar2 }}"
     vars:
@@ -89,7 +89,7 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define em7mc lists
-    set_fact:
+    ansible.builtin.set_fact:
       em7mc_ip1_list: "{{ em7mc_ip1_list | default([]) + ipvar1 if (em7mc_ip1_list is defined and em7mc_ip1_list != '') else ipvar1 }}"
       em7mc_ip2_list: "{{ em7mc_ip2_list | default([]) + ipvar2 if (em7mc_ip2_list is defined and em7mc_ip2_list != '') else ipvar2 }}"
     vars:
@@ -102,4 +102,3 @@
       - groups['em7mc'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
   run_once: true
-  tags: ['always', 'vm_facts']

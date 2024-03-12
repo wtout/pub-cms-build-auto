@@ -28,7 +28,7 @@
           when:
             - reg_ind_disc.stderr == 'Login failed'
       always:
-        - debug:
+        - ansible.builtin.debug:
             msg: "{{ reg_ind_disc|replace(spl_admin_pass, 'obfuscated') }}"
     when:
       - user_expiry_status|default('') is not search('does not exist')

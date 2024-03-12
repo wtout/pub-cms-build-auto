@@ -37,7 +37,7 @@
             gateway: "{{ netconfig.nic5.gateway }}"
             device_type: vmxnet3
     - name: Update VM hardware settings with correct NICs
-      vmware_guest:
+      community.vmware.vmware_guest:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -51,7 +51,7 @@
         validate_certs: no
         
     - name: Power on VM
-      vmware_guest_powerstate:
+      community.vmware.vmware_guest_powerstate:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -60,7 +60,7 @@
         validate_certs: no
 
     - name: Gather VM info
-      vmware_guest_info:
+      community.vmware.vmware_guest_info:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -122,5 +122,3 @@
     block:
     - cisco.ios.ios_facts:
         gather_subset: min
-  tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
-  

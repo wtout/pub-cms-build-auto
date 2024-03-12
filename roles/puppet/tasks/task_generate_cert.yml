@@ -30,4 +30,3 @@
     when: "'No puppet-agent installed' in puppet_installed.stdout"
     become: "{{ true if ansible_user != 'root' else false }}"
   - include_tasks: task_disable_puppet_sync.yml
-  tags: puppet

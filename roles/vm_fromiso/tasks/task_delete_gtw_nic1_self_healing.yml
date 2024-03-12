@@ -16,7 +16,7 @@
     - include_tasks: task_delete_gtw_nic1.yml
   always:
     - name: define gtw_rebuild
-      set_fact:
+      ansible.builtin.et_fact:
         gtw_rebuild: "{{ delete_nic1gtw|default({'failed': false}) is failed }}"
     - name: check if rebuild is still required
       ansible.builtin.assert:
@@ -24,4 +24,3 @@
           - not gtw_rebuild|default(false)
         success_msg: 'Deleted the NIC1 gateway successfully'
         fail_msg: 'Unable to delete NIC1 gateway successfully'
-  tags: vm_creation

@@ -6,8 +6,8 @@ ansible_network_os: ios
 ansible_connection: network_cli
 
 credentials:
-  username: "{{ CSR_USER|default('') }}"
-  password: "{{ CSR_PASS|default('') }}"
+  username: "{{ PCSR_USER|default('') }}"
+  password: "{{ PCSR_PASS|default('') }}"
 
 vm:
   cpu: "{{ vm_vars.infra.csr.cpu }}"

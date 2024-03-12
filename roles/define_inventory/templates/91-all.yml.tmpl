@@ -9,6 +9,15 @@ customer:
   # Official build name
   name: '{{ environment_definition.customer.name }}'
 
+  # team_contact1 (string)
+  team_contact1: '{{ environment_definition.customer.team_contact1|default('') }}'
+
+  # team_contact2 (string)
+  team_contact2: '{{ environment_definition.customer.team_contact2|default('') }}'
+
+  # team_mailer (string)
+  team_mailer: '{{ environment_definition.customer.team_mailer|default('') }}'
+
   # Disaster recovery (boolean yes/no)
   disaster_recovery: {{ environment_definition.customer.disaster_recovery }}
 
@@ -47,7 +56,7 @@ datacenter:
 
   primary:
 
-    # Available datacenters: RTP-Staging, PAE-HX-DC-1, PAE-HX-DC-2, PAE-HX-DC-3, Plat-Ops, Dev Engineering, cdra-Build-Development, PAE-Customer-Build, RTP5, Alln1 (string)
+    # Available datacenters: STG-HX-DC, RTP-Staging, PAE-HX-DC-1, PAE-HX-DC-2, PAE-HX-DC-3, PAE-HX-DC-4, Plat-Ops, Dev Engineering, cdra-Build-Development, PAE-Customer-Build, RTP5, Alln1 (string)
     name: '{{ environment_definition.datacenter.primary.name }}'
 
     # Required if a custom cluster name is to be used
@@ -68,7 +77,7 @@ datacenter:
 
   secondary:
 
-    # Available datacenters: RTP-Staging, PAE-HX-DC-1, PAE-HX-DC-2, PAE-HX-DC-3, Plat-Ops, Dev Engineering, cdra-Build-Development, PAE-Customer-Build, RTP5, Alln1 (string)
+    # Available datacenters: STG-HX-DC, RTP-Staging, PAE-HX-DC-1, PAE-HX-DC-2, PAE-HX-DC-3, PAE-HX-DC-4, Plat-Ops, Dev Engineering, cdra-Build-Development, PAE-Customer-Build, RTP5, Alln1 (string)
     name: '{{ environment_definition.datacenter.secondary.name }}'
 
     # Required if a custom cluster name is to be used

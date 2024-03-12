@@ -9,4 +9,3 @@
   - name: generate the ssh keys pair
     community.crypto.openssh_keypair:
       path: "{{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}"
-  tags: vm_configuration

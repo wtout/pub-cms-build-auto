@@ -2,14 +2,14 @@
 # Tasks to create DRS anti-affinity rules for hosted VMs
 - block:
   - name: define list of guests to check
-    set_fact:
+    ansible.builtin.set_fact:
       guest_list: "{{ guest_list|default([]) | union(groups[guest_item]) }}"
     loop: "{{ play_stack_group_list }}"
     loop_control:
       loop_var: guest_item
 
   - name: Get the guest info
-    vmware_guest_info:
+    community.vmware.vmware_guest_info:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
@@ -28,7 +28,7 @@
       - groups[host_item[:-2]] | length > 1
 
   - name: Get list of DRS rules to Create
-    set_fact:
+    ansible.builtin.set_fact:
       drs_rules_list: "{{ drs_rules_list|default([]) | union([pair_name + '-anti-affinity-rule']) }}"
     vars:
       host_num: "{{ host_item[-2:] }}"
@@ -47,7 +47,7 @@
       - peer_status
 
   - name: Create DRS anti-affinity rule
-    vmware_vm_vm_drs_rule:
+    community.vmware.vmware_vm_vm_drs_rule:
       hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
@@ -73,4 +73,3 @@
     poll: 0
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: [ 'drs_creation', 'vm_creation' ]

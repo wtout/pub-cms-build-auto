@@ -2,7 +2,7 @@
 # tasks to check primary DB credentials
 - block:
   - name: check primary DB credentials
-    wait_for_connection:
+    ansible.builtin.wait_for_connection:
       timeout: 15
     delegate_to: "{{ groups['em7db']|first }}"
     register: primarydb_connection_status1
@@ -10,4 +10,3 @@
     ignore_errors: true
   run_once: true
   become: "{{ true if inventory_hostname is search('em7') else false }}"
-  tags: vm_configuration

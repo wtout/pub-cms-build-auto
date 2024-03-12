@@ -5,7 +5,7 @@
     when:
       - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == ''
       - vm_ds is not defined or vm_ds == ''
-  - include_tasks: task_deploy_ova.yml
+  - include_tasks: task_deploy_ova_self_healing.yml
   - include_tasks: task_update_custom_attributes.yml
   - include_tasks: task_update_disks_self_healing.yml
   - include_tasks: task_update_hardware.yml
@@ -14,4 +14,3 @@
   - include_tasks: task_update_default_route.yml
   - include_tasks: task_rename_interface.yml
   - include_tasks: task_update_vmwaretools.yml
-  tags: vm_creation

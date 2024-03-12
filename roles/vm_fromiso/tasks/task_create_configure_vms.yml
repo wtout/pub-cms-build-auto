@@ -15,10 +15,6 @@
     - include_tasks: task_create_kickstart_iso.yml
     - include_tasks: task_copy_kickstart_iso_to_vsphere.yml
     - include_tasks: task_deploy_iso_self_healing.yml
-    - name: "vm_creation: Update custom attributes"
-      include_role:
-        name: vm_creation
-        tasks_from: task_update_custom_attributes.yml
     - include_tasks: task_delete_gtw_nic1_self_healing.yml
     - include_tasks: task_update_disks_self_healing.yml
     - include_tasks: task_delete_kickstart_files.yml
@@ -26,17 +22,17 @@
 
   - block:
     - include_tasks: task_deploy_em7iso.yml
-    - name: "vm_creation: Update custom attributes"
-      include_role:
-        name: vm_creation
-        tasks_from: task_update_custom_attributes.yml
+    - include_tasks: task_poweroff_vm.yml
     - include_tasks: task_update_em7prt_disk0.yml
-    - include_tasks: task_reboot_vm.yml
-      when: vmguest_disk0 is changed
+    - include_tasks: task_poweron_vm.yml
     - include_tasks: task_rename_nic2_self_healing.yml
       when: inventory_hostname is not search('em7mc')
     when: inventory_hostname is search('em7')
 
+  - name: "vm_creation: Update custom attributes"
+    include_role:
+      name: vm_creation
+      tasks_from: task_update_custom_attributes.yml
   - include_tasks: task_update_default_route.yml
   - include_tasks: task_add_gtw2.yml
 
@@ -45,9 +41,14 @@
     - include_tasks: task_expand_fs.yml
     - include_tasks: task_delete_packer_builder.yml
     - include_tasks: task_upgrade_mariadb.yml
-      when: groups['em7']|length > 1 and inventory_hostname is search('em7db') or groups['em7']|length == 1
+      when:
+        - groups['em7']|length > 1 and inventory_hostname is search('em7db') or groups['em7']|length == 1
+        - customer.version.em7_iso is not search('em7_x86_64_12.')
+    - include_tasks: task_deploy_silo_patch.yml
+      when:
+        - customer.version.em7_iso is search('em7_x86_64_12.1')
+        - inventory_hostname is search('em7db') or groups['em7']|length == 1
     when: inventory_hostname is search('em7')
   
   - name: flush handlers
     meta: flush_handlers
-  tags: vm_creation

@@ -77,4 +77,3 @@
       - custom_proxy_customer_impersonate.conf
       - custom_proxy_common.fragment
   when: ppush|default(true)
-  tags: [ 'validate_em7', 'never' ]

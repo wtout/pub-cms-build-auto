@@ -37,4 +37,3 @@
 
   when: inventory_hostname is search('em7db') or (groups['em7']|length == 1 and 'em7' in group_names)
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: vm_configuration

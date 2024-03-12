@@ -5,7 +5,7 @@
     ansible.builtin.shell: |
       grep -rw python3 {{ spl_ansible_path }} | grep -vE 'python3.9|roles' | cut -d ':' -f1 | sort -u
     register: reg_found_files
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ reg_found_files }}"
   - name: replace python3 with python3.9
     ansible.builtin.replace:

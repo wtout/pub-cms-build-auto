@@ -14,4 +14,3 @@
       loop_var: nic_item
       index_var: nic_idx
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: vm_configuration

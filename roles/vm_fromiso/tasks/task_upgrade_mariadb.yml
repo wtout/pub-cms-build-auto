@@ -34,7 +34,7 @@
       loop_control:
         loop_var: rpm_item
     - name: stop services
-      systemd:
+      ansible.builtin.systemd:
         name: "{{ service_item}}"
         state: stopped
       loop:
@@ -63,4 +63,3 @@
   vars:
     rpm_src: "{{ auto_dir }}/Packages/RPM"
     rpm_list: "{{ ['MariaDB-client-10.1.40-1.el7.centos.x86_64.rpm','MariaDB-common-10.1.40-1.el7.centos.x86_64.rpm','MariaDB-server-10.1.40-1.el7.centos.x86_64.rpm','MariaDB-shared-10.1.40-1.el7.centos.x86_64.rpm'] }}"
-  tags: vm_creation

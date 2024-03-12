@@ -3,14 +3,14 @@
 - block:
   - block:
     - name: get list of stack groups in play
-      set_fact:
+      ansible.builtin.set_fact:
         play_stack_group_list: "{{ play_stack_group_list|default([]) | union([host_item[:-2]]) }}"
       loop: "{{ ansible_play_hosts | reject('search', 'dr|bastion|puppet|vcenter|nexus') | list }}"
       loop_control:
         loop_var: host_item
         label: "{{ host_item }}"
     - name: get list of DR groups in play
-      set_fact:
+      ansible.builtin.set_fact:
         play_dr_group_list: "{{ play_dr_group_list|default([]) | union([host_item[:-2]]) }}"
       loop: "{{ ansible_play_hosts | select('match', 'dr') | reject('search', 'bastion|puppet|vcenter|nexus') | list }}"
       loop_control:

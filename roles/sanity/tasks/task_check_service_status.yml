@@ -5,7 +5,7 @@
     - include_tasks: task_check_primary_db.yml
     when: vm.name is search('em7db')
   - name: check backup RPM version on relays
-    shell: rpm -qa | grep -i csco-cms-backup | sed 's/^.*backup-//;s/\.noarch$//'
+    ansible.builtin.shell: rpm -qa | grep -i csco-cms-backup | sed 's/^.*backup-//;s/\.noarch$//'
     register: reg_bckp_rpm
     check_mode: no
     when:
@@ -27,7 +27,7 @@
         - "{{ 'em7' if vm.name is search('em7') else '' }}"
         - "{{ 'nginx' if vm.name is search('em7') else '' }}"
   - name: get service facts
-    service_facts:
+    ansible.builtin.service_facts:
     register: reg_service_facts
     no_log: yes
   - name: Check status of service

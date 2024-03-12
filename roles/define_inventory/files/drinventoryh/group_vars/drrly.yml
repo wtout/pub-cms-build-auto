@@ -1,8 +1,8 @@
 ---
 # Variables for relay hosts
 credentials:
-  username: "{{ NONEM7_USER|default('') }}"
-  password: "{{ NONEM7_PASS|default('') }}"
+  username: "{{ SLINUX_SUPERUSER_USER|default('') }}"
+  password: "{{ SLINUX_SUPERUSER_PASS|default('') }}"
 
 user:
   name: "{{ drvm_vars.rly.user.name if drvm_vars.rly.user.name is defined else '' }}"

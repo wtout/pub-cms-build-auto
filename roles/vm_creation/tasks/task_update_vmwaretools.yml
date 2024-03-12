@@ -3,7 +3,7 @@
 - block:
   - block:
     - name: Wait on VMware Tools to become available
-      vmware_guest_tools_wait:
+      community.vmware.vmware_guest_tools_wait:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -12,7 +12,7 @@
         name: "{{ vm.name }}"
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     - name: wait 60 seconds for VM to become reachable
-      wait_for_connection:
+      ansible.builtin.wait_for_connection:
         timeout: 60
       when:
         - deploy_ovf is not changed
@@ -20,7 +20,7 @@
       - netconfig.nic1.gateway != ''
 
   - name: Upgrade VMWare Tools
-    vmware_guest_tools_upgrade:
+    community.vmware.vmware_guest_tools_upgrade:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -30,4 +30,3 @@
       validate_certs: no
     register: vmt_upgrade
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: vm_creation

@@ -15,6 +15,6 @@
       ansible.builtin.set_fact:
         licensed_status: "{{ reg_lic_state.stdout }}"
   always:
-    - debug:
+    - ansible.builtin.debug:
         msg: "{{ reg_lic_state|replace(ansible_ssh_pass, 'obfuscated') }}"
   tags: sanity

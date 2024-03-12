@@ -2,7 +2,7 @@
 # Tasks to create VM pairs
 - block:
   - name: define vm_seq for each host
-    set_fact:
+    ansible.builtin.set_fact:
       vm_seq: "{{ range(0, groups[vm_group]|length, 2)|list }}"
 
   - include_tasks:
@@ -15,4 +15,3 @@
     loop_control:
       loop_var: seq_item
     when: inventory_hostname == groups[vm_group][seq_item] or ((groups[vm_group]|length - 1) >= (seq_item + 1) and inventory_hostname == groups[vm_group][seq_item + 1])
-  tags: vm_creation

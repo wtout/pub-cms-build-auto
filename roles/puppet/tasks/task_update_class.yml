@@ -2,15 +2,14 @@
 # Tasks to update class file
 - block:
   - name: define validation_command
-    set_fact:
+    ansible.builtin.set_fact:
       validation_command: '/bin/grep {{ hostvars[host_item]["vm"]["name"] }} %s'
     when: update_action == 'add'
   - name: "{{ update_action }} {{ inventory_hostname }} {{ 'to' if update_action == 'add' else 'from' }} {{ class_name }}"
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: "/opt/puppet/qs_scripts/{{ class_name }}"
       line: "{{ hostvars[host_item]['vm']['name'] }}"
       state: "{{ 'present' if update_action == 'add' else 'absent' }}"
       validate: "{{ validation_command if update_action == 'add' else '' }}"
     register: action_result
     become: true
-  tags: puppet

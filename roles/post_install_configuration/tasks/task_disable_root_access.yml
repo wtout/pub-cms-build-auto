@@ -21,4 +21,3 @@
       - reg_push_puppet.stdout is not search('Skipping run of Puppet configuration client; administratively disabled')
       - reg_push_puppet.stdout is not search('Run of Puppet configuration client already in progress')
       - reg_push_puppet.stdout is not search('Applied catalog in')
-  tags: [ 'post_install_configuration', 'never' ]

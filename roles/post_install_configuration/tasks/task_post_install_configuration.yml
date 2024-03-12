@@ -5,4 +5,3 @@
     when: inventory_hostname is search('rly')
   - include_tasks: task_disable_root_access.yml
   - include_tasks: task_disable_puppet_agent.yml
-  tags: [ 'post_install_configuration', 'never' ]

@@ -78,4 +78,3 @@
         fail_msg: "{{ em7_cluster_status }}"
     when:
       - primarydb_hostname is defined
-  tags: [ 'validate_em7', 'never' ]

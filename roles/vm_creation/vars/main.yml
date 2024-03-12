@@ -1,3 +1,3 @@
 ---
 # vars file for vm_creation
-ova_dir: "{{ auto_dir }}/Packages/{{ customer.version.release }}"
+ova_dir: "Packages/{{ customer.version.release }}"

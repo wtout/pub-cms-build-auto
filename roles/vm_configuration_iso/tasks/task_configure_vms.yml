@@ -12,17 +12,21 @@
   - include_tasks: task_update_chrony.yml
   - include_tasks: task_update_repo.yml
   - include_tasks: task_update_puppet_data_file.yml
+    when: customer.version.em7_iso is not search('em7_x86_64_12.')
   - include_tasks: task_update_hosts_file.yml
   - include_tasks: task_coro_install.yml
     when: ansible_ssh_pass != postppp
-  - name: time laps
-    ansible.builtin.wait_for:
-      timeout: 30
-    async: 35
-    poll: 0
-    register: reg_time_laps
-    when: inventory_hostname is search('em7db')
-  - include_tasks: task_increase_sync_rate.yml
+  - block:
+    - name: time laps
+      ansible.builtin.wait_for:
+        timeout: 30
+      async: 35
+      poll: 0
+      register: reg_time_laps
+    - include_tasks: task_increase_sync_rate.yml
+    when:
+      - inventory_hostname is search('em7db')
+      - customer.version.em7_iso is not search('em7_x86_64_12.')
   - include_tasks: task_update_silo_file.yml
   - include_tasks: task_install_packages.yml
   - name: flush handlers
@@ -34,7 +38,9 @@
     until: reg_time_check.finished
     retries: 3
     delay: 12
-    when: inventory_hostname is search('em7db')
+    when:
+      - inventory_hostname is search('em7db')
+      - customer.version.em7_iso is not search('em7_x86_64_12.')
   - include_tasks:
       file: task_update_conf_file.yml
       apply:
@@ -45,5 +51,6 @@
       - /etc/my.cnf.d/silo_mysql.cnf
     loop_control:
       loop_var: file_item
+    when:
+      - customer.version.em7_iso is not search('em7_x86_64_12.')
   - include_tasks: task_update_exports_file.yml
-  tags: vm_configuration

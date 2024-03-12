@@ -15,4 +15,3 @@
   rescue:
     - ansible.builtin.debug:
         msg: "{{ loop_rpm_src }}/{{ loop_rpm_file }} is not found"
-  tags: vm_creation

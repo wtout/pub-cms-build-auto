@@ -25,7 +25,7 @@
           when:
             - inventory_hostname is search('spl(dpl01|mas01|src|ind)')
       always:
-        - debug:
+        - ansible.builtin.debug:
             msg: "{{ spl_status }}"
     when: user_expiry_status|default('') is not search('does not exist')
   when: inventory_hostname is search('spl')

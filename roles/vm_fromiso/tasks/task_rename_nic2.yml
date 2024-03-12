@@ -27,11 +27,10 @@
         ansible.builtin.command: |
           ip link set ens192 up
       - name: restart network {{ loop_counter }}
-        systemd:
+        ansible.builtin.systemd:
           name: network
           state: restarted
           daemon_reload: yes
         when: int_rename is succeeded
   become: "{{ true if ansible_user != 'root' else false }}"
   when: rename_nic2
-  tags: vm_creation

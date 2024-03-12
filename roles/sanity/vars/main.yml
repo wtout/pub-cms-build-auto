@@ -1,10 +1,10 @@
 ---
 # vars file for roles/sanity
-rly_db_user: "{{ RLY_DB_USER }}"
-rly_db_pass: "{{ RLY_DB_PASS }}"
-spl_admin_user: "{{ SPL_ADMIN_USER }}"
-spl_admin_pass: "{{ SPL_ADMIN_PASS }}"
-vm_svc_user: "{{ user.name if user.name != '' else (vars[('S' if 'dr' in group_names else 'P') + 'SVC_USER'] if customer.name|lower is search('mdr') else 'ansible') if credentials.username == 'root' else credentials.username }}"
+rly_db_user: "{{ vars[('S' if 'dr' in group_names else 'P') + 'RLY_DB_USER'] }}"
+rly_db_pass: "{{ vars[('S' if 'dr' in group_names else 'P') + 'RLY_DB_PASS'] }}"
+spl_admin_user: "{{ vars[('S' if 'dr' in group_names else 'P') + 'SPL_ADMIN_USER'] }}"
+spl_admin_pass: "{{ vars[('S' if 'dr' in group_names else 'P') + 'SPL_ADMIN_PASS'] }}"
+vm_svc_user: "{{ user.name if user.name != '' else (vars[('S' if 'dr' in group_names else 'P') + 'VCENTER_SERVICE_USER'] if customer.name|lower is search('mdr') else 'ansible') if credentials.username == 'root' else credentials.username }}"
 vm_svc_pass: "{{ user.password if user.name != '' else credentials.password }}"
 chrony_file: '/etc/chrony.conf'
 relayweb_conf_file: '/opt/CSCO-CMS/relayweb/conf/common.properties'

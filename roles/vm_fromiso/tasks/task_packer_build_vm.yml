@@ -2,21 +2,21 @@
 # tasks to create EM7 VM using Packer
 - name: Create EM7 VM
   block:
-    - name: Deploy EM7 VM from ISO
-      ansible.builtin.shell: ( export PACKER_CACHE_DIR={{ auto_dir }}/../packer_cache; /usr/bin/packer build {{ role_path }}/files/{{ vm.name }}-builder.json; exit ${?} )
+    - name: Deploy EM7 VM from ISO {{ loop_idx|int + 1 }}
+      ansible.builtin.shell: |
+        ( export PACKER_CACHE_DIR={{ auto_dir }}/../packer_cache; timeout 22m /usr/bin/packer build -force {{ role_path }}/files/{{ vm.name }}-builder.json; exit ${?} )
       register: deploy_em7iso
       environment:
         http_proxy: ''
         https_proxy: ''
       throttle: "{{ 5 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else 0 }}"
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - ansible.builtin.debug:
+        msg: "Build attempt {{ loop_idx|int + 1 }} succeeded"
     - name: disable VM building
-      set_fact:
+      ansible.builtin.set_fact:
         build_vm: false
   rescue:
-    - name: "{{ auto_dir + '/roles/vm_creation' }}: Delete VM"
-      include_role:
-        name: "{{ auto_dir + '/roles/vm_creation' }}"
-        tasks_from: task_delete_vm.yml
+    - ansible.builtin.debug:
+        msg: "Build attempt {{ loop_idx|int + 1 }} failed"
   when: build_vm
-  tags: vm_creation

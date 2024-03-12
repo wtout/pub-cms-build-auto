@@ -2,7 +2,7 @@
 # tasks to define dr infra variables lists
 - block:
   - name: define dr infra info
-    set_fact:
+    ansible.builtin.set_fact:
       ipaddress1: "{{ ipvar1 if ipvar1 != '' else octetvar1 }}"
       ipaddress2: "{{ ipvar2 if ipvar2 != '' else octetvar2 }}"
     vars:
@@ -17,7 +17,7 @@
     register: info
 
   - name: define drrly lists
-    set_fact:
+    ansible.builtin.set_fact:
       drrly_ip1_list: "{{ drrly_ip1_list | default([]) + ipvar1 if (drrly_ip1_list is defined and drrly_ip1_list != '') else ipvar1 }}"
       drrly_ip2_list: "{{ drrly_ip2_list | default([]) + ipvar2 if (drrly_ip2_list is defined and drrly_ip2_list != '') else ipvar2 }}"
     vars:
@@ -31,7 +31,7 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define drsplsrc lists
-    set_fact:
+    ansible.builtin.set_fact:
       drsplsrc_ip1_list: "{{ drsplsrc_ip1_list | default([]) + ipvar1 if (drsplsrc_ip1_list is defined and drsplsrc_ip1_list != '') else ipvar1 }}"
       drsplsrc_ip2_list: "{{ drsplsrc_ip2_list | default([]) + ipvar2 if (drsplsrc_ip2_list is defined and drsplsrc_ip2_list != '') else ipvar2 }}"
     vars:
@@ -45,7 +45,7 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define drem7prt lists
-    set_fact:
+    ansible.builtin.set_fact:
       drem7prt_ip1_list: "{{ drem7prt_ip1_list | default([]) + ipvar1 if (drem7prt_ip1_list is defined and drem7prt_ip1_list != '') else ipvar1 }}"
       drem7prt_ip2_list: "{{ drem7prt_ip2_list | default([]) + ipvar2 if (drem7prt_ip2_list is defined and drem7prt_ip2_list != '') else ipvar2 }}"
     vars:
@@ -59,7 +59,7 @@
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
 
   - name: define drem7mc lists
-    set_fact:
+    ansible.builtin.set_fact:
       drem7mc_ip1_list: "{{ drem7mc_ip1_list | default([]) + ipvar1 if (drem7mc_ip1_list is defined and drem7mc_ip1_list != '') else ipvar1 }}"
       drem7mc_ip2_list: "{{ drem7mc_ip2_list | default([]) + ipvar2 if (drem7mc_ip2_list is defined and drem7mc_ip2_list != '') else ipvar2 }}"
     vars:
@@ -72,5 +72,3 @@
       - groups['drem7mc'] is defined
       - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
   run_once: true
-  tags: ['always', 'vm_facts']
-

@@ -17,4 +17,3 @@
     loop_control:
       loop_var: db_item
   when: inventory_hostname is search('em7db')
-  tags: [ 'drdb_configuration', 'never' ]

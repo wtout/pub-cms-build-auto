@@ -2,7 +2,7 @@
 # tasks to expand the file system
 - block:
   - name: define desired fs sizes
-    set_fact:
+    ansible.builtin.set_fact:
       dss: 8192
       dhs: 2560
 
@@ -50,7 +50,7 @@
     check_mode: no
   - block:
     - name: define swap size increase
-      set_fact:
+      ansible.builtin.set_fact:
         ssi: "{{ dss - swap_size.stdout|int }}"
     - name: expand swap size
       ansible.builtin.shell: |
@@ -72,7 +72,7 @@
     check_mode: no
   - block:
     - name: define home size increase
-      set_fact:
+      ansible.builtin.set_fact:
         hsi: "{{ dhs - home_size.stdout|int }}"
     - name: expand home size
       ansible.builtin.shell: |
@@ -88,4 +88,3 @@
   when:
     - inventory_hostname is search('em7')
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: vm_creation

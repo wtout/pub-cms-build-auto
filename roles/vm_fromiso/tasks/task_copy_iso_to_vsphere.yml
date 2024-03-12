@@ -2,7 +2,7 @@
 # Tasks to copy the ISO file to datastore
 - block:
   - name: check if the installer ISO is on the datastore
-    vsphere_file:
+    community.vmware.vsphere_file:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -16,7 +16,7 @@
     run_once: "{{ true if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else false }}"
   rescue:
   - name: copy installer ISO file to vsphere
-    vsphere_copy:
+    community.vmware.vsphere_copy:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -34,4 +34,3 @@
   environment:
     http_proxy: ''
     https_proxy: ''
-  tags: vm_creation

@@ -2,7 +2,7 @@
 # tasks file for infra_license
 - block:
   - name: Gather VM info
-    vmware_guest_info:
+    community.vmware.vmware_guest_info:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -23,29 +23,6 @@
       ansible_host: "{{ csr_info.instance.ipv4 }}"
       dhcp_address: "{{ csr_info.instance.ipv4 }}"
 
-  - name: Define CSR key
-    ansible.builtin.shell: ssh-keyscan -t rsa {{ netconfig.nic3.ipaddress }}
-    register: reg_ssh_key
-    async: 30
-    poll: 5
-    until: reg_ssh_key.stdout != ''
-    failed_when: reg_ssh_key.stdout == ''
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-  - name: create ~/.ssh directory
-    ansible.builtin.file:
-      path: '~/.ssh'
-      state: directory
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    run_once: yes
-
-  - name: Add CSR key to known_hosts
-    known_hosts:
-      name: "{{ netconfig.nic3.ipaddress }}"
-      key: "{{ reg_ssh_key.stdout }}"
-      state: present
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
   - name: "infra_check_csr_license: check CSR license"
     include_role:
       name: infra_check_csr_license
@@ -53,7 +30,7 @@
       ignore: yes
 
   - name: Define CSR serial number
-    ios_facts:
+    cisco.ios.ios_facts:
       gather_subset: min
   - name: List Licenses directory
     ansible.builtin.shell: "ls {{ auto_dir }}/Packages/licenses"
@@ -75,16 +52,16 @@
       when: curr_exp_date|default('') != ''
     - block:
       - name: enable scp server
-        ios_config:
+        cisco.ios.ios_config:
           lines:
             - ip scp server enable
       - name: Transfer license from Packages to CSR
-        ansible.builtin.shell: "sshpass -p {{ credentials.password }} scp {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.nic3.ipaddress }}:/bootflash:{{ license_file_name }}"
+        ansible.builtin.shell: "sshpass -p {{ credentials.password }} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.nic3.ipaddress }}:/bootflash:{{ license_file_name }}"
         delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
         register: reg_lic_transfer
         until: reg_lic_transfer is succeeded
       - name: install license
-        ios_command:
+        cisco.ios.ios_command:
           commands:
             - command: "license install bootflash:{{ license_file_name }}"
               prompt: '[confirm]'
@@ -95,12 +72,5 @@
         - not is_licensed or (reg_new_lic_exp_date.stdout|to_datetime('%Y-%m-%d') - curr_exp_date|to_datetime('%Y-%m-%d')).days > 0
     when:
       - license_file_name != ''
-  - name: Remove CSR key from known_hosts
-    known_hosts:
-      name: "{{ netconfig.nic3.ipaddress }}"
-      key: "{{ reg_ssh_key.stdout }}"
-      state: absent
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   when: inventory_hostname is search('csr')
   tags: infra_license
-  

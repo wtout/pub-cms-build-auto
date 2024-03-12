@@ -40,6 +40,6 @@
       - "{{ 'crond' if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
     loop_control:
       loop_var: svc_item
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ processes_status|default('') }}"
   tags: sanity

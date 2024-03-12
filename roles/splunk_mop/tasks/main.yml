@@ -2,20 +2,20 @@
 # tasks file for splunk_mop
 - block:
   - name: check VM reachable
-    shell: ping {{ ansible_host }} -c 1
+    ansible.builtin.shell: ping {{ ansible_host }} -c 1
     register: mop_vm_reachable
     ignore_errors: true
     check_mode: no
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
     - name: check VM credentials
-      wait_for_connection:
+      ansible.builtin.wait_for_connection:
         timeout: 3
       register: mop_creds
       ignore_errors: true
       check_mode: no
     - name: update SSH password
-      set_fact:
+      ansible.builtin.set_fact:
         ansible_ssh_pass: "{{ postppp }}"
       no_log: true
       when:

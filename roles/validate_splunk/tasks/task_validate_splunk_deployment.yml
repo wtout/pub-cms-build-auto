@@ -3,7 +3,7 @@
 - block:
   - name: run checklist script
     ansible.builtin.shell: |
-      ./splunk_cli_checklist.sh {{ splvm_type }} {{ SPL_ADMIN_PASS }}
+      ./splunk_cli_checklist.sh {{ splvm_type }} {{ vars[('S' if 'dr' in group_names else 'P') + 'SPL_ADMIN_PASS'] }}
     register: reg_checklist
     args:
       chdir: /opt/qsscripts
@@ -22,4 +22,3 @@
   - ansible.builtin.assert:
       that: splstatus|default([]) == []
       fail_msg: "{{ splstatus|default([]) }}"
-  tags: [ 'validate_splunk', 'never' ]

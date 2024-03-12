@@ -2,7 +2,7 @@
 # Tasks to update ansible.cfg file
 - block:
   - name: remove log file definition from {{ spl_ansible_path }}/ansible.cfg
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: "{{ spl_ansible_path }}/ansible.cfg"
       regex: '^log_path ='
       state: absent
@@ -17,7 +17,7 @@
       regexp: '^(command_warnings = .*)$'
       replace: '#\g<1>'
   - name: replace callback_whitelist with callbacks_enabled
-    replace:
+    ansible.builtin.replace:
       path: "{{ spl_ansible_path }}/ansible.cfg"
       regexp: '^callback_whitelist'
       replace: 'callbacks_enabled'

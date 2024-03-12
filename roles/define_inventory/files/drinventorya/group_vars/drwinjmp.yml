@@ -1,8 +1,8 @@
 ---
 # Variables for winjmp hosts
 credentials:
-  username: "{{ WINJS_USER|default('') }}"
-  password: "{{ WINJS_PASS|default('') }}"
+  username: "{{ SWINJS_USER|default('') }}"
+  password: "{{ SWINJS_PASS|default('') }}"
 
 vm:
   cpu: "{{ drvm_vars.infra.winjmp.cpu }}"

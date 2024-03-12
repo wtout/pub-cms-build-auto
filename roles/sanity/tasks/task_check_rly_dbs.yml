@@ -15,7 +15,7 @@
       ignore_errors: true
       check_mode: no
       no_log: yes
-    - debug:
+    - ansible.builtin.debug:
         msg: "{{ reg_list_dbs|replace(rly_db_pass, 'obfuscated') }}"
     - name: define rly_dbs_status
       ansible.builtin.set_fact:
@@ -46,7 +46,7 @@
         register: reg_syslogrules_count
         check_mode: no
         no_log: yes
-      - debug:
+      - ansible.builtin.debug:
           msg: "{{ reg_syslogrules_count|replace(rly_db_pass, 'obfuscated') }}"
       - name: define rly_syslogrulescount_status
         ansible.builtin.set_fact:

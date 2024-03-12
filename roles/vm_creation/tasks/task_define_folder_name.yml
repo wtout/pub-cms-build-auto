@@ -8,4 +8,3 @@
       that: fldr_name is defined
       success_msg: "{{ 'fldr_name is ' + fldr_name }}"
       fail_msg: 'fldr_name is not defined'
-  tags: vm_creation

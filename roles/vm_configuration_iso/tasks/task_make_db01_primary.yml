@@ -3,20 +3,20 @@
 - block:
   - block:
     - name: check VM reachable
-      shell: ping {{ hostvars[groups['em7db']|first]['ansible_host'] }} -c 1
+      ansible.builtin.shell: ping {{ hostvars[groups['em7db']|first]['ansible_host'] }} -c 1
       register: db01_vm_reachable
       check_mode: no
       ignore_errors: true
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     - block:
       - name: check VM credentials
-        wait_for_connection:
+        ansible.builtin.wait_for_connection:
           timeout: 3
         register: vm_creds
         ignore_errors: true
         check_mode: no
       - name: Update SSH password
-        set_fact:
+        ansible.builtin.set_fact:
           ansible_user: "{{ vm_svc_user }}"
           ansible_ssh_pass: "{{ vm_svc_pass }}"
           ansible_become_pass: "{{ vm_svc_pass }}"
@@ -28,13 +28,13 @@
       delegate_facts: yes
       when: db01_vm_reachable is succeeded
   - name: check if db vip is reachable
-    command: ping {{ vip.db }} -c 1
+    ansible.builtin.command: ping {{ vip.db }} -c 1
     retries: 3
     delay: 5
     register: db_vip_reachable1
     ignore_errors: true
   - name: check if mysql is running on db01
-    command: systemctl status mysql
+    ansible.builtin.command: systemctl status mysql
     register: mysql_service_check
     check_mode: no
     ignore_errors: true
@@ -59,4 +59,3 @@
     - groups['em7db'] is defined
   vars:
     em7_play_hosts_list: "{{ ansible_play_hosts | select('search', 'em7.*') | list }}"
-  tags: vm_configuration

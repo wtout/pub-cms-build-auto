@@ -2,7 +2,7 @@
 # Tasks to check installed RPMs
 - block:
   - name: Load rpm facts 
-    package_facts:
+    ansible.builtin.package_facts:
       manager: "rpm"
     no_log: true
   - name: check relay RPMs

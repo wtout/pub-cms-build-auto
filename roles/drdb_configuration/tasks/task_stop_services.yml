@@ -13,4 +13,3 @@
       - drbdproxy
     loop_control:
       loop_var: service_item      
-  tags: [ 'drdb_configuration', 'never' ]

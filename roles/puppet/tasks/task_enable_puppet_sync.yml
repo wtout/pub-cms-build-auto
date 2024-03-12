@@ -1,9 +1,8 @@
 ---
 # Tasks to enable automatic puppet sync
 - name: enable automatic puppet push
-  shell: /usr/local/bin/puppet resource service puppet ensure=running enable=true
+  ansible.builtin.shell: /usr/local/bin/puppet resource service puppet ensure=running enable=true
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   register: enable_auto_push
   until: enable_auto_push is succeeded
   ignore_errors: true
-  tags: puppet

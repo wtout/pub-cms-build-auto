@@ -9,4 +9,3 @@
       $(which su) splunk -c '/opt/CSCO-CMS/DataExtractor/manageDataExtractorConfigs.sh -o list -s CCMS_Data_Extractor' | grep active_de_instance_ip
     register: reg_active_de_instance
     failed_when: reg_active_de_instance.stdout|split('= ')|last != hostvars[groups['rly']|first]['ansible_host']
-  tags: [ 'post_install_configuration', 'never' ]

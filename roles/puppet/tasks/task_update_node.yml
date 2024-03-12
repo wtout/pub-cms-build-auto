@@ -13,12 +13,12 @@
       - inventory_hostname == host_item
   - block:
     - name: read content of {{ class_name }} file
-      slurp:
+      ansible.builtin.slurp:
         src: "/opt/puppet/qs_scripts/{{ class_name }}"
       register: class_file
       run_once: true
     - name: sort the content of the {{ class_name }} file
-      copy:
+      ansible.builtin.copy:
         content: "{{ (class_file['content'] | b64decode).split('\n') | difference('') | unique | sort | join('\n') }}\n"
         dest: "/opt/puppet/qs_scripts/{{ class_name }}"
         force: true
@@ -28,22 +28,22 @@
       - action_result.changed
       - action == 'add'
   - name: get key token for {{ class_name }}
-    shell: grep '^{{ class_name }}' /opt/puppet/qs_scripts/keys.txt | awk -F '::' '{print $NF}'
+    ansible.builtin.shell: grep '^{{ class_name }}' /opt/puppet/qs_scripts/keys.txt | awk -F '::' '{print $NF}'
     register: class_key
     check_mode: no
     run_once: true
   - name: get list of hostnames from {{ class_name }}
-    shell: cat /opt/puppet/qs_scripts/{{ class_name }}
+    ansible.builtin.shell: cat /opt/puppet/qs_scripts/{{ class_name }}
     register: hostnames_list
     check_mode: no
     run_once: true
   - block:
     - name: Initialize class_hostnames_list
-      set_fact:
+      ansible.builtin.set_fact:
         class_hostnames_list: []
       run_once: true
     - name: define list of class hostnames
-      set_fact:
+      ansible.builtin.set_fact:
         class_hostnames_list: "{{ class_hostnames_list + [mystring] }}"
       vars:
         mystring: '["=",["fact","hostname"],"{{ hostname_item }}"]'
@@ -55,7 +55,7 @@
       run_once: true
       no_log: true
     - name: Update puppet class rules
-      uri:
+      ansible.builtin.uri:
         url: "https://{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}:4433/classifier-api/v1/groups/{{ class_key.stdout }}"
         method: POST
         headers:
@@ -78,4 +78,3 @@
     when:
       - hostnames_list.stdout_lines | length >= 1
   delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
-  tags: puppet

@@ -16,7 +16,7 @@
       loop_var: grp_item
     when: grp_item.name != ''
   - name: Add the users
-    user:
+    ansible.builtin.user:
       name: "{{ user_item.name }}"
       group: "{{ user_item.name }}"
       password: "{{ user_item.password | password_hash('sha512') }}"
@@ -49,4 +49,3 @@
       - customer.version.release[1:]|replace('.', '')|int > 9217
       - user_item != ''
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: vm_configuration

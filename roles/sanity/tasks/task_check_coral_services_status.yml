@@ -9,7 +9,7 @@
       warn: false
     check_mode: no
     no_log: yes
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ reg_docker_ps|replace(ansible_ssh_pass, 'obfuscated') }}"
   - name: define rly_coral_services_status
     ansible.builtin.set_fact:
@@ -62,7 +62,7 @@
         warn: false
       check_mode: no
       no_log: yes
-    - debug:
+    - ansible.builtin.debug:
         msg: "{{ reg_coral_services|replace(ansible_ssh_pass, 'obfuscated') }}"
     - block:
       - name: get the faulty services list

@@ -20,11 +20,10 @@
         when:
           - inventory_hostname is search('spl(dpl01|mas01|src|ind)')
     always:
-      - debug:
+      - ansible.builtin.debug:
           msg: "{{ reg_spl_status }}"
         when: reg_spl_status is failed
   - ansible.builtin.assert:
       that: val_splunk_status|default('') == ''
       fail_msg: "{{ val_splunk_status|default('') }}"
   when: inventory_hostname is search('spl')
-  tags: [ 'validate_splunk', 'never' ]

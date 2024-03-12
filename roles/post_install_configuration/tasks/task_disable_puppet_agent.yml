@@ -8,4 +8,3 @@
   register: reg_disable_agent
   until: reg_disable_agent is succeeded
   ignore_errors: true
-  tags: [ 'post_install_configuration', 'never' ]

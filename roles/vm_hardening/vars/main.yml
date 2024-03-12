@@ -1,4 +1,4 @@
 ---
 # vars file for vm_hardening
-vm_svc_user: "{{ user.name if user.name != '' else (vars[('S' if 'dr' in group_names else 'P') + 'SVC_USER'] if customer.name|lower is search('mdr|stdal') else 'ansible') if credentials.username == 'root' else credentials.username }}"
+vm_svc_user: "{{ user.name if user.name != '' else (vars[('S' if 'dr' in group_names else 'P') + 'VCENTER_SERVICE_USER'] if customer.name|lower is search('mdr|stdal') else 'ansible') if credentials.username == 'root' else credentials.username }}"
 vm_svc_pass: "{{ user.password if user.name != '' else credentials.password }}"

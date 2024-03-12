@@ -2,7 +2,7 @@
 # tasks to update /etc/siteconfig/siloconf.siteconfig on EM7 VM
 - block:
   - name: Update siloconf.siteconfig on VM
-    replace:
+    ansible.builtin.replace:
       path: /etc/siteconfig/siloconf.siteconfig
       regexp: '^({{ task_item.param }}) (.*)$'
       replace: '\g<1> {{ task_item.value }}'
@@ -12,4 +12,3 @@
       loop_var: task_item
   when: inventory_hostname is search('em7')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
-  tags: vm_configuration

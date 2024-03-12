@@ -24,4 +24,3 @@
     notify: restart chrony
   become: "{{ true if ansible_user != 'root' else false }}"
   when: inventory_hostname is search('em7')
-  tags: vm_configuration

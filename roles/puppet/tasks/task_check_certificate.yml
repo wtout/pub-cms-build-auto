@@ -10,4 +10,3 @@
     - include_tasks: task_generate_cert_for_em7.yml
     - include_tasks: task_wait_for_certificate.yml
     when: psc|default({}) is failed
-  tags: puppet

@@ -2,7 +2,7 @@
 # tasks to update yum.conf on VM
 - block:
   - name: update /etc/yum.conf
-    lineinfile:
+    ansible.builtin.lineinfile:
       path: /etc/yum.conf
       regexp: '^proxy=.*'
       state: absent

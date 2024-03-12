@@ -17,7 +17,7 @@
       - /var/log/mysql/mysql.error.log
     loop_control:
       loop_var: fileid
-  - debug:
+  - ansible.builtin.debug:
       msg: "{{ reg_err_status.results|replace(ansible_password, 'obfuscated') }}"
     when: ansible_user != 'root'
 

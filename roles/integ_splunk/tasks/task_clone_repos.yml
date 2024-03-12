@@ -2,7 +2,7 @@
 # Tasks to clone the repos
 - block:
   - name: clone the repos
-    git:
+    ansible.builtin.git:
       repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
       dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
       version: "{{ repo_item.release }}"
@@ -17,7 +17,7 @@
     async: 200
     poll: 10
   - name: clone the repos
-    git:
+    ansible.builtin.git:
       repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
       dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
       version: "{{ repo_item.release }}"

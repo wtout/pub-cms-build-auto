@@ -2,7 +2,7 @@
 # tasks to update /opt/em7/share/config/firewalld.d/80_allow_db_conns.conf on EM7 VM
 - block:
   - name: Update 80_allow_db_conns.conf on VM
-    replace:
+    ansible.builtin.replace:
       path: /opt/em7/share/config/firewalld.d/80_allow_db_conns.conf
       regexp: '^(.*{{ task_item.param }}")[0-9]+[\\.][0-9]+[\\.][0-9]+([\\.][0-9]+.*)$'
       replace: '\g<1>{{ task_item.value }}\g<2>'
@@ -12,4 +12,3 @@
       loop_var: task_item
   when: inventory_hostname is search('em7dc') or inventory_hostname is search('em7mc')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
-  tags: vm_configuration

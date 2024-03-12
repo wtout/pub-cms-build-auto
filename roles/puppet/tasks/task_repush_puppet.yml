@@ -2,7 +2,7 @@
 # Tasks to relaunch puppet push 1
 - block:
   - name: reset SSH password
-    set_fact:
+    ansible.builtin.set_fact:
       ansible_ssh_pass: "{{ preppp }}"
       ansible_become_pass: "{{ preppp }}"
     no_log: true
@@ -11,32 +11,32 @@
       name: vm_configuration_ova
       tasks_from: task_make_db01_primary.yml
   - name: "relaunch puppet push #1"
-    shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
+    ansible.builtin.shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
     register: puppet_agent2
     async: 2700
     poll: 10
     ignore_errors: true
     no_log: true
-  - debug:
+  - ansible.builtin.debug:
       msg:
         - "{{ puppet_agent2.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
     when:
       - puppet_agent2.stdout_lines != []
       - puppet_agent2.stdout_lines|last is search('Applied catalog')
   - name: Update SSH password
-    set_fact:
+    ansible.builtin.set_fact:
       ansible_ssh_pass: "{{ postppp }}"
       ansible_become_pass: "{{ postppp }}"
     no_log: true
   - name: check updated VM credentials
-    wait_for_connection:
+    ansible.builtin.wait_for_connection:
       sleep: 10
       timeout: 10
     register: repush1_status
     ignore_errors: true
   - block:
     - name: reset SSH password
-      set_fact:
+      ansible.builtin.set_fact:
         ansible_ssh_pass: "{{ preppp }}"
         ansible_become_pass: "{{ preppp }}"
       no_log: true
@@ -53,25 +53,25 @@
         name: vm_configuration_ova
         tasks_from: task_make_db01_primary.yml
     - name: "relaunch puppet push #2"
-      shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
+      ansible.builtin.shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
       register: puppet_agent3
       async: 2700
       poll: 10
       ignore_errors: true
       no_log: true
-    - debug:
+    - ansible.builtin.debug:
         msg:
           - "{{ puppet_agent3.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
       when:
         - puppet_agent3.stdout_lines != []
         - puppet_agent3.stdout_lines|last is search('Applied catalog')
     - name: Update SSH password
-      set_fact:
+      ansible.builtin.set_fact:
         ansible_ssh_pass: "{{ postppp }}"
         ansible_become_pass: "{{ postppp }}"
       no_log: true
     - name: check updated VM credentials
-      wait_for_connection:
+      ansible.builtin.wait_for_connection:
         sleep: 10
         timeout: 10
       register: repush2_status
@@ -91,7 +91,7 @@
           name: vm_configuration_ova
           tasks_from: task_make_db01_primary.yml
       - name: "relaunch puppet push #3"
-        shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
+        ansible.builtin.shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
         register: puppet_agent4
         async: 2700
         poll: 10
@@ -104,25 +104,24 @@
           - puppet_agent4.stdout_lines != []
           - puppet_agent4.stdout_lines|last is search('Applied catalog')
       - name: Update SSH password
-        set_fact:
+        ansible.builtin.set_fact:
           ansible_ssh_pass: "{{ postppp }}"
           ansible_become_pass: "{{ postppp }}"
         no_log: true
       - name: check updated VM credentials
-        wait_for_connection:
+        ansible.builtin.wait_for_connection:
           sleep: 10
           timeout: 10
         register: repush3_status
         ignore_errors: true
-      - assert:
+      - ansible.builtin.assert:
           that:
             - repush3_status is succeeded
           fail_msg: "Puppet could not be pushed succesfully on {{ inventory_hostname }}"
       when:
-        - inventory_hostname is not search('em7')
+        - inventory_hostname is not search('em7db') or (groups['em7']|length == 1 and 'em7' not in group_names)
         - repush2_status is failed
     when: repush1_status is failed
   - name: define repush_status
-    set_fact:
+    ansible.builtin.set_fact:
       repush_status: "{{ puppet_agent4 if puppet_agent4 is not skipped else puppet_agent3 if puppet_agent3 is not skipped else puppet_agent2 if puppet_agent2 is not skipped else puppet_agent1 if puppet_agent1 is not skipped else '' }}"
-  tags: puppet

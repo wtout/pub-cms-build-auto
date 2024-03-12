@@ -2,7 +2,7 @@
 # Tasks to define lists of datastores
 - block:
   - name: define list of datastores to host the {{ vm_group }} VMs
-    set_fact:
+    ansible.builtin.set_fact:
       mylist: "{{ mylist|default([]) + [ds_item.name] }}"
     loop: "{{ ds_list }}"
     loop_control:
@@ -15,7 +15,7 @@
       - ds_item.maintenanceMode is search('normal')
 
   - name: check if there is at least 2 datastores to host {{ vm_group }}
-    assert:
+    ansible.builtin.assert:
       that:
         - "mylist|default([])|length >= 2"
       fail_msg: "Not enough storage space to deploy {{ vm_group }} VMs"
@@ -24,7 +24,7 @@
       - ansible_play_hosts|select('search', vm_group)|list|length >= 2
 
   - name: define {{ vm_group }} required space
-    set_fact:
+    ansible.builtin.set_fact:
       vm_required_space: "{{ vm_required_space|default(0)|int + hostvars[task_item]['vm']['disk']|int + hostvars[task_item]['vm']['memory']|int }}"
     loop: "{{ groups[vm_group] }}"
     loop_control:
@@ -32,7 +32,7 @@
     when: task_item in ansible_play_hosts
 
   - name: define {{ vm_group }} datastores free space
-    set_fact:
+    ansible.builtin.set_fact:
       vm_free_space: "{{ vm_free_space|default(0)|int + myvar[0] }}"
     vars:
       myvar: "{{ ds_list|selectattr('name', 'equalto', ds_item)|map(attribute='freeSpace')|list }}"
@@ -40,21 +40,20 @@
     loop_control:
       loop_var: ds_item
 
-  - debug:
+  - ansible.builtin.debug:
       msg:
         - "{{ vm_group }} required storage space: {{ (vm_required_space|float / 1024)|string + ' TiB' if (vm_required_space|int)|string|length > 3 else vm_required_space|string + ' GiB' }}"
         - "{{ vm_group }} available storage space: {{ (vm_free_space|float / 1024|pow(4))|string + ' TiB' if ((vm_free_space|int)|string|length > 12 and (vm_required_space|int)|string|length > 3) else (vm_free_space|float / 1024|pow(3))|string + ' GiB' }}"
 
   - name: check if there is enough space to host {{ vm_group }} VMs
-    assert:
+    ansible.builtin.assert:
       that:
         - "vm_free_space|float / 1023|pow(3) >= vm_required_space|float"
       fail_msg: "Not enough storage space to deploy {{ vm_group }} VMs"
 
   - name: define {{ vm_group + '_ds_names' }}
-    set_fact:
+    ansible.builtin.set_fact:
       "{{ vm_group + '_ds_names' }}" : "{{ mylist }}"
       mylist: []
       vm_required_space: 0
       vm_free_space: 0
-  tags: ['capcheck', 'vm_creation', 'infra_build_nodes']

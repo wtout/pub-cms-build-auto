@@ -2,7 +2,7 @@
 # Tasks to add vm to puppet class
 - block:
   - name: define VM's puppet class names list
-    set_fact:
+    ansible.builtin.set_fact:
       vmtype_class_list: "{{ [class_list1] + [class_list2] + [class_list3] if class_list3 != '' else [class_list1] + [class_list2] }}"
     vars:
       class_list1: "{{ 'EM7QSUtils' if inventory_hostname is search('em7') else 'QSUtils' }}"
@@ -20,4 +20,3 @@
       loop_var: class_item
     when:
       - class_item != ''
-  tags: puppet

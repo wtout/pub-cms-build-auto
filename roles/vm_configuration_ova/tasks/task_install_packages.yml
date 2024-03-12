@@ -2,7 +2,7 @@
 # tasks to install packages and upgrade kernel on non-EM7 VM
 - block:
   - name: install packages and upgrade kernel
-    yum:
+    ansible.builtin.yum:
       name: "{{ pkg_item.name }}"
       state: "{{ pkg_item.state }}"
     loop:
@@ -20,11 +20,11 @@
 
   - block:
     - name: create /root/bin directory
-      file:
+      ansible.builtin.file:
         path: /root/bin
         state: directory
     - name: install nfs-utils
-      yum:
+      ansible.builtin.yum:
         name: nfs-utils
         state: installed
       notify: start nfs
@@ -40,4 +40,3 @@
   become: "{{ true if inventory_hostname is search('em7') else false }}"
   when:
     - inventory_hostname is not search('em7')
-  tags: vm_configuration

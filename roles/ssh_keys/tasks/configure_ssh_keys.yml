@@ -3,5 +3,3 @@
 - block:
   - include_tasks: task_generate_ssh_keys.yml
   - include_tasks: task_deploy_ssh_keys.yml
-  tags: ssh_keys
-

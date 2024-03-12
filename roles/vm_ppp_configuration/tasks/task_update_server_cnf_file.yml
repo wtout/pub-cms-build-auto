@@ -1,7 +1,7 @@
 ---
 # tasks to update /etc/my.cnf.d/server.cnf on relay
 - name: Update server.cnf on relay
-  replace:
+  ansible.builtin.replace:
     path: /etc/my.cnf.d/server.cnf
     regexp: '^({{ task_item.param }})(.*)$'
     replace: '\g<1>{{ task_item.value }}'
@@ -10,4 +10,3 @@
   loop_control:
     loop_var: task_item
   become: "{{ true if inventory_hostname is search('em7') else false }}"
-  tags: vm_ppp_configuration

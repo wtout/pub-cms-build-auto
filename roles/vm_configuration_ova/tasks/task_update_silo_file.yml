@@ -2,7 +2,7 @@
 # tasks to update /etc/silo.conf on EM7 VM
 - block:
   - name: Update silo.conf on VM
-    replace:
+    ansible.builtin.replace:
       path: /etc/silo.conf
       regexp: '^({{ task_item.param }}) (.*)$'
       replace: '\g<1> {{ task_item.value }}'
@@ -17,4 +17,3 @@
       - task_item.value != ''
   when: inventory_hostname is search('em7')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
-  tags: vm_configuration

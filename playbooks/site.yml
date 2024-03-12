@@ -63,8 +63,8 @@
         tags: [ 'infra_check_csr_license', 'vm_creation' ]
       when: deploy | default(false) | bool
 
-# Play to create the VMs
-- name: Deploy VMs
+# Play to create the VMs from ISO
+- name: Deploy VMs from ISO
   hosts: all
   strategy: free
   gather_facts: no
@@ -79,6 +79,15 @@
           name: vm_hardening
         when: harden_vms | default(false) | bool
         tags: vm_hardening
+      when: deploy | default(false) | bool
+
+# Play to create the VMs from OVA
+- name: Deploy VMs from OVA
+  hosts: all
+  gather_facts: no
+
+  tasks:
+    - block:
       - include_role:
           name: vm_creation
         when: create_vms_ova | default(false) | bool

@@ -2,21 +2,22 @@
 # tasks file for vm_ppp_configuration
 - block:
   - name: check VM reachable
-    shell: ping {{ ansible_host }} -c 1
+    ansible.builtin.shell: ping {{ ansible_host }} -c 1
     register: vpco_vm_reachable
     ignore_errors: true
     check_mode: no
+    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
     - block:
       - name: check VM credentials
-        wait_for_connection:
+        ansible.builtin.wait_for_connection:
           timeout: 3
         register: vpco_vm_creds
         ignore_errors: true
         check_mode: no
       - name: Update SSH password
-        set_fact:
+        ansible.builtin.set_fact:
           ansible_ssh_pass: "{{ postppp }}"
           ansible_become_pass: "{{ postppp }}"
         no_log: true

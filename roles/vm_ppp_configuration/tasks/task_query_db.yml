@@ -2,17 +2,17 @@
 # tasks to query db on relay
 - block:
   - name: check cluster size on relay
-    shell: mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
+    ansible.builtin.shell: mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
     register: query_db1
     failed_when: query_db1.stdout|int < 3
 
   - block:
     - name: check if puppet agent test is already running
-      stat:
+      ansible.builtin.stat:
         path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
       register: ppr3
     - name: Wait for puppet push to finish
-      wait_for:
+      ansible.builtin.wait_for:
         path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
         state: absent
         timeout: 1800
@@ -28,8 +28,7 @@
       loop_control:
         loop_var: svc_item
     - name: recheck cluster size on relay
-      shell: mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
+      ansible.builtin.shell: mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
       register: query_db2
       failed_when: query_db2.stdout|int != 3
     when: query_db1.stdout|int > 3
-  tags: vm_ppp_configuration

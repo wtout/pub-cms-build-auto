@@ -1,8 +1,8 @@
 ---
 # Variables for ata relay hosts
 credentials:
-  username: "{{ NONEM7_USER|default('') }}"
-  password: "{{ NONEM7_PASS|default('') }}"
+  username: "{{ PLINUX_SUPERUSER_USER|default('') }}"
+  password: "{{ PLINUX_SUPERUSER_PASS|default('') }}"
 
 user:
   name: "{{ vm_vars.atarly.user.name if vm_vars.atarly.user.name is defined else '' }}"

@@ -2,12 +2,12 @@
 # Tasks to copy the ISO file to datastore
 - block:
   - name: define iso_datastore and iso_path
-    set_fact:
+    ansible.builtin.set_fact:
       iso_datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}"
       iso_path: "ISO{{ '/' + hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else '' }}"
 
   - name: create a directory on the datastore
-    vsphere_file:
+    community.vmware.vsphere_file:
       hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
       username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
       password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -22,7 +22,7 @@
   - block:
     - include_tasks: task_poweroff_vm.yml
     - name: copy kickstart ISO file to vsphere
-      vsphere_copy:
+      community.vmware.vsphere_copy:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
         username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
@@ -38,4 +38,3 @@
   environment:
     http_proxy: ''
     https_proxy: ''
-  tags: vm_creation

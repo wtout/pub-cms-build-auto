@@ -32,4 +32,3 @@
   - include_tasks: task_query_db.yml
   - include_tasks: task_update_common_properties_file.yml
   when: inventory_hostname is search('rly')
-  tags: vm_ppp_configuration

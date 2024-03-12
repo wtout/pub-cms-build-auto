@@ -2,16 +2,17 @@
 # tasks file for roles/sanity
 - block:
   - name: check VM reachable
-    shell: ping {{ ansible_host }} -c 1
+    ansible.builtin.shell: ping {{ ansible_host }} -c 1
     register: sc_vm_reachable
     check_mode: no
     ignore_errors: true
     until: sc_vm_reachable is succeeded
     delay: 10
+    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
     - name: check VM credentials
-      wait_for_connection:
+      ansible.builtin.wait_for_connection:
         timeout: 3
       register: sc_vm_creds1
       ignore_errors: true
@@ -20,12 +21,12 @@
       - name: Check updated credentials
         block:
           - name: Update SSH credentials
-            set_fact:
+            ansible.builtin.set_fact:
               ansible_ssh_pass: "{{ postppp }}"
               ansible_become_pass: "{{ postppp }}"
             no_log: true
           - name: check updated VM credentials
-            wait_for_connection:
+            ansible.builtin.wait_for_connection:
               timeout: 3
             register: sc_vm_creds2
             check_mode: no
@@ -33,13 +34,13 @@
           - name: Check {{ vm_svc_user }} credentials
             block:
               - name: switch to {{ vm_svc_user }} user
-                set_fact:
+                ansible.builtin.set_fact:
                   ansible_user: "{{ vm_svc_user }}"
                   ansible_ssh_pass: "{{ vm_svc_pass }}"
                   ansible_become_pass: "{{ vm_svc_pass }}"
                 no_log: true
               - name: check updated VM credentials
-                wait_for_connection:
+                ansible.builtin.wait_for_connection:
                   timeout: 3
                 register: sc_vm_creds3
                 check_mode: no

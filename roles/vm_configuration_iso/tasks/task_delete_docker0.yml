@@ -36,4 +36,3 @@
         when: int_delete is succeeded
   become: "{{ true if ansible_user != 'root' else false }}"
   when: delete_docker0
-  tags: vm_configuration

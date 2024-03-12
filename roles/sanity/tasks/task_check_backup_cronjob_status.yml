@@ -2,7 +2,7 @@
 # Tasks to check the cronjobs
 - block:
   - name: check if cms_backup rpm is installed
-    shell: $(which rpm) -qa | grep -i cms-backup
+    ansible.builtin.shell: $(which rpm) -qa | grep -i cms-backup
     register: reg_bk_rpm
     check_mode: no
     ignore_errors: yes
@@ -16,7 +16,7 @@
         args:
           warn: false
         check_mode: no
-      - set_fact:
+      - ansible.builtin.set_fact:
           reg_bk_cronjob: "{{ reg_bk_cronjob1 }}"
       when: curver is version('2.0', '=')
     - block:
@@ -28,10 +28,10 @@
         args:
           warn: false
         check_mode: no
-      - set_fact:
+      - ansible.builtin.set_fact:
           reg_bk_cronjob: "{{ reg_bk_cronjob2 }}"
       when: curver is version('2.0', '>')
-    - debug:
+    - ansible.builtin.debug:
         msg: "{{ reg_bk_cronjob|replace(ansible_ssh_pass, 'obfuscated') }}"
       when: ansible_user != 'root'
     - name: define rly_backup_cronjob_status

@@ -2,7 +2,7 @@
 # Tasks to check indexers cluster status
 - block:
   - name: get splunk admin creds from vault
-    shell: |
+    ansible.builtin.shell: |
       (head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault view default_core_passwords.yml --vault-password-file vault-password-file || cat default_core_passwords.yml) | sed -n '/splunk:/,/proxy/p' | grep -E 'user|password' | awk -F ': ' '{print $NF}'
     args:
       chdir: "{{ spl_ansible_path }}"
@@ -10,7 +10,7 @@
     check_mode: no
     no_log: yes
     delegate_to: localhost
-  - assert:
+  - ansible.builtin.assert:
       that:
         - reg_spl_admin_creds.stdout_lines|first != ''
         - reg_spl_admin_creds.stdout_lines|last != ''

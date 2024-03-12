@@ -67,6 +67,7 @@
         loop: "{{ primary_db_list|default(groups['em7'] if groups['em7']|length == 1 else []) }}"
         loop_control:
           loop_var: db_item
+    when: inventory_hostname is search('em7db') or groups['em7']|length == 1
   - ansible.builtin.assert:
       that:
         - msg_item is search('Appliance is licensed')
@@ -78,4 +79,3 @@
   vars:
     db_list: "{{ ansible_play_hosts|select('search', 'em7db') if groups['em7']|length > 1 else ansible_play_hosts|select('search', 'em7') }}"
   run_once: yes
-  tags: puppet

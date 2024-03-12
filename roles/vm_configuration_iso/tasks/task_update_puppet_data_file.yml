@@ -35,7 +35,7 @@
 
   - block:
     - name: define location to store HA files on DR lnxjmp
-      set_fact:
+      ansible.builtin.set_fact:
         hafiles_storage: '/opt/HAfiles'
     - name: create directory to store HA files on DR lnxjmp
       ansible.builtin.file:
@@ -67,4 +67,3 @@
     run_once: true
   vars:
     hosts_in_play: "{{ ansible_play_hosts | reject('search', 'bastion|vcenter|puppet|nexus') }}"
-  tags: vm_configuration

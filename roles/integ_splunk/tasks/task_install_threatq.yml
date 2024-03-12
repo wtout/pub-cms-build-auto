@@ -20,7 +20,7 @@
   - include_tasks: task_get_creds_from_keeper.yml
   - include_tasks: task_update_variables_files.yml
   - name: Deploy the indexer changes
-    shell: |
+    ansible.builtin.shell: |
       ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
@@ -29,7 +29,7 @@
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Build the SVCs Forwarder
-    shell: |
+    ansible.builtin.shell: |
       ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
@@ -38,7 +38,7 @@
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Deploy the SVCs Changes
-    shell: |
+    ansible.builtin.shell: |
       ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
@@ -47,7 +47,7 @@
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Deploy the SHC Changes
-    shell: |
+    ansible.builtin.shell: |
       ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
@@ -56,7 +56,7 @@
     args:
       chdir: "{{ spl_ansible_path }}"
   - name: Deploy the Phantom Changes
-    shell: |
+    ansible.builtin.shell: |
       ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME

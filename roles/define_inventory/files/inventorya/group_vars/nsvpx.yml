@@ -1,9 +1,9 @@
 ---
 # Variables for netscaler hosts
 credentials:
-  username: "{{ NSVPX_USER|default('') }}"
-  default_password: "{{ DEFAULT_NSVPX_PASS|default('') }}"
-  password: "{{ NSVPX_PASS|default('') }}"
+  username: "{{ PNSVPX_USER|default('') }}"
+  default_password: "{{ PDEFAULT_NSVPX_PASS|default('') }}"
+  password: "{{ PNSVPX_PASS|default('') }}"
 
 vm:
   cpu: "{{ vm_vars.infra.nsvpx.cpu }}"

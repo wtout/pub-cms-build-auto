@@ -2,6 +2,7 @@
 auto_dir: "{{ lookup('env', 'PWD') }}"
 invoker: "{{ lookup('env', 'MYINVOKER') }}"
 proxy_address: "{{ lookup('env', 'MYPROXY') }}"
+host_os: "{{ lookup('env', 'MYHOSTOS') }}"
 ##########################################
 # Do not modify anything below this line
 ##########################################

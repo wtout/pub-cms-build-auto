@@ -4,7 +4,7 @@
   - name: Checking sync status
     block:
       - name: Check sync status 1
-        shell: grep 'ds:' /proc/drbd
+        ansible.builtin.shell: grep 'ds:' /proc/drbd
         register: reg_sync_status1
         failed_when: reg_sync_status1.stdout is not search('UpToDate/UpToDate')
         check_mode: no
@@ -16,6 +16,9 @@
       - name: Reset the sync rate
         ansible.builtin.shell: /sbin/drbdadm adjust all
     rescue:
+      - include_role:
+          name: vm_configuration_iso
+          tasks_from: task_increase_sync_rate.yml
       - name: get the sync complete delay
         ansible.builtin.shell: grep 'finish:' /proc/drbd
         register: reg_sync_delay
@@ -29,7 +32,7 @@
       - name: Checking sync status 2
         block:
           - name: Check sync status 2
-            shell: grep 'ds:' /proc/drbd
+            ansible.builtin.shell: grep 'ds:' /proc/drbd
             register: reg_sync_status2
             failed_when: reg_sync_status2.stdout is not search('UpToDate/UpToDate')
             until: reg_sync_status2 is succeeded
@@ -53,4 +56,3 @@
           that: sync_status == 'UpToDate'    
   when: "'em7db' in group_names"
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: puppet

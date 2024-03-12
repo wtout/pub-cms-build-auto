@@ -2,7 +2,7 @@
 # tasks to define vm ips
 - block:
   - name: define ansible_host for HA DBs
-    set_fact:
+    ansible.builtin.set_fact:
       ansible_host: "{{ em7db_ip1_list[db_item[-2:]|int - 1] }}"
     delegate_to: "{{ db_item }}"
     delegate_facts: yes
@@ -15,7 +15,7 @@
       - ansible_play_hosts | select('regex','em7db0[1-2]') | length < 2
     run_once: true
   - name: define ansible_host for DR DB
-    set_fact:
+    ansible.builtin.set_fact:
       ansible_host: "{{ drem7db_ip1_list[db_item[-2:]|int - 1] }}"
     delegate_to: "{{ db_item }}"
     delegate_facts: yes
@@ -30,7 +30,7 @@
     run_once: true
 
   - name: define IP addresses
-    set_fact:
+    ansible.builtin.set_fact:
       ipaddress1: "{{ netconfig.nic1.ippool[index|int - 1] if netconfig.nic1.ippool != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic1.octetpool[index|int - 1]|string if (netconfig.nic1.octetpool != [] and index|int <= netconfig.nic1.octetpool|length) else '' }}"
       ipaddress2: "{{ netconfig.nic2.ippool[index|int - 1] if netconfig.nic2.ippool != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic2.octetpool[index|int - 1]|string if (netconfig.nic2.octetpool != [] and index|int <= netconfig.nic2.octetpool|length) else '' }}"
       ipaddress3: "{{ netconfig.nic3.ippool[index|int - 1] if (netconfig.nic3.ippool is defined and netconfig.nic3.ippool != []) else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic3.octetpool[index|int - 1]|string if ((netconfig.nic3.octetpool is defined and netconfig.nic3.octetpool != []) and index|int <= netconfig.nic3.octetpool|length) else '' }}"
@@ -40,11 +40,11 @@
       index: "{{ inventory_hostname[-2:] }}"
 
   - name: define ansible_host
-    set_fact:
+    ansible.builtin.set_fact:
       ansible_host: "{{ ipaddress3 if inventory_hostname is search('csr') else ipaddress1 }}"
 
   - name: update netconfig with IP addresses
-    set_fact:
+    ansible.builtin.set_fact:
       netconfig: "{{ netconfig|default({}) | combine(new_item, recursive=true) }}"
     vars:
       new_item: "{'{{ task_item.interface }}': {'{{ task_item.key }}': '{{ task_item.value }}'}}"
@@ -58,4 +58,3 @@
     loop_control:
       loop_var: task_item
     no_log: true
-  tags: ['always', 'vm_facts']

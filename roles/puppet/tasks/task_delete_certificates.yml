@@ -2,43 +2,43 @@
 # Tasks to delete the puppet certificate
 - block:
   - name: check if there is a cert on the VM
-    stat:
+    ansible.builtin.stat:
       path: "{{ '~/.puppetlabs/etc/puppet/ssl/certs/ca' if inventory_hostname is search('em7') else '/etc/puppetlabs/puppet/ssl/certs/' + vm.name + '.' + (sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name) }}.pem"
     register: client_cert_status
-  - debug:
+  - ansible.builtin.debug:
       msg: "Found no client certificate on {{ inventory_hostname }}"
     when: not client_cert_status.stat.exists
 
   - block:
     - name: check if puppet server is reachable
-      wait_for_connection:
+      ansible.builtin.wait_for_connection:
         timeout: 3
       run_once: true
     - name: get list of certificates on puppet server
-      shell: >
+      ansible.builtin.shell: >
         puppet cert list --all | grep -E '{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}' || echo 'Found no certificate'
       become: true
       ignore_errors: true
       register: certs_on_server
       delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
       run_once: true
-    - debug:
+    - ansible.builtin.debug:
         msg:
           - "{{ certs_on_server.stdout_lines }}"
       run_once: true
     - name: check if certificate exists on puppet server
-      set_fact:
-        client_cert_on_server: "{{ ((certs_on_server.stdout_lines|default([]) | select('search', host_cert_name) | list | join).split('(') | last).split(') ') }}"
+      ansible.builtin.set_fact:
+        client_cert_on_server: "{{ ((certs_on_server.stdout_lines|default([]) | select('search', '\"' + host_cert_name) | list | join).split('(') | last).split(') ') }}"
     check_mode: no
     delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
 
-  - debug:
+  - ansible.builtin.debug:
       msg: "Found no client certificate for {{ inventory_hostname }} on puppet server"
     when:
       - client_cert_on_server == ['']
 
   - name: check if client cert fingerprint matches cert on server
-    shell: openssl x509 -text -noout -{{ client_cert_on_server[0] }} -fingerprint -in {{ (ansible_user + '.' if inventory_hostname is search('em7') else '') + vm.name + '.' + (sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name) }}.pem | tail -1 | cut -d '=' -f2 | grep {{ client_cert_on_server[1] }}
+    ansible.builtin.shell: openssl x509 -text -noout -{{ client_cert_on_server[0] }} -fingerprint -in {{ (ansible_user + '.' if inventory_hostname is search('em7') else '') + vm.name + '.' + (sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name) }}.pem | tail -1 | cut -d '=' -f2 | grep {{ client_cert_on_server[1] }}
     args:
       chdir: "{{ '~/.puppetlabs/etc/puppet/ssl/certs' if inventory_hostname is search('em7') else '/etc/puppetlabs/puppet/ssl/certs' }}"
     register: client_cert_match
@@ -49,13 +49,13 @@
       - client_cert_on_server != ['']
 
   - name: define delete client cert on puppet server
-    set_fact:
+    ansible.builtin.set_fact:
       delete_client_cert_on_server: true
     when:
       - client_cert_on_server != [''] and (not client_cert_status.stat.exists or client_cert_match is failed)
 
   - name: define delete client cert on VM
-    set_fact:
+    ansible.builtin.set_fact:
       delete_client_cert_on_vm: true
     when:
       - (client_cert_status.stat.exists and (client_cert_on_server == [''] or client_cert_match is failed)) or not client_cert_status.stat.exists
@@ -63,19 +63,19 @@
   - name: delete the certificate on the VM
     block:
     - name: delete ssl directory on VM
-      file:
+      ansible.builtin.file:
         path: '~/.puppetlabs/etc/puppet/ssl'
         state: absent
       when:
         - inventory_hostname is search('em7')
     - name: delete puppetlabs directory on VM
-      file:
+      ansible.builtin.file:
         path: '/etc/puppetlabs'
         state: absent
       when:
         - inventory_hostname is not search('em7')
     - name: uninstall puppet agent on VM
-      yum:
+      ansible.builtin.yum:
         name: puppet-agent
         state: absent
       register: uninstall_status
@@ -86,17 +86,5 @@
     when:
       - delete_client_cert_on_vm | default(false) | bool
 
-  - name: delete the VM certificate on puppet server
-    shell: >
-      puppet cert clean {{ host_cert_name }}
-    args:
-      chdir: '/usr/local/bin'
-    become: true
-    ignore_errors: true
-    register: del_vm_cert
-    delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
-    until: del_vm_cert is succeeded
-    retries: 5
-    delay: 10
+  - include_tasks: task_delete_certificate_on_server.yml
     when: delete_client_cert_on_server | default(false) | bool
-  tags: puppet

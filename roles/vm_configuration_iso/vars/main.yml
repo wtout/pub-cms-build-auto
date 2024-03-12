@@ -5,5 +5,5 @@ syslog_path: '/var/log'
 sys_msgs: "{{ syslog_path }}/messages"
 LOCAL_SSH_DIR: "~/.ssh"
 SSH_KEY_FILE: "id_rsa"
-vm_svc_user: "{{ user.name if user.name != '' else (vars[('S' if 'dr' in group_names else 'P') + 'SVC_USER'] if customer.name|lower is search('mdr') else 'ansible') if credentials.username == 'root' else credentials.username }}"
+vm_svc_user: "{{ user.name if user.name != '' else (vars[('S' if 'dr' in group_names else 'P') + 'VCENTER_SERVICE_USER'] if customer.name|lower is search('mdr') else 'ansible') if credentials.username == 'root' else credentials.username }}"
 vm_svc_pass: "{{ user.password if user.name != '' else credentials.password }}"

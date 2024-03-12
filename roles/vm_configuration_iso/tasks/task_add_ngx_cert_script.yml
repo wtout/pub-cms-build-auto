@@ -20,4 +20,3 @@
   vars:
     fpath: '/opt/em7/share/ssl'
     fname: 'generate-ngx-cert.sh'
-  tags: vm_configuration

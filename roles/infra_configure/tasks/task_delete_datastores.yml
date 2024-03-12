@@ -2,7 +2,7 @@
 # tasks file to delete datastores
 - block:
   - name: Get VM info
-    vmware_vm_info:
+    community.vmware.vmware_vm_info:
       hostname: "{{ resource }}"
       username: "{{ information.hostuser }}"
       password: "{{ information.hostpass }}"
@@ -11,7 +11,7 @@
     check_mode: no
     register: reg_vm_info
   - name: define vm names list
-    set_fact:
+    ansible.builtin.set_fact:
       host_vm_names: "{{ reg_vm_info.virtual_machines|map(attribute='guest_name')|list }}"
   - block:
     - name: Delete vCLS VM
@@ -25,14 +25,14 @@
         validate_certs: no
       when: reg_vm_info.virtual_machines|map(attribute='guest_name')|select('search', 'vCLS-')|list|length > 0
     - name: Define existing datastores on {{ resource }}
-      vmware_datastore_info:
+      community.vmware.vmware_datastore_info:
         hostname: "{{ resource }}"
         username: "{{ information.hostuser }}"
         password: "{{ information.hostpass }}"
         validate_certs: no
       register: detected_datastores
     - name: Unmount datastore on {{ resource }}
-      vmware_host_datastore:
+      community.vmware.vmware_host_datastore:
         hostname: "{{ resource }}"
         username: "{{ information.hostuser }}"
         password: "{{ information.hostpass }}"
@@ -47,7 +47,7 @@
       when:
         - detected_datastores.datastores != []
         - datastore_item is search(customer.primary.name_prefix) or (datastore_item is search(customer.secondary.name_prefix) if customer.disaster_recovery)
-        - datastore_item.name is search('ssd')
+        - datastore_item.name is search('ssd|raid')
     - include_tasks:
         file: task_delete_files.yml
         apply:
@@ -77,7 +77,6 @@
       when:
         - detected_datastores.datastores != []
         - datastore_item is search(customer.primary.name_prefix) or (datastore_item is search(customer.secondary.name_prefix) if customer.disaster_recovery)
-        - datastore_item.name is search('sas')
+        - datastore_item.name is search('sas|ata-donotuse')
     when: reg_vm_info.virtual_machines|map(attribute='guest_name')|reject('search', 'vCLS-')|list|length == 0
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]

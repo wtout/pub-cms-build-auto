@@ -8,6 +8,6 @@ keeper_token_path: '~/certificates'
 spl_wd: "{{ auto_dir }}/imp_auto/splunk_install"
 spl_ansible_path: "{{ spl_wd + '/dev/' + mdr_automation_reponame + '/splunk-ansible' }}"
 spl_inventory_path: "{{ spl_ansible_path + '/environments/' + customer.env_identifier }}"
-vm_svc_user: "{{ user.name if user.name != '' else vars[('S' if 'dr' in group_names else 'P') + 'SVC_USER'] if credentials.username == 'root' else credentials.username }}"
+vm_svc_user: "{{ user.name if user.name != '' else vars[('S' if 'dr' in group_names else 'P') + 'VCENTER_SERVICE_USER'] if credentials.username == 'root' else credentials.username }}"
 vm_svc_pass: "{{ user.password if user.name != '' else credentials.password }}"
 spl_rpm_url: "https://engci-maven.cisco.com/artifactory/MDR-yum/splunk/splunk-7.3.4-13e97039fb65-linux-2.6-x86_64.rpm"

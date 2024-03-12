@@ -2,7 +2,7 @@
 # Tasks to install Splunk on hosts
 - block:
   - name: Deploy Splunk headend (core)
-    shell: |
+    ansible.builtin.shell: |
       ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
       DEPLOY_HOME={{ spl_wd }}
       export ANSIBLE_LOG_PATH DEPLOY_HOME
@@ -21,7 +21,7 @@
       ignore_errors: yes
       check_mode: no
     - name: Deploy Splunk heavy forwarder (customer)
-      shell: |
+      ansible.builtin.shell: |
         ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
         DEPLOY_HOME={{ spl_wd }}
         export ANSIBLE_LOG_PATH DEPLOY_HOME
@@ -31,13 +31,13 @@
         chdir: "{{ spl_ansible_path }}"
       when:
         - reg_deployed_customer is failed
-    - debug:
+    - ansible.builtin.debug:
         msg: "Splunk has already been deployed on {{ vm.name }}"
       when: reg_deployed_customer is succeeded
     when:
       - inventory_hostname is search('splfwd')
   - name: define delete_proxy
-    set_fact:
+    ansible.builtin.set_fact:
       delete_proxy: "{{ he_install is succeeded or cu_install is succeeded }}"
   delegate_to: localhost
   run_once: true

@@ -15,4 +15,3 @@
     loop_control:
       loop_var: sysctl_item
   when: inventory_hostname is search('em7mc')
-  tags: vm_configuration
