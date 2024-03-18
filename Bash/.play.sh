@@ -601,7 +601,7 @@ function check_updates() {
 						[[ ${?} != 0 ]] && echo -e "\nThe installation package update has failed with the following error:\n\n${BOLD}$(cat "${PWD}"/.pullerr)${NORMAL}\n\n" && EC='exit'
 						rm -f "${PWD}"/.pullerr
 					else
-						EC='continue'
+						EC=':'
 					fi
 				fi
 				${EC}
@@ -813,6 +813,7 @@ check_container && stop_container
 image_prune
 start_container
 [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+chmod 644 "${PASSVAULT}"
 PCREDS_LIST=$(get_creds primary)
 SCREDS_LIST=$(get_creds secondary)
 PROXY_ADDRESS=$(get_proxy) || PA=${?}

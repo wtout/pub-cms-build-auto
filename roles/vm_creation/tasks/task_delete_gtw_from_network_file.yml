@@ -10,9 +10,9 @@
         folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
         validate_certs: false
         name: "{{ vm.name }}"
-    - name: Pause for {{ 30 if deploy_ovf is changed else 60 }} seconds to ensure VM finished booting
+    - name: "Pause for {{ 30 if deploy_ovf|default({'changed': false}) is changed else 60 }} seconds to ensure VM finished booting"
       ansible.builtin.wait_for:
-        timeout: "{{ 30 if deploy_ovf is changed else 60 }}"
+        timeout: "{{ 30 if deploy_ovf|default({'changed': false}) is changed else 60 }}"
     - name: delete gateway from network file on the EM7 VM
       community.vmware.vmware_vm_shell:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"

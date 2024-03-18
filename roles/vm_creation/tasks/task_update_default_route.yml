@@ -12,7 +12,7 @@
   - name: Pause for 60 seconds to ensure VM finished booting
     ansible.builtin.wait_for:
       timeout: 60
-    when: deploy_ovf is not changed
+    when: "deploy_ovf|default({'changed': false}) is not changed"
   - name: copy default route file locally
     ansible.builtin.template:
       src: "templates/{{ customer.version.release[1:4].split('.')|join }}-{{ 'dr' if 'dr' in group_names else '' }}route-ens160.tmpl"

@@ -15,7 +15,7 @@
       ansible.builtin.wait_for_connection:
         timeout: 60
       when:
-        - deploy_ovf is not changed
+        - "deploy_ovf|default({'changed': false}) is not changed"
     when:
       - netconfig.nic1.gateway != ''
 
