@@ -1,4 +1,4 @@
 #! /bin/bash
-# Usage sh Bash/play_rollback.sh
+# Usage bash Bash/play_rollback.sh
 
-source Bash/.play.sh
+source $(dirname "${0}")/.plays.sh
