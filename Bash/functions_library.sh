@@ -174,7 +174,7 @@ function image_prune() {
 	local IIDLIST
 	CIID=$($(docker_cmd) images | grep -E "${CONTAINERREPO}.*${ANSIBLE_VERSION}" | awk '{print $3}')
 	[[ "${CIID}" == "" ]] && IIDLIST=$($(docker_cmd) images -a -q) || IIDLIST=$($(docker_cmd) images -a -q | grep -v ${CIID})
-	[[ "${IIDLIST}" != "" ]] && $(docker_cmd) rmi ${IIDLIST}
+	[[ "${IIDLIST}" != "" ]] && $(docker_cmd) rmi ${IIDLIST} -f
 }
 
 function check_image() {
