@@ -49,4 +49,3 @@
     when: inventory_hostname is search('splfwd')
   run_once: true
   delegate_to: localhost
-  tags: integ_splunk

@@ -101,5 +101,4 @@
       loop_var: line_item
   delegate_to: localhost
   run_once: true
-  tags: integ_splunk
   

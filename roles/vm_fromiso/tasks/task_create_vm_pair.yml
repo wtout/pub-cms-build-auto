@@ -10,7 +10,7 @@
         task_create_configure_vms.yml
       apply:
         vars:
-          - pair_num: "{{ seq_item }}"
+          pair_num: "{{ seq_item }}"
     loop: "{{ vm_seq }}"
     loop_control:
       loop_var: seq_item

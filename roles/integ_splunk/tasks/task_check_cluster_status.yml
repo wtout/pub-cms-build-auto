@@ -25,4 +25,3 @@
     delegate_to: "{{ groups['splmas']|first }}"
   when: inventory_hostname is not search('splfwd')
   run_once: true
-  tags: integ_splunk

@@ -15,7 +15,7 @@
   - block:
     - name: check access to keeper
       ansible.builtin.shell: |
-         sh keeper_control.sh --host={{ keeper_host }} --list_customers --cert={{ file_item.path }}
+         timeout 30 sh keeper_control.sh --host={{ keeper_host }} --list_customers --cert={{ file_item.path }}
       loop: "{{ reg_token.files }}"
       loop_control:
         loop_var: file_item
@@ -27,7 +27,7 @@
       no_log: true
     - name: define list of valid tokens
       ansible.builtin.set_fact:
-        valid_token_list: "{{ valid_token_list|default([]) + [loop_item.file_item.path] if loop_item.stdout is not search('error validating token') else valid_token_list|default([]) }}"
+        valid_token_list: "{{ valid_token_list|default([]) + [loop_item.file_item.path] if loop_item.stdout is not search('error validating token|Connection refused') and loop_item.stderr is not search('Traceback') and loop_item.rc == 0 else valid_token_list|default([]) }}"
       loop: "{{ reg_keeper_access.results }}"
       loop_control:
         loop_var: loop_item
@@ -41,7 +41,3 @@
     when: reg_token.matched >= 1
   delegate_to: localhost
   run_once: true
-  environment:
-    http_proxy: "{{ proxy_address|default('') }}"
-    https_proxy: "{{ proxy_address|default('') }}"
-  tags: integ_splunk

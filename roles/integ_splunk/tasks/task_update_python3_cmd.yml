@@ -16,5 +16,5 @@
     loop_control:
       loop_var: file_item
   delegate_to: localhost
+  become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
   run_once: true
-  tags: integ_splunk

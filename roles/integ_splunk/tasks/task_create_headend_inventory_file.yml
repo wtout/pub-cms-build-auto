@@ -45,4 +45,3 @@
       - { name: "templates/{{ tmpl_name }}", dest: "{{ tmpl_dest }}/{{ he_inv_file_name }}" }
     loop_control:
       loop_var: tmpl_item
-  tags: integ_splunk

@@ -69,4 +69,3 @@
     - inventory_hostname is not search('splfwd')
   delegate_to: localhost
   run_once:  yes
-  tags: integ_splunk

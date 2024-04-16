@@ -7,4 +7,3 @@
       regexp: '^proxy=.*'
       state: absent
   become: "{{ true if ansible_user != 'root' else false }}"
-  tags: integ_splunk

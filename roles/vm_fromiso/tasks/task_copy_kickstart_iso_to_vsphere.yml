@@ -32,9 +32,23 @@
         path: "{{ iso_path }}/{{ vm.name }}-kickstart.iso"
         validate_certs: false
     - include_tasks: task_copy_iso_to_vsphere.yml
+      when:
+        - mycondition
+      vars:
+        mycondition: "{{ inventory_hostname == firsthost if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else inventory_hostname in ansible_play_hosts }}"
+    - name: wait for ISO to be copied to vsphere
+      ansible.builtin.wait_for:
+        path: "/var/tmp/{{ 'secondary' if 'dr' in group_names else 'primary' }}_iso_copy_complete.txt"
+        state: present
+        timeout: 1200
+        delay: 10
+        sleep: 30
+      when:
+        - hostvars[firsthost]['iso_present'] is not defined or hostvars[firsthost]['iso_present'] is failed
+        - mycondition
+      vars:
+        mycondition: "{{ inventory_hostname != firsthost if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else false }}"
     when: ds_folder is succeeded
-
+    vars:
+      firsthost: "{{ ansible_play_hosts | intersect(groups['dr'] if 'dr' in group_names else groups['stack']) | first }}"
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  environment:
-    http_proxy: ''
-    https_proxy: ''

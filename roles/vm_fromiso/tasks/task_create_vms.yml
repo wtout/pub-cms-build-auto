@@ -30,7 +30,8 @@
         loop_control:
           loop_var: host_item
           label: "{{ host_item }}"
-        run_once: true
+        when:
+          - inventory_hostname == ansible_play_hosts | intersect(groups['stack'] + groups['dr']) | first
       - include_tasks:
           file: task_create_vm_pair.yml
           apply:
@@ -55,19 +56,19 @@
       include_role:
         name: infra_configure
         tasks_from: task_create_cluster.yml
-      run_once: true
       when:
         - ansible_play_hosts | reject('search', 'dr') | length >= 1
         - hostvars[groups['vcenter'][0]]['cluster_host'] == []
+        - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
     - name: "infra_configure: create DR cluster"
       include_role:
         name: infra_configure
         tasks_from: task_create_cluster.yml
-      run_once: true
       when:
         - customer.disaster_recovery
         - ansible_play_hosts | select('search', 'dr') | length >= 1
         - hostvars[groups['drvcenter'][0]]['cluster_host'] == []
+        - inventory_hostname == ansible_play_hosts | intersect(groups['dr']) | first
     - include_tasks: task_create_configure_vms.yml
     when:
       - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'

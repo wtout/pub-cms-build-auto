@@ -19,8 +19,8 @@
           task_define_datastores_list.yml
         apply:
           vars:
-            - vm_group: "{{ group_item }}"
-            - ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
+            vm_group: "{{ group_item }}"
+            ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
       loop: "{{ play_stack_group_list }}"
       loop_control:
         loop_var: group_item
@@ -49,8 +49,8 @@
           task_define_datastores_list.yml
         apply:
           vars:
-            - vm_group: "{{ group_item }}"
-            - ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
+            vm_group: "{{ group_item }}"
+            ds_list: "{{ datastore_info.datastores | sort(attribute='freeSpace') }}"
       loop: "{{ play_dr_group_list }}"
       loop_control:
         loop_var: group_item

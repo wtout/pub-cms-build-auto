@@ -45,5 +45,4 @@
         - is_vm_creds is failed
         - is_vm_creds.msg is search('Invalid/incorrect username/password')
     when: is_vm_reachable is succeeded
-  tags: integ_splunk
   

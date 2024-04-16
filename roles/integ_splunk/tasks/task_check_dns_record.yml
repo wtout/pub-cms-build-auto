@@ -11,5 +11,4 @@
       that: reg_dns_record is succeeded
       fail_msg: "No DNS record for {{ vm.name }}. Cannot proceed with Splunk deployment"
   delegate_to: localhost
-  tags: integ_splunk
   

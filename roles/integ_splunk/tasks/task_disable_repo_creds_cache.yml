@@ -10,4 +10,3 @@
   when: clone_repos is succeeded
   delegate_to: localhost
   run_once: true
-  tags: integ_splunk
