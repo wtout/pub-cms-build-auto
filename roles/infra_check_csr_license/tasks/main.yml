@@ -20,22 +20,6 @@
         fail_msg: 'The CSR VM is not found. Aborting playbook execution!'
     - set_fact:
         ansible_host: "{{ csr_info.instance.ipv4 }}"
-    - name: Define CSR key
-      ansible.builtin.shell: ssh-keyscan -t rsa {{ netconfig.nic3.ipaddress }}
-      register: host_key
-      async: 30
-      poll: 5
-      until: host_key.stdout != ''
-      failed_when: host_key.stdout == ''
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    - name: Add CSR key to known_hosts
-      ansible.builtin.known_hosts:
-        name: "{{ netconfig.nic3.ipaddress }}"
-        key: "{{ host_key.stdout }}"
-        path: "{{ lookup('env', 'HOME') }}/.ssh/known_hosts"
-        state: present
-      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     when: not ignore|default(false)
 
   - name: check licensed state
@@ -57,16 +41,5 @@
     rescue:
       - ansible.builtin.set_fact:
           is_licensed: false
-
-  - block:
-    - name: Remove CSR key from known_hosts
-      ansible.builtin.known_hosts:
-        name: "{{ netconfig.nic3.ipaddress }}"
-        key: "{{ host_key.stdout }}"
-        path: "{{ lookup('env', 'HOME') }}/.ssh/known_hosts"
-        state: absent
-      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
-    when: not ignore|default(false)
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   when: inventory_hostname is search('csr')
   tags: [ 'infra_check_csr_license', 'vm_creation' ]

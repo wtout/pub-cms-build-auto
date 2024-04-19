@@ -56,7 +56,7 @@
           lines:
             - ip scp server enable
       - name: Transfer license from Packages to CSR
-        ansible.builtin.shell: "sshpass -p {{ credentials.password }} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.nic3.ipaddress }}:/bootflash:{{ license_file_name }}"
+        ansible.builtin.shell: "sshpass -p {{ credentials.password }} scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o KexAlgorithms=+diffie-hellman-group14-sha1 -o HostKeyAlgorithms=+ssh-rsa {{ auto_dir }}/Packages/licenses/{{ license_file_name }} {{ credentials.username }}@{{ netconfig.nic3.ipaddress }}:/bootflash:{{ license_file_name }}"
         delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
         register: reg_lic_transfer
         until: reg_lic_transfer is succeeded

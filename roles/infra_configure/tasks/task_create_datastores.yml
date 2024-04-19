@@ -30,13 +30,13 @@
       sdid: []
   - name: define list of storage device IDs
     ansible.builtin.set_fact:
-      sdid: "{{ sdid|default([]) | union(ds_item|dict2items|selectattr('key','equalto','canonical_name')|map(attribute='value')|list) }}"
-    loop: "{{ storage_devices.hosts_disk_info|dict2items|map(attribute='value')|first|selectattr('device_type','equalto','disk')|list|sort(attribute='capacity_mb', reverse=true) }}"
+      sdid: "{{ sdid|default([]) + ds_item|dict2items|selectattr('key','equalto','canonical_name')|map(attribute='value') | list | unique }}"
+    loop: "{{ storage_devices.hosts_disk_info|dict2items|map(attribute='value')|first|selectattr('device_type','equalto','disk') | list | sort(attribute='capacity_mb', reverse=true) }}"
     loop_control:
       loop_var: ds_item
   - name: define host datastore names
     ansible.builtin.set_fact:
-      ds_name: "{{ ds_name|default([]) | union([customer_prefix + '-esxi-a-%02d'|format(mycount|int) + '-' + type_item]) }}"
+      ds_name: "{{ (ds_name|default([]) + [customer_prefix + '-esxi-a-%02d'|format(mycount|int) + '-' + type_item]) | unique }}"
     vars:
       mycount: "{{ count|int + 1 }}"
     loop:
@@ -46,7 +46,7 @@
       loop_var: type_item
   - name: define 'donotuse' datastore names
     ansible.builtin.set_fact:
-      dnuds_name: "{{ dnuds_name|default([]) | union([myname]) }}"
+      dnuds_name: "{{ dnuds_name|default([]) + [myname] }}"
     vars:
       myidx: "{{ idx|int + 1 if sdid|length > 3 else '' }}"
       mycount: "{{ count|int + 1 }}"
@@ -72,7 +72,7 @@
           hostid: "{{ resource }}"
           dsname: "{{ ds_item[0] }}"
           dvcname: "{{ ds_item[1] }}"
-    loop: "{{ ds_name | union(dnuds_name|default([])) | zip(sdid) | list }}"
+    loop: "{{ (ds_name + dnuds_name|default([])) | zip(sdid) | list | unique }}"
     loop_control:
       loop_var: ds_item
   run_once: true

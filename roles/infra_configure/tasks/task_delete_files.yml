@@ -22,11 +22,12 @@
     loop_control:
       loop_var: loop_item
       label: "{{ loop_item.split('/')|first }}"
+  rescue:
+  - ansible.builtin.debug:
+      msg: "{{ dsname }} is empty"
+  always:
   - name: Ensure {{ dsname }} is empty
     ansible.builtin.assert:
       that: datastore_content|default([]) == []
       fail_msg: "{{ ['Delete the following folders/files and rerun the automation:'] + datastore_content|default([]) }}"
-  rescue:
-  - ansible.builtin.debug:
-      msg: "{{ dsname }} is empty"
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

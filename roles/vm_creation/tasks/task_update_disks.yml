@@ -84,6 +84,7 @@
         - size_kb: "{{ disk0_size_kb }}"
           type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging|STG') else 'thick' }}"
           datastore: "{{ disk0_datastore }}"
+          disk_mode: 'persistent'
           controller_number: 0
           controller_type: 'lsilogic'
           unit_number: "{{ disk0_unit_number }}"
@@ -105,6 +106,7 @@
         - size_kb: "{{ disk1_size_kb }}"
           type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging|STG') else 'thick' }}"
           datastore: "{{ disk1_datastore }}"
+          disk_mode: 'persistent'
           controller_number: 0
           controller_type: 'lsilogic'
           unit_number: "{{ disk1_unit_number }}"
@@ -126,6 +128,7 @@
         - size_kb: "{{ disk2_size_kb }}"
           type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging|STG') else 'thick' }}"
           datastore: "{{ disk2_datastore }}"
+          disk_mode: 'persistent'
           controller_number: 0
           controller_type: 'lsilogic'
           unit_number: "{{ disk2_unit_number }}"
@@ -148,6 +151,7 @@
         - size_kb: "{{ disk3_size_kb }}"
           type: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging|STG') else 'thick' }}"
           datastore: "{{ disk3_datastore }}"
+          disk_mode: 'persistent'
           controller_number: 0
           controller_type: 'lsilogic'
           unit_number: "{{ disk3_unit_number }}"

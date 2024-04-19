@@ -102,7 +102,6 @@
     - netconfig.nic1.gateway == ''
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
-
-- name: wait 600 seconds for VM to become reachable
+- name: wait up to 600 seconds for VM to become reachable
   ansible.builtin.wait_for_connection:
     timeout: 600

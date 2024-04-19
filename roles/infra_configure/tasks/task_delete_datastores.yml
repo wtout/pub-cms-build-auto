@@ -1,7 +1,7 @@
 ---
 # tasks file to delete datastores
 - block:
-  - name: Get VM info
+  - name: Get VM info on {{ resource }}
     community.vmware.vmware_vm_info:
       hostname: "{{ resource }}"
       username: "{{ information.hostuser }}"
@@ -10,11 +10,11 @@
       validate_certs: no
     check_mode: no
     register: reg_vm_info
-  - name: define vm names list
+  - name: define vm names list on {{ resource }}
     ansible.builtin.set_fact:
       host_vm_names: "{{ reg_vm_info.virtual_machines|map(attribute='guest_name')|list }}"
   - block:
-    - name: Delete vCLS VM
+    - name: Delete vCLS VM on {{ resource }}
       community.vmware.vmware_guest:
         hostname: "{{ resource }}"
         username: "{{ information.hostuser }}"
