@@ -3,6 +3,9 @@
 - block:
   - include_tasks: task_check_dbpeer_reachable.yml
   - include_role:
+      name: vm_configuration_ova
+      tasks_from: task_make_db01_primary.yml
+  - include_role:
       name: puppet
       tasks_from: task_em7_check_license.yml
   - include_tasks: task_copy_proxy_license.yml

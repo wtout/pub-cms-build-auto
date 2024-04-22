@@ -59,6 +59,6 @@ run_playbook "${CONTAINERNAME}_2" "${@}"
 disable_logging
 start_container "${CONTAINERNAME}_3" &>/dev/null
 kill_container "${CONTAINERNAME}_2" &>/dev/null
-#send_notification "${CONTAINERNAME}_3" "${ORIG_ARGS}"
+send_notification "${CONTAINERNAME}_3" "${ORIG_ARGS}"
 kill_container "${CONTAINERNAME}_3" &>/dev/null
 exit ${SCRIPT_STATUS}
