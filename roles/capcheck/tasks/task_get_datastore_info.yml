@@ -100,4 +100,3 @@
       - hostvars['vcenter01']['total_fs'] is defined
       - hostvars['drvcenter01']['total_fs'] is defined
     run_once: true
-

@@ -757,10 +757,10 @@ function run_playbook() {
 		$(docker_cmd) exec -i ${CNTNRNAME} ansible "${HL}" -m debug -a 'msg={{ ansible_ssh_pass }}' &>/dev/null && [[ ${?} == 0 ]] && ASK_PASS=''
 		### End
 		### Begin: Define the extra-vars argument list and bastion credentials vault name and password file
+		local EVARGS
+		local BCV
 		if [[ $(get_bastion_address "${CNTNRNAME}") == '[]' ]]
 		then
-			local EVARGS
-			local BCV
 			EVARGS="{SVCFILE: '${SVCVAULT}', $(basename "${0}" | sed -e 's/\(.*\)\.sh/\1/'): true}"
 			BCV=""
 		else

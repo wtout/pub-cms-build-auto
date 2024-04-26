@@ -5,11 +5,11 @@
     include_role:
       name: vm_configuration_ova
       tasks_from: task_make_db01_primary.yml
-  - name: check if puppet push {{ push_num|int }} is already running
+  - name: check if puppet push {{ push_num|default('1')|int }} is already running
     ansible.builtin.shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
     register: ppr1
     check_mode: no
-  - name: Wait for puppet push {{ push_num|int }} to finish
+  - name: Wait for puppet push {{ push_num|default('1')|int }} to finish
     ansible.builtin.shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
     register: ppr2
     until: ppr2.stdout is search('finished')
@@ -19,11 +19,11 @@
       - not ansible_check_mode
       - ppr1.stdout is not search('not running')
   - block:
-    - name: check if puppet agent_catalog_run.lock exists {{ push_num|int + 1 }}
+    - name: check if puppet agent_catalog_run.lock exists {{ push_num|default('1')|int + 1 }}
       ansible.builtin.stat:
         path: "{{ '.puppetlabs/opt/puppet' if inventory_hostname is search('em7') else '/opt/puppetlabs/puppet' }}/cache/state/agent_catalog_run.lock"
       register: lock_file
-    - name: Wait for puppet agent_catalog_run.lock to disappear {{ push_num|int + 1 }}
+    - name: Wait for puppet agent_catalog_run.lock to disappear {{ push_num|default('1')|int + 1 }}
       ansible.builtin.wait_for:
         path: "{{ '.puppetlabs/opt/puppet' if inventory_hostname is search('em7') else '/opt/puppetlabs/puppet' }}/cache/state/agent_catalog_run.lock"
         state: absent
@@ -31,7 +31,7 @@
       when: lock_file.stat.exists
     ignore_errors: true
     when: ppr1 is search('not running')
-  - name: Start puppet push {{ push_num|int + 1 }}
+  - name: Start puppet push {{ push_num|default('1')|int + 1 }}
     ansible.builtin.shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
     register: puppet_push
     no_log: yes
