@@ -29,6 +29,8 @@
           commands: "show license detail"
         register: lic_detail
       - ansible.builtin.setup:
+          filter:
+            - 'date_time'
         run_once: yes
       - ansible.builtin.set_fact:
           curr_exp_date: "{{ numdate }}"
@@ -41,5 +43,9 @@
     rescue:
       - ansible.builtin.set_fact:
           is_licensed: false
+    always:
+      - ansible.builtin.assert:
+          that: is_licensed
+        when: not ignore|default(false)
   when: inventory_hostname is search('csr')
   tags: [ 'infra_check_csr_license', 'vm_creation' ]

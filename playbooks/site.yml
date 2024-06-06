@@ -56,7 +56,7 @@
       - include_role:
           name: infra_license
         when: infra_license | default(false) | bool
-        tags: infra_license
+        tags: [ 'infra_license', 'never' ]
       - include_role:
           name: infra_check_csr_license
         when: check_csr_license | default(false) | bool
