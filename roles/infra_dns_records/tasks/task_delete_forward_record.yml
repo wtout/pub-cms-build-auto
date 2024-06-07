@@ -18,7 +18,7 @@
     failed_when: reg_fdr.rc != 0 and reg_fdr.stderr is not search('tsig verify failure')
     until: reg_fdr is succeeded
     delay: 10
-#    no_log: yes
+    no_log: yes
   rescue:
   - ansible.builtin.debug:
       msg: "{{ reg_fdr|replace(svc_password,'obfuscated') if svc_password != '' else reg_fdr }}"
