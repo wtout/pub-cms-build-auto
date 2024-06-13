@@ -39,27 +39,49 @@
       validate_certs: no
     register: power
 
-  - name: Check credentials
-    ansible.builtin.shell: sshpass -p {{ credentials.default_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'exit'
-    register: login_result
-    ignore_errors: yes
-    no_log: true
-    failed_when: login_result.rc != 0 and login_result.rc != 5 and login_result.rc != 6
-    async: 600
-    poll: 10
-
-  - ansible.builtin.debug:
-      msg: "{{ login_result|replace(credentials.default_password, 'obfuscated') }}"
-    when: login_result is failed
-
-  - ansible.builtin.assert:
-      that: login_result is succeeded
-      fail_msg: 'Unable to SSH to NSVPX'
-
-  - name: Update credentials
-    ansible.builtin.set_fact:
-      password: "{{ credentials.default_password if login_result.rc == 0 else credentials.password }}"
-    no_log: yes
+  - block:
+    - name: Check credentials
+      ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+      no_log: true
+    rescue:
+    - block:
+      - name: Update admin password
+        ansible.builtin.shell: |
+          set timeout 10
+          spawn sshpass -p {{ credentials.default_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+          expect "Enter new password:"
+          send "{{ credentials.password }}\n"
+          expect "Please re-enter your password:"
+          send "{{ credentials.password }}\n"
+          expect "Done"
+          send "\r"
+          interact
+          exit 0
+        register: reg_update_password
+        no_log: yes
+        args:
+          executable: /usr/bin/expect
+      rescue:
+      - debug:
+          msg:
+            - "{{ reg_update_password|replace('-p ' + credentials.default_password,'-p obfuscated')|replace(credentials.password, 'obfuscated') }}"
+      always:
+      - ansible.builtin.assert:
+          that:
+            - reg_update_password is succeeded
+          fail_msg: 'Unable to update admin password'
+    - block:
+      - name: Check credentials
+        ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+        register: reg_check_creds
+        no_log: true
+      rescue:
+      - ansible.builtin.debug:
+          msg: "{{ reg_check_creds|replace(credentials.password, 'obfuscated') }}"
+      always:
+      - ansible.builtin.assert:
+          that: reg_check_creds is succeeded
+          fail_msg: 'Unable to SSH to NSVPX'
 
   - name: Render configuration file
     ansible.builtin.template:
@@ -76,7 +98,7 @@
       return_content: yes
       headers:
         X-NITRO-USER: "{{ credentials.username }}"
-        X-NITRO-PASS: "{{ password }}"
+        X-NITRO-PASS: "{{ credentials.password }}"
       body_format: json
       body:
         systemfile:
@@ -100,45 +122,49 @@
       state: absent
     when: upload is succeeded
 
-  - name: read sshd process ID
-    ansible.builtin.shell: sshpass -p {{ password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell cat /var/run/sshd.pid 2>/dev/null" | tail -n 2
-    register: sshd_pid
-    check_mode: no
-    no_log: yes
+  - block:
+    - name: read sshd process ID
+      ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell cat /var/run/sshd.pid 2>/dev/null" | tail -n 2
+      register: sshd_pid
+      failed_when: sshd_pid.stdout == ''
+      check_mode: no
+      no_log: yes
+    rescue:
+    - ansible.builtin.debug:
+        msg: "{{ sshd_pid | replace(credentials.password, 'obfuscated') }}"
+    always:
+    - ansible.builtin.assert:
+        that:
+          - sshd_pid is succeeded
 
-  - ansible.builtin.debug:
-      msg: "{{ sshd_pid | replace(password, 'obfuscated') }}"
-    when: sshd_pid is failed
-
-  - name: Apply ssh configuration
-    ansible.builtin.shell: |
-      sshpass -p {{ password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell \"grep '# SSH Hardending' /etc/sshd_config &>/dev/null || echo -e '\n\n# SSH Hardending' >> /etc/sshd_config; grep 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' /etc/sshd_config &>/dev/null || echo -e 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' >> /etc/sshd_config; grep 'MACs hmac-sha2-256,hmac-sha2-512' /etc/sshd_config &>/dev/null || echo -e 'MACs hmac-sha2-256,hmac-sha2-512' >> /etc/sshd_config; grep 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' /etc/sshd_config &>/dev/null || echo -e 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' >> /etc/sshd_config\""
-      sshpass -p {{ password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell \"cp -f /etc/sshd_config /nsconfig/; kill -1 {{ sshd_pid.stdout_lines|first }}\""
-    register: ssh_config
-    no_log: yes
-    ignore_errors: true
-    async: 60
-    poll: 10
-
-  - ansible.builtin.debug:
-      msg: "{{ ssh_config | replace(password, 'obfuscated') }}"
-    when: ssh_config is failed
-
-  - ansible.builtin.assert:
-      that:
-        - ssh_config is succeeded 
+  - block:
+    - name: Apply ssh configuration
+      ansible.builtin.shell: |
+        sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell \"grep '# SSH Hardending' /etc/sshd_config &>/dev/null || echo -e '\n\n# SSH Hardending' >> /etc/sshd_config; grep 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' /etc/sshd_config &>/dev/null || echo -e 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' >> /etc/sshd_config; grep 'MACs hmac-sha2-256,hmac-sha2-512' /etc/sshd_config &>/dev/null || echo -e 'MACs hmac-sha2-256,hmac-sha2-512' >> /etc/sshd_config; grep 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' /etc/sshd_config &>/dev/null || echo -e 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' >> /etc/sshd_config\""
+        sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell \"cp -f /etc/sshd_config /nsconfig/; kill -1 {{ sshd_pid.stdout_lines|first }}\""
+      register: ssh_config
+      no_log: yes
+      async: 60
+      poll: 10
+    rescue:
+    - ansible.builtin.debug:
+        msg: "{{ ssh_config | replace(credentials.password, 'obfuscated') }}"
+    always:
+    - ansible.builtin.assert:
+        that:
+          - ssh_config is succeeded 
 
   - block:
     - name: Apply Netscaler configuration
-      ansible.builtin.shell: sshpass -p {{ password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'batch -f /tmp/config'
+      ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'batch -f /tmp/config'
       register: config01
       no_log: yes
-      ignore_errors: true
       failed_when: config01.rc > 1
       async: 600
       poll: 10
+    rescue:
     - ansible.builtin.debug: var=config01
-      when: config01 is failed
+    always:
     - ansible.builtin.assert:
         that:
           - not (config01 is failed)
@@ -146,15 +172,15 @@
 
   - block:
     - name: Apply Netscaler configuration
-      ansible.builtin.shell: sshpass -p {{ password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'batch -f /tmp/config'
+      ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'batch -f /tmp/config'
       register: config02
       no_log: yes
-      ignore_errors: true
       failed_when: config02.rc > 1
       async: 600
       poll: 10
+    rescue:
     - ansible.builtin.debug: var=config02
-      when: config02 is failed
+    always:
     - ansible.builtin.assert:
         that:
           - not (config02 is failed)
