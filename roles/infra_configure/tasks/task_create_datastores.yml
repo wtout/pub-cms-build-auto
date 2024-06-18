@@ -50,7 +50,7 @@
     vars:
       myidx: "{{ idx|int + 1 if sdid|length > 3 else '' }}"
       mycount: "{{ count|int + 1 }}"
-      myname: "{{ customer_prefix + '-esxi-only-%02d'|format(mycount|int) + ('-ata-donotuse' if host_model == 'UCSC-C240-M6SX' else '-donotuse') + myidx }}"
+      myname: "{{ customer_prefix + '-esxi-only-%02d'|format(mycount|int) + '-donotuse' + myidx }}"
     loop: "{{ sdid[2:] if sdid|length > 2 else [] }}"
     loop_control:
       loop_var: dnuds_item
