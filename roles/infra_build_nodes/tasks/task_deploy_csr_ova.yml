@@ -17,16 +17,7 @@
     wait: yes
     allow_duplicates: no
     validate_certs: no
-    properties:
-      com.cisco.csr1000v.login-username.1: "{{ credentials.username }}"
-      com.cisco.csr1000v.login-password.1: "{{ credentials.password }}"
-      com.cisco.csr1000v.enable-scp-server.1: 'True'
-      com.cisco.csr1000v.enable-ssh-server.1: 'True'
-      com.cisco.csr1000v.mgmt-ipv4-addr.1: 'dhcp'
-      com.cisco.csr1000v.mgmt-ipv4-gateway.1: "dhcp"
-      com.cisco.csr1000v.privilege-password.1 : "{{ credentials.password }}"
-      com.cisco.csr1000v.hostname.1 : "{{ vm.name }}"
-      com.cisco.csr1000v.domain-name.1 : "{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"
+    properties: "{{ csr.properties }}"
   environment:
     http_proxy: ''
     https_proxy: ''
