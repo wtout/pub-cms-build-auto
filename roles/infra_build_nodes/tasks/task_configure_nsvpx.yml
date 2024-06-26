@@ -39,49 +39,40 @@
       validate_certs: no
     register: power
 
+  - name: Check credentials
+    ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+    register: login_result
+    ignore_errors: yes
+    no_log: true
+
   - block:
+    - name: Update admin password
+      ansible.builtin.shell: |
+        set timeout 10
+        spawn sshpass -p {{ credentials.default_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+        expect "Enter new password:"
+        send "{{ credentials.password }}\n"
+        expect "Please re-enter your password:"
+        send "{{ credentials.password }}\n"
+        expect "Done"
+        send "\r"
+        interact
+        exit 0
+      register: reg_update_password
+      no_log: yes
+      args:
+        executable: /usr/bin/expect
     - name: Check credentials
       ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+      register: reg_check_creds
       no_log: true
-    rescue:
-    - block:
-      - name: Update admin password
-        ansible.builtin.shell: |
-          set timeout 10
-          spawn sshpass -p {{ credentials.default_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
-          expect "Enter new password:"
-          send "{{ credentials.password }}\n"
-          expect "Please re-enter your password:"
-          send "{{ credentials.password }}\n"
-          expect "Done"
-          send "\r"
-          interact
-          exit 0
-        register: reg_update_password
-        no_log: yes
-        args:
-          executable: /usr/bin/expect
-      rescue:
-      - debug:
-          msg:
-            - "{{ reg_update_password|replace('-p ' + credentials.default_password,'-p obfuscated')|replace(credentials.password, 'obfuscated') }}"
-      always:
-      - ansible.builtin.assert:
-          that:
-            - reg_update_password is succeeded
-          fail_msg: 'Unable to update admin password'
-    - block:
-      - name: Check credentials
-        ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
-        register: reg_check_creds
-        no_log: true
-      rescue:
-      - ansible.builtin.debug:
-          msg: "{{ reg_check_creds|replace(credentials.password, 'obfuscated') }}"
-      always:
-      - ansible.builtin.assert:
-          that: reg_check_creds is succeeded
-          fail_msg: 'Unable to SSH to NSVPX'
+    - ansible.builtin.debug:
+        msg: "{{ reg_check_creds|replace(credentials.password, 'obfuscated') }}"
+      when: reg_check_creds is failed
+    - ansible.builtin.assert:
+        that: reg_check_creds is succeeded
+        fail_msg: 'Unable to SSH to NSVPX'
+    when: login_result is failed
 
   - name: Render configuration file
     ansible.builtin.template:

@@ -64,7 +64,7 @@
 
   - name: Send Webex Teams Notification With CSR/Netscaler Serial Numbers
     include_tasks: task_notify_teams.yml
-    when: not inventory_hostname is search('nexus')
+    when: inventory_hostname is not search('nexus')
 
   - name: Configure Windows Jump Severs
     include_tasks: task_configure_winjmp.yml
@@ -74,6 +74,7 @@
     include_role:
       name: vm_creation
       tasks_from: task_define_folder_name.yml
+    when: fldr_name is not defined
 
   - name: "vm_creation: Update custom attributes"
     include_role:
