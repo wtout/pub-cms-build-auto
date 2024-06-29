@@ -62,16 +62,40 @@
       no_log: yes
       args:
         executable: /usr/bin/expect
-    - name: Check credentials
-      ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
-      register: reg_check_creds
-      no_log: true
-    - ansible.builtin.debug:
-        msg: "{{ reg_check_creds|replace(credentials.password, 'obfuscated') }}"
-      when: reg_check_creds is failed
-    - ansible.builtin.assert:
-        that: reg_check_creds is succeeded
-        fail_msg: 'Unable to SSH to NSVPX'
+    - block:
+      - name: Check credentials
+        ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+        register: reg_check_creds1
+        no_log: true
+      rescue:
+      - name: Update admin password
+        ansible.builtin.shell: |
+          set timeout 10
+          spawn sshpass -p {{ credentials.default_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+          expect "Enter new password:"
+          send "{{ credentials.password }}\n"
+          expect "Please re-enter your password:"
+          send "{{ credentials.password }}\n"
+          expect "Done"
+          send "\r"
+          interact
+          exit 0
+        no_log: yes
+        args:
+          executable: /usr/bin/expect
+    - block:
+      - name: Check credentials
+        ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+        register: reg_check_creds2
+        no_log: true
+      rescue:
+      - ansible.builtin.debug:
+          msg: "{{ reg_check_creds2|replace(credentials.password, 'obfuscated') }}"
+      always:
+      - ansible.builtin.assert:
+          that: reg_check_creds2 is succeeded
+          fail_msg: 'Unable to SSH to NSVPX'
+      when: reg_check_creds1 is failed
     when: login_result is failed
 
   - name: Render configuration file

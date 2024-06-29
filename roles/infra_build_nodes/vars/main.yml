@@ -1,5 +1,6 @@
 ---
 # vars file for infra_build_nodes
+csr_license_idtoken_path: '${HOME}/certificates/smart_license_idtoken.txt'
 ova_dir: "{{ auto_dir }}/Packages"
 
 ova_names:

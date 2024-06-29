@@ -93,6 +93,14 @@
           source: "{{ ntp_source }}"
         state: merged
 
+    - name: Disable the router's Web GUIs
+      cisco.ios.ios_command:
+        commands:
+          - configure terminal
+          - no ip http server
+          - no ip http secure-server
+          - end
+
     - name: Save Primary CSR configuration
       cisco.ios.ios_command:
         commands:

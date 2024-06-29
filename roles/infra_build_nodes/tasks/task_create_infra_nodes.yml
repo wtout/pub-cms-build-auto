@@ -27,6 +27,10 @@
         include_tasks: task_deploy_csr_ova.yml
       - name: Configure CSR
         include_tasks: task_configure_csr.yml
+      - name: License CSR
+        include_tasks: task_license_csr.yml
+      - name: Check CSR license
+        include_tasks: task_check_csr_license.yml
     when: inventory_hostname is search('csr')
 
   - name: Update Nexus Switch
@@ -64,7 +68,7 @@
 
   - name: Send Webex Teams Notification With CSR/Netscaler Serial Numbers
     include_tasks: task_notify_teams.yml
-    when: inventory_hostname is not search('nexus')
+    when: not inventory_hostname is search('nexus')
 
   - name: Configure Windows Jump Severs
     include_tasks: task_configure_winjmp.yml
@@ -74,7 +78,6 @@
     include_role:
       name: vm_creation
       tasks_from: task_define_folder_name.yml
-    when: fldr_name is not defined
 
   - name: "vm_creation: Update custom attributes"
     include_role:

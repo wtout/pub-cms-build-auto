@@ -1,0 +1,61 @@
+---
+# Task file to license CSRs
+- name: Configure Smart Licensing
+  cisco.ios.ios_command:
+    commands:
+      - configure terminal
+      - ip name-server {{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|first }}
+      - license boot level network-essentials addon dna-essentials
+      - license smart proxy address 64.102.255.40
+      - license smart proxy port 8080
+      - license smart transport smart
+      - license smart url default
+      - platform hardware throughput level MB T2
+      - exit
+- name: Save licensed CSR configuration
+  cisco.ios.ios_command:
+    commands:
+      - command: Copy running-config startup-config
+        prompt: '[confirm]'
+        answer: "\r"
+- name: Get the Smart licensing ID Token
+  ansible.builtin.slurp:
+    src: "{{ csr_license_idtoken_path }}"
+  register: csr_license_idtoken
+  run_once: true
+- name: Configure Smart Licensing ID Token
+  cisco.ios.ios_command:
+    commands:
+      - license smart trust idtoken {{ csr_license_idtoken['content'] | b64decode | trim }} local
+- block:
+  - name: Check smart licensing
+    cisco.ios.ios_command:
+      commands:
+        - show license summary
+    register: reg_smart_account1
+    until: sm is not search('none')
+    delay: 10
+    failed_when: sm is search('none')
+    vars:
+      sm: "{{ (reg_smart_account1.stdout_lines|first|select('search','Smart Account:')|first).split(': ')|last }}"
+  rescue:
+  - name: Reconfigure Smart Licensing ID Token
+    cisco.ios.ios_command:
+      commands:
+        - license smart trust idtoken {{ csr_license_idtoken['content'] | b64decode | trim }} local
+  - name: Check smart licensing
+    cisco.ios.ios_command:
+      commands:
+        - show license summary
+    register: reg_smart_account2
+    until: sm is not search('none')
+    delay: 10
+    failed_when: sm is search('none')
+    vars:
+      sm: "{{ (reg_smart_account2.stdout_lines|first|select('search','Smart Account:')|first).split(': ')|last }}"
+  always:
+  - ansible.builtin.set_fact:
+      reg_smart_account: "{{ reg_smart_account2 if reg_smart_account2 is defined else reg_smart_account1 }}"
+  - ansible.builtin.assert:
+      that: reg_smart_account is succeeded
+      fail_msg: 'Unable to apply the smart ID token successfully'
