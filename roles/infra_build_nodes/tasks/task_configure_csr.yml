@@ -125,8 +125,3 @@
             prompt: '[confirm]'
             answer: "\r"
     when: inventory_hostname is search('csr02')
-
-  - name: Define CSR serial number
-    block:
-    - cisco.ios.ios_facts:
-        gather_subset: min
