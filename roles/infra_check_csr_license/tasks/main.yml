@@ -25,36 +25,9 @@
   - name: check licensed state
     block:
       - name: Check if CSR is licensed
-        ansible.builtin.include_role:
-          name: infra_build_nodes
-          tasks_from: task_check_csr_license.yml
+        ansible.builtin.include_tasks: task_check_csr_license.yml
       - ansible.builtin.set_fact:
           is_licensed: true
-      - debug:
-          msg:
-            - "{{ lic_date|join(' ') }}"
-            - "{{ (lic_date[:2] + [lic_date[3]])|join(' ') }}"
-            - "{{ strmnth }}"
-            - "{{ nummnth }}"
-            - "{{ numdate }}"
-        vars:
-          lic_date: "{{ ((reg_throughput.stdout_lines|first|select('search','Smart Account:')|first).split('As of ')|last).split(' ') }}"
-          strmnth: "{{ lic_date|first }}"
-          nummnth: "{{ '1' if strmnth|lower is search('jan') else '2' if strmnth|lower is search('feb') else '3' if strmnth|lower is search('mar') else '4' if strmnth|lower is search('apr') else '5' if strmnth|lower is search('may') else'6' if strmnth|lower is search('jun') else '7' if strmnth|lower is search('jul') else '8' if strmnth|lower is search('aug') else '9' if strmnth|lower is search('sep') else '10' if strmnth|lower is search('oct') else '11' if strmnth|lower is search('nov') else '12' }}"
-          numdate: "{{ lic_date[-2] + '-' + '%02d' | format(nummnth|int) + '-' + lic_date[1] }}"
-#      - pause:
-#      - ansible.builtin.setup:
-#          filter:
-#            - 'date_time'
-#        run_once: yes
-#      - ansible.builtin.set_fact:
-#          curr_exp_date: "{{ numdate }}"
-#          is_licensed: "{{ (numdate|to_datetime('%Y-%m-%d') - ansible_date_time.date|to_datetime('%Y-%m-%d')).days|int > 0 }}"
-#        vars:
-#          strdate: "{{ lic_detail.stdout_lines|first|select('search','End Date:')|first|split('End Date: ')|last }}"
-#          strmnth: "{{ strdate|split(' ')|first }}"
-#          nummnth: "{{ '1' if strmnth|lower is search('jan') else '2' if strmnth|lower is search('feb') else '3' if strmnth|lower is search('mar') else '4' if strmnth|lower is search('apr') else '5' if strmnth|lower is search('may') else'6' if strmnth|lower is search('jun') else '7' if strmnth|lower is search('jul') else '8' if strmnth|lower is search('aug') else '9' if strmnth|lower is search('sep') else '10' if strmnth|lower is search('oct') else '11' if strmnth|lower is search('nov') else '12' }}"
-#          numdate: "{{ strdate|split(' ')|last + '-' + '%02d' | format(nummnth|int) + '-' + (strdate|split(' '))[1] }}"
     rescue:
       - ansible.builtin.set_fact:
           is_licensed: false

@@ -30,7 +30,9 @@
       - name: License CSR
         include_tasks: task_license_csr.yml
       - name: Check CSR license
-        include_tasks: task_check_csr_license.yml
+        ansible.builtin.include_role:
+          name: infra_chek_csr_license
+          tasks_from: task_check_csr_license.yml
     when: inventory_hostname is search('csr')
 
   - name: Update Nexus Switch

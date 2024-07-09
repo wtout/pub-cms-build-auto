@@ -1,0 +1,19 @@
+---
+# Task file to check the CSR license
+- name: Check CSR Throughput
+  cisco.ios.ios_command:
+    commands:
+      - show license summary
+  register: reg_throughput
+  until: sm is not search('none')
+  delay: 10
+  vars:
+    sm: "{{ (reg_throughput.stdout_lines|first|select('search','Smart Account:')|first).split(': ')|last }}"
+- name: Ensure Throughput is 250M
+  ansible.builtin.assert:
+    that: reg_throughput.stdout_lines|first|select('search','IN USE')|select('search','(network|dna)-essentials_250M')|length == 2
+    fail_msg: 'CSR is not properly licensed'
+    success_msg: "CSR is properly licensed by {{ virtual_account }} and {{ smart_account }}. The throughput is 250Mbps"
+  vars:
+    smart_account: "{{ reg_throughput.stdout_lines|first|select('search','Smart Account:')|map('trim')|first }}"
+    virtual_account: "{{ reg_throughput.stdout_lines|first|select('search','Virtual Account:')|map('trim')|first }}"

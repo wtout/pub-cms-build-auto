@@ -26,7 +26,9 @@
       - include_tasks: task_define_infra_variables.yml
         when: ansible_run_tags is search('infra_build_nodes')
       - include_tasks: task_define_hosts_variables.yml
-        when: configure_vms_iso|default(false) or configure_vms_ova|default(false) or push_puppet|default(false) or configure_ppp_vms|default(false) or sanity_check|default(false) or drdb_configure|default(false)
+        when:
+          - ansible_run_tags is not search('infra')
+          - configure_vms_iso|default(false) or configure_vms_ova|default(false) or push_puppet|default(false) or configure_ppp_vms|default(false) or sanity_check|default(false) or drdb_configure|default(false)
       when:
         - deploy | default(false)
     - include_tasks: task_define_vm_ip.yml
