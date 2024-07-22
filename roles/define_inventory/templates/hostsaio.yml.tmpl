@@ -9,9 +9,11 @@ all:
     puppet:
       hosts:
         puppet[{{ environment_definition.puppet.primary.server_name[-2:] }}:{{ environment_definition.puppet.primary.server_name[-2:] }}]:
+{% if environment_definition.customer.deployment_model is not search('s|h') %}
     nexus:
       hosts:
         nexus[01:02]:
+{% endif %}
     stack:
       children:
         infra:

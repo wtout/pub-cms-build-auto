@@ -41,7 +41,7 @@
 
   - name: define ansible_host
     ansible.builtin.set_fact:
-      ansible_host: "{{ ipaddress3 if inventory_hostname is search('csr') else ipaddress1 }}"
+      ansible_host: "{{ (ipaddress2 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else ipaddress3) if inventory_hostname is search('csr') else ipaddress1 }}"
 
   - name: update netconfig with IP addresses
     ansible.builtin.set_fact:

@@ -1,29 +1,24 @@
 #jinja2: trim_blocks: False
 {% include (environment_definition.customer.version.release or 'R9.2.17')[1:4].split('.')|join + '-all.yml.tmpl' %}
-{% if environment_definition.customer.deployment_model is search('sa|sh') %}
+{% if environment_definition.customer.deployment_model is search('s') %}
 {% include 'templates/alls.yml.tmpl' %}
 {% if environment_definition.customer.disaster_recovery %}
 {% include 'templates/dralls.yml.tmpl' %}
 {% endif %}
-{% else %}
-{% if environment_definition.customer.deployment_model is search('aio') %}
+{% elif environment_definition.customer.deployment_model is search('aio') %}
 {% if environment_definition.customer.deployment_model[-1:] is search('a') %}
 {% include 'templates/allaioa.yml.tmpl' %}
 {% else %}
 {% include 'templates/allaioh.yml.tmpl' %}
 {% endif %}
-{% else %}
-{% if environment_definition.customer.deployment_model is search('a') %}
+{% elif environment_definition.customer.deployment_model is search('a') %}
 {% include 'templates/alla.yml.tmpl' %}
 {% if environment_definition.customer.disaster_recovery %}
 {% include 'templates/dralla.yml.tmpl' %}
 {% endif %}
-{% endif %}
-{% if environment_definition.customer.deployment_model is search('h') %}
+{% else %}
 {% include 'templates/allh.yml.tmpl' %}
 {% if environment_definition.customer.disaster_recovery %}
 {% include 'templates/drallh.yml.tmpl' %}
-{% endif %}
-{% endif %}
 {% endif %}
 {% endif %}

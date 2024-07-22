@@ -95,7 +95,7 @@ datacenter:
     customer_net_inside_vlan_id: '{{ environment_definition.datacenter.secondary.customer_net_inside_vlan_id if environment_definition.datacenter.secondary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.secondary.customer_net_inside_vlan_id != none else environment_definition.datacenter.primary.customer_net_inside_vlan_id if environment_definition.datacenter.primary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.primary.customer_net_inside_vlan_id != none else "" }}'
     em7db_heartbeat_link_vlan_id: '{{ environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id != none else environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id != none else "" }}'
 
-{% if environment_definition.customer.deployment_model is not search('sa|sh') %}
+{% if environment_definition.customer.deployment_model is not search('s|h') %}
 {% block nexus %}
 ##################################################################################
 # Nexus information

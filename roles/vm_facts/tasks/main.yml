@@ -24,7 +24,9 @@
       - include_tasks: task_define_vm_disk_size.yml
       - include_tasks: task_define_groups_list.yml
       - include_tasks: task_define_infra_variables.yml
-        when: ansible_run_tags is search('infra_build_nodes')
+        when:
+          - ansible_run_tags is search('infra_build_nodes')
+          - ansible_play_hosts | select('match','nsvpx') | list != []
       - include_tasks: task_define_hosts_variables.yml
         when:
           - ansible_run_tags is not search('infra')

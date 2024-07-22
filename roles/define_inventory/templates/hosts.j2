@@ -1,26 +1,13 @@
-{% if environment_definition.customer.deployment_model is search('sa|sh') %}
+{% if environment_definition.customer.deployment_model is search('s') %}
 {% include 'templates/hostss.yml.tmpl' %}
 {% if environment_definition.customer.disaster_recovery %}
 {% include 'templates/drhostss.yml.tmpl' %}
 {% endif %}
+{% elif environment_definition.customer.deployment_model is search('aio') %}
+{% include 'templates/hostsaio.yml.tmpl' %}
 {% else %}
-{% if environment_definition.customer.deployment_model is search('aio') %}
-{% if environment_definition.customer.deployment_model[-1:] is search('a') %}
-{% include 'templates/hostsaioa.yml.tmpl' %}
-{% else %}
-{% include 'templates/hostsaioh.yml.tmpl' %}
-{% endif %}
-{% else %}
-{% if environment_definition.customer.deployment_model is search('a') %}
-{% include 'templates/hostsa.yml.tmpl' %}
+{% include 'templates/hosts.yml.tmpl' %}
 {% if environment_definition.customer.disaster_recovery %}
-{% include 'templates/drhostsa.yml.tmpl' %}
-{% endif %}
-{% else %}
-{% include 'templates/hostsh.yml.tmpl' %}
-{% if environment_definition.customer.disaster_recovery %}
-{% include 'templates/drhostsh.yml.tmpl' %}
-{% endif %}
-{% endif %}
+{% include 'templates/drhosts.yml.tmpl' %}
 {% endif %}
 {% endif %}

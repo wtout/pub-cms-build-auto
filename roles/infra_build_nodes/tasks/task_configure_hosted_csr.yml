@@ -1,0 +1,76 @@
+---
+# Task file to configure CSR NICs
+- block:
+  - name: check VM reachable
+    ansible.builtin.command: ping {{ netconfig.nic4.ipaddress }} -c 1
+    register: ibn_vm_reachable
+    check_mode: no
+    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    ignore_errors: yes
+  - block:
+    - name: Power off VM
+      ansible.builtin.include_tasks: task_poweroff_csr.yml
+    - name: define csr NICs
+      ansible.builtin.set_fact:
+        nic1:
+          - name: "{{ netconfig.nic1.network }}"
+            ip: "{{ netconfig.nic1.ipaddress }}"
+            netmask: "{{ netconfig.nic1.netmask }}"
+            gateway: "{{ netconfig.nic1.gateway }}"
+            device_type: vmxnet3
+        nic2:
+          - name: "{{ netconfig.nic2.network }}"
+            ip: "{{ netconfig.nic2.ipaddress }}"
+            netmask: "{{ netconfig.nic2.netmask }}"
+            gateway: "{{ netconfig.nic2.gateway }}"
+            device_type: vmxnet3
+        nic3:
+          - name: "{{ netconfig.nic3.network }}"
+            ip: "{{ netconfig.nic3.ipaddress }}"
+            netmask: "{{ netconfig.nic3.netmask }}"
+            gateway: "{{ netconfig.nic3.gateway }}"
+            device_type: vmxnet3
+        nic4:
+          - name: "{{ netconfig.nic4.network }}"
+            ip: "{{ netconfig.nic4.ipaddress }}"
+            netmask: "{{ netconfig.nic4.netmask }}"
+            gateway: "{{ netconfig.nic4.gateway }}"
+            device_type: vmxnet3
+    - name: Update VM hardware settings with correct NICs
+      community.vmware.vmware_guest:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        name: "{{ vm.name }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+        hardware:
+          memory_mb: "{{ vm.memory | int * 1024 }}"
+          num_cpus: "{{ vm.cpu | int }}"
+        networks: "{{ nic1 + nic2 + nic3 + nic4 }}"
+        validate_certs: no
+    - name: Power on VM
+      ansible.builtin.include_tasks: task_poweron_csr.yml
+    - name: check VM reachable
+      ansible.builtin.command: ping {{ netconfig.nic4.ipaddress }} -c 1
+      register: ibn_vm_reachable2
+      check_mode: no
+      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+      until: ibn_vm_reachable2 is succeeded
+      retries: 20
+      delay: 30
+    when: ibn_vm_reachable is failed
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+- name: define ansible_host as Interface1 IP address
+  set_fact:
+    ansible_host: "{{ netconfig.nic4.ipaddress }}"
+- name: Save CSR configuration
+  cisco.ios.ios_command:
+    commands:
+      - command: Copy running-config startup-config
+        prompt: '[confirm]'
+        answer: "\r"
+  register: reg_save_config
+  until: reg_save_config is succeeded
+  retries: 15
+  delay: 9

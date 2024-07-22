@@ -42,7 +42,7 @@
       - name: get included hash
         ansible.builtin.shell: cat {{ hash_file }}
         vars:
-          - hash_file: "{{ file_item.path + '.sha1' }}"
+          hash_file: "{{ file_item.path + '.sha1' }}"
         loop: "{{ files_list.files }}"
         loop_control:
           loop_var: file_item

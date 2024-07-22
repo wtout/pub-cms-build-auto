@@ -12,12 +12,12 @@
     folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
     name: "{{ vm.name }}"
     networks: {}
-    ova: "{{ ova_dir }}/{{ ova_names.csr }}"
+    ova: "{{ role_path + '/files/' + ova_names.csr|replace('CSR/',vm.name + '_')|replace('.ova','_customized.ova') if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else ova_dir + '/' + ova_names.csr }}"
     power_on: no
     wait: yes
     allow_duplicates: no
     validate_certs: no
-    properties: "{{ csr.properties }}"
+    properties: "{{ onprem_csr.properties if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is not search('h') else omit }}"
   environment:
     http_proxy: ''
     https_proxy: ''

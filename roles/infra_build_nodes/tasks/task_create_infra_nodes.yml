@@ -19,19 +19,49 @@
 
   - name: Deploy Loadbalancers From OVA
     include_tasks: task_deploy_nsvpx_ova.yml
-    when: inventory_hostname is search('nsvpx')
+    when:
+      - inventory_hostname is search('nsvpx')
+      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is not search('h') or hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('Staging|STG|PAE-HX-DC')
 
   - name: Deploy And Configure CSRs
     block:
+      - name: Create CSR customized OVA file
+        ansible.builtin.include_tasks:
+          file: task_create_customized_ova.yml
+          apply:
+            vars:
+              host_index: "{{ loop_item }}"
+        loop: "{{ range(0,groups['csr']|length) }}"
+        loop_control:
+          loop_var: loop_item
+        when:
+          - inventory_hostname in groups['csr']
+          - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
+      - name: Create DR CSR customized OVA file
+        ansible.builtin.include_tasks:
+          file: task_create_customized_ova.yml
+          apply:
+            vars:
+              host_index: "{{ loop_item }}"
+        loop: "{{ range(0,groups['drcsr']|length) }}"
+        loop_control:
+          loop_var: loop_item
+        when:
+          - customer.disaster_recovery
+          - inventory_hostname in groups['drcsr']
+          - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
       - name: Deploy CSR From OVA
         include_tasks: task_deploy_csr_ova.yml
+      - name: Delete CSR customized OVA file
+        ansible.builtin.include_tasks: task_delete_customized_ova.yml
+        when: hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
       - name: Configure CSR
         include_tasks: task_configure_csr.yml
       - name: License CSR
         include_tasks: task_license_csr.yml
       - name: Check CSR license
         ansible.builtin.include_role:
-          name: infra_chek_csr_license
+          name: infra_check_csr_license
           tasks_from: task_check_csr_license.yml
     when: inventory_hostname is search('csr')
 
@@ -66,7 +96,9 @@
 
   - name: Configure Netscalers
     include_tasks: task_configure_nsvpx.yml
-    when: inventory_hostname is search('nsvpx')
+    when:
+      - inventory_hostname is search('nsvpx')
+      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is not search('h') or hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('Staging|STG|PAE-HX-DC')
 
   - name: Send Webex Teams Notification With CSR/Netscaler Serial Numbers
     include_tasks: task_notify_teams.yml
