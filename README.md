@@ -130,7 +130,6 @@ The list of roles used in the playbooks:
   - **get_release**: downloads the release package from the repository
   - **infra_dns_records**: creates all required DNS records for a given stack
   - **infra_build_nodes**: deploys and configures CSRs, Netscalers, and Windows Jump Servers
-  - **infra_license**: retrieves licenses from Packages/licenses and applies them to CSRs
   - **infra_check_csr_license**: verifies that CSRs licenses are active
   - **vm_fromiso**: deploys the stack's VMs from ISO
   - **vm_hardening**: enables hardening on the VMS created from ISO
