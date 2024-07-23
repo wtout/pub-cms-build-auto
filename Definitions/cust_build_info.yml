@@ -5,6 +5,15 @@ customer:
   # Official customer name (string)
   name: cust_name
 
+  # team_contact1 (string)
+  team_contact1: 
+
+  # team_contact2 (string)
+  team_contact2: 
+
+  # team_mailer (string)
+  team_mailer: pae-labs@cisco.com
+
   version:
 
     # Platform Release version (string)
