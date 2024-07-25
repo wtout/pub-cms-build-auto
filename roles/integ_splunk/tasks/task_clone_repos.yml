@@ -40,7 +40,7 @@
     args:
       chdir: "{{ spl_wd }}/dev/{{ mdr_automation_reponame }}"
   delegate_to: localhost
-  become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+  become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
   run_once: true
   environment:
     http_proxy: "{{ proxy_address|default('') }}"

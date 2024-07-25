@@ -14,7 +14,7 @@
           ansible.builtin.command: ping {{ ansible_host }} -c 1
           register: vh_vm_reachable
           check_mode: no
-          become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+          become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
           delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
         - block:
           - name: check updated credentials

@@ -5,7 +5,7 @@
     ansible.builtin.command: ping {{ netconfig.nic4.ipaddress }} -c 1
     register: ibn_vm_reachable
     check_mode: no
-    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
     ignore_errors: yes
   - block:
     - name: Power off VM
@@ -55,7 +55,7 @@
       ansible.builtin.command: ping {{ netconfig.nic4.ipaddress }} -c 1
       register: ibn_vm_reachable2
       check_mode: no
-      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+      become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
       until: ibn_vm_reachable2 is succeeded
       retries: 20
       delay: 30

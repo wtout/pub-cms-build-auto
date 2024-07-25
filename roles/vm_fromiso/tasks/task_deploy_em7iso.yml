@@ -34,7 +34,7 @@
       until: em7_vm_reachable1 is succeeded
       retries: 5
       delay: 10
-      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+      become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
     rescue:
     - block:
       - include_tasks: task_reboot_guest_vm.yml
@@ -45,7 +45,7 @@
         until: em7_vm_reachable2 is succeeded
         retries: 5
         delay: 10
-        become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+        become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
       rescue:
       - block:
         - name: enable VM building
@@ -64,7 +64,7 @@
           until: em7_vm_reachable3 is succeeded
           retries: 5
           delay: 10
-          become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+          become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
         rescue:
           - include_tasks: task_reboot_guest_vm.yml
           - name: recheck EM7 VM reachable
@@ -74,7 +74,7 @@
             until: em7_vm_reachable4 is succeeded
             retries: 5
             delay: 10
-            become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+            become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
     - name: Wait for port 22 to become open and contain "OpenSSH"
       ansible.builtin.wait_for:
         port: 22

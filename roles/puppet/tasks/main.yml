@@ -7,7 +7,7 @@
       register: pp_vm_reachable
       check_mode: no
       ignore_errors: true
-      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+      become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     - block:
       - block:
@@ -74,7 +74,7 @@
       register: pp_vm_reachable
       check_mode: no
       ignore_errors: true
-      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+      become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     - block:
       - include_tasks: task_remove_vm_from_class.yml

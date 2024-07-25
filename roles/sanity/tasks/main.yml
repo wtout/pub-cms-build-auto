@@ -8,7 +8,7 @@
     ignore_errors: true
     until: sc_vm_reachable is succeeded
     delay: 10
-    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
   - block:
     - name: check VM credentials

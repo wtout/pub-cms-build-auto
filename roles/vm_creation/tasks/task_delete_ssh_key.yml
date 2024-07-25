@@ -7,11 +7,11 @@
   - name: check if known hosts file exists
     ansible.builtin.stat:
       path: "{{ home_dir }}/.ssh/known_hosts"
-    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
   - name: delete ssh key
     ansible.builtin.lineinfile:
       path: "{{ home_dir }}/.ssh/known_hosts"
       regex: '^{{ ansible_host }}.*$'
       state: absent
-    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

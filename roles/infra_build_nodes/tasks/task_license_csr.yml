@@ -37,7 +37,7 @@
         ansible.builtin.command: ping {{ netconfig.nic4.ipaddress if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else ansible_host }} -c 1
         register: ibn_vm_reachable_lic1
         check_mode: no
-        become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+        become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
         until: ibn_vm_reachable_lic1 is succeeded
         retries: 20
         delay: 30

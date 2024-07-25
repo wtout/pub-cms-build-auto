@@ -19,7 +19,7 @@
       name: "{{ netconfig.nic1.ipaddress }}"
       path: "{{ lookup('env', 'HOME') }}/.ssh/known_hosts"
       state: absent
-    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     when: inventory_hostname is search('nsvpx')
   - name: Remove CSR key from known_hosts
@@ -34,7 +34,7 @@
       - "{{ netconfig.nic4.ipaddress }}"
     loop_control:
       loop_var: loop_item
-    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
     delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
     when: inventory_hostname is search('csr')
 

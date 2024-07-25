@@ -5,7 +5,7 @@
     - name: check VM reachable
       ansible.builtin.shell: ping {{ hostvars[groups['em7db']|first]['ansible_host'] }} -c 1
       register: db01_vm_reachable
-      become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+      become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
       check_mode: no
       ignore_errors: true
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

@@ -22,5 +22,5 @@
       regexp: '^callback_whitelist'
       replace: 'callbacks_enabled'
   delegate_to: localhost
-  become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+  become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
   run_once: true

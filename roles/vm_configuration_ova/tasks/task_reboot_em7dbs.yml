@@ -16,7 +16,7 @@
     ignore_errors: yes
   - name: wait until db vip is reachable
     ansible.builtin.shell: ping {{ vip.db }} -c 1
-    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
     retries: 30
     delay: 10
     register: db_vip_reachable2

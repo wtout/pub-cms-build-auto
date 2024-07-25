@@ -19,7 +19,7 @@
       chdir: "{{ spl_wd }}/dev/{{ repo_name }}"
     environment:
       https_proxy: "{{ proxy_address }}"
-    become: "{{ 'yes' if host_os|lower is search('almalinux') else 'no' }}"
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
   when: clone_repos is succeeded
   delegate_to: localhost
   run_once: true
