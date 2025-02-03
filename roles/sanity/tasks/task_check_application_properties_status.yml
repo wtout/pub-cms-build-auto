@@ -1,0 +1,52 @@
+---
+# Tasks to the content of /opt/CSCO-CMS/relayweb/conf/application.properties
+- block:
+  - name: check if {{ fname }} exists
+    ansible.builtin.stat:
+      path: "{{ fname }}"
+    register: findfile
+  - name: define rly_app_prop_status
+    ansible.builtin.set_fact:
+      rly_app_prop_status: "{{ rly_app_prop_status|default([]) + [fname + ' is not found'] }}"
+    when: not findfile.stat.exists
+  - block:
+    - name: check content of {{ fname }}
+      ansible.builtin.shell: |
+        grep {{ param_item.split(' ')|first }} {{ fname }}
+      register: reg_app_prop
+      ignore_errors: true
+      loop: "{{ req_params_list }}"
+      loop_control:
+        loop_var: param_item
+    - name: define rly_app_prop_status
+      ansible.builtin.set_fact:
+        rly_app_prop_status: "{{ rly_app_prop_status|default([]) + [param_item.split(' ')|first + ' is not present in ' + fname] }}"
+      when:
+        - reg_app_prop.results | selectattr('param_item', 'search', param_item.split(' ')|first) | map(attribute='stdout')|join  == ''
+      loop: "{{ req_params_list }}"
+      loop_control:
+        loop_var: param_item
+    - name: define rly_app_prop_status
+      ansible.builtin.set_fact:
+        rly_app_prop_status: "{{ rly_app_prop_status|default([]) + [param_item.split(' ')|first + ' is not configured correctly in ' + fname + '. Got ' + (reg_app_prop.results | selectattr('param_item', 'search', param_item.split(' ')|first) | map(attribute='stdout')|join).split('=')|last|trim + ' instead of ' + param_item.split(' ')|last] }}"
+      when:
+        - reg_app_prop.results | selectattr('param_item', 'search', param_item.split(' ')|first) | map(attribute='stdout')|join  != ''
+        - (reg_app_prop.results | selectattr('param_item', 'search', param_item.split(' ')|first) | map(attribute='stdout')|join).split('=')|last|trim != param_item.split(' ')|last
+      loop: "{{ req_params_list }}"
+      loop_control:
+        loop_var: param_item
+    when: findfile.stat.exists
+  vars:
+    fname: '/opt/CSCO-CMS/relayweb/conf/application.properties'
+    req_params_list:
+      - server.port 9001
+      - davSplunkIP splunk-search-head-vip
+      - davSplunkPort 8089
+      - davSplunkUserName cms
+      - davSplunkUserPassword cmsautomation~123
+      - splunkKVStoreIP splunk-search-head-vip
+      - splunkKVStorePort 8089
+      - splunkKVStoreUserName cms
+      - em7DBIP em7-db-vip
+  tags: sanity
+  

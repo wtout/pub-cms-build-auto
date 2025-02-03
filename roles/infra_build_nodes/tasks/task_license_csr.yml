@@ -1,0 +1,93 @@
+---
+# Task file to license CSRs
+- block:
+  - name: Check smart license
+    cisco.ios.ios_command:
+      commands:
+        - show license summary
+    register: reg_smart_account1
+    ignore_errors: yes
+    until: reg_smart_account1.stdout is not search('No licenses in use')
+    delay: 10
+  - block:
+    - name: Configure Smart Licensing
+      cisco.ios.ios_command:
+        commands:
+          - configure terminal
+          - ip name-server {{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|first }}
+          - license boot level network-essentials addon dna-essentials
+          - license smart proxy address 64.102.255.40
+          - license smart proxy port 8080
+          - license smart transport smart
+          - license smart url default
+          - exit
+          - write
+    - name: Save licensed CSR configuration
+      cisco.ios.ios_command:
+        commands:
+          - command: Copy running-config startup-config
+            prompt: '[confirm]'
+            answer: "\r"
+    - block:
+      - name: Power off VM
+        ansible.builtin.include_tasks: task_poweroff_csr.yml
+      - name: Power on VM
+        ansible.builtin.include_tasks: task_poweron_csr.yml
+      - name: check VM reachable
+        ansible.builtin.command: ping {{ netconfig.nic4.ipaddress if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else ansible_host }} -c 1
+        register: ibn_vm_reachable_lic1
+        check_mode: no
+        become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+        until: ibn_vm_reachable_lic1 is succeeded
+        retries: 20
+        delay: 30
+      - name: Get the Smart licensing ID Token
+        ansible.builtin.slurp:
+          src: "{{ csr_license_idtoken_path }}"
+        register: csr_license_idtoken
+        run_once: true
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - name: Configure Smart Licensing
+      cisco.ios.ios_command:
+        commands:
+          - configure terminal
+          - platform hardware throughput level MB T2
+          - exit
+          - write
+    - name: Configure Smart Licensing ID Token
+      cisco.ios.ios_command:
+        commands:
+          - license smart trust idtoken {{ csr_license_idtoken['content'] | b64decode | trim }} local
+    - block:
+      - name: Check smart licensing
+        cisco.ios.ios_command:
+          commands:
+            - show license summary
+        register: reg_smart_account2
+        until: sm is not search('none')
+        delay: 10
+        failed_when: sm is search('none')
+        vars:
+          sm: "{{ (reg_smart_account2.stdout_lines|first|select('search','Smart Account:')|first).split(': ')|last }}"
+      rescue:
+      - name: Reconfigure Smart Licensing ID Token
+        cisco.ios.ios_command:
+          commands:
+            - license smart trust idtoken {{ csr_license_idtoken['content'] | b64decode | trim }} local
+      - name: Check smart licensing
+        cisco.ios.ios_command:
+          commands:
+            - show license summary
+        register: reg_smart_account3
+        until: sm is not search('none')
+        delay: 10
+        failed_when: sm is search('none')
+        vars:
+          sm: "{{ (reg_smart_account3.stdout_lines|first|select('search','Smart Account:')|first).split(': ')|last }}"
+      always:
+      - ansible.builtin.set_fact:
+          reg_smart_account: "{{ reg_smart_account3 if reg_smart_account3 is defined else reg_smart_account2 }}"
+      - ansible.builtin.assert:
+          that: reg_smart_account is succeeded
+          fail_msg: 'Unable to apply the smart ID token successfully'
+    when: reg_smart_account1 is failed

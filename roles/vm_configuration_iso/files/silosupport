@@ -1,0 +1,8 @@
+Host_Alias  SILO_SUDO_HOSTS = ALL
+Runas_Alias SILO_SUDO_RUNAS = ALL
+Cmnd_Alias  SILO_SUDO_CMNDS = ALL
+
+Cmnd_Alias      SILO_SHELLS = /bin/sh, /bin/bash, /sbin/nologin, /usr/bin/sh, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
+Cmnd_Alias      SILO_RP = /usr/sbin/visudo, /bin/su, /usr/bin/su, /bin/rm, /usr/bin/rm, /bin/truncate, /usr/bin/truncate
+
+%silosupport SILO_SUDO_HOSTS = (SILO_SUDO_RUNAS)  SILO_SUDO_CMNDS, !SILO_SHELLS, !SILO_RP

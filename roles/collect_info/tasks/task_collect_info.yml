@@ -1,0 +1,93 @@
+---
+# tasks to collect info
+- block:
+### Bastion ###
+### prompts ###
+  - ansible.builtin.pause:
+      prompt: "Enter the Bastion username [ENTER]"
+    register: bastion_user
+    until: bastion_user.user_input != ''
+    run_once: true
+
+  - ansible.builtin.pause:
+      prompt: "Enter the Bastion password [ENTER]"
+      echo: no
+    when:
+      - groups['bastion'] | length >= 1
+    register: bastion_pass
+    until: bastion_pass.user_input != ''
+    run_once: true
+
+  - ansible.builtin.pause:
+      prompt: "Confirm the Bastion password [ENTER]"
+      echo: no
+    when:
+      - bastion_pass.user_input != ''
+    register: bastion_pass2
+    until: bastion_pass2.user_input == bastion_pass.user_input
+    run_once: true
+
+### Set Facts ###
+  - block:
+    - name: process Bastion credentials
+      ansible.builtin.set_fact:
+        new_buser: '{{ bastion_user.user_input | regex_replace("\\", "\\\\") }}'
+        new_bpass: '{{ bastion_pass.user_input | regex_replace("\\", "\\\\") }}'
+    - name: process Bastion password with "
+      ansible.builtin.set_fact:
+        new_bpass: \'{{ new_bpass }}\'
+      when: bastion_pass.user_input is search('"')
+    - name: process Bastion password with '
+      ansible.builtin.set_fact:
+        new_bpass: \"{{ new_bpass | regex_replace("'", "\'") }}\"
+      when: bastion_pass.user_input is search("'")
+    - name: process Bastion password with no quotes
+      ansible.builtin.set_fact:
+        new_bpass: "{{ new_bpass }}"
+      when: bastion_pass.user_input is not regex("'|\"")
+
+    - name: define Bastion credentials
+      ansible.builtin.set_fact:
+        bastion: "{{ bastion | default({}) | combine(new_item, recursive=true) }}"
+      vars:
+        new_item: "{'{{ item.key }}': '{{ item.value }}'}"
+      with_items:
+        - { key: 'username', value: '{{ new_buser }}' }
+        - { key: 'password', value: '{{ new_bpass }}' }
+
+    - name: check if Bastion login credentials are defined
+      ansible.builtin.assert:
+        that:
+          - bastion.username is defined
+          - bastion.username != ''
+          - bastion.password is defined
+          - bastion.password != ''
+    when:
+      - bastion_user.user_input is defined
+  no_log: true
+  when:
+    - groups['bastion'] | length >= 1
+    - bastion.address != [] and bastion.address != ['']
+  tags: always
+
+### Write facts ###
+- block:
+  - name: create credentials file
+    ansible.builtin.copy:
+      content: '# Credentials'
+      dest: "{{ VFILE }}"
+      force: true
+  - name: Save Bastion credentials
+    ansible.builtin.lineinfile:
+      path: "{{ VFILE }}"
+      line: "{{ task_item.name|upper }}_{{ task_item.key|upper }}: {{ task_item.value }}"
+    with_items:
+        - { name: 'bastion', key: 'user', value: '{{ bastion.username }}' }
+        - { name: 'bastion', key: 'pass', value: '{{ bastion.password }}' }
+    loop_control:
+      loop_var: task_item
+  when:
+    - groups['bastion'] | length >=1
+    - bastion.address != [] and bastion.address != ['']
+  no_log: true
+  check_mode: no

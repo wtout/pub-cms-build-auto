@@ -1,0 +1,9 @@
+
+    drvcenter:
+      hosts:
+        drvcenter[01:01]:
+    dr:
+      children:
+        drstdalvm:
+          hosts:
+            drstdalvm[01:{{ '%02d' | format(environment_definition.customer.secondary.number_of_stdalvms|int) }}]:

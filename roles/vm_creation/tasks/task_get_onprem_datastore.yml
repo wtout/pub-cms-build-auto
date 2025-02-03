@@ -1,0 +1,9 @@
+---
+# tasks to define the on-prem datastore for each host
+- block:
+  - name: define on-prem datastores list for each host group
+    ansible.builtin.set_fact:
+      vm_ds_names: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter']|first][inventory_hostname[:-2] + '_ds_names'] }}"
+  - name: define on-prem datastore for each host
+    ansible.builtin.set_fact:
+      vm_ds: "{{ vm_ds_names|select('regex', '-%02d'|format(vm.hostmap[inventory_hostname[-2:]|int - 1]|int))|list|join if vm.hostmap|default([]) != [] and vm.hostmap|length > inventory_hostname[-2:]|int - 1 else vm_ds_names[1] if inventory_hostname[-2:]|int % 2 == 0 and vm_ds_names|length > 1 else vm_ds_names[0] }}"

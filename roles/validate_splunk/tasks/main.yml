@@ -1,0 +1,33 @@
+---
+# tasks file for roles/validate_splunk
+- block:
+  - name: check VM reachable
+    ansible.builtin.shell: ping {{ ansible_host }} -c 1
+    register: vs_vm_reachable
+    ignore_errors: true
+    check_mode: no
+    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - block:
+    - name: determine VM credentials
+      block:
+        - name: check VM credentials
+          ansible.builtin.wait_for_connection:
+            timeout: 3
+          register: vs_vm_creds
+          check_mode: no
+      rescue:
+        - name: Update SSH password
+          ansible.builtin.set_fact:
+            ansible_ssh_pass: "{{ postppp }}"
+            ansible_become_pass: "{{ postppp }}"
+          no_log: true
+        - name: check updated VM credentials
+          ansible.builtin.wait_for_connection:
+            timeout: 3
+          check_mode: no
+    - include_tasks: task_validate_splunk.yml
+      when: ansible_ssh_pass == postppp
+    when: vs_vm_reachable is succeeded
+  when: validate_splunk | default(false) | bool
+  tags: [ 'validate_splunk', 'never' ]

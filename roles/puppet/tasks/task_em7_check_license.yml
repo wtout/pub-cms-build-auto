@@ -1,0 +1,81 @@
+---
+# tasks to get the license status for the EM7 DBs
+- block:
+  - block:
+    - name: check if /proc/drbd exists
+      ansible.builtin.stat:
+        path: '/proc/drbd'
+      register: reg_drbd_file
+      loop: "{{ db_list }}"
+      loop_control:
+        loop_var: db_item
+      delegate_to: "{{ db_item }}"
+      become: yes
+    - name: define status_message1
+      ansible.builtin.set_fact:
+        status_message1: "{{ status_message1|default([]) | union([db_item + ' configured: ' + reg_drbd_file.results|selectattr('db_item','equalto',db_item)|map(attribute='stat.exists')|list|join]) }}"
+      loop: "{{ db_list }}"
+      loop_control:
+        loop_var: db_item
+      delegate_to: "{{ db_item }}"
+    - ansible.builtin.assert:
+        that:
+          - "msg_item is search('configured: True')"
+        fail_msg: "{{ msg_item }}"
+      loop: "{{ status_message1 }}"
+      loop_control:
+        loop_var: msg_item
+      when: status_message1 != []
+
+    - name: get primary DB
+      ansible.builtin.shell: grep 'ro:' /proc/drbd | head -1 | awk -F 'ro:' '{print $NF}' | cut -d '/' -f1
+      register: reg_primary_check
+      loop: "{{ db_list }}"
+      loop_control:
+        loop_var: db_item
+      delegate_to: "{{ db_item }}"
+      become: yes
+      check_mode: no
+      args:
+        warn: no
+    - name: define primary DB list
+      ansible.builtin.set_fact:
+        primary_db_list: "{{ primary_db_list|default([]) | union([db_item]) }}"
+      when: reg_primary_check.results|selectattr('db_item','equalto',db_item)|map(attribute='stdout')|list|first == 'Primary'
+      loop: "{{ db_list }}"
+      loop_control:
+        loop_var: db_item
+    when: inventory_hostname is search('em7db')
+  - name: checking licensed state
+    block:
+      - name: Check licensed state
+        ansible.builtin.shell: |
+          /opt/em7/bin/licensed_state
+        register: reg_lic_state
+        loop: "{{ primary_db_list|default(groups['em7'] if groups['em7']|length == 1 else []) }}"
+        loop_control:
+          loop_var: db_item
+        delegate_to: "{{ db_item }}"
+        become: yes
+        args:
+          warn: no
+        check_mode: no
+    rescue:
+      - name: define status_message2
+        ansible.builtin.set_fact:
+          status_message2: "{{ status_message2|default([]) | union([db_item + ': ' + reg_lic_state.results|selectattr('db_item','equalto',db_item)|map(attribute='stdout')|list|join if reg_lic_state.results|selectattr('db_item','equalto',db_item)|select('search', 'stdout')|length > 0 else reg_lic_state.results|selectattr('db_item','equalto',db_item)|map(attribute='msg')|list|join]) }}"
+        loop: "{{ primary_db_list|default(groups['em7'] if groups['em7']|length == 1 else []) }}"
+        loop_control:
+          loop_var: db_item
+    when: inventory_hostname is search('em7db') or groups['em7']|length == 1
+  - ansible.builtin.assert:
+      that:
+        - msg_item is search('Appliance is licensed')
+      fail_msg: "{{ msg_item }}"
+    loop: "{{ status_message2 }}"
+    loop_control:
+      loop_var: msg_item
+    when: status_message2|default([]) != []
+  vars:
+    db_list: "{{ ansible_play_hosts|select('search', 'em7db') if groups['em7']|length > 1 else ansible_play_hosts|select('search', 'em7') }}"
+  run_once: yes

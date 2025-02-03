@@ -1,0 +1,12 @@
+---
+# Tasks to delete the customized CSR OVA file
+- name: Delete customized OVA file
+  ansible.builtin.file:
+    path: "{{ file_item }}"
+    state: absent
+  loop:
+    - "{{ role_path }}/files/{{ ova_names.csr|replace('CSR/',vm.name + '_')|replace('.ova','_customized.ova') }}"
+    - "{{ role_path }}/files/iosxe_config.txt"
+  loop_control:
+    loop_var: file_item
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

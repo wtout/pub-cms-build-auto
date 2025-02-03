@@ -1,0 +1,87 @@
+---
+# tasks to configure cluster on EM7 DB VM
+- block:
+  - name: check if /etc/drbd.d/r0.res exists
+    ansible.builtin.stat:
+      path: /etc/drbd.d/r0.res
+    register: reg_res_file
+
+  - block:
+    - include_role:
+        name: vm_configuration_iso
+        tasks_from: task_generate_ssh_keys.yml
+    - include_role:
+        name: vm_configuration_iso
+        tasks_from: task_deploy_ssh_keys.yml
+    when:
+      - inventory_hostname is search('02')
+
+  - block:
+    - name: define the answers for DB01
+      ansible.builtin.set_fact:
+        answers: "{{ 'yes\\n' if reg_res_file.stat.exists else '' }}3\\n1\\ny\\ny\\n1\\n{{ hostvars['em7db02']['vm']['name'] }}\\n{{ hostvars['em7db02']['netconfig']['nic2']['ipaddress'] }}\\n{{ hostvars['em7db02']['netconfig']['nic1']['ipaddress'] }}\\n{{ hostvars['drem7db01']['vm']['name'] }}\\n{{ hostvars['drem7db01']['netconfig']['nic1']['ipaddress'] }}\\n{{ vip.db }}\\n26\\n250\\ny"
+    - name: run coro_install script
+      ansible.builtin.shell: |
+        echo -e "{{ answers }}" | /opt/em7/bin/coro_install
+      register: coro_install_status1
+      ignore_errors: true
+      failed_when:
+        - coro_install_status1.rc != 0
+        - coro_install_status1.rc != 32
+    - name: clean mysql resource
+      ansible.builtin.command: crm resource clean mysql
+    when:
+      - "'dr' not in group_names"
+      - inventory_hostname is search('01')
+
+  - block:
+    - name: define the answers for DB02
+      ansible.builtin.set_fact:
+        answers: "{{ 'yes\\n' if reg_res_file.stat.exists else '' }}3\\n2\\ny\\ny\\n1\\n{{ hostvars['em7db01']['vm']['name'] }}\\n{{ hostvars['em7db01']['netconfig']['nic2']['ipaddress'] }}\\n{{ hostvars['em7db01']['netconfig']['nic1']['ipaddress'] }}\\n{{ hostvars['drem7db01']['vm']['name'] }}\\n{{ hostvars['drem7db01']['netconfig']['nic1']['ipaddress'] }}\\n250\\ny"
+    - name: run coro_install script
+      ansible.builtin.shell: |
+        echo -e "{{ answers }}" | /opt/em7/bin/coro_install
+      register: coro_install_status2
+      ignore_errors: true
+      failed_when:
+        - coro_install_status2.rc != 0
+        - coro_install_status2.rc != 32
+    - ansible.builtin.debug:
+        msg:
+          - "{{ coro_install_status2.stderr }}"
+          - "{{ coro_install_status2.stderr is regex('t connect to MySQL server on.*192.170.170.10') }}"
+    - name: Update silo.conf on VM
+      ansible.builtin.replace:
+        path: /etc/silo.conf
+        regexp: '^({{ task_item.param }}) (.*)$'
+        replace: '\g<1> {{ task_item.value }}'
+      loop:
+        - { param: 'ipaddr =', value: "{{ em7db_ip2_list[0] }}" }
+      loop_control:
+        loop_var: task_item
+      when:
+        - coro_install_status2.stderr is regex('t connect to MySQL server on.*192.170.170.10')
+    - name: clean mysql resource
+      ansible.builtin.command: crm resource clean mysql
+    when: inventory_hostname is search('02')
+
+  - block:
+    - name: define the answers for DRDB01
+      ansible.builtin.set_fact:
+        answers: "{{ 'yes\\n' if reg_res_file.stat.exists else '' }}3\\n3\\ny\\ny\\n1\\n{{ vip.db }}\\n250\\ny"
+    - name: run coro_install script
+      ansible.builtin.shell: |
+        echo -e "{{ answers }}" | /opt/em7/bin/coro_install
+      register: coro_install_status3
+      ignore_errors: true
+      failed_when:
+        - coro_install_status3.rc != 0
+        - coro_install_status3.rc != 32
+    - name: clean mysql resource
+      ansible.builtin.command: crm resource clean mysql
+    when:
+      - "'dr' in group_names"
+      - inventory_hostname is search('01')
+
+  when: inventory_hostname is search('em7db')
+  become: "{{ true if ansible_user != 'root' else false }}"

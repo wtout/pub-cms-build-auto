@@ -1,0 +1,25 @@
+---
+# tasks to update chrony.conf on VM
+- block:
+  - name: Remove bad time server from the chrony config file
+    ansible.builtin.lineinfile:
+      path: "{{ chrony_file }}"
+      regexp: '^server [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}.*$'
+      state: absent
+  - name: Comment out the default time servers in the chrony config file
+    ansible.builtin.replace:
+      path: "{{ chrony_file }}"
+      regexp: "{{ line_item }}"
+      replace: '#\g<1>'
+    loop:
+      - '^(include.*chrony\.d.*)$'
+      - '^(server .*org iburst)$'
+    loop_control:
+      loop_var: line_item
+  - name: Add the local time server to the chrony config file
+    ansible.builtin.lineinfile:
+      path: "{{ chrony_file }}"
+      line: "{% if 'dr' in group_names %} {%- if sysconfig.secondary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.secondary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.secondary.ntp_server + ' iburst\n' -}} {% endif -%} {% else %} {%- if sysconfig.primary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.primary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.primary.ntp_server + ' iburst\n' -}} {% endif -%} {% endif %}"
+      insertafter: '^# Please consider.*$'
+    notify: restart chrony
+  become: "{{ true if ansible_user != 'root' else false }}"

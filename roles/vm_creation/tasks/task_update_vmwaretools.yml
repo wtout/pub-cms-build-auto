@@ -1,0 +1,32 @@
+---
+# tasks to update VMWare tools on VM
+- block:
+  - block:
+    - name: Wait on VMware Tools to become available
+      community.vmware.vmware_guest_tools_wait:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+        validate_certs: false
+        name: "{{ vm.name }}"
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - name: wait 60 seconds for VM to become reachable
+      ansible.builtin.wait_for_connection:
+        timeout: 60
+      when:
+        - "deploy_ovf|default({'changed': false}) is not changed"
+    when:
+      - netconfig.nic1.gateway != ''
+
+  - name: Upgrade VMWare Tools
+    community.vmware.vmware_guest_tools_upgrade:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      validate_certs: no
+    register: vmt_upgrade
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

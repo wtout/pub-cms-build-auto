@@ -1,0 +1,16 @@
+---
+# Tasks to apply fix to relay
+- block:
+  - ansible.builtin.set_fact:
+      splunk_dir: "/opt/splunk/{{ fwd_item }}/splunkforwarder" 
+  - include_tasks: task_check_datetime.yml
+
+  - block:
+    - name: Copy splunk fix to host
+      include_tasks: task_copy_splunk_fix.yml
+    - name: Stop splunk
+      include_tasks: task_stop_splunk.yml
+    - name: apply datetime fix to splunk machines
+      include_tasks: task_apply_fix.yml
+    when: datetime is failed
+  tags: splunk_mop

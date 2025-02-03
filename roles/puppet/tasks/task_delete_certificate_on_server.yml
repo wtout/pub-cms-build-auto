@@ -1,0 +1,15 @@
+---
+# Tasks to delete the puppet certificate on server
+- block:
+  - name: delete the VM certificate on puppet server
+    ansible.builtin.shell: >
+      puppet cert clean {{ host_cert_name }}
+    args:
+      chdir: '/usr/local/bin'
+    become: true
+    ignore_errors: true
+    register: del_vm_cert
+    delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
+    until: del_vm_cert is succeeded
+    retries: 5
+    delay: 10

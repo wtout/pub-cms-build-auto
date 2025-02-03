@@ -1,0 +1,15 @@
+---
+# Tasks to add/delete the additional DNS records
+- name: "{{ 'Add' if dns_state == 'present' else 'Remove' }} additional {{ 'DR ' if 'dr' in group_names else '' }}DNS records"
+  community.general.nsupdate:
+    server: "{{ dns_server }}"
+    record: "{{ list_item.record }}"
+    value: "{{ list_item.value }}"
+    zone: "{{ dns_zone }}"
+    type: "{{ list_item.type }}"
+    state: "{{ dns_state }}"
+  loop: "{{ dns_loop }}"
+  loop_control:
+    loop_var: list_item
+  run_once: true
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

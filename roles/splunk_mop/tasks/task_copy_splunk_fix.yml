@@ -1,0 +1,23 @@
+---
+# Tasks to copy splunk fix to host
+- block:
+  - name: Check if splunk directory exists
+    ansible.builtin.stat:
+      path: "{{ splunk_dir }}"
+    register: dir
+  - ansible.builtin.assert:
+      that: dir.stat.exists
+      fail_msg: "{{ splunk_dir }} does not exist"
+  - name: distribute datetime.zip to host
+    ansible.builtin.unarchive:
+      src: "{{ datetime_zip }}/datetime.zip"
+      dest: /opt/install
+      mode: 0444
+  - name: confirm datetime.zip was properly extracted
+    ansible.builtin.stat:
+      path: /opt/install/cfg
+    register: cfg
+  - ansible.builtin.assert:
+      that: cfg.stat.exists
+      fail_msg: "datetime.zip was not properly extracted"
+  tags: splunk_mop

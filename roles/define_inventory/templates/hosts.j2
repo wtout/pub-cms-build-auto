@@ -1,0 +1,13 @@
+{% if environment_definition.customer.deployment_model is search('s') %}
+{% include 'templates/hostss.yml.tmpl' %}
+{% if environment_definition.customer.disaster_recovery %}
+{% include 'templates/drhostss.yml.tmpl' %}
+{% endif %}
+{% elif environment_definition.customer.deployment_model is search('aio') %}
+{% include 'templates/hostsaio.yml.tmpl' %}
+{% else %}
+{% include 'templates/hosts.yml.tmpl' %}
+{% if environment_definition.customer.disaster_recovery %}
+{% include 'templates/drhosts.yml.tmpl' %}
+{% endif %}
+{% endif %}

@@ -1,0 +1,184 @@
+127.0.0.1 localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1 localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+#### Host Alias Names ####
+{{ vip.mc + "\tem7-message-collector-vip" }}
+{{ vip.db + "\tem7-db-vip" }}
+{{ vip.prt + "\tem7-admin-portal-vip" }}
+{{ vip.src + "\tsplunk-search-head-vip" }}
+{{ drspldpl_ip1_list[0] + "\tsplunk-deployer-server" }}
+{{ vip.rly + "\trelay-vip" }}
+{{ vip.rly_db +	"\trelay-db-vip" }}
+{{ drrly_ip1_list|first + "\trelay-site1-server01" }}
+{{ drrly_ip1_list|last + "\trelay-site2-server01" }}
+{{ splunk.he_deployment_server_ip + "\tsplunk-head-deployment-server" }}
+{{ splunk.he_indexer01_ip + "\tsplunk-head-indexer01" }}
+{{ splunk.he_indexer01_ip + "\tsplunk-head-indexer02" }}
+{{ drsplind_ip1_list|first + "\tsplunk-site1-indexer01" }}
+{{ drsplind_ip1_list|last + "\tsplunk-site2-indexer01" }}
+{{ drsplsrc_ip1_list|first + "\tsplunk-site1-search-head01" }}
+{{ drsplsrc_ip1_list|last + "\tsplunk-site2-search-head01" }}
+{{ splunk.license_master_ip + "\tsplunk-license-master" }}
+{{ drsplmas_ip1_list[0] + "\tsplunk-cluster-master" }}
+{{ splunk.mom_clustermaster_ip + "\tmom-splunk-cluster-master" }}
+{{ splunk.mom_indexer1_ip + "\tsplunk-momidx-01" }}
+{{ splunk.mom_indexer2_ip + "\tsplunk-momidx-02" }}
+{{ splunk.mom_rly_vip + "\tmom-relay-vip" }}
+{{ splunk.mom_clustermaster_ip + "\tsplunk-mom-cluster-master" }}
+
+#### Host Names ####
+{{ puppet.secondary.ipaddress + "\t" + puppet.secondary.vmname + "\t" + puppet.secondary.fqdn }}
+{{ yum.secondary.ipaddress + "\t" + yum.secondary.vmname + "\t" + yum.secondary.fqdn }}
+
+{% if drlnxjmp_ip1_list is defined -%}
+{% block lnxjmp_ip1 %}
+{% for item in drlnxjmp_ip1_list %}
+{{ item + "\t" + drlnxjmp_hst_list[loop.index0] + "\t" + drlnxjmp_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock lnxjmp_ip1 %}
+{% endif %}
+
+{%- if drrly_ip1_list is defined -%}
+{% block rly_ip1 %}
+{% for item in drrly_ip1_list %}
+{{ item + "\t" + drrly_hst_list[loop.index0] + "\t" + drrly_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock rly_ip1 %}
+{% endif %}
+
+{%- if drsplsrc_ip1_list is defined -%}
+{% block splsrc_ip1 %}
+{% for item in drsplsrc_ip1_list %}
+{{ item + "\t" + drsplsrc_hst_list[loop.index0] + "\t" + drsplsrc_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock splsrc_ip1 %}
+{% endif %}
+
+{%- if drsplind_ip1_list is defined -%}
+{% block splind_ip1 %}
+{% for item in drsplind_ip1_list %}
+{{ item + "\t" + drsplind_hst_list[loop.index0] + "\t" + drsplind_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock splind_ip1 %}
+{% endif %}
+
+{%- if drsplmas_ip1_list is defined -%}
+{% block splmas_ip1 %}
+{% for item in drsplmas_ip1_list %}
+{{ item + "\t" + drsplmas_hst_list[loop.index0] + "\t" + drsplmas_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock splmas_ip1 %}
+{% endif %}
+
+{%- if drspldpl_ip1_list is defined -%}
+{% block spldpl_ip1 %}
+{% for item in drspldpl_ip1_list %}
+{{ item + "\t" + drspldpl_hst_list[loop.index0] + "\t" + drspldpl_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock spldpl_ip1 %}
+{% endif %}
+
+{%- if drem7db_ip1_list is defined -%}
+{% block db_ip1 %}
+{% for item in drem7db_ip1_list %}
+{{ item + "\t" + drem7db_hst_list[loop.index0] + "\t" + drem7db_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock db_ip1 %}
+{% endif %}
+
+{%- if drem7prt_ip1_list is defined -%}
+{% block prt_ip1 %}
+{% for item in drem7prt_ip1_list %}
+{{ item + "\t" + drem7prt_hst_list[loop.index0] + "\t" + drem7prt_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock prt_ip1 %}
+{% endif %}
+
+{%- if drem7mc_ip1_list is defined -%}
+{% block mc_ip1 %}
+{% for item in drem7mc_ip1_list %}
+{{ item + "\t" + drem7mc_hst_list[loop.index0] + "\t" + drem7mc_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock mc_ip1 %}
+{% endif %}
+
+{%- if drem7dc_ip1_list is defined -%}
+{% block dc_ip1 %}
+{% for item in drem7dc_ip1_list %}
+{{ item + "\t" + drem7dc_hst_list[loop.index0] + "\t" + drem7dc_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endblock dc_ip1 %}
+{% endif %}
+
+# HA hosts
+{% if lnxjmp_ip1_list is defined -%}
+{% for item in lnxjmp_ip1_list %}
+{{ item + "\t" + lnxjmp_hst_list[loop.index0] + "\t" + lnxjmp_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if rly_ip1_list is defined -%}
+{% for item in rly_ip1_list %}
+{{ item + "\t" + rly_hst_list[loop.index0] + "\t" + rly_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if groups['atarly'] is defined -%}
+{{ atarly_ip1_list[0] + "\t" + atarly_hst_list[0] + "\t" + atarly_hst_list[0] + '.' + sysconfig.secondary.domain_name }}
+{% endif %}
+
+{%- if spl_ip1_list is defined -%}
+{{ spl_ip1_list[0] + "\t" + spl_hst_list[0] + "\t" + spl_hst_list[0] + '.' + sysconfig.secondary.domain_name }}
+{% endif %}
+
+{%- if splsrc_ip1_list is defined -%}
+{% for item in splsrc_ip1_list %}
+{{ item + "\t" + splsrc_hst_list[loop.index0] + "\t" + splsrc_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if splind_ip1_list is defined -%}
+{% for item in splind_ip1_list %}
+{{ item + "\t" + splind_hst_list[loop.index0] + "\t" + splind_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if splmas_ip1_list is defined -%}
+{% for item in splmas_ip1_list %}
+{{ item + "\t" + splmas_hst_list[loop.index0] + "\t" + splmas_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if spldpl_ip1_list is defined -%}
+{% for item in spldpl_ip1_list %}
+{{ item + "\t" + spldpl_hst_list[loop.index0] + "\t" + spldpl_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if em7_ip1_list is defined -%}
+{{ em7_ip1_list[0] + "\t" + em7_hst_list[0] + "\t" + em7_hst_list[0] + '.' + sysconfig.secondary.domain_name }}
+{% endif %}
+
+{%- if em7db_ip1_list is defined -%}
+{% for item in em7db_ip1_list %}
+{{ item + "\t" + em7db_hst_list[loop.index0] + "\t" + em7db_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if prt_ip1_list is defined -%}
+{% for item in prt_ip1_list %}
+{{ item + "\t" + prt_hst_list[loop.index0] + "\t" + prt_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if em7mc_ip1_list is defined -%}
+{% for item in em7mc_ip1_list %}
+{{ item + "\t" + em7mc_hst_list[loop.index0] + "\t" + em7mc_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}
+
+{%- if em7dc_ip1_list is defined -%}
+{% for item in em7dc_ip1_list %}
+{{ item + "\t" + em7dc_hst_list[loop.index0] + "\t" + em7dc_hst_list[loop.index0] + '.' + sysconfig.secondary.domain_name }}
+{% endfor %}
+{% endif %}

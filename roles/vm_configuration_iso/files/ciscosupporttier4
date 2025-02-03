@@ -1,0 +1,8 @@
+Host_Alias  L4_SUDO_HOSTS = ALL
+Runas_Alias L4_SUDO_RUNAS = ALL
+Cmnd_Alias  L4_SUDO_CMNDS = ALL
+
+Cmnd_Alias      L4_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
+
+%ciscosupporttier4 L4_SUDO_HOSTS = (L4_SUDO_RUNAS) NOPASSWD: L4_SUDO_CMNDS, !L4_SHELLS
+%role\ -\ linux\ l4\ users@cisco-cms.com L4_SUDO_HOSTS = (L4_SUDO_RUNAS) NOPASSWD: L4_SUDO_CMNDS, !L4_SHELLS

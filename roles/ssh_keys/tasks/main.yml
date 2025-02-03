@@ -1,0 +1,9 @@
+---
+# Tasks for configure and rollback ssh keys
+- block:
+  - include_tasks: configure_ssh_keys.yml
+    when: configure_ssh_keys | default(false) | bool
+
+  - include_tasks: rollback_ssh_keys.yml
+    when: rollback_ssh_keys | default(false) | bool
+  tags: ssh_keys

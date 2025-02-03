@@ -1,0 +1,109 @@
+---
+# tasks to check if puppet push is required on the relay
+- block:
+  - name: check if /opt/CSCO-CMS/relayweb/conf/common.properties is created on the relay
+    ansible.builtin.stat:
+      path: '/opt/CSCO-CMS/relayweb/conf/common.properties'
+    register: prop_file1
+
+  - block:
+    - name: "puppet: puppet push"
+      include_role:
+        name: puppet
+        tasks_from: task_puppet_push.yml
+
+    - name: check if /opt/CSCO-CMS/relayweb/conf/common.properties is created on the relay
+      ansible.builtin.stat:
+        path: '/opt/CSCO-CMS/relayweb/conf/common.properties'
+      register: prop_file2
+
+    - ansible.builtin.assert:
+        that:
+          - prop_file2.stat.exists
+        fail_msg: "Unable to have relayweb path created. Aborting!"
+    when: not prop_file1.stat.exists
+
+  - name: check if /data01/mysql_data/mysql/grastate.dat is created on the relay
+    ansible.builtin.stat:
+      path: /data01/mysql_data/mysql/grastate.dat
+    register: grastate_file1
+
+  - block:
+    - name: "puppet: disable puppet sync"
+      include_role:
+        name: puppet
+        tasks_from: task_disable_puppet_sync.yml
+    - name: "puppet: puppet push"
+      include_role:
+        name: puppet
+        tasks_from: task_puppet_push.yml
+      vars:
+        push_num: "{{ loop_item }}"
+      loop: "{{ range(1, 2 + 1)|list }}"
+      loop_control:
+        loop_var: loop_item
+    - name: "puppet: enable puppet sync"
+      include_role:
+        name: puppet
+        tasks_from: task_enable_puppet_sync.yml
+    - name: check if /data01/mysql_data/mysql/grastate.dat is created on the relay
+      ansible.builtin.stat:
+        path: /data01/mysql_data/mysql/grastate.dat
+      register: grastate_file2
+    - ansible.builtin.assert:
+        that:
+          - grastate_file2.stat.exists
+        fail_msg: "Unable to have grastate.dat file created. Aborting!"
+    when: not grastate_file1.stat.exists
+
+  - name: check if mariadb is started
+    ansible.builtin.shell: $(which systemctl) status mariadb
+    register: mariadb_status1
+    ignore_errors: true
+
+  - include_tasks: task_fix_mariadb.yml
+    when: mariadb_status1 is failed
+
+  - name: Validate Relay DB credentials
+    community.mysql.mysql_info:
+      login_user: root
+      login_password: "{{ relay_db_password }}"
+      filter:
+        - version
+    register: dbcon1
+    ignore_errors: yes
+
+  - block:
+    - name: "puppet: disable puppet sync"
+      include_role:
+        name: puppet
+        tasks_from: task_disable_puppet_sync.yml
+    - name: "puppet: puppet push"
+      include_role:
+        name: puppet
+        tasks_from: task_puppet_push.yml
+      vars:
+        push_num: "{{ loop_item }}"
+      loop: "{{ range(1, 2 + 1)|list }}"
+      loop_control:
+        loop_var: loop_item
+    - name: "puppet: enable puppet sync"
+      include_role:
+        name: puppet
+        tasks_from: task_enable_puppet_sync.yml
+    when: dbcon1 is failed
+
+  - name: check if mariadb is started
+    ansible.builtin.shell: $(which systemctl) status mariadb
+    register: mariadb_status2
+    ignore_errors: true
+
+  - include_tasks: task_fix_mariadb.yml
+    when: mariadb_status2 is failed
+
+  - name: Re-validate Relay DB credentials
+    community.mysql.mysql_info:
+      login_user: root
+      login_password: "{{ relay_db_password }}"
+      filter:
+        - version

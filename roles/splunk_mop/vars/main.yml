@@ -1,0 +1,14 @@
+---
+# vars file for splunk_mop
+splunk_dir: /opt/splunk
+datetime_zip: files/
+ufwd:
+  - UFWD-agnosticdata
+  - UFWD-cmsdata
+  - UFWD-collabdata
+  - UFWD-corallogdata
+  - UFWD-cpsdata
+  - UFWD-diagnosticdata
+  - UFWD-em7data
+  - UFWD-snmptraps
+  - UFWD-syslogs

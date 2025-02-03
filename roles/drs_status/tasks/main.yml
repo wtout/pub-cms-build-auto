@@ -1,0 +1,13 @@
+---
+# tasks file for drs_status
+- block:
+  - include_tasks: task_check_drs_creation.yml
+    when:
+      - check_drs_creation | default(false) | bool
+      - create_drs is defined
+
+  - include_tasks: task_check_drs_removal.yml
+    when:
+      - check_drs_removal | default(false) | bool
+      - delete_drs is defined
+  tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]

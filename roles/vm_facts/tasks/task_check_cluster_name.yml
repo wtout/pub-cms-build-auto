@@ -1,0 +1,13 @@
+---
+# tasks to get cluster name
+- block:
+  - name: Check on-prem cluster name
+    include_tasks: task_check_onprem_cluster_name.yml
+    when:
+      - information.deptype == 'a'
+  - name: Get cluster name
+    include_tasks: task_get_cluster_name.yml
+    when:
+      - information.cluster is not defined or information.cluster == ''
+  when:
+    - "'vcenter' in group_names or (customer.disaster_recovery and 'drvcenter' in group_names)"

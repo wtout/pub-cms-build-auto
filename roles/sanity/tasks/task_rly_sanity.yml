@@ -1,0 +1,51 @@
+---
+# Tasks to check RLY sanity
+- block:
+  - include_tasks: task_check_puppet_push_status.yml
+    when: customer.version.release[1:]|replace('.', '')|int <= 9217
+  - block:
+    - include_tasks: task_check_rly_current_version.yml
+    - include_tasks: task_check_rly_rpms_status.yml
+    - include_tasks: task_check_service_status.yml
+    - include_tasks: task_check_rly_logged_errors_status.yml
+    - name: check rules
+      include_tasks:
+        file: task_check_rly_rules_status.yml
+        apply:
+          vars:
+            fileid: "{{ file_item.name }}"
+            rulesnum: "{{ file_item.number }}"
+      loop:
+        - { name: '/etc/syslog-ng/conf.d/priority_em7-message-collector-vip_WL.conf', number: "{{ 1185 if groups['rly']|length == 1 else 1273 }}" }
+        - { name: '/etc/syslog-ng/conf.d/priority_em7-message-collector-vip_BL.conf', number: "{{ 91 if groups['rly']|length == 1 else 115 }}" }
+      loop_control:
+        loop_var: file_item
+    - include_tasks: task_check_rly_dbs.yml
+    - include_tasks: task_check_rly_db_cluster_status.yml
+    - include_tasks: task_check_rly_db_grants_status.yml
+    - include_tasks: task_check_reportstore_status.yml
+    - include_tasks: task_check_coral_services_status.yml
+    - include_tasks: task_check_searchhead_vip_status.yml
+    - include_tasks: task_check_de_config_status.yml
+    - include_tasks: task_check_relayweb_port_status.yml
+    - include_tasks: task_check_chrony_server_status.yml
+    - include_tasks: task_check_process_status.yml
+    - include_tasks: task_check_rly_splunk_status.yml
+    - include_tasks: task_check_relayweb_conf_file.yml
+    - include_tasks: task_check_hosts_file.yml
+    - include_tasks: task_check_chrony_file.yml
+    - include_tasks: task_check_splunk_cronjob_status.yml
+    - include_tasks: task_check_splunk_status.yml
+    - include_tasks: task_check_backup_dir_status.yml
+    - include_tasks: task_check_data01_dir_status.yml
+    - include_tasks: task_check_swap_status.yml
+    - include_tasks: task_check_application_properties_status.yml
+    - include_tasks: task_check_configfile_properties_status.yml
+    - include_tasks: task_check_backup_cronjob_status.yml
+    - include_tasks: task_check_user_expiry_status.yml
+    - include_tasks: task_check_ownership_status.yml
+    - include_tasks: task_check_sudoers_user_status.yml
+  when:
+    - inventory_hostname is search('rly')
+    - inventory_hostname is not search('atarly')
+  tags: sanity

@@ -1,0 +1,47 @@
+---
+# Tasks to clone the repos
+- block:
+  - name: clone the repos
+    ansible.builtin.git:
+      repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
+      dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
+      version: "{{ repo_item.release }}"
+      force: yes
+    loop:
+      - { name: "{{ automation_site }}/{{ mdr_automation_reponame }}.git", release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
+      - { name: "{{ automation_site }}/{{ mdr_splunkenv_reponame }}.git", release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
+    loop_control:
+      loop_var: repo_item
+    register: reg_clone_repos1
+    ignore_errors: yes
+    async: 200
+    poll: 10
+  - name: clone the repos
+    ansible.builtin.git:
+      repo: "{{ repo_item.name | regex_replace('//', '//' + repo_creds + '@') }}"
+      dest: "{{ spl_wd }}/dev/{{ repo_item.name | basename | replace('.git','') }}"
+      version: "{{ repo_item.release }}"
+      force: yes
+    loop:
+      - { name: "{{ automation_site }}/{{ mdr_automation_reponame }}.git", release: "{{ mdr_repo.automation if mdr_repo.automation != '' else 'HEAD' }}" }
+      - { name: "{{ automation_site }}/{{ mdr_splunkenv_reponame }}.git", release: "{{ mdr_repo.splunk_env if mdr_repo.splunk_env != '' else 'HEAD' }}" }
+    loop_control:
+      loop_var: repo_item
+    register: reg_clone_repos2
+    async: 200
+    poll: 10
+    when: reg_clone_repos1 is failed
+  - name: define clone_repos
+    ansible.builtin.set_fact:
+      clone_repos: "{{ reg_clone_repos1 if reg_clone_repos1 is succeeded else reg_clone_repos2 }}"
+  - name: switch to last working version of MDR-Automation
+    ansible.builtin.shell: |
+      git reset --hard a4f42334d57a0d1e09d650f433a431e86b1614f0
+    args:
+      chdir: "{{ spl_wd }}/dev/{{ mdr_automation_reponame }}"
+  delegate_to: localhost
+  become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+  run_once: true
+  environment:
+    http_proxy: "{{ proxy_address|default('') }}"
+    https_proxy: "{{ proxy_address|default('') }}"
