@@ -23,11 +23,11 @@ On a newly installed Linux **CentOS 7.7+** VM that has docker installed and conf
 
 6- Download the Ansible automation package
 
-    $> git clone https://github.com/CXEPI/cms-build-auto-deploy.git
+    $> git clone https://github.com/wtout/cms-build-auto.git
 
-7- Go to the newly cloned cms-build-auto-deploy directory
+7- Go to the newly cloned cms-build-auto directory
 
-    $> cd cms-build-auto-deploy
+    $> cd cms-build-auto
 
 ***Note**: you might need to disable the proxy to be able to clone the repository*
 
@@ -80,9 +80,9 @@ The system definition file name **must match the customer name** as defined in t
 
 Non-standard host specific settings are to be added to a dedicated file under _``inventories/<system-name>/host_vars``_ directory. The name of the variables file must match the name of the host as defined in the hosts.yml file. This can only be done after the system inventory has been created.
 
-To create the system inventory without deploying the system, issue the following command from the automation root directory (cms-build-auto-deploy):
+To create the system inventory without deploying the system, issue the following command from the automation root directory (cms-build-auto):
 
-    $> sh Bash/play_deploy.sh –-envname <system-name> --tags none
+    $> bash Bash/play_deploy.sh –-envname <system-name> --tags none
 
 
 ### Artifacts ###
@@ -91,16 +91,16 @@ The tool automatically downloads and checks the CMSP software package(s) to the 
 
 If the automated procedure is preferred, the user must ensure that the correct and complete package is available at the location the Ansible code expects it to be, _``http://engci-maven-master.cisco.com/artifactory/cms-quicksilver-release/<release_version>/Puppet/``_
 
-To download the artifacts without deploying the system, issue the following command from the automation root directory (cms-build-auto-deploy):
+To download the artifacts without deploying the system, issue the following command from the automation root directory (cms-build-auto):
 
-    $> sh Bash/play_deploy.sh –-envname <system-name> --tags get_release
+    $> bash Bash/play_deploy.sh –-envname <system-name> --tags get_release
 
 
 ### System Deployment ###
 
-1- From the automation root directory (cms-build-auto-deploy), run one of the bash scripts under the Bash folder depending on what you want to do. 
+1- From the automation root directory (cms-build-auto), run one of the bash scripts under the Bash folder depending on what you want to do. 
 
-    $> sh Bash/<script name> --envname <system-name>
+    $> bash Bash/<script name> --envname <system-name>
 
 with the system-name being the name of the system definition file from "Configuration" step 1 and the script name being one of the following options:
 
@@ -156,17 +156,17 @@ To skip specific role(s), add "_--skip-tags 'role1,role2,etc...'_" as argument t
 
 **_Example1_**: to execute one or more roles, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --tags 'role1,role2,etc...'
+    $> bash Bash/<script-name> --envname <system-name> --tags 'role1,role2,etc...'
 
 **_Example2_**: to run all roles except one or more, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --skip-tags 'role1,role2,etc...'
+    $> bash Bash/<script-name> --envname <system-name> --skip-tags 'role1,role2,etc...'
 
 To limit the processing to specific host(s) or group(s) or a combination of both, add "_--limit 'group1,host1,etc...'_" as argument to the script.
 
 **_Example3_**: to execute role1 and role2 on the linux jump servers and on relay01, run the script as follows:
 
-    $> sh Bash/<script-name> --envname <system-name> --tags 'role1,role2' --limit 'lnxjmp,rly01'
+    $> bash Bash/<script-name> --envname <system-name> --tags 'role1,role2' --limit 'lnxjmp,rly01'
 
 ***Note**: group(s) or host(s) names specified with --limit must match the names defined in the hosts.yml file*
 

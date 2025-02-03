@@ -153,7 +153,7 @@ function docker_cmd() {
 			fi
 			;;
 		AlmaLinux*|Ubuntu*)
-			echo "docker"
+			echo "podman"
 			;;
 		*)
 			;;
@@ -190,22 +190,24 @@ function pull_image() {
 		MYRELEASE=$(get_os)
 		case ${MYRELEASE} in
 			CentOS*)
-				$(docker_cmd) pull "${CONTAINERREPO}:${ANSIBLE_VERSION}"
+				$(docker_cmd) pull "${CONTAINERREPO}:${ANSIBLE_VERSION}" &>"${ANSIBLE_LOG_LOCATION}"/pull_error."${PID}"
 				;;
 			AlmaLinux*)
 				if [[ -f ${HOME}/.podman/auth.json ]]
 				then
-					$(docker_cmd) pull "${CONTAINERREPO}:${ANSIBLE_VERSION}" --authfile ${HOME}/.podman/auth.json
+					$(docker_cmd) pull "${CONTAINERREPO}:${ANSIBLE_VERSION}" --authfile ${HOME}/.podman/auth.json &>"${ANSIBLE_LOG_LOCATION}"/pull_error."${PID}"
 				else
-					$(docker_cmd) pull "${CONTAINERREPO}:${ANSIBLE_VERSION}" --authfile ${XDG_RUNTIME_DIR}/containers/auth.json
+					$(docker_cmd) pull "${CONTAINERREPO}:${ANSIBLE_VERSION}" --authfile ${XDG_RUNTIME_DIR}/containers/auth.json &>"${ANSIBLE_LOG_LOCATION}"/pull_error."${PID}"
 				fi
 				;;
 			Ubuntu*)
-				$(docker_cmd) pull "${CONTAINERREPO}:${ANSIBLE_VERSION}" --authfile ${HOME}/.podman/auth.json
+				$(docker_cmd) pull "${CONTAINERREPO}:${ANSIBLE_VERSION}" --authfile ${HOME}/.podman/auth.json &>"${ANSIBLE_LOG_LOCATION}"/pull_error."${PID}"
 				;;
 			*)
 				;;
 		esac
+		[[ $(grep -i "error" "${ANSIBLE_LOG_LOCATION}"/pull_error."${PID}") != "" ]] &>/dev/null && cat "${ANSIBLE_LOG_LOCATION}"/pull_error."${PID}" && echo -e "\nCheck if the container image ${BOLD}${CONTAINERREPO}:${ANSIBLE_VERSION}${NORMAL} exists\n" && exit 1
+		rm -f "${ANSIBLE_LOG_LOCATION}"/pull_error."${PID}"
 	fi
 }
 
@@ -222,13 +224,13 @@ function start_container() {
 	if [[ $(check_container "${CNTNRNAME}"; echo "${?}") -ne 0 ]]
 	then
 		[[ ! -d ${HOME}/.ssh ]] && mkdir ${HOME}/.ssh
-		echo "Starting container ${CNTNRNAME}"
+		[[ $- =~ x ]] && debug=1 && echo "Starting container ${CNTNRNAME}"
 		[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 		if [[ "${ANSIBLE_LOG_PATH}" == "" ]]
 		then
-			$(docker_cmd) run --rm -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CNTNRNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${PWD}:${CONTAINERWD}:z --name ${CNTNRNAME} -t -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION}
+			$(docker_cmd) run --rm -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CNTNRNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${PWD}:${CONTAINERWD}:z --name ${CNTNRNAME} -t -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION} 1>/dev/null
 		else
-			$(docker_cmd) run --rm -e ANSIBLE_LOG_PATH=${ANSIBLE_LOG_PATH} -e ANSIBLE_FORKS=${NUM_HOSTSINPLAY} -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CNTNRNAME} -e MYIP=$(get_host_ip) -e MYHOSTOS=$(get_os) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${HOME}/.ssh:/home/ansible/.ssh:z -v ${PWD}:${CONTAINERWD}:z --name ${CNTNRNAME} -t -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION}
+			$(docker_cmd) run --rm -e ANSIBLE_LOG_PATH=${ANSIBLE_LOG_PATH} -e ANSIBLE_FORKS=${NUM_HOSTSINPLAY} -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CNTNRNAME} -e MYIP=$(get_host_ip) -e MYHOSTOS=$(get_os) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${HOME}/.ssh:/home/ansible/.ssh:z -v ${PWD}:${CONTAINERWD}:z --name ${CNTNRNAME} -t -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION} 1>/dev/null
 		fi
 		[[ ${debug} == 1 ]] && set -x
 		[[ $(check_container "${CNTNRNAME}"; echo "${?}") -ne 0 ]] && echo "Unable to start container ${CNTNRNAME}" && exit 1
@@ -240,7 +242,7 @@ function kill_container() {
 	CNTNRNAME="${1}"
 	if [[ $(check_container "${CNTNRNAME}"; echo "${?}") -eq 0 ]]
 	then
-		echo "Killing container ${CNTNRNAME}"
+		[[ $- =~ x ]] && debug=1 && echo "Killing container ${CNTNRNAME}"
 		$(docker_cmd) kill ${CNTNRNAME} &>/dev/null
 	fi
 }
@@ -341,11 +343,16 @@ function git_config() {
 			NAME=$(git config --file .git/config user.name | awk '{print $1}' | tr '[:upper:]' '[:lower:]')
 			SURNAME=$(git config --file .git/config user.name | awk '{print $NF}' | tr '[:upper:]' '[:lower:]')
 			read -rp "Enter your email address [ENTER]: " GIT_EMAIL_ADDRESS
-			if [[ "$(git config --file .git/config remote.origin.url | grep "\/\/.*@")" == "" ]] && [[ "${GIT_EMAIL_ADDRESS}" != "" ]] && ([[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${NAME:0:2} | tr '[:upper:]' '[:lower:]')"* ]] || [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${NAME:0:1} | tr '[:upper:]' '[:lower:]')"* ]]) && [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${SURNAME:0:5} | tr '[:upper:]' '[:lower:]')"* ]]
+			if [[ -z "$(echo "${GIT_EMAIL_ADDRESS}"|grep -E '<|>')" ]]
 			then
-				git config --file .git/config user.email "${GIT_EMAIL_ADDRESS}" && git config --file .git/config remote.origin.url "$(git config --file .git/config remote.origin.url | sed -e "s|//\(\w\)|//$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)@\1|")" || EC=1
+				if [[ "$(git config --file .git/config remote.origin.url | grep "\/\/.*@")" == "" ]] && [[ -n "${GIT_EMAIL_ADDRESS}" ]] && ([[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${NAME:0:2} | tr '[:upper:]' '[:lower:]')"* ]] || [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${NAME:0:1} | tr '[:upper:]' '[:lower:]')"* ]]) && [[ "$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)" == *"$(echo ${SURNAME:0:5} | tr '[:upper:]' '[:lower:]')"* ]]
+				then
+					git config --file .git/config user.email "${GIT_EMAIL_ADDRESS}" && git config --file .git/config remote.origin.url "$(git config --file .git/config remote.origin.url | sed -e "s|//\(\w\)|//$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)@\1|")" || EC=1
+				else
+					[[ "$(git config --file .git/config remote.origin.url)" == *"$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)"* ]] && git config --file .git/config user.email "${GIT_EMAIL_ADDRESS}" || EC=1
+				fi
 			else
-				[[ "$(git config --file .git/config remote.origin.url)" == *"$(echo "${GIT_EMAIL_ADDRESS}" | cut -d '@' -f1)"* ]] && git config --file .git/config user.email "${GIT_EMAIL_ADDRESS}" || EC=1
+				git config --file .git/config user.email "${GIT_EMAIL_ADDRESS}" || EC=1
 			fi
 		fi
 		[[ ${EC} -eq 1 ]] && echo "Invalid email address. Aborting!" && exit ${EC}
@@ -415,6 +422,13 @@ function add_write_permission() {
 	for i in ${*}
 	do
 		sudo chmod o+w ${i}
+	done
+}
+
+function remove_write_permission() {
+	for i in ${*}
+	do
+		sudo chmod o-w ${i}
 	done
 }
 
@@ -569,6 +583,56 @@ function get_repo_creds() {
 	fi
 }
 
+function read_repo_cred() {
+	local CNTNRNAME
+	local REPOCRED
+	CNTNRNAME="${1}"
+	read -r REPOCRED <<< "$(view_vault "${CNTNRNAME}" "${2}" "${3}" | grep $(echo ${4//REPO/}) | cut -d "'" -f2)"
+	echo "${REPOCRED}"
+}
+
+function get_secrets_vault() {
+	if [[ ! -f ${PASSVAULT} ]]
+	then
+		local CNTNRNAME
+		local REPOUSER
+		local REPOPASS
+		local REMOTEURL
+		local localbranch
+		local remotebranchlist
+		CNTNRNAME="${1}"
+		localbranch=$(git branch|grep '^*'|awk '{print $NF}')
+		[[ -z ${localbranch} ]] && echo "Unable to determine the current branch. Exiting!" && exit 1
+		remotebranchlist=$(git branch -r)
+		if [[ $(echo ${remotebranchlist}|grep '/'${localbranch}) ]]
+		then
+			[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
+			REPOUSER=$(read_repo_cred "${CNTNRNAME}" "${2}" "${3}" "REPOUSER")
+			REPOPASS=$(read_repo_cred "${CNTNRNAME}" "${2}" "${3}" "REPOPASS")
+			REPOPWD="${REPOPASS//@/%40}"
+			[[ "$(git config --file .git/config --get remote.origin.url | grep '\/\/.*@')" == "" ]] && REMOTEURL=$(git config --file .git/config --get remote.origin.url | sed -e "s|//\(\w\)|//${REPOUSER}:${REPOPWD}@\1|") || REMOTEURL=$(git config --file .git/config --get remote.origin.url | sed -e "s|//.*@|//${REPOUSER}:${REPOPWD}@|")
+			for i in {1..3}
+			do
+				git clone --branch ${localbranch} --single-branch "$(echo "${REMOTEURL}" | sed -e "s|pub-||" -e "s|auto|auto-secrets|")" .tmp
+				[[ ${?} -eq 0 ]] && break
+			done
+			[[ ${debug} == 1 ]] && set -x
+			mv .tmp/$(echo "${PASSVAULT##*/}") vars/
+			rm -rf .tmp
+		else
+			echo "Unable to clone branch "${localbranch}" of the secrets vault. Exiting!"
+			exit 1
+		fi
+	fi
+}
+
+function remove_secrets_vault() {
+	if [[ -f "${PASSVAULT}" ]]
+	then
+		rm -f "${PASSVAULT}"
+	fi
+}
+
 function check_updates() {
 	local CNTNRNAME
 	CNTNRNAME="${1}"
@@ -596,9 +660,9 @@ function check_updates() {
 					[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 					if [[ ${REPOUSER} == "" || ${REPOPASS} == "" ]]
 					then
+						REPOUSER=$(read_repo_cred "${CNTNRNAME}" "${2}" "${3}" "REPOUSER")
+						REPOPASS=$(read_repo_cred "${CNTNRNAME}" "${2}" "${3}" "REPOPASS")
 						[[ ${debug} == 1 ]] && set -x
-						read -r REPOUSER <<< "$(view_vault "${CNTNRNAME}" "${2}" "${3}" | grep USER | cut -d "'" -f2)"
-						read -r REPOPASS <<< "$(view_vault "${CNTNRNAME}" "${2}" "${3}" | grep PASS | cut -d "'" -f2)"
 					else
 						break
 					fi
@@ -644,9 +708,11 @@ function check_updates() {
 					if [[ "${ANSWER,,}" == "y" ]]
 					then
 						git reset -q --hard origin/"${localbranch}"
+						[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 						git pull "$(git config --file .git/config --get remote.origin.url | sed -e "s|\(//.*\)@|\1:${REPOPASS}@|")" "${localbranch}" &>"${PWD}"/.pullerr && sed -i "s|${REPOPASS}|xxxxx|" "${PWD}"/.pullerr
 						[[ ${?} == 0 ]] && echo -e "\nThe installation package has been updated. ${BOLD}Please re-run the script for the updates to take effect${NORMAL}\n\n" && EC='return 3'
 						[[ ${?} != 0 ]] && echo -e "\nThe installation package update has failed with the following error:\n\n${BOLD}$(cat "${PWD}"/.pullerr)${NORMAL}\n\n" && EC='exit'
+						[[ ${debug} == 1 ]] && set -x
 						rm -f "${PWD}"/.pullerr
 					else
 						EC=':'
