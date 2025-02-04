@@ -24,7 +24,7 @@ pull_image
 start_container "${CONTAINERNAME}"
 add_write_permission "${PWD}/vars"
 add_write_permission "${PWD}/roles"
-find "${PWD}/roles" -type d -name files -exec dirname {} \; | sort -u | xargs -I {} add_write_permission "{}"
+add_write_permission "$(find "${PWD}/roles" -type d -name files -exec dirname {} \;)"
 find "${PWD}/roles" -type d -name files -exec chmod 757 {} \;
 get_repo_creds "${CONTAINERNAME}" "${REPOVAULT}" Bash/get_repo_vault_pass.sh
 get_secrets_vault "${CONTAINERNAME}" "${REPOVAULT}" Bash/get_repo_vault_pass.sh
