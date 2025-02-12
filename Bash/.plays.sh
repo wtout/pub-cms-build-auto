@@ -21,6 +21,7 @@ restart_docker
 git_config
 [[ "$(git config --file .git/config user.name|cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')" == "tout" ]] && image_prune
 pull_image
+check_container "${CONTAINERNAME}" && kill_container "${CONTAINERNAME}"
 start_container "${CONTAINERNAME}"
 add_write_permission "${PWD}/vars"
 add_write_permission "${PWD}/roles"
@@ -35,6 +36,7 @@ then
 else
 	CHECK_UPDATE_STATUS=0
 fi
+[[ "$(get_host_ip)" == "192.168."* ]] && get_bastion_credentials "${CONTAINERNAME}" "${@}"
 kill_container "${CONTAINERNAME}"
 if [[ ${CHECK_UPDATE_STATUS} -eq 3 ]]
 then
