@@ -13,7 +13,6 @@ ORIG_ARGS="${@}"
 ENAME=$(get_envname "${ORIG_ARGS}")
 check_repeat_job && echo -e "\nRunning multiple instances of ${BOLD}$(basename "${0}")${NORMAL} is prohibited. Aborting!\n\n" && exit 1
 INVENTORY_PATH="inventories/${ENAME}"
-CRVAULT="vars/.vault_${ENAME}.yml"
 SYS_DEF="Definitions/${ENAME}.yml"
 SYS_ALL="${INVENTORY_PATH}/group_vars/all.yml"
 SVCVAULT="vars/.svc_acct_creds_${ENAME}.yml"
@@ -24,7 +23,7 @@ NEW_ARGS=$(clean_arguments '--envname' "${ENAME}" "${@}")
 set -- && set -- "${@}" "${NEW_ARGS}"
 for cnum in {1..3}
 do
-	check_container "${CONTAINERNAME}_${cnum}" && kill_container "${CONTAINERNAME}_${cnum}" &>/dev/null
+	check_container "${CONTAINERNAME}_${cnum}" && kill_container "${CONTAINERNAME}_${cnum}"
 done
 start_container "${CONTAINERNAME}_1"
 [[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
@@ -45,7 +44,6 @@ sudo chown "$(stat -c '%U' "$(pwd)")":"$(stat -c '%G' "$(pwd)")" "${SVCVAULT}"
 sudo chmod 644 "${SVCVAULT}"
 get_inventory "${CONTAINERNAME}_1" "${@}"
 get_hosts "${CONTAINERNAME}_1" "${@}"
-get_credentials "${CONTAINERNAME}_1" "${@}"
 NUM_HOSTSINPLAY=$([[ "$(get_hostsinplay "${CONTAINERNAME}_1" "${HL}" | wc -w)" != "0" ]] && get_hostsinplay "${CONTAINERNAME}_1" "${HL}" | wc -w || echo "1")
 [[ $(get_bastion_address "${CONTAINERNAME}_1") == "[]" ]] && create_symlink
 enable_logging "${CONTAINERNAME}_2" "${@}"

@@ -2,7 +2,7 @@
 # tasks to validate bastion credentials
 - block:
   - name: Validate bastion credentials
-    ansible.builtin.shell: ansible {{ bastion_host }} -i {{ VFILE.split('/')[:-2]|join('/') }} -m ping -e @{{ VFILE }} --vault-password-file {{ SCRTFILE }} -T 5
+    ansible.builtin.shell: ansible {{ bastion_host }} -i {{ INVPATH }} -m ping -e @{{ VFILE }} --vault-password-file {{ SCRTFILE }} -T 5
     args:
       chdir: "{{ auto_dir }}"
     register: bastion_creds
@@ -17,7 +17,7 @@
     when: "hostvars[groups['bastion']|first]['ansible_user'] == '' or hostvars[groups['bastion']|first]['ansible_ssh_pass'] == '' or bastion_creds is failed"
   - ansible.builtin.set_fact:
       abort_play: "{{ abort_play | default(false) or 'yes'|bool }}"
-      err_msg: "{{ b_list }}: Incorrect/Invalid credentials"
+      err_msg: "{{ b_list }}: {{ bastion_creds.stdout_lines | select('search','msg\":')|list|first|split('msg\": ')|last|regex_replace('\"','') }}"
     when: "hostvars[groups['bastion']|first]['ansible_user'] == '' or hostvars[groups['bastion']|first]['ansible_ssh_pass'] == '' or bastion_creds is failed"
   - ansible.builtin.set_fact:
       delete_creds: yes
