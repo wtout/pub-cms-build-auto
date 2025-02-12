@@ -9,6 +9,7 @@ ANSIBLE_VERSION='6.3.0'
 ANSIBLE_VARS="vars/datacenters.yml"
 PASSVAULT="vars/passwords.yml"
 REPOVAULT="vars/.repovault.yml"
+CRVAULT="vars/.bastion.yml"
 CONTAINERWD="/home/ansible/$(basename ${PWD})"
 CONTAINERREPO="registry-1.docker.io/wtout/ansible"
 MDR_AUTO_LOCATION="imp_auto"

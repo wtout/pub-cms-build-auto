@@ -28,6 +28,7 @@
         marker: 'Failed Hosts Block'
         block: "{{ NOTIF_MSG|join('dashdash') }}"
       when: NOTIF_MSG|default([]) != []
+      become: yes
     - ansible.builtin.assert:
         that: NOTIF_MSG|default([]) == []
     when: invoker is search('cdra')
