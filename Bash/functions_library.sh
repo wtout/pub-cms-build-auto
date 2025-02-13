@@ -578,7 +578,7 @@ function get_repo_creds() {
 			echo
 			echo "Unable to get repo credentials"
 			echo
-			[[ -z ${MYINVOKER+x} ]] && kill_container  "${CNTNRNAME}" && exit 1
+			[[ -z ${MYINVOKER+x} ]] && kill_container "${CNTNRNAME}" && exit 1
 		fi
 	fi
 }
@@ -880,7 +880,7 @@ function run_playbook() {
 		else
 			$(docker_cmd) exec -e MYINVOKER="${MYINVOKER}" -t ${CNTNRNAME} ansible-playbook playbooks/site.yml -i "${INVENTORY_PATH}" --extra-vars "${EVARGS}" ${ASK_PASS} -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh ${BCV} -e @"${ANSIBLE_VARS}" -e "{auto_dir: '${CONTAINERWD}'}" ${ANSIBLE_CMD_ARGS} -v 2> "${ANSIBLE_LOG_LOCATION}"/"${PID}"-run_playbook.stderr 1>/dev/null
 		fi
-		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}"-run_playbook.stderr | grep  "${SVCVAULT}") != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${SVCVAULT}${NORMAL}" && EC=1
+		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}"-run_playbook.stderr | grep "${SVCVAULT}") != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${SVCVAULT}${NORMAL}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}"-run_playbook.stderr | grep "${CRVAULT}") != "" ]] && echo -e "\nUnable to decrypt ${BOLD}${CRVAULT}${NORMAL}" && rm -f "${CRVAULT}" && EC=1
 		[[ $(grep "no vault secrets were found that could decrypt" "${ANSIBLE_LOG_LOCATION}"/"${PID}"-run_playbook.stderr) == "" ]] && [[ $(grep -i warning "${ANSIBLE_LOG_LOCATION}"/"${PID}"-run_playbook.stderr) == '' ]] && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}"-run_playbook.stderr
 		rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-run_playbook.stderr
