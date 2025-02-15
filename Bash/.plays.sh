@@ -36,7 +36,7 @@ then
 else
 	CHECK_UPDATE_STATUS=0
 fi
-[[ "$(get_host_ip)" == "192.168."* ]] && get_bastion_credentials "${CONTAINERNAME}" "${@}"
+[[ "$(get_host_ip)" == "192.168."* ]] && get_bastion_credentials "${CONTAINERNAME}" "${@}" && chmod 755 "${HOME}/.ssh" && add_write_permission "${HOME}/.ssh"
 kill_container "${CONTAINERNAME}"
 if [[ ${CHECK_UPDATE_STATUS} -eq 3 ]]
 then
@@ -79,6 +79,7 @@ else
 	remove_secrets_vault
 	remove_write_permission "${PWD}/vars"
 	remove_write_permission "${PWD}/roles"
+	remove_write_permission "${HOME}/.ssh"
 	find "${PWD}/roles" -type d -exec chmod 755 {} \;
 	exit "${EC}"
 fi

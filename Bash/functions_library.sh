@@ -228,9 +228,9 @@ function start_container() {
 		[[ $- =~ x ]] && debug=1 && [[ "${SECON}" == "true" ]] && set +x
 		if [[ "${ANSIBLE_LOG_PATH}" == "" ]]
 		then
-			$(docker_cmd) run --rm -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CNTNRNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${PWD}:${CONTAINERWD}:z --name ${CNTNRNAME} -t -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION} 1>/dev/null
+			$(docker_cmd) run --rm -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${PWD} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CNTNRNAME} -e MYIP=$(get_host_ip) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${PWD}:${CONTAINERWD}:z --name ${CNTNRNAME} -t -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION} 1>/dev/null
 		else
-			$(docker_cmd) run --rm -e ANSIBLE_LOG_PATH=${ANSIBLE_LOG_PATH} -e ANSIBLE_FORKS=${NUM_HOSTSINPLAY} -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${HOME} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CNTNRNAME} -e MYIP=$(get_host_ip) -e MYHOSTOS=$(get_os) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${HOME}/.ssh:/home/ansible/.ssh:z -v ${PWD}:${CONTAINERWD}:z --name ${CNTNRNAME} -t -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION} 1>/dev/null
+			$(docker_cmd) run --rm -e ANSIBLE_LOG_PATH=${ANSIBLE_LOG_PATH} -e ANSIBLE_FORKS=${NUM_HOSTSINPLAY} -e MYPROXY=${PROXY_ADDRESS} -e MYHOME=${PWD} -e MYHOSTNAME=$(hostname) -e MYCONTAINERNAME=${CNTNRNAME} -e MYIP=$(get_host_ip) -e MYHOSTOS=$(get_os) --user ansible -w ${CONTAINERWD} -v /data:/data:z -v /tmp:/tmp:z -v ${HOME}/certificates:/home/ansible/certificates:z -v ${HOME}/.ssh:/home/ansible/.ssh:z -v ${PWD}:${CONTAINERWD}:z --name ${CNTNRNAME} -t -d --entrypoint /bin/bash ${CONTAINERREPO}:${ANSIBLE_VERSION} 1>/dev/null
 		fi
 		[[ ${debug} == 1 ]] && set -x
 		[[ $(check_container "${CNTNRNAME}"; echo "${?}") -ne 0 ]] && echo "Unable to start container ${CNTNRNAME}" && exit 1
@@ -872,7 +872,12 @@ function run_playbook() {
 		fi
 		### End
 		### Begin: Determine if ASK_PASS is required
-		$(docker_cmd) exec -i ${CNTNRNAME} ansible -i "${INVENTORY_PATH}" "$(echo "${HL}" | grep -v 'vcenter')" -m debug -a 'msg={{ ansible_ssh_pass }}' --extra-vars "${EVARGS}" -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh ${BCV} &>/dev/null && [[ ${?} == 0 ]] && ASK_PASS='' || ASK_PASS='--ask-pass'
+		if [[ "$(echo "${HL}" | grep -v 'vcenter')" == "" ]]
+		then
+			ASK_PASS=''
+		else
+			$(docker_cmd) exec -i ${CNTNRNAME} ansible -i "${INVENTORY_PATH}" "$(echo "${HL}" | grep -v 'vcenter')" -m debug -a 'msg={{ ansible_ssh_pass }}' --extra-vars "${EVARGS}" -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh &>/dev/null && [[ ${?} == 0 ]] && ASK_PASS='' || ASK_PASS='--ask-pass'
+		fi
 		### End
 		if [[ -z ${MYINVOKER+x} ]]
 		then
@@ -912,13 +917,10 @@ function send_notification() {
 		if [[ -z ${MYINVOKER+x} ]]
 		then
 			# Send playbook status notification
-			$(docker_cmd) exec -t ${CNTNRNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTSINPLAY}'}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v &>/dev/null
-			SCRIPT_STATUS=${?}
+			$(docker_cmd) exec -t ${CNTNRNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}'}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v &>/dev/null
 		else
-			local INVOKED
-			INVOKED=true
 			# Send playbook status notification
-			$(docker_cmd) exec -e MYINVOKER="${MYINVOKER}" -t ${CNTNRNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}', NHOSTS: '${NUM_HOSTSINPLAY}', INVOKED: ${INVOKED}}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v
+			$(docker_cmd) exec -e MYINVOKER="${MYINVOKER}" -t ${CNTNRNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}'}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v
 		fi
 	fi
 }
