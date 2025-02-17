@@ -50,7 +50,6 @@ enable_logging "${CONTAINERNAME}_2" "${@}"
 start_container "${CONTAINERNAME}_2"
 kill_container "${CONTAINERNAME}_1"
 run_playbook "${CONTAINERNAME}_2" "${@}"
-SCRIPT_STATUS=${?}
 disable_logging
 start_container "${CONTAINERNAME}_3"
 kill_container "${CONTAINERNAME}_2"
