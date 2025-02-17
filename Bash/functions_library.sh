@@ -616,7 +616,11 @@ function get_secrets_vault() {
 				git clone --branch ${localbranch} --single-branch "$(echo "${REMOTEURL}" | sed -e "s|pub-||" -e "s|auto|auto-secrets|")" .tmp &>"${ANSIBLE_LOG_LOCATION}"/"${PID}"-get-secrets-vault.stderr
 				[[ ${?} -eq 0 ]] && break || CLONE_FAILED="true"
 			done
-			[[ "${CLONE_FAILED}" ]] && echo -e "${BOLD}Unable to download the secrets vault${NORMAL}" && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}"-get-secrets-vault.stderr && EC=1
+			if [[ "${CLONE_FAILED}" ]]
+			then
+				[[ "$(grep 'Invalid username or password' "${ANSIBLE_LOG_LOCATION}"/"${PID}"-get-secrets-vault.stderr)" != '' ]] && rm -f "${REPOVAULT}"
+				echo -e "${BOLD}Unable to download the secrets vault${NORMAL}" && cat "${ANSIBLE_LOG_LOCATION}"/"${PID}"-get-secrets-vault.stderr && EC=1
+			fi
 			rm -f "${ANSIBLE_LOG_LOCATION}"/"${PID}"-get-secrets-vault.stderr
 			[[ ${EC} == 1 ]] && exit ${EC}
 			[[ ${debug} == 1 ]] && set -x
@@ -922,5 +926,6 @@ function send_notification() {
 			# Send playbook status notification
 			$(docker_cmd) exec -e MYINVOKER="${MYINVOKER}" -t ${CNTNRNAME} ansible-playbook playbooks/notify.yml --extra-vars "{SVCFILE: '${CONTAINERWD}/${SVCVAULT}', SNAME: '$(basename "${0}")', SARG: '${SCRIPT_ARG}', LFILE: '${CONTAINERWD}/${NEW_LOG_FILE}'}" --tags notify -e @"${SVCVAULT}" --vault-password-file Bash/get_common_vault_pass.sh -e @"${ANSIBLE_VARS}" -v
 		fi
+		SCRIPT_STATUS=${?}
 	fi
 }
