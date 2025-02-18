@@ -1,5 +1,24 @@
 # Functions declaration
 
+function kill_sub_processes() {
+	local pid
+	local and_self
+	local children
+	pid="${1}"
+	and_self="${2:-false}"
+	if children=($(pgrep -P "${pid}"))
+	then
+		for child in "${children[@]}"
+		do
+			kill_sub_processes "${child}" true
+		done
+	fi
+	if [[ "${and_self}" == true ]]
+	then
+		[[ "$(ps -o pid | grep ${pid})" != "" ]] && kill -9 "${pid}"
+	fi
+}
+
 function create_dir() {
 	if [[ ! -d "${1}" ]]
 	then
@@ -239,11 +258,18 @@ function start_container() {
 
 function kill_container() {
 	local CNTNRNAME
+	local dc
 	CNTNRNAME="${1}"
+	dc=$(docker_cmd)
 	if [[ $(check_container "${CNTNRNAME}"; echo "${?}") -eq 0 ]]
 	then
 		[[ $- =~ x ]] && debug=1 && echo "Killing container ${CNTNRNAME}"
-		$(docker_cmd) kill ${CNTNRNAME} &>/dev/null
+		if [[ "${dc}" == "podman" ]]
+		then
+			${dc} container rm ${CNTNRNAME} &>/dev/null
+		else
+			${dc} kill ${CNTNRNAME} &>/dev/null
+		fi
 	fi
 }
 
