@@ -60,21 +60,26 @@ else
 			BGPIDS+=" ${!}"
 		fi
 	done
-	BGPIDS_LIST=(${BGPIDS})
-	for p in "${BGPIDS_LIST}"
-	do
-		trap "kill -2 ${p}" INT
-	done
 	[[ "${ENV_LIST_LENGTH}" -gt 1 ]] && echo "Please wait..."
-	for i in "${!BGPIDS_LIST[@]}"
+	BGPIDS_LIST=(${BGPIDS})
+	trap "kill_sub_processes ${$}" INT SIGINT TERM SIGTERM EXIT
+	while [[ ${#BGPIDS_LIST[@]} -ne 0 ]]
 	do
-		wait "${BGPIDS_LIST[i]}"
-		EC="${?}"
-		if [[ "${EC}" -ne 0 ]]
-		then
-			[[ "${ENV_LIST_LENGTH}" -gt 1 ]] && echo "System ${LOOP_LIST[i]} failed with exit code ${EC}"
-		fi
-		[[ "${AC}" -eq 0 ]] && AC="${EC}"
+		for i in "${!BGPIDS_LIST[@]}"
+		do
+			if [[ ! -d "/proc/${BGPIDS_LIST[i]}" ]]
+			then
+				wait "${BGPIDS_LIST[i]}"
+				EC="${?}"
+				if [[ "${EC}" -ne 0 ]]
+				then
+					[[ "${ENV_LIST_LENGTH}" -gt 1 ]] && echo "System ${LOOP_LIST[i]} failed with exit code ${EC}"
+				fi
+				[[ "${AC}" -eq 0 ]] && AC="${EC}"
+				unset BGPIDS_LIST[i]
+			fi
+		done
+		sleep 2
 	done
 	# Clean up
 	remove_secrets_vault
