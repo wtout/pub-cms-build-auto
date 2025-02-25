@@ -15,17 +15,13 @@ The deployment procedure has to be the same for all deployments. Ansible code co
 
 ### Installation ###
 
-On a newly installed Linux **CentOS 7.7+** VM that has docker installed and configured and that can access the internet, container repo and the VM infrastructure, run the following command to download and start the container hosting the automation code:
+On a newly installed Linux **CentOS 7.7+/AlmaLinux 8+/Ubuntu 22.04+** VM that has **git** and **docker**/**podman** installed and configured and that can access the internet, container repo and the VM infrastructure, run the following command to download the automation code:
 
-1- Install the git package
-
-    $> sudo yum install -y git
-
-6- Download the Ansible automation package
+1- Download the Ansible automation package
 
     $> git clone https://github.com/wtout/pub-cms-build-auto.git
 
-7- Go to the newly cloned pub-cms-build-auto directory
+2- Go to the newly cloned pub-cms-build-auto directory
 
     $> cd pub-cms-build-auto
 
