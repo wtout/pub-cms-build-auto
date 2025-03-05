@@ -32,4 +32,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.WASS }}
         ORIGINAL_REPO_NAME: ${{ github.event.repository.name }}
-        ORG_NAME: wtout
+        ORG_NAME: ${{ github.actor }}
