@@ -1,7 +1,9 @@
 #! /bin/bash
 if [[ "$(pwd | grep -i 'cdra')" == "" ]]
 then
-	git config --file .git/config remote.origin.url | awk -F '/' '{print $NF}' | sed -e "s|^pub-||"
+	password=$(git config --file .git/config remote.origin.url | awk -F '/' '{print $NF}' | sed -e "s|^pub-||")
+	[[ "${password}" != *".git" ]] && password="${password}.git"
 else
-	echo "cms-build-auto.git"
+	password="cms-build-auto.git"
 fi
+echo ${password}

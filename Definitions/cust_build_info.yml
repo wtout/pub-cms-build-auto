@@ -17,7 +17,7 @@ customer:
   version:
 
     # Platform Release version (string)
-    release: 
+    release: R9.2.17
 
     # EM7 ISO (string)
     em7_iso: 
@@ -26,7 +26,7 @@ customer:
     centos_iso: 
 
   # Deployment model (string a/h/aioa/aioh/sa/sh)
-  deployment_model: sa
+  deployment_model: a
 
   # ATA relay (boolean yes/no)
   ata: no
@@ -37,19 +37,19 @@ customer:
   primary:
 
   # Number of primary standalone VMs (integer)
-    number_of_stdalvms: 3
+    number_of_stdalvms: 
 
   # Number of primary EM7 Portals (integer, even) [2 - 4]
-    number_of_prts: 
+    number_of_prts: 4
 
   # Number of primary EM7 Message Collectors (integer, even) [2 - 6]
-    number_of_mcs: 
+    number_of_mcs: 4
 
   # Number of primary EM7 Data Collectors (integer, even) [2 - 12]
-    number_of_dcs: 
+    number_of_dcs: 8
 
   # Primary site name prefix (string)
-    name_prefix: rtp5daautop
+    name_prefix: testa
 
   # Primary site first 3 octets (string)
     octets: 172.19.135
@@ -57,10 +57,10 @@ customer:
   secondary:
 
   # Number of secondary standalone VMs (integer)
-    number_of_stdalvms: 2
+    number_of_stdalvms: 0
 
   # Secondary site name prefix (string)
-    name_prefix: drrtp5daautop
+    name_prefix: testb
 
   # Secondary site first 3 octets (string)
     octets: 172.19.134
@@ -120,12 +120,12 @@ puppet:
   primary:
 
     # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03, alln1qspupp04 (string)
-    server_name: 
+    server_name: alln1qspupp02
 
   secondary:
     
     # Available puppet servers: alln1qspupp01, alln1qspupp02, alln1qspupp03, alln1qspupp04 (string)
-    server_name: 
+    server_name: alln1qspupp02
 
 ##################################################################################
 # Yum server to be used
@@ -142,30 +142,3 @@ yum:
     # Available yum servers: alln1qsyumrpp01, alln1qsyumrpp02 (string)
     server_name: alln1qsyumrpp01
 
-vm_setting:
-  stdalvm:
-    cpu: 2
-    memory: 4
-    disk0: 40
-    disk1: 25
-    hostmap: 3, 4, 5
-    nic1:
-      ip_pool: ['172.30.252.162','172.30.252.163','172.30.252.164']
-      gtw: '172.19.135.62'
-      netmask: '255.255.255.0'
-      netname: 'testa-Internal-Net'
-      intname: 'ens160'
-
-drvm_setting:
-  stdalvm:
-    cpu: 2
-    memory: 4
-    disk0: 40
-    disk1: 25
-    hostmap: 2, 3
-    nic1:
-      ip_pool: ['172.30.210.123', '172.30.210.124']
-      gtw: '172.19.134.62'
-      netmask: '255.255.255.0'
-      netname: 'testb-Internal-Net'
-      intname: 'ens160'
