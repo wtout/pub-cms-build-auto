@@ -118,5 +118,5 @@ jobs:
       - name: Create New Tag
         run: |
           git tag -a ${{ steps.nt.outputs.NEW_TAG }} -m "Create release tag ${{ steps.nt.outputs.NEW_TAG }}"
-#          git push origin master
-#          git push origin --tags
+          git push origin master
+          git push origin --tags
