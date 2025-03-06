@@ -86,7 +86,7 @@ jobs:
       - name: Read Current Tag
         id: tf
         run: |
-          read -r P1 P2 P3 <<<$(git tag | tail -1 | tr '.' ' ')
+          read -r P1 P2 P3 <<<$(git describe --abbrev=0 | tr '.' ' ')
           echo "P1=$P1" >> $GITHUB_OUTPUT
           echo "P2=$P2" >> $GITHUB_OUTPUT
           echo "P3=$P3" >> $GITHUB_OUTPUT
