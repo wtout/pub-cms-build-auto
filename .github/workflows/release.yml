@@ -7,7 +7,7 @@ on:
       - develop
 
 env:
-  GITHUB_TOKEN: ${{ secrets.WASS }}
+  MYGH_TOKEN: ${{ secrets.WASS }}
   ORIGINAL_REPO_NAME: ${{ github.event.repository.name }}
   ORG_NAME: ${{ github.actor }}
   REGISTRY_USER: ${{ vars.DOCKERHUB_USERNAME }}
@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ env.MYGH_TOKEN }}
       - name: Login to DockerHub
         uses: redhat-actions/podman-login@v1
         with:
@@ -37,7 +39,7 @@ jobs:
           chmod 755 Bash/vp.sh
       - name: Create .repovault.yml Vault
         run: |
-          echo -e "REPOUSER='${{ env.ORG_NAME }}'\nREPOPASS='${{ env.GITHUB_TOKEN }}'" > vars/.repovault.yml
+          echo -e "REPOUSER='${{ env.ORG_NAME }}'\nREPOPASS='${{ env.MYGH_TOKEN }}'" > vars/.repovault.yml
           ansible-vault encrypt vars/.repovault.yml --vault-password-file Bash/vp.sh
       - name: Set Ansible version
         run: |
@@ -56,11 +58,13 @@ jobs:
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ env.MYGH_TOKEN }}
       - name: Configure GIT
         run: |
           git config user.email \<\>
           git config user.name "Wassim Tout"
-          sed  -i "s|\(^.*url.*//\).*\(github.*$\)|\1${{ env.ORG_NAME }}:${{ env.GITHUB_TOKEN }}@\2|" .git/config
+          sed  -i "s|\(^.*url.*//\).*\(github.*$\)|\1${{ env.ORG_NAME }}:${{ env.MYGH_TOKEN }}@\2|" .git/config
       - name: Update from Remote
         run: |
           git remote update
@@ -82,7 +86,7 @@ jobs:
       - name: Read Current Tag
         id: tf
         run: |
-          read -r P1 P2 P3 <<<$(git tag | tail -1 | tr '.' ' ')
+          read -r P1 P2 P3 <<<$(git describe --abbrev=0 | tr '.' ' ')
           echo "P1=$P1" >> $GITHUB_OUTPUT
           echo "P2=$P2" >> $GITHUB_OUTPUT
           echo "P3=$P3" >> $GITHUB_OUTPUT
