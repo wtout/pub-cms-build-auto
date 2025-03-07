@@ -45,6 +45,9 @@ jobs:
       - name: Set Ansible version
         run: |
           sed -i 's/6.3.0/11.1.0/' Bash/common_parameters.sh
+      - name: Create /data/Packages directory
+        run: |
+          sudo mkdir -p /data/Packages
       - name: Create ${HOME}/certificates Directory
         run: |
           mkdir -p ${HOME}/certificates
