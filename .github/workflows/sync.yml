@@ -22,10 +22,6 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-#      - name: Checkout source repository
-#        uses: actions/checkout@v4
-#        with:
-#          token: ${{ env.MYGH_TOKEN }}
       - name: Push to destination repository
         run: |
           git clone https://${{ env.ORG_NAME }}:${{ env.MYGH_TOKEN }}@github.com/${{ env.ORG_NAME }}/pub-${{ env.ORIGINAL_REPO_NAME }}.git
