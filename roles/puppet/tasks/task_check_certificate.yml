@@ -1,0 +1,12 @@
+---
+# Tasks to check the status of the certificate
+- block:
+  - include_tasks: task_wait_for_certificate.yml
+    when: "'No puppet-agent installed' in puppet_installed.stdout"
+  - block:
+    - include_tasks: task_delete_certificates.yml
+    - include_tasks: task_add_vm_to_class.yml
+    - include_tasks: task_generate_cert.yml
+    - include_tasks: task_generate_cert_for_em7.yml
+    - include_tasks: task_wait_for_certificate.yml
+    when: psc|default({}) is failed

@@ -1,0 +1,93 @@
+  ##
+#  Common Proxy settins
+#  splunk:
+#     yum_proxy_enabled:  fasle
+#     TA_proxy_enabled:  false
+#     command_proxy_enabled: false
+#  phantom:
+#     yum_proxy_enabled:  false
+#     command_proxy_enabled:  false
+
+##
+  splunk_phantom:
+    hosts:
+      {{ hostvars[groups['splphn'][0]]['vm']['name'] if groups['splphn'] is defined else splphn_list[0] }}:
+    vars:
+      phantom:
+        mgt_port: 443
+        username: phantom
+        group: phantom
+        yum_proxy_enabled: {{ true if proxy_address != '' else false }}
+        command_proxy_enabled: {{ true if proxy_address != '' else false }}
+
+
+  splunk_cluster_master:
+    hosts:
+      {{ hostvars[groups['splmas'][0]]['vm']['name'] if groups['splmas'] is defined else splmas_list[0] }}:
+    vars:
+      splunk:
+        role: splunk_cluster_master
+        site: site1
+
+  splunk_indexer:
+    hosts:
+      {{ hostvars[groups['splind'][0]]['vm']['name'] if groups['splind'] is defined else splind_list[0] }}:
+        splunk:
+          site: site1
+      {{ hostvars[groups['splind'][1]]['vm']['name'] if groups['splind'] is defined else splind_list[1] }}:
+        splunk:
+          site: site2
+      {{ hostvars[groups['splind'][2]]['vm']['name'] if groups['splind'] is defined else splind_list[2] }}:
+        splunk:
+          site: site3
+    vars:
+      splunk:
+        role: splunk_indexer
+        s2s_enable: true
+        s2s_port: 9997
+
+  splunk_deployer:
+    hosts:
+      {{ hostvars[groups['spldpl'][0]]['vm']['name'] if groups['spldpl'] is defined else spldpl_list[0] }}:
+    vars:
+      splunk:
+        role: splunk_deployer
+        site: site0
+
+  splunk_search_head:
+    hosts:
+       {{ hostvars[groups['splsrc'][2]]['vm']['name'] if groups['splsrc'] is defined else splsrc_list[2] }}:
+        splunk_search_head_captain: false
+       {{ hostvars[groups['splsrc'][1]]['vm']['name'] if groups['splsrc'] is defined else splsrc_list[1] }}:
+        splunk_search_head_captain: false
+       {{ hostvars[groups['splsrc'][0]]['vm']['name'] if groups['splsrc'] is defined else splsrc_list[0] }}:
+        splunk_search_head_captain: true
+    vars:
+      splunk:
+        role: splunk_search_head
+        site: site0
+        hostname: mdrsplsrcla01
+        # ^^ Host name is the searchhead captain
+        auth_type: LDAP
+        auth_settings: MDR_LA
+
+{% if include_svc and ((inventory_hostname is search('splfwd') and reg_cust_creds is succeeded) or (inventory_hostname is not search('splfwd') and reg_core_creds is succeeded)) %}
+  splunk_svcs_forwarder:
+    hosts:
+      {{ hostvars[groups['splsvc'][0]]['vm']['name'] if groups['splsvc'] is defined else splsvc_list[0] }}:
+    vars:
+      splunk:
+        role: splunk_heavy_forwarder
+        yum_proxy_enabled: true
+        TA_proxy_enabled: true
+        svcs_forwarder_enabled: true
+{% endif %}
+
+{% if groups['splds'] is defined or 'splds' in he_group_list|default([]) %}
+#  splunk_deployment_server:
+#    hosts:
+#      {{ hostvars[groups['splds'][0]]['vm']['name'] if groups['splds'] is defined else splds_list[0] }}:
+#    vars:
+#      splunk:
+#        role: splunk_deployment_server
+{% endif %}

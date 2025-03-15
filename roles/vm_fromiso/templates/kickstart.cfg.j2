@@ -1,0 +1,190 @@
+# System authorization information
+auth --useshadow --passalgo=sha512
+# Use CDROM installation media
+cdrom
+# Use command line install
+cmdline
+# Install OS instead of upgrade
+install
+# Run the Setup Agent on first boot
+firstboot --disable
+# Keyboard layouts
+keyboard --vckeymap=us --xlayouts='us'
+
+# System language
+lang en_US.UTF-8
+
+# Network information
+network --bootproto=static --device={{ netconfig.nic1.intname }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.nic1.gateway if netconfig.nic1.gateway != '' else ((customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62') if (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) is defined else '' }} --ip={{ netconfig.nic1.ipaddress }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.nic1.netmask }} {% if netconfig.nic1.ipv6_pool is defined and netconfig.nic1.ipv6_pool|length >= inventory_hostname[-2:]|int and netconfig.nic1.ipv6_pool[inventory_hostname[-2:]|int - 1] != '' -%} --ipv6={{ netconfig.nic1.ipv6_pool[inventory_hostname[-2:]|int - 1] }} --ipv6gateway={{ netconfig.nic1.ipv6_gtw }} {% else -%} --noipv6 {% endif -%} --activate
+network --bootproto=static --device={{ netconfig.nic2.intname }} --onboot=on --ethtool=vmxnet3 --gateway={{ netconfig.nic2.gateway if netconfig.nic2.gateway != '' else ((customer.secondary.octets if 'dr' in group_names else customer.primary.octets) + '.62') if (customer.secondary.octets if 'dr' in group_names else customer.primary.octets) is defined else '' }} --ip={{ netconfig.nic2.ipaddress }} --nameserver={{ (sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers)|join(',') }} --netmask={{ netconfig.nic2.netmask }} {% if netconfig.nic2.ipv6_pool is defined and netconfig.nic2.ipv6_pool|length >= inventory_hostname[-2:]|int and netconfig.nic2.ipv6_pool[inventory_hostname[-2:]|int - 1] != '' -%} --ipv6={{ netconfig.nic2.ipv6_pool[inventory_hostname[-2:]|int - 1] }} --ipv6gateway={{ netconfig.nic2.ipv6_gtw }} {% else -%} --noipv6 {% endif -%} --activate
+network --hostname={{ vm.name }}
+
+# Root password
+rootpw --iscrypted {{ ansible_ssh_pass | password_hash('sha512') }}
+# SELinux configuration
+selinux --disabled
+# System services
+services --enabled="chronyd"
+# Firewall configuration
+firewall --disabled
+# Do not configure the X Window System
+skipx
+# Reboot after installation
+reboot --eject
+
+# System timezone
+timezone UTC
+# System bootloader configuration
+bootloader --boot-drive=sda --location=mbr --append="rhgb quiet crashkernel=auto" --iscrypted --password=grub.pbkdf2.sha512.10000.5F7BC3CE2A23B3D88C82BC7900BD9DDCCE3357F5DC60F8C755B9BBAE5E0934D711735A99FE3F0477EDD5812FE53269AD4BD66AEEA6E2A40322BB791B4F0C6D05.B07C8E4CEAD6D59F404822B6750A3B40062E45D54B9B435E9D525E577764BEA7D12CAD1314008600E9A1274A15DDD6AF7D01CE494650C0AAF777E6DE5DDD24A6
+# Clear the Master Boot Record
+zerombr
+# Partition clearing information
+clearpart --all
+
+# Disk partitioning information
+part /boot --fstype="ext4" --size=512
+part pv.561 --fstype="lvmpv" --ondisk=sda --size=37375
+volgroup vgroup1 --pesize=4096 pv.561
+logvol swap  --fstype="swap" --size=8096 --name=swap --vgname=vgroup1
+logvol /  --fstype="ext4" --size=10844 --name=root --vgname=vgroup1
+logvol /home  --fstype="ext4" --size=5120 --name=home --vgname=vgroup1 --fsoptions=rw,nodev,nosuid
+logvol /var  --fstype="ext4" --size=5120 --name=var --vgname=vgroup1
+logvol /var/log  --fstype="ext4" --size=5120 --name=varlog --vgname=vgroup1
+logvol /tmp  --fstype="ext4" --size=2048 --name=temp --vgname=vgroup1 --fsoptions=nodev,nosuid,noexec
+logvol /var/log/audit  --fstype="ext4" --size=1024 --name=audit --vgname=vgroup1
+
+%packages --excludedocs
+@base
+@core
+kexec-tools
+open-vm-tools
+chrony
+iptables-services
+aide
+tcp_wrappers
+net-snmp
+net-snmp-utils
+rsyslog
+sssd
+realmd
+oddjob
+oddjob-mkhomedir
+adcli
+samba-common
+samba-common-tools
+krb5-workstation
+openldap-clients
+policycoreutils-python
+{% if invoker is search('cdra') %}
+{% block cdra_pkgs %}
+nss-pam-ldapd
+expect
+sssd-tools
+{% endblock cdra_pkgs %}
+{% endif %}
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+%end
+
+%post
+# Add search domain
+echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.nic1.intname }}
+{% if netconfig.nic2.intname != '' %}
+{% block nic2_domain %}
+echo 'DOMAIN="{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"' >> /etc/sysconfig/network-scripts/ifcfg-{{ netconfig.nic2.intname }}
+{% endblock nic2_domain %}
+{% endif %}
+
+# Yum repos
+rm -f /etc/yum.repos.d/*
+{% if customer.primary.name_prefix is not search('mdr|stdal') %}
+{% block QS_repo %}
+cat <<EOF > /etc/yum.repos.d/QS.repo
+[QS-PROD]
+Name=QS-PROD
+baseurl={{ (yum.secondary.baseurl if 'dr' in group_names else yum.primary.baseurl) + '/QS' }}
+enabled=1
+gpgcheck=0
+sslverify=False
+{% if (datacenter.secondary.name if 'dr' in group_names else datacenter.primary.name) is search('PAE-HX-DC-(2|4)|Staging|STG') %}
+proxy=_none_
+{% endif %}
+EOF
+{% endblock QS_repo %}
+{% endif %}
+
+{% if customer.primary.name_prefix is search('mdr|stdal') %}
+{% block artifactory_repo %}
+cat <<EOF > /etc/yum.repos.d/artifactory.repo
+[EpelArtifactory]
+name=Epel Artifactory
+baseurl=https://devhub.cisco.com/artifactory/cms-epel/7Server/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://devhub.cisco.com/artifactory/cms-epel/RPM-GPG-KEY-EPEL-7Server
+
+[CentosBaseArtifactory]
+name=Centos Base Artifactory
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
+
+[CentosExtrasArtifactory]
+name=Centos Extras Artifactory
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/extras/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
+
+[CentosUpdatesArtifactory]
+name=Centos Updates Artifactory
+baseurl=https://devhub.cisco.com/artifactory/cms-centos7/updates/x86_64/
+enabled=1
+gpgcheck=1
+gpgkey=https://devhub.cisco.com/artifactory/cms-centos7/os/x86_64/RPM-GPG-KEY-CentOS-7
+EOF
+{% endblock artifactory_repo %}
+
+{% if proxy_address is defined and proxy_address != '' %}
+{% block yum_conf %}
+# Add proxy to yum.conf on VM
+grep proxy /etc/yum.conf || sed -i 's|^\(\[main\]\)$|\1\nproxy={{ proxy_address }}|' /etc/yum.conf
+{% endblock yum_conf %}
+{% endif %}
+{% endif %}
+
+# Configure Chrony
+sed -i '/^server.*iburst$/d' /etc/chrony.conf
+sed -i 's/^\(# Please consider.*\)$/\1\n{% if customer.name|lower is search('mdr|stdal') %} {{ 'server ' + netconfig.nic1.ipaddress.split('.')[:-1] | join('.') + '.254 iburst\\n' }} {% elif 'dr' in group_names %} {%- if sysconfig.secondary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.secondary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.secondary.ntp_server + ' iburst\\n' -}} {% endif -%} {% else %} {%- if sysconfig.primary.ntp_server|type_debug == 'list' %} {%- for line in sysconfig.primary.ntp_server|join(',')|split(', ') %} {{- 'server ' + line + ' iburst\\n' -}} {% endfor -%} {% else %} {{- 'server ' + sysconfig.primary.ntp_server + ' iburst\\n' -}} {% endif -%} {% endif %}/' /etc/chrony.conf
+
+# Configure SNMP
+/usr/bin/net-snmp-create-v3-user -ro -A "C1s20A798hPwec" -X "m91K0sl1ux9bsp" -a MD5 -x DES cmsmomuser
+sed -i "$(sed -n '/^view.*systemview/ =' /etc/snmp/snmpd.conf | tail -n 1)s/^\(view.*systemview.*\)$/\1\nview    systemview    included   .1/" /etc/snmp/snmpd.conf
+sed -i 's/usmUser/# usmUser/g' /var/lib/net-snmp/snmpd.conf
+systemctl enable snmpd
+systemctl restart snmpd
+
+# Configure hosts.allow
+sed -i 's/^\(\w.*\)$/#\1/' /etc/hosts.allow
+echo 'SSHD: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
+echo 'snmpd: 172.0.0.0/255.0.0.0' >> /etc/hosts.allow
+
+# Add user
+useradd {{ vm_svc_user }}
+echo '{{ vm_svc_user }}:{{ vm_svc_pass }}' |chpasswd
+cat << xxEOFxx >> /etc/sudoers.d/{{ vm_svc_user }}
+Host_Alias  {{ vm_svc_user | upper }}_SUDO_HOSTS = ALL
+Runas_Alias {{ vm_svc_user | upper }}_SUDO_RUNAS = ALL
+Cmnd_Alias  {{ vm_svc_user | upper }}_SUDO_CMNDS = ALL
+Cmnd_Alias  {{ vm_svc_user | upper }}_SHELLS = /bin/bash, /sbin/nologin, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
+%{{ vm_svc_user }} {{ vm_svc_user | upper }}_SUDO_HOSTS = ({{ vm_svc_user | upper }}_SUDO_RUNAS) NOPASSWD: {{ vm_svc_user | upper }}_SUDO_CMNDS, !{{ vm_svc_user | upper }}_SHELLS
+xxEOFxx
+%end
+
+%anaconda
+pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+%end

@@ -1,0 +1,23 @@
+---
+# Tasks to disable root access
+- block:
+  - name: create .done file
+    ansible.builtin.copy:
+      content: ''
+      dest: "{{ file_item }}"
+    register: reg_post_install
+    when: file_item != ''
+    loop:
+      - "{{ '/opt/splunk/var/runDisableSplunkShellAccess.done' if inventory_hostname is search('spl') else '' }}"
+      - "{{ '/home/em7release/var/runpostInstallConfiguration.done' if inventory_hostname is search('em7') else '/opt/puppet/var/runpostInstallConfiguration.done' }}"
+    loop_control:
+      loop_var: file_item
+  - name: push puppet
+    ansible.builtin.shell: |
+      /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
+    register: reg_push_puppet
+    no_log: true
+    failed_when:
+      - reg_push_puppet.stdout is not search('Skipping run of Puppet configuration client; administratively disabled')
+      - reg_push_puppet.stdout is not search('Run of Puppet configuration client already in progress')
+      - reg_push_puppet.stdout is not search('Applied catalog in')

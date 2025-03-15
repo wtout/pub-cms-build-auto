@@ -1,0 +1,72 @@
+---
+# Variables for csr hosts
+ansible_become: yes
+ansible_become_method: enable
+ansible_network_os: ios
+ansible_connection: network_cli
+
+credentials:
+  username: "{{ SCSR_USER|default('') }}"
+  password: "{{ SCSR_PASS|default('') }}"
+
+vm:
+  cpu: "{{ drvm_vars.infra.csr.cpu }}"
+  memory: "{{ drvm_vars.infra.csr.memory }}"
+  disk0: "{{ drvm_vars.infra.csr.disk0 }}"
+  disk1: "{{ drvm_vars.infra.csr.disk1 | default(0) }}"
+  disk2: "{{ drvm_vars.infra.csr.disk2 | default(0) }}"
+  disk3: "{{ drvm_vars.infra.csr.disk3 | default(0) }}"
+  disk_provisioning: "{{ drvm_vars.infra.csr.disk_provisioning if drvm_vars.infra.csr.disk_provisioning != '' else '' }}"
+  hostmap: "{{ drvm_vars.infra.csr.hostmap | default([]) }}"
+  name: "{{ drvm_vars.infra.csr.vmname if drvm_vars.infra.csr.vmname != '' else (customer.secondary.name_prefix + inventory_hostname[2:-2] + datacenters[datacenter.secondary.name]['deptype'] + inventory_hostname[-2:]) }}"
+
+netconfig:
+  nic1:
+    intname: "{{ drvm_vars.infra.csr.nic1.intname }}"
+    ippool: "{{ drvm_vars.infra.csr.nic1.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.infra.csr.nic1.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.infra.csr.nic1.gtw if drvm_vars.infra.csr.nic1.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.infra.csr.nic1.gtw_octet) if drvm_vars.infra.csr.nic1.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.infra.csr.nic1.netmask }}"
+    network: "{{ drvm_vars.infra.csr.nic1.netname if drvm_vars.infra.csr.nic1.netname != '' else (customer.secondary.name_prefix + '-' + drvm_vars.infra.csr.nic1.netbase) if drvm_vars.infra.csr.nic1.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.infra.csr.nic1.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.infra.csr.nic1.ipv6_gtw | default('') }}"
+
+  nic2:
+    intname: "{{ drvm_vars.infra.csr.nic2.intname }}"
+    ippool: "{{ drvm_vars.infra.csr.nic2.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.infra.csr.nic2.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.infra.csr.nic2.gtw if drvm_vars.infra.csr.nic2.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.infra.csr.nic2.gtw_octet) if drvm_vars.infra.csr.nic2.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.infra.csr.nic2.netmask }}"
+    network: "{{ drvm_vars.infra.csr.nic2.netname if drvm_vars.infra.csr.nic2.netname != '' else (customer.secondary.name_prefix + '-' + drvm_vars.infra.csr.nic2.netbase) if drvm_vars.infra.csr.nic2.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.infra.csr.nic2.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.infra.csr.nic2.ipv6_gtw | default('') }}"
+
+  nic3:
+    intname: "{{ drvm_vars.infra.csr.nic3.intname }}"
+    ippool: "{{ drvm_vars.infra.csr.nic3.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.infra.csr.nic3.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.infra.csr.nic3.gtw if drvm_vars.infra.csr.nic3.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.infra.csr.nic3.gtw_octet) if drvm_vars.infra.csr.nic3.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.infra.csr.nic3.netmask }}"
+    network: "{{ drvm_vars.infra.csr.nic3.netname if drvm_vars.infra.csr.nic3.netname != '' else (customer.secondary.name_prefix + '-' + drvm_vars.infra.csr.nic3.netbase) if drvm_vars.infra.csr.nic3.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.infra.csr.nic3.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.infra.csr.nic3.ipv6_gtw | default('') }}"
+
+  nic4:
+    intname: "{{ drvm_vars.infra.csr.nic4.intname }}"
+    ippool: "{{ drvm_vars.infra.csr.nic4.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.infra.csr.nic4.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.infra.csr.nic4.gtw if drvm_vars.infra.csr.nic4.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.infra.csr.nic4.gtw_octet) if drvm_vars.infra.csr.nic4.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.infra.csr.nic4.netmask }}"
+    network: "{{ drvm_vars.infra.csr.nic4.netname if drvm_vars.infra.csr.nic4.netname != '' else (customer.secondary.name_prefix + '-' + drvm_vars.infra.csr.nic4.netbase) if drvm_vars.infra.csr.nic4.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.infra.csr.nic4.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.infra.csr.nic4.ipv6_gtw | default('') }}"
+
+  nic5:
+    intname: "{{ drvm_vars.infra.csr.nic5.intname }}"
+    ippool: "{{ drvm_vars.infra.csr.nic5.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.infra.csr.nic5.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.infra.csr.nic5.gtw if drvm_vars.infra.csr.nic5.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.infra.csr.nic5.gtw_octet) if drvm_vars.infra.csr.nic5.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.infra.csr.nic5.netmask }}"
+    network: "{{ drvm_vars.infra.csr.nic5.netname if drvm_vars.infra.csr.nic5.netname != '' else (customer.secondary.name_prefix + '-' + drvm_vars.infra.csr.nic5.netbase) if drvm_vars.infra.csr.nic5.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.infra.csr.nic5.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.infra.csr.nic5.ipv6_gtw | default('') }}"

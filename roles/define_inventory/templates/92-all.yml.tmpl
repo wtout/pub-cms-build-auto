@@ -1,0 +1,296 @@
+---
+# Variables for all hosts
+
+##################################################################################
+# Customer specific information
+##################################################################################
+customer:
+
+  # Official build name
+  name: '{{ environment_definition.customer.name }}'
+
+  # team_contact1 (string)
+  team_contact1: '{{ environment_definition.customer.team_contact1|default('') }}'
+
+  # team_contact2 (string)
+  team_contact2: '{{ environment_definition.customer.team_contact2|default('') }}'
+
+  # team_mailer (string)
+  team_mailer: '{{ environment_definition.customer.team_mailer|default('') }}'
+
+  # Disaster recovery (boolean yes/no)
+  disaster_recovery: {{ environment_definition.customer.disaster_recovery }}
+
+  version:
+
+    # Platform Release version (string)
+    release: '{{ environment_definition.customer.version.release }}'
+
+    # EM7 ISO (string)
+    em7_iso: '{{ environment_definition.customer.version.em7_iso if environment_definition.customer.version.em7_iso != none else 'em7_x86_64_8.12.0-1191.iso' }}'
+
+    # CentOS ISO (string)
+    centos_iso: '{{ environment_definition.customer.version.centos_iso if environment_definition.customer.version.centos_iso != none else 'CentOS-7-x86_64-DVD-1908.iso' }}'
+
+  primary:
+
+    # Primary name prefix
+    name_prefix: '{{ environment_definition.customer.primary.name_prefix }}'
+
+    # Primary first 3 octets
+    octets: '{{ environment_definition.customer.primary.octets }}'
+
+  secondary:
+
+    # Secondary name prefix
+    name_prefix: '{{ environment_definition.customer.secondary.name_prefix if environment_definition.customer.disaster_recovery else "" }}'
+
+    # Secondary first 3 octets
+    octets: '{{ environment_definition.customer.secondary.octets if environment_definition.customer.disaster_recovery else "" }}'
+
+
+##################################################################################
+# Datacenter where the stack is to be built
+##################################################################################
+datacenter:
+
+  primary:
+
+    # Available datacenters: STG-HX-DC, RTP-Staging, PAE-HX-DC-1, PAE-HX-DC-2, PAE-HX-DC-3, PAE-HX-DC-4, Plat-Ops, Dev Engineering, cdra-Build-Development, PAE-Customer-Build, RTP5, Alln1 (string)
+    name: '{{ environment_definition.datacenter.primary.name }}'
+
+    # Required if a custom cluster name is to be used
+    # The primary cluster to host the customer's primary stack
+    cluster: '{{ environment_definition.datacenter.primary.cluster if environment_definition.datacenter.primary.cluster != none else "" }}'
+
+    # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
+    # For hosted deployments DO NOT TOUCH
+    # Use ',', ';' or space as separator when you have more than one host
+    resources: [ '{{ primary_resources|join(',')|replace(",", "', '") if (environment_definition.customer.deployment_model is regex('a|u') and environment_definition.customer.deployment_model is not search('h')) else "" }}' ]
+
+    # ONLY for on-premise deployments, define the VLAN IDs to use (string)
+    # For hosted deployments DO NOT TOUCH
+    internal_net_vlan_id: '{{ environment_definition.datacenter.primary.internal_net_vlan_id if environment_definition.datacenter.primary.internal_net_vlan_id is defined and environment_definition.datacenter.primary.internal_net_vlan_id != none else "" }}'
+    loadbalancer_net_vlan_id: '{{ environment_definition.datacenter.primary.loadbalancer_net_vlan_id if environment_definition.datacenter.primary.loadbalancer_net_vlan_id is defined and environment_definition.datacenter.primary.loadbalancer_net_vlan_id != none else "" }}'
+    customer_net_inside_vlan_id: '{{ environment_definition.datacenter.primary.customer_net_inside_vlan_id if environment_definition.datacenter.primary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.primary.customer_net_inside_vlan_id != none else "" }}'
+    em7db_heartbeat_link_vlan_id: '{{ environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id != none else "" }}'
+
+  secondary:
+
+    # Available datacenters: STG-HX-DC, RTP-Staging, PAE-HX-DC-1, PAE-HX-DC-2, PAE-HX-DC-3, PAE-HX-DC-4, Plat-Ops, Dev Engineering, cdra-Build-Development, PAE-Customer-Build, RTP5, Alln1 (string)
+    name: '{{ environment_definition.datacenter.secondary.name }}'
+
+    # Required if a custom cluster name is to be used
+    # The secondary cluster to host the customer's secondary stack
+    cluster: '{{ environment_definition.datacenter.secondary.cluster if environment_definition.datacenter.secondary.cluster != none else "" }}'
+
+    # ONLY for on-premise deployments, define the list of esxi hosts (resources) to use (string)
+    # For hosted deployments DO NOT TOUCH
+    resources: [ '{{ secondary_resources|join(',')|replace(",", "', '") if (environment_definition.customer.disaster_recovery and environment_definition.customer.deployment_model is regex('a|u') and environment_definition.customer.deployment_model is not search('h')) else "" }}' ]
+
+    # ONLY for on-premise deployments, define the VLAN IDs to use (string)
+    # For hosted deployments DO NOT TOUCH
+    internal_net_vlan_id: '{{ environment_definition.datacenter.secondary.internal_net_vlan_id if environment_definition.datacenter.secondary.internal_net_vlan_id is defined and environment_definition.datacenter.secondary.internal_net_vlan_id != none else environment_definition.datacenter.primary.internal_net_vlan_id if environment_definition.datacenter.primary.internal_net_vlan_id is defined and environment_definition.datacenter.primary.internal_net_vlan_id != none else "" }}'
+    loadbalancer_net_vlan_id: '{{ environment_definition.datacenter.secondary.loadbalancer_net_vlan_id if environment_definition.datacenter.secondary.loadbalancer_net_vlan_id is defined and environment_definition.datacenter.secondary.loadbalancer_net_vlan_id != none else environment_definition.datacenter.primary.loadbalancer_net_vlan_id if environment_definition.datacenter.primary.loadbalancer_net_vlan_id is defined and environment_definition.datacenter.primary.loadbalancer_net_vlan_id != none else "" }}'
+    customer_net_inside_vlan_id: '{{ environment_definition.datacenter.secondary.customer_net_inside_vlan_id if environment_definition.datacenter.secondary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.secondary.customer_net_inside_vlan_id != none else environment_definition.datacenter.primary.customer_net_inside_vlan_id if environment_definition.datacenter.primary.customer_net_inside_vlan_id is defined and environment_definition.datacenter.primary.customer_net_inside_vlan_id != none else "" }}'
+    em7db_heartbeat_link_vlan_id: '{{ environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.secondary.em7db_heartbeat_link_vlan_id != none else environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id if environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id is defined and environment_definition.datacenter.primary.em7db_heartbeat_link_vlan_id != none else "" }}'
+
+{% if environment_definition.customer.deployment_model is not search('s|h') %}
+{% block nexus %}
+##################################################################################
+# Nexus information
+##################################################################################
+nexus:
+  address: [ '172.30.240.253', '172.30.240.254' ]
+{% endblock nexus %}
+{% endif %}
+##################################################################################
+# If a bastion server (a.k.a linux jump server) is to be used, the address must be provided
+##################################################################################
+bastion:
+  address: {{ "[ '10.225.228.240' ]" if use_bastion else [] }}
+
+
+##################################################################################
+# System configuration variables
+##################################################################################
+sysconfig:
+
+  primary:
+
+    # DNS servers list
+    dns_servers: {{ [ '172.23.251.21', '172.23.251.22' ] if environment_definition.datacenter.primary.name is search('RTP-Staging|STG') else ['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else ['172.19.251.21', '172.19.251.22'] }}
+
+    # Domain name to use
+    domain_name: "{{ ('staging.' if environment_definition.datacenter.primary.name is search('RTP-Staging|STG') else '') + 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com' }}"
+
+    # NTP server
+    ntp_server: {{ ([environment_definition.vm_setting.sysconfig.ntp_server|unique|join(', ')] if environment_definition.vm_setting.sysconfig.ntp_server|type_debug == 'list' else ("'" + environment_definition.vm_setting.sysconfig.ntp_server|string + "'")) if environment_definition.vm_setting.sysconfig.ntp_server is defined else "'{{ customer.primary.octets }}.254'" if environment_definition.customer.deployment_model is search('sa|sh') else "'{{ customer.primary.octets }}.62'" }}
+
+  secondary:
+  
+    # DNS servers list
+    dns_servers: {{ ([ '172.23.251.21', '172.23.251.22' ] if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else ['172.30.251.21', '172.30.251.22'] if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else ['172.19.251.21', '172.19.251.22']) if environment_definition.customer.disaster_recovery else ''  }}
+
+    # Domain name to use
+    domain_name: "{{ (('staging.' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '') + 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|PAE-HX-DC-3|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else '' }}"
+
+    # NTP server
+    ntp_server: {{ (([environment_definition.drvm_setting.sysconfig.ntp_server|unique|join(', ')] if environment_definition.drvm_setting.sysconfig.ntp_server|type_debug == 'list' else ("'" + environment_definition.drvm_setting.sysconfig.ntp_server|string + "'")) if environment_definition.drvm_setting.sysconfig.ntp_server is defined else "'{{ customer.secondary.octets }}.254'" if environment_definition.customer.deployment_model is search('sa|sh') else "'{{ customer.secondary.octets }}.62'") if environment_definition.customer.disaster_recovery else '' }}
+
+{% if environment_definition.customer.deployment_model is not search('sa|sh') %}
+{% block puppet %}
+##################################################################################
+# Puppet server information: ensure you are pointing to the correct puppet server
+##################################################################################
+puppet:
+
+  primary:
+
+    # VM name
+    vmname: '{{ environment_definition.puppet.primary.server_name }}'
+
+    # FQDN
+    fqdn: '{{ environment_definition.puppet.primary.server_name + '.' + ('staging.' if environment_definition.datacenter.primary.name is search('RTP-Staging|STG') else '') + "cisco-cms.com" }}'
+
+    # ip address
+    ipaddress: '{{ "172.23.251.38" if environment_definition.datacenter.primary.name is search('RTP-Staging|STG') else [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.primary.server_name[-1:]|int-1] }}'
+
+  secondary:
+
+    # VM name
+    vmname: '{{ environment_definition.puppet.secondary.server_name if environment_definition.customer.disaster_recovery else "" }}'
+
+    # FQDN
+    fqdn: '{{ (environment_definition.puppet.secondary.server_name + '.' + ('staging.' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '') + "cisco-cms.com") if environment_definition.customer.disaster_recovery else "" }}'
+
+    # ip address
+    ipaddress: '{{ ("172.23.251.38" if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else [ "172.19.251.53", "172.19.251.59", "172.19.251.34", "172.19.251.66" ][environment_definition.puppet.secondary.server_name[-1:]|int-1]) if environment_definition.customer.disaster_recovery else "" }}'
+
+
+##################################################################################
+# Release Artifactory information
+##################################################################################
+artifactory:
+
+  # baseurl
+  baseurl: 'https://engci-maven-master.cisco.com'
+{% endblock puppet %}
+{% endif %}
+
+##################################################################################
+# Yum server information
+##################################################################################
+yum:
+
+  primary:
+
+    # baseurl
+    baseurl: 'https://{{ environment_definition.yum.primary.server_name + '.' + ('staging.' if environment_definition.datacenter.primary.name is search('RTP-Staging|STG') else '') + 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
+
+    # VM name
+    vmname: '{{ environment_definition.yum.primary.server_name }}'
+
+    # FQDN
+    fqdn: '{{ environment_definition.yum.primary.server_name + '.' + ('staging.' if environment_definition.datacenter.primary.name is search('RTP-Staging|STG') else '') + 'cisco-' + ('pae' if environment_definition.datacenter.primary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com' }}'
+
+    # ip address
+    ipaddress: '{{ "172.23.251.39" if environment_definition.datacenter.primary.name is search('RTP-Staging|STG') else [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.primary.server_name[-1:]|int-1] }}'
+
+  secondary:
+
+    # baseurl
+    baseurl: '{{ ('https://' + environment_definition.yum.secondary.server_name + '.' + ('staging.' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '') + 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else "" }}'
+
+    # VM name
+    vmname: '{{ environment_definition.yum.secondary.server_name if environment_definition.customer.disaster_recovery else "" }}'
+
+    # FQDN
+    fqdn: '{{ (environment_definition.yum.secondary.server_name + '.' + ('staging.' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '') + 'cisco-' + ('pae' if environment_definition.datacenter.secondary.name is regex('PAE-HX-DC-2|Dev Engineering') else 'cms') + '.com') if environment_definition.customer.disaster_recovery else "" }}'
+
+    # ip address
+    ipaddress: '{{ ("172.23.251.39" if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else [ "172.19.251.54", "172.19.251.52" ][environment_definition.yum.secondary.server_name[-1:]|int-1]) if environment_definition.customer.disaster_recovery else "" }}'
+{% if environment_definition.customer.deployment_model is not search('sa|sh') %}
+{% block splunk %}
+
+##################################################################################
+# Splunk information. Although the values in this section do not typically change from one customer to another, ensure they are correct 
+##################################################################################
+splunk:
+
+  # head-end deployment
+  he_deployment_server_ip: '{{ '172.23.252.28' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.252.21' }}'
+  he_deployment_server: '{{ 'sastgsplhedep01.staging.cisco-cms.com' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else 'splds.gslb.cisco-cms.com' }}'
+
+  # license master
+  license_master_ip: '{{ '172.23.252.29' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.252.22' }}'
+  license_master_server: '{{ 'sastgsplhelic01.staging.cisco-cms.com' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else 'spllic.gslb.cisco-cms.com'}}'
+
+  # head-end search-head
+  he_searchhead01_ip: '{{ '172.23.252.27' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.252.23' }}'
+  he_searchhead01_server: '{{ 'sastghesplsrc01' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else 'alln1splsrcp01' }}'
+  he_searchhead02_ip: '{{ '172.23.252.27' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.252.25' }}'
+  he_searchhead02_server: '{{ 'sastghesplsrc01' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else 'alln1splsrcp02' }}'
+
+  # head-end indexer
+  he_indexer01_ip: '{{ '172.23.252.26' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.252.24' }}'
+  he_indexer01_server: '{{ 'sastghesplind01' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else 'alln1splidxp01' }}'
+  he_indexer02_ip: ''
+  he_indexer02_server: ''
+
+  # mom indexer
+  mom_indexer1_ip: '{{ '172.23.252.24' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.252.28' }}'
+  mom_indexer2_ip: '{{ '172.23.252.25' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.252.29' }}'
+
+  # mom cluster master
+  mom_clustermaster_ip: '{{ '172.23.252.22' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.252.30' }}'
+
+  # mom relay vip
+  mom_rly_vip: '{{ '172.23.254.52' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.254.23' }}'
+
+  # tile server hostname
+  tile_server: '{{ 'sastgspltls01' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else 'alln1spltlsp01' }}'
+
+
+##################################################################################
+# IS4 information. Although the values in this section do not typically change from one customer to another, ensure they are correct 
+##################################################################################
+is4:
+
+  # vip
+  vip: '{{ '172.23.254.100' if environment_definition.datacenter.secondary.name is search('RTP-Staging|STG') else '172.19.254.100' }}'
+
+
+#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
+##################################################################################
+# Do NOT change anything below this line
+##################################################################################
+#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@
+
+##################################################################################
+# Service VIPs
+##################################################################################
+vip:
+
+  # Message collectors VIP
+  mc: "{{ '{{' }} customer.primary.octets {{ '}}' }}.42"
+
+  # EM7 portals (application servers) VIP
+  prt: "{{ '{{' }} customer.primary.octets {{ '}}' }}.49"
+
+  # EM7 databases VIP
+  db: "{{ '{{' }} customer.primary.octets {{ '}}' }}.40"
+
+  # Splunk search heads VIP
+  src: "{{ '{{' }} customer.primary.octets {{ '}}' }}.41"
+
+  # Relay servers VIP
+  rly: "{{ '{{' }} customer.primary.octets {{ '}}' }}.52"
+
+  # Relay servers database VIP
+  rly_db: "{{ '{{' }} customer.primary.octets {{ '}}' }}.1"
+
+  # NFS mount VIP
+  nfs_mnt: "{{ '{{' }} customer.primary.octets {{ '}}' }}.1"
+{% endblock splunk %}
+{% endif %}

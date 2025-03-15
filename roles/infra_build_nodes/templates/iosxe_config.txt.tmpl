@@ -1,0 +1,81 @@
+hostname {{ vm.name }}
+!
+enable secret 0 {{ credentials.password }}
+username admin privilege 15 secret 0 {{ credentials.password }}
+!
+ntp source {{ ntp_source }}
+ntp server {{ ntp_server }}
+!
+ip domain name {{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}
+!
+interface GigabitEthernet1
+description ****Customer Net****
+ip address {{ netconfig.nic1.ipaddress }} {{ netconfig.nic1.netmask }}
+standby use-bia
+standby 1 ip {{ netconfig.nic1.gateway }}
+{% if 'dr' not in group_names %}
+standby 1 priority 130
+standby 1 preempt
+{% endif %}
+no shutdown
+negotiation auto
+exit
+!
+interface GigabitEthernet2
+description ****Internal-Net****
+ip address {{ netconfig.nic2.ipaddress }} {{ netconfig.nic2.netmask }}
+standby use-bia
+standby 2 ip {{ netconfig.nic2.gateway }}
+{% if 'dr' not in group_names %}
+standby 2 priority 130
+standby 2 preempt
+{% endif %}
+no shutdown
+negotiation auto
+exit
+!
+interface GigabitEthernet3
+description ****Loadbalancer Net One Arm****
+ip address {{ netconfig.nic3.ipaddress }} {{ netconfig.nic3.netmask }}
+standby use-bia
+standby 3 ip {{ netconfig.nic3.gateway }}
+{% if 'dr' not in group_names %}
+standby 3 priority 130
+standby 3 preempt
+{% endif %}
+no shutdown
+negotiation auto
+exit
+!
+interface GigabitEthernet4
+description ****Connects to FirePower PO.1361 & ASA Gi0/0.1361 ****
+ip address {{ netconfig.nic4.ipaddress }} {{ netconfig.nic4.netmask }}
+standby use-bia
+standby 4 ip {{ netconfig.nic4.gateway }}
+{% if 'dr' not in group_names %}
+standby 4 priority 130
+standby 4 preempt
+{% endif %}
+no shutdown
+negotiation auto
+exit
+!
+no ip http server
+no ip http secure-server
+!
+ip route 0.0.0.0 0.0.0.0 {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.{{ '246' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('Staging|STG|PAE-HX-DC') else '252' }}
+ip route 172.19.240.0 255.255.240.0 {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.246
+ip route 172.21.240.0 255.255.240.0 {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.246
+ip route 172.26.9.0 255.255.255.0 {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.246
+ip route 172.29.9.0 255.255.255.0 {{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.246
+!
+ip ssh version 2
+ip scp server enable
+!
+crypto key generate rsa modulus 2048
+!
+line vty 0 4
+login local
+transport input ssh
+!
+end

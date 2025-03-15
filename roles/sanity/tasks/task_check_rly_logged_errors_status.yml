@@ -1,0 +1,38 @@
+---
+# Tasks to check logged errors status
+- block:
+  - name: check for errors in log files
+    ansible.builtin.shell: |
+      {{ 'sudo -S' if ansible_user != 'root' else '' }} grep -i error {{ fileid }} {{ '<<< ' + ansible_password if ansible_user != 'root' else '' }} | grep -v ansible
+    register: reg_err_status
+    args:
+      warn: false
+    ignore_errors: true
+    check_mode: no
+    no_log: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
+    loop:
+      - /var/log/messages
+      - /opt/CSCO-CMS/relayweb/log/relayweb.log
+      - /opt/CSCO-CMS/relaysnmp/log/trapprocessor.log
+      - /var/log/mysql/mysql.error.log
+    loop_control:
+      loop_var: fileid
+  - ansible.builtin.debug:
+      msg: "{{ reg_err_status.results|replace(ansible_password, 'obfuscated') }}"
+    when: ansible_user != 'root'
+
+  - name: define rly_errors_status
+    ansible.builtin.set_fact:
+      rly_errors_status: "{{ rly_errors_status|default([]) + [file_stderr|regex_replace('^.*password for.*?: ', '')|replace('grep: ', '') if file_stderr|regex_replace('^.*password for.*?: ', '') != '' else ('Errors detected in ' + file_item) if file_stdout != '' else '']|select()|list }}"
+    vars:
+      file_stdout: "{{ reg_err_status.results|selectattr('fileid', 'equalto', file_item)|map(attribute='stdout')|join }}"
+      file_stderr: "{{ reg_err_status.results|selectattr('fileid', 'equalto', file_item)|map(attribute='stderr')|join }}"
+    loop:
+      - /var/log/mysql/messages
+      - /opt/CSCO-CMS/relayweb/log/relayweb.log
+      - /opt/CSCO-CMS/relaysnmp/log/trapprocessor.log
+      - /var/log/mysql/mysql.error.log
+    loop_control:
+      loop_var: file_item
+  tags: sanity
+

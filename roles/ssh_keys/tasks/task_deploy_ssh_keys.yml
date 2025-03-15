@@ -1,0 +1,20 @@
+---
+# tasks to deploy ssh_keys to remote server(s)
+- block:
+  - block:
+    - ansible.builtin.stat:
+        path: "{{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}"
+      register: privkey
+    - ansible.builtin.stat:
+        path: "{{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}.pub"
+      register: pubkey
+    delegate_to: localhost
+    run_once: true
+  - name: copy the SSH keys to remote host
+    ansible.posix.authorized_key:
+      user: "{{ ansible_user }}"
+      state: present
+      key: "{{ lookup('file', '{{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}.pub') }}"
+    when:
+      - privkey.stat.exists and pubkey.stat.exists
+      - hostvars[inventory_hostname]['ansible_host'] != ''

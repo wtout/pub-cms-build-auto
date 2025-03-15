@@ -1,0 +1,1006 @@
+---
+# vars file for infra_build_nodes
+csr_license_idtoken_path: '${HOME}/certificates/smart_license_idtoken.txt'
+ova_dir: "{{ auto_dir }}/Packages"
+
+ova_names:
+  nsvpx: NSVPX/NSVPX-ESX-13.1-50.23_nc_64.ovf
+  csr: CSR/c8000v-universalk9.17.09.05a.ova
+
+onprem_csr:
+  properties:
+    com.cisco.c8000v.login-username.1: "{{ credentials.username }}"
+    com.cisco.c8000v.login-password.1: "{{ credentials.password }}"
+    com.cisco.c8000v.enable-scp-server.1: 'True'
+    com.cisco.c8000v.enable-ssh-server.1: 'True'
+    com.cisco.c8000v.mgmt-ipv4-addr.1: 'dhcp'
+    com.cisco.c8000v.mgmt-ipv4-gateway.1: 'dhcp'
+    com.cisco.c8000v.privilege-password.1 : "{{ credentials.password }}"
+    com.cisco.c8000v.hostname.1 : "{{ vm.name }}"
+    com.cisco.c8000v.domain-name.1 : "{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"
+    com.cisco.c8000v.license.1 : 'network-essentials'
+
+winjmp:
+  interface_configuration:
+    - name: Rename interface 1
+      command: interface set interface name = "{{ netconfig.nic1.default_netname }}" newname = "{{ netconfig.nic1.intname }}"
+      shell: c:\windows\system32\netsh.exe
+      ignore_errors: yes
+
+    - name: Set IP Address for QS Head-end connection
+      command: interface ip set address "{{ netconfig.nic1.intname }}" static {{ netconfig.nic1.ipaddress }} {{ netconfig.nic1.netmask }}
+      shell: c:\windows\system32\netsh.exe
+      ignore_errors: no
+
+    - name: Set primary DNS entry for interface 1
+      command: interface ip set dns "{{ netconfig.nic1.intname }}" static {{ sysconfig.secondary.dns_servers[0] if 'dr' in group_names else sysconfig.primary.dns_servers[0] }} primary
+      shell: c:\windows\system32\netsh.exe
+      ignore_errors: no
+
+    - name: Add secondary DNS entry for interface 1
+      command: interface ip add dns "{{ netconfig.nic1.intname }}" {{ sysconfig.secondary.dns_servers[1] if 'dr' in group_names else sysconfig.primary.dns_servers[1] }} index=2
+      shell: c:\windows\system32\netsh.exe
+      ignore_errors: yes
+
+    - name: Rename interface 2
+      command: interface set interface name = "{{ netconfig.nic2.default_netname }}" newname = "{{ netconfig.nic2.intname }}"
+      shell: c:\windows\system32\netsh.exe
+      ignore_errors: yes
+
+    - name: Set IP address for interface 2
+      command: interface ip set address "{{ netconfig.nic2.intname }}" static {{ netconfig.nic2.ipaddress }} {{ netconfig.nic2.netmask }} {{ netconfig.nic2.gateway }}
+      shell: c:\windows\system32\netsh.exe
+      ignore_errors: no
+
+  other_configuration:
+    - name: Configure firewall to all Remote Desktop connectivity
+      command: 'advfirewall firewall set rule name"Remote Desktop (TCP-IN)" new enable=yes'
+      shell: c:\windows\system32\netsh.exe
+      ignore_errors: yes
+
+    - name: Set profile directory
+      command: /S c:\temp\profiles.reg
+      shell: c:\windows\regedit.exe
+      ignore_errors: no
+
+    - name: Remove Authenticated Users group from D drive
+      command: D:\ /remove:g "Authenticated Users"
+      shell: c:\windows\system32\icacls.exe
+      ignore_errors: no
+
+nsvpx:
+  configuration:
+    ise_server: 172.19.250.14
+
+    servers:
+      - name: EM7App01
+        ipaddress: "{{ em7prt_ip2_list[0] if em7prt_ip2_list is defined else em7_ip2_list[0] }}"
+        comment: EM7App01
+
+      - name: EM7App02
+        ipaddress: "{{ em7prt_ip2_list[1] if em7prt_ip2_list is defined else '' }}"
+        comment: EM7App02
+
+      - name: EM7App01-INT
+        ipaddress: "{{ em7prt_ip1_list[0] if em7prt_ip1_list is defined else em7_ip1_list[0] }}"
+        comment: EM7App01-INT
+
+      - name: EM7App02-INT
+        ipaddress: "{{ em7prt_ip1_list[1] if em7prt_ip1_list is defined else '' }}"
+        comment: EM7App02-INT
+
+      - name: EM7MC01
+        ipaddress: "{{ em7mc_ip1_list[0] if em7mc_ip1_list is defined else em7_ip1_list[0] }}"
+        comment: EM7MC01
+
+      - name: EM7MC02
+        ipaddress: "{{ em7mc_ip1_list[1] if em7mc_ip1_list is defined else '' }}"
+        comment: EM7MC02
+
+      - name: Splunk-Search01
+        ipaddress: "{{ splsrc_ip1_list[0] if splsrc_ip1_list is defined else spl_ip1_list[0] }}"
+        comment: Splunk-Search01
+
+      - name: Splunk-Search02
+        ipaddress: "{{ splsrc_ip1_list[1] if splsrc_ip1_list is defined else '' }}"
+        comment: Splunk-Search02
+
+      - name: Net-SNMP-1
+        ipaddress: "{{ rly_ip2_list[0] if rly_ip2_list is defined else rly_ip2_list[0] }}"
+        comment: Net SNMP poller 1
+
+      - name: Net-SNMP-2
+        ipaddress: "{{ rly_ip2_list[1] if (rly_ip2_list is defined and rly_ip2_list|length > 1) else '' }}"
+        comment: Net SNMP poller 2
+
+      - name: Net-SNMP-3
+        ipaddress: "{{ rly_ip1_list[0] if rly_ip1_list is defined else rly_ip1_list[0] }}"
+        comment: Net SNMP poller 3
+
+      - name: Net-SNMP-4
+        ipaddress: "{{ rly_ip1_list[1] if (rly_ip1_list is defined and rly_ip1_list|length > 1) else '' }}"
+        comment: Net SNMP poller 4
+
+    services:
+      - name: NETSNMP-TrapService-01
+        server: Net-SNMP-1
+        type: ANY
+        port: 162
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120netname
+
+      - name: NETSNMP-TrapService-02
+        server: Net-SNMP-2
+        type: ANY
+        port: 162
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: NETSNMP-SyslogService-01
+        server: Net-SNMP-1
+        type: ANY
+        port: 514
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: NETSNMP-SyslogService-02
+        server: Net-SNMP-2
+        type: ANY
+        port: 514
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: EM7App01-INTService
+        server: EM7App01-INT
+        type: TCP
+        port: 443
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: EM7App02-INTService
+        server: EM7App02-INT
+        type: TCP
+        port: 443
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: EM7MC01Trap
+        server: EM7MC01
+        type: ANY
+        port: 162
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: EM7MC02Trap
+        server: EM7MC02
+        type: ANY
+        port: 162
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: EM7MC01Syslog
+        server: EM7MC01
+        type: ANY
+        port: 514
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: EM7MC02Syslog
+        server: EM7MC02
+        type: ANY
+        port: 514
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: SplunkSearch-01
+        server: Splunk-Search01
+        type: SSL_BRIDGE
+        port: 8000
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: SplunkSearch-02
+        server: Splunk-Search02
+        type: SSL_BRIDGE
+        port: 8000
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: SplunkSearch-8089-01
+        server: Splunk-Search01
+        type: SSL_BRIDGE
+        port: 8089
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: SplunkSearch-8089-02
+        server: Splunk-Search02
+        type: SSL_BRIDGE
+        port: 8089
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: EM7httpsApp01
+        server: EM7App01
+        type: SSL_BRIDGE
+        port: 443
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: EM7httpsApp02
+        server: EM7App02
+        type: SSL_BRIDGE
+        port: 443
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: NETSNMP_03_3306
+        server: Net-SNMP-3
+        type: TCP
+        port: 3306
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+
+      - name: NETSNMP_04_3306
+        server: Net-SNMP-4
+        type: TCP
+        port: 3306
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+
+      - name: NETSNMP_03_5000
+        server: Net-SNMP-3
+        type: TCP
+        port: 5000
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: NETSNMP_04_5000
+        server: Net-SNMP-4
+        type: TCP
+        port: 5000
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: NETSNMP-sftp-Service-01
+        server: Net-SNMP-1
+        type: TCP
+        port: 22
+        usip: "YES"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: NETSNMP-sftp-Service-02
+        server: Net-SNMP-2
+        type: TCP
+        port: 22
+        usip: "YES"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+    lb_servers:
+      - name: EM7App01-INTService-VIP
+        type: TCP
+        ipaddress: "{{ vip.prt }}"
+        port: 443
+        persistence_type: SOURCEIP
+        lb_method: ROUNDROBIN
+        sessionless: DISABLED
+        clt_timeout: 9000
+
+      - name: EM7MC01Trap-VIP
+        type: ANY
+        ipaddress: "{{ vip.mc }}"
+        port: 162
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: ENABLED
+        clt_timeout: 120
+
+      - name: EM7MC01Syslog-VIP
+        type: ANY
+        ipaddress: "{{ vip.mc }}"
+        port: 514
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: ENABLED
+        clt_timeout: 120
+        
+      - name: SplunkSearch-VIP
+        type: SSL_BRIDGE
+        ipaddress: "{{ vip.src }}"
+        port: 443
+        persistence_type: SSLSESSION
+        lb_method: SOURCEIPHASH
+        sessionless: DISABLED
+        clt_timeout: 180
+
+      - name: EM7App01-VIP
+        type: SSL_BRIDGE
+        ipaddress: "{{ customer.primary.octets }}.120"
+        port: 443
+        persistence_type: SSLSESSION
+        lb_method: SOURCEIPHASH
+        sessionless: DISABLED
+        clt_timeout: 180
+
+      - name: NETSNMP-TrapService-VIP
+        type: ANY
+        ipaddress: "{{ customer.primary.octets }}.120"
+        port: 162
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: ENABLED
+        clt_timeout: 120
+
+      - name: NETSNMP-SyslogService-VIP
+        type: ANY
+        ipaddress: "{{ customer.primary.octets }}.120"
+        port: 514
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: ENABLED
+        clt_timeout: 120
+
+      - name: SplunkSearch-8089-VIP
+        type: SSL_BRIDGE
+        ipaddress: "{{ vip.src }}"
+        port: 8089
+        persistence_type: SSLSESSION
+        lb_method: SOURCEIPHASH
+        sessionless: DISABLED
+        clt_timeout: 180
+
+      - name: NETSNMP_3306_VIP
+        type: TCP
+        ipaddress: "{{ customer.primary.octets }}.52"
+        port: 3306
+        persistence_type: SOURCEIP
+        lb_method: SRCIPDESTIPHASH
+        sessionless: DISABLED
+        clt_timeout: 9000
+
+      - name: NETSNMP_5000_VIP
+        type: TCP
+        ipaddress: "{{ customer.primary.octets }}.52"
+        port: 5000
+        persistence_type: SOURCEIP
+        lb_method: SRCIPDESTIPHASH
+        sessionless: DISABLED
+        clt_timeout: 9000
+
+      - name: NETSNMP_sftp_Service-VIP
+        type: TCP
+        ipaddress: "{{ customer.primary.octets }}.120"
+        port: 22
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: DISABLED
+        clt_timeout: 9000
+
+    lb_server_binds:
+      - name: EM7App01-INTService-VIP
+        service: EM7App01-INTService
+        
+      - name: EM7App01-INTService-VIP
+        service: EM7App02-INTService
+
+      - name: EM7MC01Trap-VIP
+        service: EM7MC01Trap
+        
+      - name: EM7MC01Trap-VIP
+        service: EM7MC02Trap
+
+      - name: EM7MC01Syslog-VIP
+        service: EM7MC01Syslog
+        
+      - name: EM7MC01Syslog-VIP
+        service: EM7MC02Syslog
+
+      - name: SplunkSearch-VIP
+        service: SplunkSearch-01
+        
+      - name: SplunkSearch-VIP
+        service: SplunkSearch-02
+
+      - name: EM7App01-VIP
+        service: EM7httpsApp01
+        
+      - name: EM7App01-VIP
+        service: EM7httpsApp02
+
+      - name: NETSNMP-TrapService-VIP
+        service: NETSNMP-TrapService-01
+        
+      - name: NETSNMP-TrapService-VIP
+        service: NETSNMP-TrapService-02
+
+      - name: NETSNMP-SyslogService-VIP
+        service: NETSNMP-SyslogService-01
+
+      - name: NETSNMP-SyslogService-VIP
+        service: NETSNMP-SyslogService-02
+
+      - name: SplunkSearch-8089-VIP
+        service: SplunkSearch-8089-01
+
+      - name: SplunkSearch-8089-VIP
+        service: SplunkSearch-8089-02
+
+      - name: NETSNMP_3306_VIP
+        service: NETSNMP_03_3306
+
+      - name: NETSNMP_3306_VIP
+        service: NETSNMP_04_3306
+
+      - name: NETSNMP_5000_VIP
+        service: NETSNMP_03_5000
+
+      - name: NETSNMP_5000_VIP
+        service: NETSNMP_04_5000
+
+      - name: NETSNMP_sftp_Service-VIP
+        service: NETSNMP-sftp-Service-01
+
+      - name: NETSNMP_sftp_Service-VIP
+        service: NETSNMP-sftp-Service-02
+
+    ssl_services:
+      - name: nshttps-{{ customer.primary.octets }}.123-443
+        eRSA: ENABLED
+        sessReuse: DISABLED
+
+      - name: nsrpcs-{{ customer.primary.octets }}.123-3008
+        eRSA: ENABLED
+        sessReuse: DISABLED
+
+      - name: nshttps-127.0.0.1-443
+        eRSA: DISABLED
+        sessReuse: ENABLED
+
+    ssl_server_binds:
+      - name: nshttps-{{ customer.primary.octets }}.123-443
+        eccCurveName: P_256
+
+      - name: nshttps-{{ customer.primary.octets }}.123-443
+        eccCurveName: P_384
+
+      - name: nshttps-{{ customer.primary.octets }}.123-443
+        eccCurveName: P_224
+
+      - name: nshttps-{{ customer.primary.octets }}.123-443
+        eccCurveName: P_521
+
+      - name: nsrpcs-{{ customer.primary.octets }}.123-3008
+        eccCurveName: P_256
+
+      - name: nsrpcs-{{ customer.primary.octets }}.123-3008
+        eccCurveName: P_384
+
+      - name: nsrpcs-{{ customer.primary.octets }}.123-3008
+        eccCurveName: P_224
+
+      - name: nsrpcs-{{ customer.primary.octets }}.123-3008
+        eccCurveName: P_521
+
+drnsvpx: 
+  configuration:
+    servers:
+      - name: EM7App01
+        ipaddress: "{{ drem7prt_ip2_list[0] }}"
+        comment: EM7App01
+
+      - name: EM7App01-INT
+        ipaddress: "{{ drem7prt_ip1_list[0] }}"
+        comment: EM7App01-INT
+
+      - name: EM7MC01
+        ipaddress: "{{ drem7mc_ip1_list[0] }}"
+        comment: EM7MC01
+
+      - name: Splunk-Search01
+        ipaddress: "{{ drsplsrc_ip1_list[0] }}"
+        comment: Splunk-Search01
+
+      - name: Net-SNMP-1
+        ipaddress: "{{ drrly_ip2_list[0] }}"
+        comment: Net SNMP poller 1
+
+      - name: Net-SNMP-3
+        ipaddress: "{{ drrly_ip1_list[0] }}"
+        comment: Net SNMP poller 3
+
+    services:
+      - name: NETSNMP-TrapService-01
+        server: Net-SNMP-1
+        type: ANY
+        port: 162
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: NETSNMP-TrapService-02
+        server: Net-SNMP-2
+        type: ANY
+        port: 162
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: NETSNMP-SyslogService-01
+        server: Net-SNMP-1
+        type: ANY
+        port: 514
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: NETSNMP-SyslogService-02
+        server: Net-SNMP-2
+        type: ANY
+        port: 514
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: EM7App01-INTService
+        server: EM7App01-INT
+        type: TCP
+        port: 443
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: EM7App02-INTService
+        server: EM7App02-INT
+        type: TCP
+        port: 443
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: EM7MC01Trap
+        server: EM7MC01
+        type: ANY
+        port: 162
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: EM7MC02Trap
+        server: EM7MC02
+        type: ANY
+        port: 162
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: EM7MC01Syslog
+        server: EM7MC01
+        type: ANY
+        port: 514
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: EM7MC02Syslog
+        server: EM7MC02
+        type: ANY
+        port: 514
+        usip: "YES"
+        useproxyport: "NO"
+        sp: "OFF"
+        clt_timeout: 120
+        svr_timeout: 120
+
+      - name: SplunkSearch-01
+        server: Splunk-Search01
+        type: SSL_BRIDGE
+        port: 8000
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: SplunkSearch-02
+        server: Splunk-Search02
+        type: SSL_BRIDGE
+        port: 8000
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: SplunkSearch-8089-01
+        server: Splunk-Search01
+        type: SSL_BRIDGE
+        port: 8089
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: SplunkSearch-8089-02
+        server: Splunk-Search02
+        type: SSL_BRIDGE
+        port: 8089
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: EM7httpsApp01
+        server: EM7App01
+        type: SSL_BRIDGE
+        port: 443
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: EM7httpsApp02
+        server: EM7App02
+        type: SSL_BRIDGE
+        port: 443
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 180
+        svr_timeout: 360
+
+      - name: NETSNMP_03_3306
+        server: Net-SNMP-3
+        type: TCP
+        port: 3306
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+
+      - name: NETSNMP_04_3306
+        server: Net-SNMP-4
+        type: TCP
+        port: 3306
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+
+      - name: NETSNMP_03_5000
+        server: Net-SNMP-3
+        type: TCP
+        port: 5000
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: NETSNMP_04_5000
+        server: Net-SNMP-4
+        type: TCP
+        port: 5000
+        usip: "NO"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: NETSNMP-sftp-Service-01
+        server: Net-SNMP-1
+        type: TCP
+        port: 22
+        usip: "YES"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+      - name: NETSNMP-sftp-Service-02
+        server: Net-SNMP-2
+        type: TCP
+        port: 22
+        usip: "YES"
+        useproxyport: "YES"
+        sp: "ON"
+        clt_timeout: 9000
+        svr_timeout: 9000
+
+    lb_servers:
+      - name: EM7App01-INTService-VIP
+        type: TCP
+        ipaddress: "{{ vip.prt }}"
+        port: 443
+        persistence_type: SOURCEIP
+        lb_method: ROUNDROBIN
+        sessionless: DISABLED
+        clt_timeout: 9000
+
+      - name: EM7MC01Trap-VIP
+        type: ANY
+        ipaddress: "{{ vip.mc }}"
+        port: 162
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: ENABLED
+        clt_timeout: 120
+
+      - name: EM7MC01Syslog-VIP
+        type: ANY
+        ipaddress: "{{ vip.mc }}"
+        port: 514
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: ENABLED
+        clt_timeout: 120
+        
+      - name: SplunkSearch-VIP
+        type: SSL_BRIDGE
+        ipaddress: "{{ vip.src }}"
+        port: 443
+        persistence_type: SSLSESSION
+        lb_method: SOURCEIPHASH
+        sessionless: DISABLED
+        clt_timeout: 180
+
+      - name: EM7App01-VIP
+        type: SSL_BRIDGE
+        ipaddress: "{{ customer.secondary.octets }}.120"
+        port: 443
+        persistence_type: SSLSESSION
+        lb_method: SOURCEIPHASH
+        sessionless: DISABLED
+        clt_timeout: 180
+
+      - name: NETSNMP-TrapService-VIP
+        type: ANY
+        ipaddress: "{{ customer.secondary.octets }}.120"
+        port: 162
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: ENABLED
+        clt_timeout: 120
+
+      - name: NETSNMP-SyslogService-VIP
+        type: ANY
+        ipaddress: "{{ customer.secondary.octets }}.120"
+        port: 514
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: ENABLED
+        clt_timeout: 120
+
+      - name: SplunkSearch-8089-VIP
+        type: SSL_BRIDGE
+        ipaddress: "{{ vip.src }}"
+        port: 8089
+        persistence_type: SSLSESSION
+        lb_method: SOURCEIPHASH
+        sessionless: DISABLED
+        clt_timeout: 180
+
+      - name: NETSNMP_3306_VIP
+        type: TCP
+        ipaddress: "{{ customer.secondary.octets }}.52"
+        port: 3306
+        persistence_type: SOURCEIP
+        lb_method: SRCIPDESTIPHASH
+        sessionless: DISABLED
+        clt_timeout: 9000
+
+      - name: NETSNMP_5000_VIP
+        type: TCP
+        ipaddress: "{{ customer.secondary.octets }}.52"
+        port: 5000
+        persistence_type: SOURCEIP
+        lb_method: SRCIPDESTIPHASH
+        sessionless: DISABLED
+        clt_timeout: 9000
+
+      - name: NETSNMP_sftp_Service-VIP
+        type: TCP
+        ipaddress: "{{ customer.secondary.octets }}.120"
+        port: 22
+        persistence_type: NONE
+        lb_method: ROUNDROBIN
+        sessionless: DISABLED
+        clt_timeout: 9000
+
+    lb_server_binds:
+      - name: EM7App01-INTService-VIP
+        service: EM7App01-INTService
+        
+      - name: EM7App01-INTService-VIP
+        service: EM7App02-INTService
+
+      - name: EM7MC01Trap-VIP
+        service: EM7MC01Trap
+        
+      - name: EM7MC01Trap-VIP
+        service: EM7MC02Trap
+
+      - name: EM7MC01Syslog-VIP
+        service: EM7MC01Syslog
+        
+      - name: EM7MC01Syslog-VIP
+        service: EM7MC02Syslog
+
+      - name: SplunkSearch-VIP
+        service: SplunkSearch-01
+        
+      - name: SplunkSearch-VIP
+        service: SplunkSearch-02
+
+      - name: EM7App01-VIP
+        service: EM7httpsApp01
+        
+      - name: EM7App01-VIP
+        service: EM7httpsApp02
+
+      - name: NETSNMP-TrapService-VIP
+        service: NETSNMP-TrapService-01
+        
+      - name: NETSNMP-TrapService-VIP
+        service: NETSNMP-TrapService-02
+
+      - name: NETSNMP-SyslogService-VIP
+        service: NETSNMP-SyslogService-01
+
+      - name: NETSNMP-SyslogService-VIP
+        service: NETSNMP-SyslogService-02
+
+      - name: SplunkSearch-8089-VIP
+        service: SplunkSearch-8089-01
+
+      - name: SplunkSearch-8089-VIP
+        service: SplunkSearch-8089-02
+
+      - name: NETSNMP_3306_VIP
+        service: NETSNMP_03_3306
+
+      - name: NETSNMP_3306_VIP
+        service: NETSNMP_04_3306
+
+      - name: NETSNMP_5000_VIP
+        service: NETSNMP_03_5000
+
+      - name: NETSNMP_5000_VIP
+        service: NETSNMP_04_5000
+
+      - name: NETSNMP_sftp_Service-VIP
+        service: NETSNMP-sftp-Service-01
+
+      - name: NETSNMP_sftp_Service-VIP
+        service: NETSNMP-sftp-Service-02
+
+    ssl_services:
+      - name: nshttps-{{ customer.secondary.octets }}.123-443
+        eRSA: ENABLED
+        sessReuse: DISABLED
+
+      - name: nsrpcs-{{ customer.secondary.octets }}.123-3008
+        eRSA: ENABLED
+        sessReuse: DISABLED
+
+      - name: nshttps-127.0.0.1-443
+        eRSA: DISABLED
+        sessReuse: ENABLED
+
+    ssl_server_binds:
+      - name: nshttps-{{ customer.secondary.octets }}.123-443
+        eccCurveName: P_256
+
+      - name: nshttps-{{ customer.secondary.octets }}.123-443
+        eccCurveName: P_384
+
+      - name: nshttps-{{ customer.secondary.octets }}.123-443
+        eccCurveName: P_224
+
+      - name: nshttps-{{ customer.secondary.octets }}.123-443
+        eccCurveName: P_521
+
+      - name: nsrpcs-{{ customer.secondary.octets }}.123-3008
+        eccCurveName: P_256
+
+      - name: nsrpcs-{{ customer.secondary.octets }}.123-3008
+        eccCurveName: P_384
+
+      - name: nsrpcs-{{ customer.secondary.octets }}.123-3008
+        eccCurveName: P_224
+
+      - name: nsrpcs-{{ customer.secondary.octets }}.123-3008
+        eccCurveName: P_521
+        

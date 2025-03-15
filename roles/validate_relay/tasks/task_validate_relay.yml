@@ -1,0 +1,8 @@
+---
+# Tasks to validate Relay
+- block:
+  - include_tasks: task_validate_passwordless_ssh_to_relay.yml
+    when: 
+      - groups['rly']|length > 1
+  - include_tasks: task_create_probe_file.yml
+  - include_tasks: task_validate_relay_deployment.yml

@@ -1,0 +1,13 @@
+---
+# Tasks to set up splunk env
+- name: run the environment set up script
+  ansible.builtin.command: ./setup-env.sh
+  register: setup_env
+  args:
+    chdir: "{{ spl_wd }}/dev/{{ mdr_splunkenv_reponame }}"
+  when: clone_repos is succeeded
+  delegate_to: localhost
+  run_once: true
+  environment:
+    https_proxy: "{{ proxy_address|default('') }}"
+  

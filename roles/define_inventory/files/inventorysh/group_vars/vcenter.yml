@@ -1,0 +1,29 @@
+---
+# Variables for vcenter
+ssh_username: "{{ hostvars[groups['bastion'][0]]['ansible_user'] if (groups['bastion'][0] is defined and bastion.address != []) else '' }}"
+ssh_address: "{{ hostvars[groups['bastion'][0]]['ansible_host'] if (groups['bastion'][0] is defined and bastion.address != []) else '' }}"
+ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ ssh_username }}@{{ ssh_address }}"'
+ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else '' }}"
+
+credentials:
+  username: "{{ datacenters[datacenter.primary.name]['vsphere'].split('.')[-3] if datacenters[datacenter.primary.name]['vsphere']|lower is search('staging') else datacenters[datacenter.primary.name]['vsphere'].split('.')[-2] if datacenters[datacenter.primary.name]['vsphere']|lower is search('exrtp') else datacenters[datacenter.primary.name]['vsphere'].split('.')[-2].split('-')|last }}\\{{ PVCENTER_SERVICE_USER | default('') }}"
+  password: "{{ PVCENTER_SERVICE_PASS | default('') }}"
+
+cluster_name: "{{ (datacenter.primary.resources[0].split('.')|last if datacenter.primary.resources[0].split('.')|last | regex_search('[0-9]{1,3}') else datacenter.primary.resources[0].split('.')|first) if datacenter.primary.resources|length == 1 else ((datacenter.primary.resources[0].split('.')|last if datacenter.primary.resources[0].split('.')|last | regex_search('[0-9]{1,3}') else datacenter.primary.resources[0].split('.')|first) + '-' + (datacenter.primary.resources[1].split('.')|last if datacenter.primary.resources[1].split('.')|last | regex_search('[0-9]{1,3}') else datacenter.primary.resources[1].split('.')|first)) if datacenter.primary.resources != [] and datacenter.primary.resources != [''] else '' }}"
+
+information:
+  address: "{{ datacenters[datacenter.primary.name]['vsphere'] }}"
+  datacenter: "{{ datacenter.primary.name | regex_replace('^(.*)-[1-9]$', '\\1') }}"
+  deptype: "{{ datacenters[datacenter.primary.name]['deptype'].split(',')|last }}"
+  resources: "{{ datacenter.primary.resources if (datacenter.primary.resources != [] and datacenter.primary.resources != ['']) else datacenters[datacenter.primary.name]['resources'] if datacenters[datacenter.primary.name]['resources'] is defined else [] }}"
+  hostuser: "{{ datacenter.hostuser if (datacenter.hostuser is defined and datacenter.hostuser != '') else PESXI_HOST_USER if PESXI_HOST_USER is defined else '' }}"
+  hostpass: "{{ datacenter.hostpass if (datacenter.hostpass is defined and datacenter.hostpass != '') else PESXI_HOST_PASS if PESXI_HOST_PASS is defined else '' }}"
+  cluster: "{{ datacenter.primary.cluster if datacenter.primary.cluster != '' else datacenters[datacenter.primary.name]['cluster'] if (datacenters[datacenter.primary.name]['cluster'] is defined and datacenters[datacenter.primary.name]['cluster'] != '') else 'CMSP - '+ cluster_name if datacenters[datacenter.primary.name]['deptype'] == 'a' else '' }}"
+  folder: "{{ datacenters[datacenter.primary.name]['folder'] if datacenters[datacenter.primary.name]['folder'] is defined else '' }}"
+  datastore_cluster: "{{ datacenters[datacenter.primary.name]['datastore_cluster'] if datacenters[datacenter.primary.name]['datastore_cluster'] is defined else '' }}"
+  storage_datastore: "{{ datacenters[datacenter.primary.name]['storage_datastore'] if datacenters[datacenter.primary.name]['storage_datastore'] is defined else '' }}"
+  storage_path: "{{ datacenters[datacenter.primary.name]['storage_path'] if datacenters[datacenter.primary.name]['storage_path'] is defined else '' }}"
+  internal_net_vlan_id: "{{ datacenter.primary.internal_net_vlan_id if datacenter.primary.internal_net_vlan_id is defined else '' }}"
+  loadbalancer_net_vlan_id: "{{ datacenter.primary.loadbalancer_net_vlan_id if datacenter.primary.loadbalancer_net_vlan_id is defined else '' }}"
+  customer_net_inside_vlan_id: "{{ datacenter.primary.customer_net_inside_vlan_id if datacenter.primary.customer_net_inside_vlan_id is defined else '' }}"
+  em7db_heartbeat_link_vlan_id: "{{ datacenter.primary.em7db_heartbeat_link_vlan_id if datacenter.primary.em7db_heartbeat_link_vlan_id is defined else '' }}"

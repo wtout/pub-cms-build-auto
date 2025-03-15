@@ -1,0 +1,28 @@
+---
+# Tasks to check the relayweb common.properties file
+- block:
+  - name: check if {{ relayweb_conf_file }} exists
+    ansible.builtin.stat:
+      path: "{{ relayweb_conf_file }}"
+    register: reg_rw_conf_file
+  - name: define rly_relayweb_conf_status
+    ansible.builtin.set_fact:
+      rly_relayweb_conf_status: "{{ relayweb_conf_file }} is not found"
+    when: not reg_rw_conf_file.stat.exists
+  - block:
+    - name: get message collector VIP and relay DB IPs
+      ansible.builtin.shell: |
+        grep 'em7_alias\|cluster.relay.dbpeer' {{ relayweb_conf_file }}
+      register: reg_relayweb_config
+      check_mode: no
+      ignore_errors: yes
+    - name: define rly_relayweb_conf_status
+      ansible.builtin.set_fact:
+        rly_relayweb_conf_status: "{{ rly_relayweb_conf_status|default([]) + ['em7_alias is not configured correctly in ' + relayweb_conf_file + '. Got ' + reg_relayweb_config.stdout_lines[0].split('= ')|last + ' instead of em7-message-collector-vip'] }}"
+      when: reg_relayweb_config.stdout_lines[0].split('= ')|last != 'em7-message-collector-vip'
+    - name: define rly_relayweb_conf_status
+      ansible.builtin.set_fact:
+        rly_relayweb_conf_status: "{{ rly_relayweb_conf_status|default([]) + ['cluster.relay.dbpeer is not configured correctly in ' + relayweb_conf_file + '. Got ' + reg_relayweb_config.stdout_lines[1].split('= ')|last + ' instead of ' + (drrly_ip1_list|default([]) | union(rly_ip1_list) if 'dr' in group_names else rly_ip1_list | union(drrly_ip1_list|default([])))|join(',')] }}"
+      when: reg_relayweb_config.stdout_lines[1].split('= ')|last != (drrly_ip1_list|default([]) | union(rly_ip1_list) if 'dr' in group_names else rly_ip1_list | union(drrly_ip1_list|default([])))|join(',')
+    when: reg_rw_conf_file.stat.exists
+  tags: sanity

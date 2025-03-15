@@ -1,0 +1,11 @@
+---
+# Variables for puppet hosts
+ssh_username: "{{ hostvars[groups['bastion'][0]]['ansible_user'] if (groups['bastion'][0] is defined and bastion.address != []) else '' }}"
+ssh_address: "{{ hostvars[groups['bastion'][0]]['ansible_host'] if (groups['bastion'][0] is defined and bastion.address != []) else '' }}"
+ssh_var: '-o ProxyCommand="ssh -W %h:%p -q {{ ssh_username }}@{{ ssh_address }}"'
+ansible_ssh_common_args: "{{ ssh_var if (groups['bastion'] | length >= 1 and bastion.address != []) else '' }}"
+
+ansible_user: "{{ SVCENTER_SERVICE_USER | default('') }}"
+ansible_ssh_pass: "{{ SVCENTER_SERVICE_PASS | default('') }}"
+ansible_become_pass: "{{ SVCENTER_SERVICE_PASS | default('') }}"
+ansible_host: "{{ puppet.secondary.ipaddress }}"

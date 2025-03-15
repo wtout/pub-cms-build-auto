@@ -1,0 +1,11 @@
+---
+# tasks to run the galera_new_cluster on primary relay
+- block:
+  - name: Run galera_new_cluster on primary relay
+    ansible.builtin.shell: galera_new_cluster
+    register: gnw
+    ignore_errors: true
+
+  - include_tasks: task_fix_mariadb.yml
+    when: gnw.stderr != ''
+  when: inventory_hostname == groups['rly']|first

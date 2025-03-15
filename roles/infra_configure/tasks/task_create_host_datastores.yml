@@ -1,0 +1,40 @@
+---
+# Tasks to create datastore
+- block:
+  - name: initialize existing_dsname
+    ansible.builtin.set_fact:
+      existing_dsname: ''
+      existing_dsmoid: ''
+  - name: define existing_dsname and existing_dsmoid
+    ansible.builtin.set_fact:
+      existing_dsname: "{{ loop_item.info.name }}"
+      existing_dsmoid: "{{ loop_item.moid }}"
+    when:
+      - loop_item.info.vmfs.extent[0].diskName == dvcname
+      - loop_item.info.name != dsname
+    loop: "{{ existing_datastores.datastores }}"
+    loop_control:
+      loop_var: loop_item
+      label: "{{ loop_item.info.name }}"
+  - name: Create datastore on {{ hostid }}
+    vmware_host_datastore:
+      hostname: "{{ hostid }}"
+      username: "{{ information.hostuser }}"
+      password: "{{ information.hostpass }}"
+      datastore_name: "{{ dsname }}"
+      datastore_type: vmfs
+      vmfs_device_name: "{{ dvcname }}"
+      vmfs_version: 6
+      validate_certs: no
+    when: existing_dsname|default('') == ''
+  - name: Rename datastore on {{ hostid }}
+    community.vmware.vmware_object_rename:
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      new_name: "{{ dsname }}"
+      object_name: "{{ existing_dsname }}"
+      object_type: Datastore
+      validate_certs: no
+    when:
+      - existing_dsname|default('') is search('datastore')

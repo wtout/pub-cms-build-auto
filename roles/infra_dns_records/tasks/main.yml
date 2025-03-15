@@ -1,0 +1,10 @@
+---
+# Task file to add DNS records
+- block:
+  - include_tasks: task_create_dns_records.yml
+    when:
+      - add_dns_records | default(false) | bool
+  - include_tasks: task_rollback_dns_records.yml
+    when:
+      - rollback_dns_records | default(false) | bool
+  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]

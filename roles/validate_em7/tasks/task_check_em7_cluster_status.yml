@@ -1,0 +1,80 @@
+---
+# Tasks to check the EM7 cluster status
+- block:
+  - block:
+    - include_role:
+        name: sanity
+        tasks_from: task_check_primary_db.yml
+    when:
+      - vm.name is search('em7db')
+      - primary_db is not defined
+  - name: define primary DB hostname
+    ansible.builtin.set_fact:
+      primarydb_hostname: "{{ vm.name }}"
+    when:
+      - primary_db is defined
+      - primary_db
+    loop: "{{ groups[('dr' if 'dr' in group_names else '') + 'em7db'] }}"
+    loop_control:
+      loop_var: db_item
+  - name: check cluster status
+    ansible.builtin.shell: crm_mon -1
+    register: reg_crm_mon
+    check_mode: no
+    become: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
+    when:
+      - vm.name is search('em7db')
+  - name: define em7_cluster_status 1
+    ansible.builtin.set_fact:
+      em7_cluster_status: "{{ em7_cluster_status|default([]) + ['EM7 cluster is not up'] }}"
+    when:
+      - reg_crm_mon is failed
+  - block:
+    - block:
+      - name: define em7_cluster_status 2
+        ansible.builtin.set_fact:
+          em7_cluster_status: "{{ em7_cluster_status|default([]) | union([missing_node|join + ' is not in the cluster']) }}"
+        when: missing_node != []
+        vars:
+          ha_db_nodes: "{{ [hostvars[groups[('dr' if 'dr' in group_names else '') + 'em7db']|first]['vm']['name']] | union([hostvars[groups[('dr' if 'dr' in group_names else '') + 'em7db']|last]['vm']['name']])|join }}"
+          online_nodes: "{{ reg_crm_mon.stdout_lines|select('search', 'Online: ')|list|regex_replace('^.* \\[ (.*) \\].*$', '\\1') }}"
+          missing_node: "{{ online_nodes|split(' ')|difference(ha_db_nodes) }}"
+      - name: define em7_cluster_status 3
+        ansible.builtin.set_fact:
+          em7_cluster_status: "{{ em7_cluster_status|default([]) | union([master_nodes|regex_replace(customer.primary.name_prefix if 'dr' not in group_names else customer.secondary.name_prefix, '')|regex_replace('a|h', '') + ' is not primary']) }}"
+        when: not hostvars[master_nodes|regex_replace(customer.primary.name_prefix if 'dr' not in group_names else customer.secondary.name_prefix, '')|regex_replace('a|h', '')]['primary_db']
+        vars:
+          master_nodes: "{{ reg_crm_mon.stdout_lines|select('search', 'Masters: ')|list|regex_replace('^.* \\[ (.*) \\].*$', '\\1') }}"
+      - name: define em7_cluster_status 4
+        ansible.builtin.set_fact:
+          em7_cluster_status: "{{ em7_cluster_status|default([]) | union([myservice|first|trim + ': ' + myservice|last]) }}"
+        loop: "{{ reg_crm_mon.stdout_lines|select('regex', ':\t')|list }}"
+        loop_control:
+          loop_var: loop_item
+        vars:
+          myservice: "{{ loop_item|split('\t')|list }}"
+        when: myservice|last|split(' ')|last != primarydb_hostname
+      when:
+        - reg_crm_mon is succeeded
+    - name: check sync status
+      ansible.builtin.shell: |
+        grep ro: /proc/drbd
+      register: reg_sync_status
+      check_mode: no
+    - name: define em7_cluster_status 5
+      ansible.builtin.set_fact:
+        em7_cluster_status: "{{ em7_cluster_status|default([]) | union(['EM7 DB sync needs to be redone']) }}"
+      when:
+        - reg_sync_status.stdout is search('WFConnection')
+    - name: define em7_cluster_status 6
+      ansible.builtin.set_fact:
+        em7_cluster_status: "{{ em7_cluster_status|default([]) | union(['EM7 DB sync is not running correctly']) }}"
+      when:
+        - (primary_db and mysync != 'Primary/Secondary') or (not primary_db and mysync != 'Secondary/Primary')
+      vars:
+        mysync: "{{ reg_sync_status.stdout|regex_replace('^.*ro:(.*) ds.*$','\\1') }}"
+    - ansible.builtin.assert:
+        that: em7_cluster_status == []
+        fail_msg: "{{ em7_cluster_status }}"
+    when:
+      - primarydb_hostname is defined

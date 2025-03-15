@@ -1,0 +1,47 @@
+---
+# tasks file for splunk_mop
+- block:
+  - name: check VM reachable
+    ansible.builtin.shell: ping {{ ansible_host }} -c 1
+    register: mop_vm_reachable
+    ignore_errors: true
+    check_mode: no
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  - block:
+    - name: check VM credentials
+      ansible.builtin.wait_for_connection:
+        timeout: 3
+      register: mop_creds
+      ignore_errors: true
+      check_mode: no
+    - name: update SSH password
+      ansible.builtin.set_fact:
+        ansible_ssh_pass: "{{ postppp }}"
+      no_log: true
+      when:
+        - mop_creds is failed
+        - mop_creds.msg is search('Invalid/incorrect username/password')
+    when:
+      - ansible_ssh_pass != postppp
+      - inventory_hostname is not search('em7')
+
+  - block:
+    - include_tasks: task_check_datetime.yml
+    - block:
+      - name: Copy splunk fix to host
+        include_tasks: task_copy_splunk_fix.yml
+      - name: Stop splunk
+        include_tasks: task_stop_splunk.yml
+      - name: apply datetime fix to splunk host
+        include_tasks: task_apply_fix.yml
+      when: datetime is failed
+    when: inventory_hostname is search('spl')
+
+  - block:
+    - name: apply datetime fix to relay host
+      include_tasks: task_relay_check.yml
+      loop: "{{ ufwd }}"  
+      loop_control:
+        loop_var: fwd_item
+    when: inventory_hostname is search('rly')
+  tags: splunk_mop

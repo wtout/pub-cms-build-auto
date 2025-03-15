@@ -1,0 +1,101 @@
+---
+# Task file to configure CSRs
+- block:
+  - block:
+    - name: define csr NICs
+      ansible.builtin.set_fact:
+        nic1:
+          - name: "{{ netconfig.nic1.network }}"
+            ip: "{{ netconfig.nic1.ipaddress }}"
+            netmask: "{{ netconfig.nic1.netmask }}"
+            gateway: "{{ netconfig.nic1.gateway }}"
+            device_type: vmxnet3
+        nic2:
+          - name: "{{ netconfig.nic2.network }}"
+            ip: "{{ netconfig.nic2.ipaddress }}"
+            netmask: "{{ netconfig.nic2.netmask }}"
+            gateway: "{{ netconfig.nic2.gateway }}"
+            device_type: vmxnet3
+        nic3:
+          - name: "{{ netconfig.nic3.network }}"
+            ip: "{{ netconfig.nic3.ipaddress }}"
+            netmask: "{{ netconfig.nic3.netmask }}"
+            gateway: "{{ netconfig.nic3.gateway }}"
+            device_type: vmxnet3
+        nic4:
+          - name: "{{ netconfig.nic4.network }}"
+            ip: "{{ netconfig.nic4.ipaddress }}"
+            netmask: "{{ netconfig.nic4.netmask }}"
+            gateway: "{{ netconfig.nic4.gateway }}"
+            device_type: vmxnet3
+    - name: define csr NIC5
+      ansible.builtin.set_fact:
+        nic5:
+          - name: "{{ netconfig.nic5.network }}"
+            ip: "{{ netconfig.nic5.ipaddress }}"
+            netmask: "{{ netconfig.nic5.netmask }}"
+            gateway: "{{ netconfig.nic5.gateway }}"
+            device_type: vmxnet3
+      when: netconfig.nic5.network != ''
+    - name: Update VM hardware settings with correct NICs
+      community.vmware.vmware_guest:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        name: "{{ vm.name }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+        hardware:
+          memory_mb: "{{ vm.memory | int * 1024 }}"
+          num_cpus: "{{ vm.cpu | int }}"
+        networks: "{{ nic1 + nic2 + nic3 + nic4 + nic5|default([]) }}"
+        validate_certs: no
+        
+    - name: Power on VM
+      ansible.builtin.include_tasks: task_poweron_csr.yml
+
+    - name: Gather VM info
+      community.vmware.vmware_guest_info:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        name: "{{ vm.name }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: no
+      register: csr_info
+      until: csr_info.instance.ipv4 != None
+      retries: 20
+      delay: 30
+    - set_fact:
+        ansible_host: "{{ csr_info.instance.ipv4 }}"
+        dhcp_address: "{{ csr_info.instance.ipv4 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is not search('h') else omit }}"
+    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}" 
+
+  - name: Apply CSR configuration
+    cisco.ios.ios_config:
+      lines: "{{ interface_item.properties }}"
+      parents: "{{ interface_item.name }}"
+    loop: "{{ interfaces }}"
+    loop_control:
+      loop_var: interface_item
+
+  - name: Set NTP server
+    cisco.ios.ios_ntp_global:
+      config:
+        servers:
+          - server: "{{ ntp_server }}"
+        source: "{{ ntp_source }}"
+      state: merged
+  - name: Disable the router's Web GUIs
+    cisco.ios.ios_command:
+      commands:
+        - configure terminal
+        - no ip http server
+        - no ip http secure-server
+        - end
+  - name: Save CSR configuration
+    cisco.ios.ios_command:
+      commands:
+        - command: Copy running-config startup-config
+          prompt: '[confirm]'
+          answer: "\r"

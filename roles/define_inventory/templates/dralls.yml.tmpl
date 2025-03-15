@@ -1,0 +1,104 @@
+##################################################################################
+# DR VM specific information
+##################################################################################
+drvm_vars:
+
+  ################
+  # Standalone VMs
+  ################
+  stdalvm:
+
+{%- if environment_definition.drvm_setting.stdalvm.user.name is defined and environment_definition.drvm_setting.stdalvm.user.name != none and environment_definition.drvm_setting.stdalvm.user.name != '' and environment_definition.drvm_setting.stdalvm.user.password is defined and environment_definition.drvm_setting.stdalvm.user.password != none and environment_definition.drvm_setting.stdalvm.user.password != '' %}
+{% block stdalvmusers %}
+    # User credentials
+    user:
+      name: "{{ environment_definition.drvm_setting.stdalvm.user.name }}"
+      password: "{{ environment_definition.drvm_setting.stdalvm.user.password }}"
+{%- endblock stdalvmusers %}
+{%- endif %}
+
+    # number of CPUs
+    cpu: "{{ environment_definition.drvm_setting.stdalvm.cpu if (environment_definition.drvm_setting.stdalvm.cpu is defined and environment_definition.drvm_setting.stdalvm.cpu != none) else '' }}"
+
+    # Memory size in GiB
+    memory: "{{ environment_definition.drvm_setting.stdalvm.memory if (environment_definition.drvm_setting.stdalvm.memory is defined and environment_definition.drvm_setting.stdalvm.memory != none) else '' }}"
+
+    # Disks sizing in GiB
+    disk0: "{{ environment_definition.drvm_setting.stdalvm.disk0 if (environment_definition.drvm_setting.stdalvm.disk0 is defined and environment_definition.drvm_setting.stdalvm.disk0 != none) else '0' }}"
+    disk1: "{{ environment_definition.drvm_setting.stdalvm.disk1 if (environment_definition.drvm_setting.stdalvm.disk1 is defined and environment_definition.drvm_setting.stdalvm.disk1 != none) else '0' }}"
+    disk2: "{{ environment_definition.drvm_setting.stdalvm.disk2 if (environment_definition.drvm_setting.stdalvm.disk2 is defined and environment_definition.drvm_setting.stdalvm.disk2 != none) else '0' }}"
+    disk3: "{{ environment_definition.drvm_setting.stdalvm.disk3 if (environment_definition.drvm_setting.stdalvm.disk3 is defined and environment_definition.drvm_setting.stdalvm.disk3 != none) else '0' }}"
+
+    disk_provisioning: "{{ environment_definition.drvm_setting.stdalvm.disk_provisioning if (environment_definition.drvm_setting.stdalvm.disk_provisioning is defined and environment_definition.drvm_setting.stdalvm.disk_provisioning != none) else '' }}"
+
+    hostmap: {{ (environment_definition.drvm_setting.stdalvm.hostmap.split(',')|map('trim')|list if environment_definition.drvm_setting.stdalvm.hostmap is search(',') else [environment_definition.drvm_setting.stdalvm.hostmap|string]) if (environment_definition.drvm_setting.stdalvm.hostmap is defined and environment_definition.drvm_setting.stdalvm.hostmap != none) else [] }}
+
+    vmname: "{{ environment_definition.drvm_setting.stdalvm.vmname if (environment_definition.drvm_setting.stdalvm.vmname is defined and environment_definition.drvm_setting.stdalvm.vmname != none) else '' }}"
+
+    # Network interface 1
+    ################
+    nic1:
+
+      # Interface name
+      intname: "{{ environment_definition.drvm_setting.stdalvm.nic1.intname if (environment_definition.drvm_setting.stdalvm.nic1.intname is defined and environment_definition.drvm_setting.stdalvm.nic1.intname != none) else 'ens160' }}"
+
+      # IP pool
+      ip_pool: {{ environment_definition.drvm_setting.stdalvm.nic1.ip_pool if (environment_definition.drvm_setting.stdalvm.nic1.ip_pool is defined and environment_definition.drvm_setting.stdalvm.nic1.ip_pool != none) else [] }}
+
+      # IP fourth octet pool
+      ip_octetpool: {{ environment_definition.drvm_setting.stdalvm.nic1.ip_octetpool if (environment_definition.drvm_setting.stdalvm.nic1.ip_octetpool is defined and environment_definition.drvm_setting.stdalvm.nic1.ip_octetpool != none) else [] }}
+
+      # Gateway
+      gtw: "{{ environment_definition.drvm_setting.stdalvm.nic1.gtw if (environment_definition.drvm_setting.stdalvm.nic1.gtw is defined and environment_definition.drvm_setting.stdalvm.nic1.gtw != none) else '' }}"
+
+      # Gateway fourth octet
+      gtw_octet: "{{ environment_definition.drvm_setting.stdalvm.nic1.gtw_octet if (environment_definition.drvm_setting.stdalvm.nic1.gtw_octet is defined and environment_definition.drvm_setting.stdalvm.nic1.gtw_octet != none) else '' }}"
+
+      # Netmask
+      netmask: "{{ environment_definition.drvm_setting.stdalvm.nic1.netmask if (environment_definition.drvm_setting.stdalvm.nic1.netmask is defined and environment_definition.drvm_setting.stdalvm.nic1.netmask != none) else '' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.drvm_setting.stdalvm.nic1.ipv6_pool if (environment_definition.drvm_setting.stdalvm.nic1.ipv6_pool is defined and environment_definition.drvm_setting.stdalvm.nic1.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.drvm_setting.stdalvm.nic1.ipv6_gtw if (environment_definition.drvm_setting.stdalvm.nic1.ipv6_gtw is defined and environment_definition.drvm_setting.stdalvm.nic1.ipv6_gtw != none) else '' }}"
+
+      # Net Name
+      netname: "{{ environment_definition.drvm_setting.stdalvm.nic1.netname if (environment_definition.drvm_setting.stdalvm.nic1.netname is defined and environment_definition.drvm_setting.stdalvm.nic1.netname != none) else '' }}"
+
+      # Net Base
+      netbase: "{{ environment_definition.drvm_setting.stdalvm.nic1.network if (environment_definition.drvm_setting.stdalvm.nic1.network is defined and environment_definition.drvm_setting.stdalvm.nic1.network != none) else '' }}"
+
+    # Network interface 2
+    ################
+    nic2:
+
+      # Interface name
+      intname: "{{ environment_definition.drvm_setting.stdalvm.nic2.intname if (environment_definition.drvm_setting.stdalvm.nic2.intname is defined and environment_definition.drvm_setting.stdalvm.nic2.intname != none) else 'ens192' }}"
+
+      # IP pool
+      ip_pool: {{ environment_definition.drvm_setting.stdalvm.nic2.ip_pool if (environment_definition.drvm_setting.stdalvm.nic2.ip_pool is defined and environment_definition.drvm_setting.stdalvm.nic2.ip_pool != none) else [] }}
+
+      # IP fourth octet pool
+      ip_octetpool: {{ environment_definition.drvm_setting.stdalvm.nic2.ip_octetpool if (environment_definition.drvm_setting.stdalvm.nic2.ip_octetpool is defined and environment_definition.drvm_setting.stdalvm.nic2.ip_octetpool != none) else [] }}
+
+      # Gateway
+      gtw: "{{ environment_definition.drvm_setting.stdalvm.nic2.gtw if (environment_definition.drvm_setting.stdalvm.nic2.gtw is defined and environment_definition.drvm_setting.stdalvm.nic2.gtw != none) else '' }}"
+
+      # Gateway fourth octet
+      gtw_octet: "{{ environment_definition.drvm_setting.stdalvm.nic2.gtw_octet if (environment_definition.drvm_setting.stdalvm.nic2.gtw_octet is defined and environment_definition.drvm_setting.stdalvm.nic2.gtw_octet != none) else '' }}"
+
+      # Netmask
+      netmask: "{{ environment_definition.drvm_setting.stdalvm.nic2.netmask if (environment_definition.drvm_setting.stdalvm.nic2.netmask is defined and environment_definition.drvm_setting.stdalvm.nic2.netmask != none) else '' }}"
+
+      # IPV6 pool
+      ipv6_pool: {{ environment_definition.drvm_setting.stdalvm.nic2.ipv6_pool if (environment_definition.drvm_setting.stdalvm.nic2.ipv6_pool is defined and environment_definition.drvm_setting.stdalvm.nic2.ipv6_pool != none) else [] }}
+
+      # IPV6 Gateway
+      ipv6_gtw: "{{ environment_definition.drvm_setting.stdalvm.nic2.ipv6_gtw if (environment_definition.drvm_setting.stdalvm.nic2.ipv6_gtw is defined and environment_definition.drvm_setting.stdalvm.nic2.ipv6_gtw != none) else '' }}"
+
+      # Net Name
+      netname: "{{ environment_definition.drvm_setting.stdalvm.nic2.netname if (environment_definition.drvm_setting.stdalvm.nic2.netname is defined and environment_definition.drvm_setting.stdalvm.nic2.netname != none) else '' }}"
+
+      # Net Base
+      netbase: "{{ environment_definition.drvm_setting.stdalvm.nic2.network if (environment_definition.drvm_setting.stdalvm.nic2.network is defined and environment_definition.drvm_setting.stdalvm.nic2.network != none) else '' }}"

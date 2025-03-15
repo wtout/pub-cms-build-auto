@@ -1,0 +1,60 @@
+---
+# Tasks to enable hardening on VM
+- name: check if hardening is enabled
+  ansible.builtin.wait_for_connection:
+    timeout: 10
+  register: harden1
+  ignore_errors: true
+  tags: vm_hardening
+
+- block:
+  - ansible.builtin.debug:
+      msg: 'Procedure to enable hardening is starting'
+  - include_tasks: task_create_hardening_script.yml
+  - name: copy hardening package files to VM
+    ansible.builtin.copy:
+      src: '{{ role_path }}/files/{{ file_item }}'
+      dest: '/home/{{ vm_svc_user }}/hardening/'
+      owner: 'root'
+      group: 'root'
+    loop:
+      - "{{ vm.name + '-hardening.sh' }}"
+      - login.defs
+      - password-auth-ac
+      - system-auth-ac
+    loop_control:
+      loop_var: file_item
+    when: not ansible_check_mode
+    register: reg_copy_pkg
+    ignore_errors: yes
+  - include_tasks: task_delete_hardening_script.yml
+  - block:
+    - name: switch to {{ vm_svc_user }} user
+      ansible.builtin.set_fact:
+        ansible_user: "{{ vm_svc_user }}"
+        ansible_ssh_pass: "{{ vm_svc_pass }}"
+      no_log: true
+    - name: run hardening script
+      ansible.builtin.command: sh {{ vm.name }}-hardening.sh
+      register: hard_script
+      become: true
+      args:
+        chdir: "/home/{{ vm_svc_user }}/hardening"
+      when: not ansible_check_mode
+      no_log: true
+    - ansible.builtin.debug:
+        msg: "{{ hard_script.stdout_lines }}"
+      when: hard_script is failed
+    - name: check if hardening is enabled
+      ansible.builtin.shell: grep 'Cisco Acceptable Use Policy' /etc/issue
+      register: harden2
+      ignore_errors: true
+      when: not ansible_check_mode
+    - ansible.builtin.assert:
+        that:
+          - harden2 is succeeded
+        fail_msg: 'Hardening is not enabled'
+        success_msg: 'Hardening is enabled'
+      when: not ansible_check_mode
+    when: reg_copy_pkg.results|select('search', 'not writable')|list|length == 0
+  when: harden1 is succeeded

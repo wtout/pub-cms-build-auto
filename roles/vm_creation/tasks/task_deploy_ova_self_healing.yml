@@ -1,0 +1,27 @@
+---
+# tasks to deploy VM from OVA
+- block:
+  - name: Get VM info
+    community.vmware.vmware_guest_info:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      name: "{{ vm.name }}"
+      validate_certs: no
+    check_mode: no
+    register: reg_vmguest_info
+  rescue:
+  - name: enable VM building
+    ansible.builtin.set_fact:
+      build_vm: true
+  - include_tasks: task_deploy_ova.yml
+    loop: "{{ range(1, 3 + 1)|list }}"
+    loop_control:
+      loop_var: loop_item
+      index_var: loop_idx
+  always:
+  - ansible.builtin.assert:
+      that:
+        - "deploy_ovf|default({'failed': false}) is succeeded"
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

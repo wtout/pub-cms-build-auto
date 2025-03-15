@@ -1,0 +1,9 @@
+---
+# Tasks to cache repo credentials
+- name: Cache the repo credentials
+  ansible.builtin.shell: |
+    git config --global credential.helper cache
+    git config --global credential.helper "cache --timeout=12000"
+  delegate_to: localhost
+  run_once: true
+  

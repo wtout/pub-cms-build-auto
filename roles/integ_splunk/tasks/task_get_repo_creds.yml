@@ -1,0 +1,24 @@
+---
+# Tasks to get repo credentials
+- block:
+  - name: get repo credentials
+    ansible.builtin.shell: |
+      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      export ANSIBLE_LOG_PATH
+      ansible-vault view {{ auto_dir }}/vars/.repovault.yml --vault-password-file {{ auto_dir }}/Bash/get_repo_vault_pass.sh | cut -d "'" -f2
+    register: reg_repo_creds
+  - name: define repo credentials
+    ansible.builtin.set_fact:
+      repo_username: "{{ reg_repo_creds.stdout_lines[0] }}"
+      repo_password: "{{ reg_repo_creds.stdout_lines[1] }}"
+  - name: define credentials string
+    ansible.builtin.set_fact:
+      repo_creds: "{{ repo_username + ':' + repo_password }}"
+    when:
+      - repo_username != ''
+      - repo_password != ''
+  check_mode: no
+  no_log: true
+  delegate_to: localhost
+  run_once: true
+  

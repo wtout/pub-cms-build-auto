@@ -1,0 +1,985 @@
+#!/bin/sh
+# CentOS 7 Hardening script Level 1 Server
+#Execution on configured system may break functionality
+#Author Mathru (mathru@cisco.com)
+#Please consult before execution of this script
+##################################################################
+
+### set the Last password change value on the root account created at install time
+chage -d `date +%Y-%m-%d`  root
+
+# # Root user password last set 1969-12-30 by default Changing to today date
+# \cp -fp /etc/shadow /etc/shadow.bak
+# TST=`echo $(( $(date +%s )/(60*60*24) ))`
+# NVL=$(cat /etc/shadow |grep root |awk -F":" 'BEGIN { OFS = ":" } {$3='${TST}'}1')
+# sed -i "s/^root.*/${NVL}/" /etc/shadow
+
+#Password policy enforcement
+mv -f password-auth-ac /etc/pam.d/password-auth-ac
+mv -f system-auth-ac /etc/pam.d/system-auth-ac
+mv -f login.defs /etc/login.defs
+
+# 1.1.1.1 - Ensure mounting of cramfs filesystems is disabled (Scored)
+echo "install cramfs /bin/true" > /etc/modprobe.d/CIS.conf
+rmmod cramfs
+
+# 1.1.1.2 - Ensure mounting of freevxfs filesystems is disabled (Scored)
+echo "install freevxfs /bin/true" >> /etc/modprobe.d/CIS.conf
+rmmod freevxfs
+
+# 1.1.1.3 - Ensure mounting of jffs2 filesystems is disabled (Scored)
+echo "install jffs2 /bin/true" >> /etc/modprobe.d/CIS.conf
+rmmod jffs2
+
+# 1.1.1.4 - Ensure mounting of hfs filesystems is disabled (Scored)
+echo "install hfs /bin/true" >> /etc/modprobe.d/CIS.conf
+rmmod hfs
+
+# 1.1.1.5 - Ensure mounting of hfsplus filesystems is disabled (Scored)
+echo "install hfsplus /bin/true" >> /etc/modprobe.d/CIS.conf
+rmmod hfsplus
+
+# 1.1.1.6 - Ensure mounting of squashfs filesystems is disabled (Scored)
+echo "install squashfs /bin/true" >> /etc/modprobe.d/CIS.conf
+rmmod squashfs
+
+# 1.1.1.7 - Ensure mounting of udf filesystems is disabled (Scored)
+echo "install udf /bin/true" >> /etc/modprobe.d/CIS.conf
+rmmod udf
+
+# 1.1.1.8 - Ensure mounting of FAT filesystems is disabled (Scored)
+echo "install vfat /bin/true" >> /etc/modprobe.d/CIS.conf
+rmmod vfat
+
+#1.1.17 Ensure noexec option set on /dev/shm partition
+echo "tmpfs                   /dev/shm                tmpfs   defaults,nodev,nosuid,noexec        0 0" >>/etc/fstab
+mount -o remount tmpfs
+
+# 1.1.21 - Ensure sticky bit is set on all world-writable directories
+df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type d -perm -0002 2>/dev/null | xargs chmod a+t
+
+# 1.1.22 - Disable Automounting (Scored)
+systemctl disable autofs > /dev/null 2>&1
+
+# 1.2.3 - Ensure gpgcheck is globally activated (Scored)
+echo "gpgcheck=1" >> /etc/yum.repos.d/CIS.conf
+
+# 1.3.1 - Ensure AIDE is installed (Scored)
+### install at build time
+### yum install aide -y
+
+# 1.3.2 - Ensure filesystem integrity is regularly checked
+echo "0 5 * * * /usr/sbin/aide --check" >>/var/spool/cron/root
+
+# 1.4.1 - Ensure permissions on bootloader config are configured (Scored)
+file=/boot/grub2/grub.cfg
+perm="600 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 1.5.1 - Ensure core dumps are restricted (Scored)
+echo -e "*\thard\tcore\t0" > /etc/security/limits.d/CIS.conf
+echo "fs.suid_dumpable = 0" > /etc/sysctl.d/CIS.conf
+sysctl -w fs.suid_dumpable=0
+
+# 1.5.3 - Ensure address space layout randomization (ASLR) is enabled (Scored)
+echo "kernel.randomize_va_space = 2" >>/etc/sysctl.d/CIS.conf
+sysctl -w kernel.randomize_va_space=2
+sysctl -w net.ipv4.route.flush=1
+
+
+
+# 1.5.4 - Ensure prelink is disabled (Scored)
+yum remove prelink -y 
+
+# 1.6.1.4 - Ensure SETroubleshoot is not installed (Scored)
+yum remove setroubleshoot -y 
+
+# 1.6.1.5 - Ensure the MCS Translation Service (mcstrans) is not installed (Scored)
+yum remove mcstrans -y 
+
+# 1.7.1.4 - Ensure permissions on /etc/motd are configured (Not Scored)
+file=/etc/motd
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 1.7.1.5 - Ensure permissions on /etc/issue are configured (Scored)
+
+file=/etc/issue
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 1.7.1.6 - Ensure permissions on /etc/issue.net are configured (Not Scored)
+file=/etc/issue.net
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 1.7.2 - Ensure GDM login banner is configured (Scored)
+mkdir /etc/dconf
+mkdir /etc/dconf/profile
+echo "user-db:user" > /etc/dconf/profile/gdm
+echo "system-db:gdm" >> /etc/dconf/profile/gdm
+echo "file-db:/usr/share/gdm/greeter-dconf-defaults" >> /etc/dconf/profile/gdm
+
+mkdir /etc/dconf/db
+mkdir /etc/dconf/db/gdm.d/
+
+echo "[org/gnome/login-screen]" > /etc/dconf/db/gdm.d/CIS.conf
+echo "banner-message-enable=true" >> /etc/dconf/db/gdm.d/CIS.conf
+echo "banner-message-text='Authorised Users Only'" >> /etc/dconf/db/gdm.d/CIS.conf
+
+# 1.8 - Ensure updates, patches, and additional security software are installed (Scored)
+
+### skipping because repo access is not guaranteed
+### yum update -y --security
+
+# 2.1.1 - Ensure chargen services are not enabled (Scored)
+variable="chargen-dgram|chargen-stream"
+for i in $(echo $variable | sed "s/|/ /g")
+do
+    chkconfig $i off
+done
+
+# 2.1.2 - Ensure daytime services are not enabled (Scored)
+variable="daytime-dgram|daytime-stream"
+for i in $(echo $variable | sed "s/|/ /g")
+do
+    chkconfig $i off
+done
+
+# 2.1.3 - Ensure discard services are not enabled (Scored)
+variable="discard-dgram|discard-stream"
+for i in $(echo $variable | sed "s/|/ /g")
+do
+    chkconfig $i off
+done
+
+# 2.1.4 - Ensure echo services are not enabled (Scored)
+variable="echo-dgram|echo-stream"
+for i in $(echo $variable | sed "s/|/ /g")
+do
+    chkconfig $i off
+done
+
+# 2.1.5 - Ensure time services are not enabled (Scored)
+variable="time-dgram|time-stream"
+for i in $(echo $variable | sed "s/|/ /g")
+do
+    chkconfig $i off
+done
+
+# 2.1.6 - Ensure tftp server is not enabled (Scored)
+chkconfig tftp off 
+
+# 2.1.7 - Ensure xinetd is not enabled (Scored)
+systemctl disable xinetd > /dev/null 2>&1
+
+# 2.1.8 - Ensure telnet server is not enabled (Scored)
+chkconfig telnet off 
+
+# 2.2.2 Ensure X Window System is not installed
+#Removing after installing java
+yum remove -y xorg-x11*
+
+# 2.2.10 - Ensure HTTP server is not enabled (Scored)
+systemctl disable httpd > /dev/null 2>&1
+
+# 2.2.1.1 - Ensure time synchronization is in use (Not Scored)
+### chrony is used instead
+###yum install ntp -y
+
+# 2.2.1.3 - Ensure chrony is configured 
+sed -i 's/OPTIONS=""/OPTIONS="-u chrony"/' /etc/sysconfig/chronyd
+
+# 2.2.11 - Ensure IMAP and POP3 server is not enabled (Scored)
+systemctl disable dovecot > /dev/null 2>&1
+
+# 2.2.12 - Ensure Samba is not enabled (Scored)
+systemctl disable smb > /dev/null 2>&1 
+
+# 2.2.13 - Ensure HTTP Proxy Server is not enabled (Scored)
+systemctl disable squid > /dev/null 2>&1 
+
+# 2.2.14 - Ensure SNMP Server is not enabled (Scored)
+#systemctl disable snmpd > /dev/null 2>&1 
+
+# 2.2.16 - Ensure NIS Server is not enabled (Scored)
+systemctl disable ypserv > /dev/null 2>&1 
+
+# 2.2.17 - Ensure rsh server is not enabled (Scored)
+variable="rsh|rlogin|rexec"
+for i in $(echo $variable | sed "s/|/ /g")
+do
+    systemctl disable $i > /dev/null 2>&1
+done
+
+# 2.2.18 - Ensure telnet server is not enabled (Scored)
+systemctl disable telnet.socket > /dev/null 2>&1 
+
+# 2.2.19 - Ensure tftp server is not enabled (Scored)
+systemctl disable tftp.socket > /dev/null 2>&1 
+
+# 2.2.20 - Ensure rsync service is not enabled (Scored)
+systemctl disable rsync > /dev/null 2>&1 
+
+# 2.2.21 - Ensure talk server is not enabled (Scored)
+systemctl disable ntalk > /dev/null 2>&1 
+
+# 2.2.3 - Ensure Avahi Server is not enabled (Scored)
+systemctl disable avahi-daemon > /dev/null 2>&1 
+
+# 2.2.4 - Ensure CUPS is not enabled (Scored)
+systemctl disable cups > /dev/null 2>&1 
+
+# 2.2.5 - Ensure DHCP Server is not enabled (Scored)
+systemctl disable dhcpd > /dev/null 2>&1 
+
+# 2.2.6 - Ensure LDAP server is not enabled (Scored)
+systemctl disable slapd > /dev/null 2>&1 
+
+# 2.2.7 - Ensure NFS and RPC are not enabled (Scored)
+variable="nfs|nfs-server|rpcbind"
+for i in $(echo $variable | sed "s/|/ /g")
+do
+    systemctl disable $i > /dev/null 2>&1 
+done
+
+# 2.2.8 - Ensure DNS Server is not enabled (Scored)
+systemctl disable named > /dev/null 2>&1 
+
+# 2.2.9 - Ensure FTP Server is not enabled (Scored)
+systemctl disable vsftpd > /dev/null 2>&1 
+
+# 2.3.1 - Ensure NIS Client is not installed (Scored)
+yum remove ypbind -y 
+
+# 2.3.2 - Ensure rsh client is not installed (Scored)
+yum remove rsh -y 
+
+# 2.3.3 - Ensure talk client is not installed (Scored)
+yum remove talk -y 
+
+# 2.3.4 - Ensure telnet client is not installed (Scored)
+yum remove telnet -y 
+
+# 2.3.5 - Ensure LDAP client is not installed (Scored)
+yum remove openldap-clients -y 
+
+# 3.1.1 - Ensure IP forwarding is disabled (Scored)
+echo "net.ipv4.ip_forward = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.ip_forward=0
+sysctl -w net.ipv4.route.flush=1
+
+# 3.1.2 - Ensure packet redirect sending is disabled (Scored)
+echo "net.ipv4.conf.all.send_redirects = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.all.send_redirects=0
+sysctl -w net.ipv4.route.flush=1
+
+echo "net.ipv4.conf.default.send_redirects = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.default.send_redirects=0
+sysctl -w net.ipv4.route.flush=1
+
+# 3.2.1 - Ensure source routed packets are not accepted (Scored)
+echo "net.ipv4.conf.all.accept_source_route = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.all.accept_source_route=0
+sysctl -w net.ipv4.route.flush=1
+
+echo "net.ipv4.conf.default.accept_source_route = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.default.accept_source_route=0
+sysctl -w net.ipv4.route.flush=1
+
+# 3.2.2 - Ensure ICMP redirects are not accepted (Scored)
+echo "net.ipv4.conf.all.accept_redirects = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.all.accept_redirects=0
+sysctl -w net.ipv4.route.flush=1
+
+echo "net.ipv4.conf.default.accept_redirects = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.default.accept_redirects=0
+sysctl -w net.ipv4.route.flush=1
+
+# 3.2.3 - Ensure secure ICMP redirects are not accepted (Scored)
+echo "net.ipv4.conf.all.secure_redirects = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.all.secure_redirects=0
+sysctl -w net.ipv4.route.flush=1
+
+echo "net.ipv4.conf.default.secure_redirects = 0" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.default.secure_redirects=0
+sysctl -w net.ipv4.route.flush=1
+
+# 3.2.4 - Ensure suspicious packets are logged (Scored)
+echo "net.ipv4.conf.all.log_martians = 1" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.all.log_martians=1
+sysctl -w net.ipv4.route.flush=1
+
+echo "net.ipv4.conf.default.log_martians = 1" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.default.log_martians=1
+sysctl -w net.ipv4.route.flush=1
+
+# 3.2.5 - Ensure broadcast ICMP requests are ignored (Scored)
+echo "net.ipv4.icmp_echo_ignore_broadcasts = 1" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.icmp_echo_ignore_broadcasts=1
+sysctl -w net.ipv4.route.flush=1
+
+# 3.2.6 - Ensure bogus ICMP responses are ignored (Scored)
+echo "net.ipv4.icmp_ignore_bogus_error_responses = 1" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.icmp_ignore_bogus_error_responses=1
+sysctl -w net.ipv4.route.flush=1
+
+# 3.2.7 - Ensure Reverse Path Filtering is enabled (Scored)
+echo "net.ipv4.conf.all.rp_filter = 1" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.all.rp_filter=1
+sysctl -w net.ipv4.route.flush=1
+
+echo "net.ipv4.conf.default.rp_filter = 1" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.conf.default.rp_filter=1
+sysctl -w net.ipv4.route.flush=1
+
+# 3.2.8 - Ensure TCP SYN Cookies is enabled (Scored)
+echo "net.ipv4.tcp_syncookies = 1" >>/etc/sysctl.d/CIS.conf
+sysctl -w net.ipv4.tcp_syncookies=1
+sysctl -w net.ipv4.route.flush=1
+
+# 3.3.1 - Ensure IPv6 router advertiddsements are not accepted (Not Scored)
+echo "Since IPv6 is already disabled skipping this section 3.3.1"
+
+# 3.3.2 - Ensure IPv6 redirects are not accepted (Not Scored)
+echo "Since IPv6 is already disabled skipping this section 3.3.2"
+
+# 3.3.3 - Ensure IPv6 is disabled (Not Scored)
+echo "Since IPv6 is already disabled skipping this section 3.3.3"
+
+# 3.4.1 - Ensure TCP Wrappers is installed (Scored)
+
+### install at build time
+### yum install tcp_wrappers -y
+### yum install tcp_wrappers-libs -y
+
+# 3.4.3 - Ensure /etc/hosts.deny is configured
+echo "ALL: ALL" >> /etc/hosts.deny
+#Following can be modified based on local network allowed networks
+echo "ALL: ALL" >> /etc/hosts.allow
+
+# 3.4.4 - Ensure permissions on /etc/hosts.allow are configured (Scored)
+file=/etc/hosts.allow
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 3.4.5 - Ensure permissions on /etc/hosts.deny are configured (Scored)
+file=/etc/hosts.deny
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 3.5.1 - Ensure DCCP is disabled (Not Scored)
+echo "install dccp /bin/true" >> /etc/modprobe.d/CIS.conf
+
+# 3.5.2 - Ensure SCTP is disabled (Not Scored)
+echo "install sctp /bin/true" >> /etc/modprobe.d/CIS.conf
+
+# 3.5.3 - Ensure RDS is disabled (Not Scored)
+echo "install rds /bin/true" >> /etc/modprobe.d/CIS.conf
+
+# 3.5.4 - Ensure TIPC is disabled (Not Scored)
+echo "install tipc /bin/true" >> /etc/modprobe.d/CIS.conf
+
+# 3.6.1 - Ensure iptables is installed (Scored)
+### install at build time
+### yum install iptables -y
+chkconfig iptables on
+
+#Setting iptables
+
+# Flush IPtables rules
+iptables -F
+
+# Ensure default deny firewall policy
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
+
+# Ensure loopback traffic is configured
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+iptables -A INPUT -s 127.0.0.0/8 -j DROP
+
+# Ensure outbound and established connections are configured
+iptables -A OUTPUT -p tcp -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p udp -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A INPUT -p tcp -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -p udp -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -p icmp -m state --state ESTABLISHED -j ACCEPT
+
+# Open inbound ssh(tcp port 22) connections
+### iptables -A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT
+
+# 3.6.5 - Ensure firewall rules exist for all open ports (Scored)
+
+# tcp
+for port in $(netstat -lnt |grep ^tcp | grep LISTEN | awk {'print $4'} | cut -d":" -f2); do
+       iptables -A INPUT -p tcp --dport $port -m state --state NEW -j ACCEPT
+done
+
+# udp
+for port in $(netstat -lnt |grep ^udp | grep LISTEN | awk {'print $4'} | cut -d":" -f2); do
+       iptables -A INPUT -p udp --dport $port -m state --state NEW -j ACCEPT
+done
+
+#Save current setting and restart service
+service iptables save
+systemctl restart iptables
+### added disable firewalld to ensure that iptables runs instead
+systemctl disable firewalld
+#
+
+# 4.1.8 - Ensure login and logout events are collected (Scored)
+echo "-w /var/log/lastlog -p wa -k logins" >> /etc/audit/rules.d/audit.rules
+echo "-w /var/run/faillog -p wa -k logins" >> /etc/audit/rules.d/audit.rules
+service auditd restart
+
+# 4.2.3 - Ensure rsyslog or syslog-ng is installed (Scored)
+
+### installed at build time
+### yum install rsyslog -y
+
+# 4.2.1.2 - Ensure logging is configured (Not Scored)
+echo '*.emerg :omusrmsg:*' >> /etc/rsyslog.d/CIS.conf
+echo 'mail.* -/var/log/mail' >> /etc/rsyslog.d/CIS.conf
+echo 'mail.info -/var/log/mail.info' >> /etc/rsyslog.d/CIS.conf
+echo 'mail.warning -/var/log/mail.warn' >> /etc/rsyslog.d/CIS.conf
+echo 'mail.err /var/log/mail.err' >> /etc/rsyslog.d/CIS.conf
+echo 'news.crit -/var/log/news/news.crit' >> /etc/rsyslog.d/CIS.conf
+echo 'news.err -/var/log/news/news.err' >> /etc/rsyslog.d/CIS.conf
+echo 'news.notice -/var/log/news/news.notice' >> /etc/rsyslog.d/CIS.conf
+echo '*.=warning;*.=err -/var/log/warn' >> /etc/rsyslog.d/CIS.conf
+echo '*.crit /var/log/warn' >> /etc/rsyslog.d/CIS.conf
+echo '*.*;mail.none;news.none -/var/log/messages' >> /etc/rsyslog.d/CIS.conf
+echo 'local0,local1.* -/var/log/localmessages' >> /etc/rsyslog.d/CIS.conf
+echo 'local2,local3.* -/var/log/localmessages' >> /etc/rsyslog.d/CIS.conf
+echo 'local4,local5.* -/var/log/localmessages' >> /etc/rsyslog.d/CIS.conf
+echo 'local6,local7.* -/var/log/localmessages' >> /etc/rsyslog.d/CIS.conf
+echo '*.* @@loghost.cisco-cms.com' >> /etc/rsyslog.d/CIS.conf
+
+# 4.2.1.3 - Ensure rsyslog default file permissions configured (Scored)
+sed -i '/#### GLOBAL DIRECTIVES ####/a\$FileCreateMode 0640' /etc/rsyslog.conf
+systemctl restart rsyslog
+
+# 4.2.1.4 - Ensure rsyslog is configured to send logs to a remote log host 
+echo '*.* @@loghost.cisco-cms.com' >> /etc/rsyslog.conf
+echo '*.* @@loghost.cisco-cms.com' >> /etc/rsyslog.d/CIS.conf
+echo '*.* @@loghost.cisco-cms.com' >> /etc/rsyslog.d/listen.conf
+
+# 4.2.1.1 - Ensure rsyslog Service is enabled (Scored)
+# 4.2.2.1 - Ensure syslog-ng service is enabled (Scored)
+chkconfig rsyslog on
+
+# 4.2.2.3 - Ensure syslog-ng default file permissions configured (Scored)
+
+#if [[ ! -d /etc/syslog-ng ]]; then
+#        mkdir /etc/syslog-ng
+#fi
+#echo "options { chain_hostnames(off); flush_lines(0); perm(0640); stats_freq(3600); threaded(yes); };" >> /etc/syslog-ng/syslog-ng.conf
+
+# 4.2.2.5 - Ensure remote syslog-ng messages are only accepted on designated log hosts (Not Scored)
+
+#echo 'source net{ tcp(); };' >> /etc/syslog-ng/syslog-ng.conf
+#echo 'destination remote { file("/var/log/remote/${FULLHOST}-log"); };' >> /etc/syslog-ng/syslog-ng.conf
+#echo 'log { source(net); destination(remote); };' >> /etc/syslog-ng/syslog-ng.conf
+
+#4.2.4 - Ensure permissions on all logfiles are configured (Scored)
+sed -i 's#/var/log/wtmp 0664#/var/log/wtmp 0640#' /usr/lib/tmpfiles.d/var.conf
+sed -i '/#!\/bin\/bash/a umask 027' /usr/lib/systemd/rhel-dmesg
+systemctl daemon-reload
+systemctl restart rhel-dmesg
+find /var/log -type f -exec chmod g-wx,o-rwx {} +
+#find /var/log -type f -ls | grep -v "\-r\-\-\-\-\-\-\-\-" | grep -v "\-rw\-\-\-\-\-\-\-" | grep -v "\-rw\-r\-\-\-\-\-" |awk '{ print $11 }'|xargs -I {} chmod 0640 {}
+
+# 5.1.1 - Ensure cron daemon is enabled (Scored)
+chkconfig crond on
+
+# 5.1.2 - Ensure permissions on /etc/crontab are configured (Scored)
+file=/etc/crontab
+perm="600 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 5.1.3 - Ensure permissions on /etc/cron.hourly are configured (Scored)
+file=/etc/cron.hourly
+perm="700 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 5.1.4 - Ensure permissions on /etc/cron.daily are configured (Scored)
+file=/etc/cron.daily
+perm="700 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 5.1.5 - Ensure permissions on /etc/cron.weekly are configured (Scored)
+file=/etc/cron.weekly
+perm="700 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 5.1.6 - Ensure permissions on /etc/cron.monthly are configured (Scored)
+file=/etc/cron.monthly
+perm="700 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 5.1.7 - Ensure permissions on /etc/cron.d are configured (Scored)
+file=/etc/cron.d
+perm="700 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 5.1.8 - Ensure at/cron is restricted to authorized users (Scored)
+rm /etc/cron.deny
+rm /etc/at.deny
+touch /etc/cron.allow
+chown root:root /etc/cron.allow
+chmod 600 /etc/cron.allow
+chown root:root /etc/at.allow
+touch /etc/at.allow
+chmod 600 /etc/at.allow
+
+# 5.2.1 - Ensure permissions on /etc/ssh/sshd_config are configured (Scored)
+# Executed after section 5.2.15
+
+# 5.2.2 - Ensure SSH Protocol is set to 2 (Scored)
+cat /etc/ssh/sshd_config | grep -v Protocol > /etc/ssh/sshd_config.new
+echo "Protocol 2">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.3 - Ensure SSH LogLevel is set to INFO (Scored)
+cat /etc/ssh/sshd_config | grep -v LogLevel > /etc/ssh/sshd_config.new
+echo "LogLevel INFO">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.4 - Ensure SSH X11 forwarding is disabled (Scored)
+cat /etc/ssh/sshd_config | grep -v X11Forwarding > /etc/ssh/sshd_config.new
+echo "X11Forwarding no">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.5 - Ensure SSH MaxAuthTries is set to 4 or less (Scored)
+cat /etc/ssh/sshd_config | grep -v MaxAuthTries > /etc/ssh/sshd_config.new
+echo "MaxAuthTries 4">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.6 - Ensure SSH IgnoreRhosts is enabled (Scored)
+cat /etc/ssh/sshd_config | grep -v IgnoreRhosts > /etc/ssh/sshd_config.new
+echo "IgnoreRhosts yes">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.7 - Ensure SSH HostbasedAuthentication is disabled (Scored)
+cat /etc/ssh/sshd_config | grep -v HostbasedAuthentication > /etc/ssh/sshd_config.new
+echo "HostbasedAuthentication no">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.8 - Ensure SSH root login is disabled (Scored)
+cat /etc/ssh/sshd_config | grep -v PermitRootLogin > /etc/ssh/sshd_config.new
+echo "PermitRootLogin no">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.9 - Ensure SSH PermitEmptyPasswords is disabled (Scored)
+cat /etc/ssh/sshd_config | grep -v PermitEmptyPasswords > /etc/ssh/sshd_config.new
+echo "PermitEmptyPasswords no">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.10 - Ensure SSH PermitUserEnvironment is disabled (Scored)
+cat /etc/ssh/sshd_config | grep -v PermitUserEnvironment > /etc/ssh/sshd_config.new
+echo "PermitUserEnvironment no">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.11 - Ensure only approved MAC algorithms are used
+echo "Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr" >>/etc/ssh/sshd_config
+echo "KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256" >>/etc/ssh/sshd_config
+echo "MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com" >>/etc/ssh/sshd_config
+
+# 5.2.12 - Ensure SSH Idle Timeout Interval is configured (Scored)
+cat /etc/ssh/sshd_config | grep -v "ClientAliveInternal"| grep -v "ClientAliveCountMax" > /etc/ssh/sshd_config.new
+mv /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+echo "ClientAliveInterval 300" >> /etc/ssh/sshd_config
+echo "ClientAliveCountMax 0" >> /etc/ssh/sshd_config
+
+# 5.2.13 - Ensure SSH LoginGraceTime is set to one minute or less (Scored)
+cat /etc/ssh/sshd_config | grep -v LoginGraceTime  > /etc/ssh/sshd_config.new
+echo "LoginGraceTime 60">>/etc/ssh/sshd_config.new
+
+cp /etc/ssh/sshd_config.new /etc/ssh/sshd_config
+rm /etc/ssh/sshd_config.new
+
+# 5.2.14 - Ensure SSH access is limited (Scored)
+sed -i  "/^UsePAM.*/a AllowGroups\ root\ {{ vm_svc_user }}" /etc/ssh/sshd_config
+
+# 5.2.15 - Ensure SSH warning banner is configured
+cp -f /etc/issue /etc/issue_old && rm -f /etc/issue
+cat  << xxEOFxx >> /etc/issue
+                               WARNING!!!
+                   READ THIS BEFORE ATTEMPTING TO LOGON
+
+     This System is for the use of authorized users only.  Individuals
+     using this computer without authority, or in excess of their
+     authority, are subject to having all of their activities on this
+     system monitored and recorded by system personnel.  In the course
+     of monitoring individuals improperly using this system, or in the
+     course of system maintenance, the activities of authorized users
+     may also be monitored.  Anyone using this system expressly
+     consents to such monitoring and is advised that if such
+     monitoring reveals possible criminal activity, system personnel
+     may provide the evidence of such monitoring to law enforcement
+     officials.
+
+     Cisco Acceptable Use Policy:
+     http://wwwin.cisco.com/infosec/policies/acceptable_use.shtml
+xxEOFxx
+
+\cp -rp /etc/issue /etc/issue.net
+chmod 644 /etc/issue
+chmod 644 /etc/issue.net
+sed -i 's@#Banner.*@Banner /etc/issue.net@' /etc/ssh/sshd_config
+systemctl restart sshd
+
+# 5.2.1 - Ensure permissions on /etc/ssh/sshd_config are configured (Scored)
+# Executing section after above modification of sshd_config file
+file=/etc/ssh/sshd_config
+perm="600 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+# 5.3 - Configure PAM
+#/etc/pam.d/system-auth-ac and /etc/pam.d/password-auth-ac are replaced along with RPM install
+
+# 5.3.1 - Ensure password creation requirements are configured
+### echo -e "minlen=14\ndcredit=-1\nucredit=-1\nocredit=-1\nlcredit=-1" >>/etc/security/pwquality.conf
+  echo
+  echo \*\*\*\* Ensure\ password\ creation\ requirements\ are\ configured
+  egrep -q "^(\s*)minlen\s*=\s*\S+(\s*#.*)?\s*$" /etc/security/pwquality.conf && sed -ri "s/^(\s*)minlen\s*=\s*\S+(\s*#.*)?\s*$/\minlen=14\2/" /etc/security/pwquality.conf || echo "minlen=14" >> /etc/security/pwquality.conf
+  egrep -q "^(\s*)dcredit\s*=\s*\S+(\s*#.*)?\s*$" /etc/security/pwquality.conf && sed -ri "s/^(\s*)dcredit\s*=\s*\S+(\s*#.*)?\s*$/\dcredit=-1\2/" /etc/security/pwquality.conf || echo "dcredit=-1" >> /etc/security/pwquality.conf
+  egrep -q "^(\s*)ucredit\s*=\s*\S+(\s*#.*)?\s*$" /etc/security/pwquality.conf && sed -ri "s/^(\s*)ucredit\s*=\s*\S+(\s*#.*)?\s*$/\ucredit=-1\2/" /etc/security/pwquality.conf || echo "ucredit=-1" >> /etc/security/pwquality.conf
+  egrep -q "^(\s*)ocredit\s*=\s*\S+(\s*#.*)?\s*$" /etc/security/pwquality.conf && sed -ri "s/^(\s*)ocredit\s*=\s*\S+(\s*#.*)?\s*$/\ocredit=-1\2/" /etc/security/pwquality.conf || echo "ocredit=-1" >> /etc/security/pwquality.conf
+  egrep -q "^(\s*)lcredit\s*=\s*\S+(\s*#.*)?\s*$" /etc/security/pwquality.conf && sed -ri "s/^(\s*)lcredit\s*=\s*\S+(\s*#.*)?\s*$/\lcredit=-1\2/" /etc/security/pwquality.conf || echo "lcredit=-1" >> /etc/security/pwquality.conf
+  egrep -q "^\s*password\s+requisite\s+pam_pwquality.so\s+" /etc/pam.d/system-auth && sed -ri '/^\s*password\s+requisite\s+pam_pwquality.so\s+/ { /^\s*password\s+requisite\s+pam_pwquality.so(\s+\S+)*(\s+try_first_pass)(\s+.*)?$/! s/^(\s*password\s+requisite\s+pam_pwquality.so\s+)(.*)$/\1try_first_pass \2/ }' /etc/pam.d/system-auth && sed -ri '/^\s*password\s+requisite\s+pam_pwquality.so\s+/ { /^\s*password\s+requisite\s+pam_pwquality.so(\s+\S+)*(\s+retry=[0-9]+)(\s+.*)?$/! s/^(\s*password\s+requisite\s+pam_pwquality.so\s+)(.*)$/\1retry=3 \2/ }' /etc/pam.d/system-auth && sed -ri 's/(^\s*password\s+requisite\s+pam_pwquality.so(\s+\S+)*\s+)retry=[0-9]+(\s+.*)?$/\1retry=3\3/' /etc/pam.d/system-auth || echo Ensure\ password\ creation\ requirements\ are\ configured - /etc/pam.d/system-auth not configured.
+  egrep -q "^\s*password\s+requisite\s+pam_pwquality.so\s+" /etc/pam.d/password-auth && sed -ri '/^\s*password\s+requisite\s+pam_pwquality.so\s+/ { /^\s*password\s+requisite\s+pam_pwquality.so(\s+\S+)*(\s+try_first_pass)(\s+.*)?$/! s/^(\s*password\s+requisite\s+pam_pwquality.so\s+)(.*)$/\1try_first_pass \2/ }' /etc/pam.d/password-auth && sed -ri '/^\s*password\s+requisite\s+pam_pwquality.so\s+/ { /^\s*password\s+requisite\s+pam_pwquality.so(\s+\S+)*(\s+retry=[0-9]+)(\s+.*)?$/! s/^(\s*password\s+requisite\s+pam_pwquality.so\s+)(.*)$/\1retry=3 \2/ }' /etc/pam.d/password-auth && sed -ri 's/(^\s*password\s+requisite\s+pam_pwquality.so(\s+\S+)*\s+)retry=[0-9]+(\s+.*)?$/\1retry=3\3/' /etc/pam.d/password-auth || echo Ensure\ password\ creation\ requirements\ are\ configured - /etc/pam.d/password-auth not configured.
+
+# 5.3.2 - Ensure lockout for failed password attempts is configured (Scored)
+echo "auth required pam_faillock.so preauth audit silent deny=5 unlock_time=900" >> /etc/pam.d/system-auth
+echo "auth [success=1 default=bad] pam_unix.so" >> /etc/pam.d/system-auth
+echo "auth [default=die] pam_faillock.so authfail audit deny=5 unlock_time=900" >> /etc/pam.d/system-auth
+echo "auth sufficient pam_faillock.so authsucc audit deny=5 unlock_time=900" >> /etc/pam.d/system-auth
+
+# 5.4.1.1 - Ensure password expiration is 365 days or less (Scored)
+# 5.4.1.2 - Ensure minimum days between password changes is 7 or more (Scored)
+# 5.4.1.4 - Ensure inactive password lock is 30 days or less (Scored)
+sed -i '/^PASS_MAX_DAYS/c\PASS_MAX_DAYS   90' /etc/login.defs
+sed -i '/^PASS_MIN_DAYS/c\PASS_MIN_DAYS    7' /etc/login.defs
+sed -i '/^PASS_WARN_AGE/c\PASS_WARN_AGE    7' /etc/login.defs
+sed -i '/^PASS_MIN_LEN/c\PASS_MIN_LEN    14' /etc/login.defs
+useradd -D -f 30
+for i in $(egrep ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1 ); do
+                chage -M 90 -m 7 -I 30 $i
+done
+
+# 5.4.4 - Ensure default user umask is 027 or more restrictive (Scored)
+sed -i 's/umask.*/umask 027/' /etc/bashrc
+#echo umask 027 >> /etc/bashrc
+sed -i 's/umask.*/umask 027/' /etc/profile
+#echo umask 027 >> /etc/profile
+for files in $( ls -A /etc/profile.d/*.sh); do echo "umask 027" >>$files; done
+cat /etc/passwd | egrep -v '^(halt|sync|shutdown)' | awk -F: '($7 != "/sbin/nologin" && $7 != "/bin/false") { print $6 }' |while read dir; do if [ -d "$dir" ]; then echo "umask 027" >> $dir/.bash_profile; echo "umask 027" >> $dir/.bashrc; fi; done
+
+# 5.6 - Ensure access to the su command is restricted (Scored)
+echo "auth required pam_wheel.so use_uid" >> /etc/pam.d/su
+
+# 6.1.2 - Ensure permissions on /etc/passwd are configured (Scored)
+file=/etc/passwd
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 6.1.3 - Ensure permissions on /etc/shadow are configured (Scored)
+file=/etc/shadow
+perm="^0 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 6.1.4 - Ensure permissions on /etc/group are configured (Scored)
+file=/etc/group
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 6.1.5 - Ensure permissions on /etc/gshadow are configured (Scored)
+file=/etc/gshadow
+perm="^0 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 6.1.6 - Ensure permissions on /etc/passwd- are configured (Scored)
+file=/etc/passwd-
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 6.1.7 - Ensure permissions on /etc/shadow- are configured (Scored)
+file=/etc/shadow-
+perm="^0 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 6.1.8 - Ensure permissions on /etc/group- are configured (Scored)
+file=/etc/group-
+perm="644 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+
+# 6.1.9 - Ensure permissions on /etc/gshadow- are configured (Scored)
+file=/etc/gshadow-
+perm="^0 0 0"
+
+p=$(echo $perm | awk {'print $1'} | sed "s/[^0-9]//g" )
+o=$(echo $perm | awk {'print $2'})
+g=$(echo $perm | awk {'print $3'})
+
+touch $file
+
+if [[ $o -eq 0 && $g -eq 0 ]]; then
+        chown root:root $file
+fi
+
+chmod $p $file
+
+# 6.2.6 - Ensure root PATH Integrity
+mkdir -p /root/bin

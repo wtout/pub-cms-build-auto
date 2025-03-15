@@ -1,0 +1,49 @@
+---
+# tasks file for vm_creation
+- block:
+  - include_tasks: task_delete_ssh_key.yml
+  - include_tasks: task_define_folder_name.yml
+
+  - block:
+    - block:
+      - name: check VM reachable
+        ansible.builtin.shell: ping {{ ansible_host }} -c 1
+        register: vcr_vm_reachable
+        ignore_errors: true
+        check_mode: no
+        become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+        delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+      - block:
+        - name: check VM credentials
+          ansible.builtin.wait_for_connection:
+            timeout: 3
+          register: vcr_vm_creds
+          check_mode: no
+        rescue:
+        - name: Update SSH password
+          ansible.builtin.set_fact:
+            ansible_ssh_pass: "{{ postppp }}"
+            ansible_become_pass: "{{ postppp }}"
+          no_log: true
+          when:
+            - vcr_vm_creds.msg is search('Invalid/incorrect username/password')
+        - block:
+          - name: check updated VM credentials
+            ansible.builtin.wait_for_connection:
+              timeout: 3
+            register: vcr_connection_status
+            check_mode: no
+          rescue:
+          - name: reset SSH password
+            ansible.builtin.set_fact:
+              ansible_ssh_pass: "{{ preppp }}"
+              ansible_become_pass: "{{ preppp }}"
+            no_log: true
+        when: vcr_vm_reachable is succeeded
+
+    - include_tasks: task_create_vms.yml
+    when: create_vms_ova | default(false) | bool
+
+  - include_tasks: task_rollback_vms.yml
+    when: rollback_vms_ova | default(false) | bool
+  tags: vm_creation

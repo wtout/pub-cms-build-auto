@@ -1,0 +1,45 @@
+---
+# vars file for roles/sanity
+rly_db_user: "{{ vars[('S' if 'dr' in group_names else 'P') + 'RLY_DB_USER'] }}"
+rly_db_pass: "{{ vars[('S' if 'dr' in group_names else 'P') + 'RLY_DB_PASS'] }}"
+spl_admin_user: "{{ vars[('S' if 'dr' in group_names else 'P') + 'SPL_ADMIN_USER'] }}"
+spl_admin_pass: "{{ vars[('S' if 'dr' in group_names else 'P') + 'SPL_ADMIN_PASS'] }}"
+vm_svc_user: "{{ user.name if user.name != '' else (vars[('S' if 'dr' in group_names else 'P') + 'VCENTER_SERVICE_USER'] if customer.name|lower is search('mdr') else 'ansible') if credentials.username == 'root' else credentials.username }}"
+vm_svc_pass: "{{ user.password if user.name != '' else credentials.password }}"
+chrony_file: '/etc/chrony.conf'
+relayweb_conf_file: '/opt/CSCO-CMS/relayweb/conf/common.properties'
+rly_csco_rpms:
+  - csco-cms-relay-syslogng
+  - csco-cms-reportstore-scripts
+  - csco-cms-backup
+  - csco-cms-relay-utilities
+  - CSCO-CMS-RelayDependencies
+  - CSCO-CMS-ReportScheduler
+  - csco-cms-relay-webservice
+  - csco-cms-notification
+  - CSCO-CMS-DataExtractor
+  - csco-cms-relay-snmp
+  - csco-cms-lb-automation
+  - csco-cms-reportstore-server
+  - CSCO-CMS-ReportingAccessory
+  - csco-cms-decron-editor
+
+rly_mariadb_rpms:
+  - MariaDB-shared
+  - MariaDB-common
+  - MariaDB-client
+  - MariaDB-server
+
+rly_nfs_rpms:
+  - nfs-utils
+  - libnfsidmap
+
+rly_db_list:
+  - DataExtractor
+  - automationdb
+  - dedb
+  - information_schema
+  - mysql
+  - performance_schema
+  - relaydb
+  - reportstore

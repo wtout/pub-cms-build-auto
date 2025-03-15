@@ -1,0 +1,45 @@
+---
+# tasks to restart EM7 DBs
+- block:
+  - name: Set the state of the virtual machine to powered-off
+    vmware_guest_powerstate:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      validate_certs: false
+      name: "{{ vm.name }}"
+      state: powered-off
+      state_change_timeout: 60
+  - name: Set the state of EM7 DB01 to powered-on
+    vmware_guest_powerstate:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      validate_certs: false
+      name: "{{ vm.name }}"
+      state: powered-on
+      state_change_timeout: 60
+    when: inventory_hostname is search('01')
+  - name: Pause for 30 seconds
+    wait_for:
+      timeout: 30
+    run_once: true
+  - name: Set the state of EM7 DB02 to powered-on
+    vmware_guest_powerstate:
+      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      validate_certs: false
+      name: "{{ vm.name }}"
+      state: powered-on
+      state_change_timeout: 60
+    when: inventory_hostname is search('02')
+  when:
+    - vm_group is search('em7db')
+    - "'em7db01' in ansible_play_hosts"
+    - "'em7db02' in ansible_play_hosts"
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  tags: vms
