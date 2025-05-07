@@ -120,7 +120,7 @@ jobs:
       - name: Run Test
         run: |
           echo 'export MYINVOKER=github' >> ~/.bashrc
-          bash -x Bash/play_deploy.sh --envname build_def_file --skip-tags $(grep -r ' tags:' roles/ | awk -F 'tags: ' '{print $NF}' | sed "s/\[\|\]\|'\|,//g" | tr ' ' '\n' | grep -ve 'always\|never\|define_inventory' | sort -u | xargs | tr ' ' ',')
+          bash -x Bash/play_deploy.sh --envname cust_build_info --skip-tags $(grep -r ' tags:' roles/ | awk -F 'tags: ' '{print $NF}' | sed "s/\[\|\]\|'\|,//g" | tr ' ' '\n' | grep -ve 'always\|never\|define_inventory' | sort -u | xargs | tr ' ' ',')
 
   merge_release:
     if: needs.get_info.outputs.is-complete == 'true'
