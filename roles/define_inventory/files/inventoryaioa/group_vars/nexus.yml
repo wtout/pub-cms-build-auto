@@ -1,0 +1,7 @@
+---
+# Variables for nexus hosts
+ansible_connection: network_cli
+ansible_network_os: nxos
+ansible_user: "{{ PNEXUS_USER|default('') }}"
+ansible_ssh_pass: "{{ PNEXUS_PASS|default('') }}"
+ansible_host: "{{ nexus.address[inventory_hostname[-2:]|int - 1] }}"

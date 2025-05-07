@@ -1,0 +1,85 @@
+---
+# tasks file for puppet
+- block:
+  - block:
+    - name: check VM reachable
+      ansible.builtin.shell: ping {{ ansible_host }} -c 1
+      register: pp_vm_reachable
+      check_mode: no
+      ignore_errors: true
+      become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - block:
+      - block:
+        - name: check VM credentials
+          ansible.builtin.wait_for_connection:
+            timeout: 3
+          register: pp_vm_creds1
+          ignore_errors: true
+          check_mode: no
+        - block:
+          - name: Update SSH password
+            ansible.builtin.set_fact:
+              ansible_ssh_pass: "{{ postppp }}"
+              ansible_become_pass: "{{ postppp }}"
+            no_log: true
+          - name: check updated VM credentials
+            ansible.builtin.wait_for_connection:
+              timeout: 3
+            register: pp_vm_creds2
+            check_mode: no
+          when:
+            - pp_vm_creds1 is failed
+            - pp_vm_creds1.msg is search('Invalid/incorrect username/password')
+        when:
+          - inventory_hostname is not search('em7') or customer.version.release is search('9.2')
+      - include_tasks: task_em7_check_license.yml
+        when:
+          - group_names | select('regex', 'stack|dr') | list | length >=1
+          - inventory_hostname is search('em7')
+      - include_tasks: task_check_sync_status.yml
+      - block:
+        - include_tasks: task_delete_certificates.yml
+        - include_tasks: task_add_vm_to_class.yml
+        - block:
+          - include_tasks: task_generate_cert.yml
+          - include_tasks: task_generate_cert_for_em7.yml
+          - include_tasks: task_check_certificate.yml
+          when:
+            - delete_client_cert_on_vm | default(false) | bool
+        - include_tasks: task_puppet_agent_test.yml
+          when:
+            - inventory_hostname is not search('em7') or customer.version.release is search('9.2')
+        when: "'stack' in group_names"
+      - block:
+        - include_tasks: task_delete_certificates.yml
+        - include_tasks: task_add_vm_to_class.yml
+        - block:
+          - include_tasks: task_generate_cert.yml
+          - include_tasks: task_generate_cert_for_em7.yml
+          - include_tasks: task_check_certificate.yml
+          when:
+            - delete_client_cert_on_vm | default(false) | bool
+        - include_tasks: task_puppet_agent_test.yml
+          when:
+            - inventory_hostname is not search('em7') or customer.version.release is search('9.2')
+        when: "'dr' in group_names"
+      when: pp_vm_reachable is succeeded
+    when:
+      - push_puppet | default(false) | bool
+
+  - block:
+    - name: check VM reachable
+      ansible.builtin.shell: ping {{ ansible_host }} -c 1
+      register: pp_vm_reachable
+      check_mode: no
+      ignore_errors: true
+      become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - block:
+      - include_tasks: task_remove_vm_from_class.yml
+      - include_tasks: task_delete_certificate_on_server.yml
+      when: pp_vm_reachable is succeeded
+    when:
+      - rollback_puppet | default(false) | bool
+  tags: puppet

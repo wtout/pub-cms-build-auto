@@ -1,0 +1,74 @@
+---
+# tasks to define dr infra variables lists
+- block:
+  - name: define dr infra info
+    ansible.builtin.set_fact:
+      ipaddress1: "{{ ipvar1 if ipvar1 != '' else octetvar1 }}"
+      ipaddress2: "{{ ipvar2 if ipvar2 != '' else octetvar2 }}"
+    vars:
+      index: "{{ member_item[-2:] }}"
+      ipvar1: "{{ hostvars[member_item]['netconfig']['nic1']['ippool'][index|int - 1] if hostvars[member_item]['netconfig']['nic1']['ippool']|length >= index|int else '' }}"
+      ipvar2: "{{ hostvars[member_item]['netconfig']['nic2']['ippool'][index|int - 1] if hostvars[member_item]['netconfig']['nic2']['ippool']|length >= index|int else '' }}"
+      octetvar1: "{{ customer.secondary.octets + '.' + hostvars[member_item]['netconfig']['nic1']['octetpool'][index|int - 1]|string if hostvars[member_item]['netconfig']['nic1']['octetpool']|length >= index|int else '' }}"
+      octetvar2: "{{ customer.secondary.octets + '.' + hostvars[member_item]['netconfig']['nic2']['octetpool'][index|int - 1]|string if hostvars[member_item]['netconfig']['nic2']['octetpool']|length >= index|int else '' }}"
+    loop: "{{ groups[vm_group] }}"
+    loop_control:
+      loop_var: member_item
+    register: info
+
+  - name: define drrly lists
+    ansible.builtin.set_fact:
+      drrly_ip1_list: "{{ drrly_ip1_list | default([]) + ipvar1 if (drrly_ip1_list is defined and drrly_ip1_list != '') else ipvar1 }}"
+      drrly_ip2_list: "{{ drrly_ip2_list | default([]) + ipvar2 if (drrly_ip2_list is defined and drrly_ip2_list != '') else ipvar2 }}"
+    vars:
+      ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
+      ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"
+    loop: "{{ groups['drrly'] }}"
+    loop_control:
+      loop_var: info_item
+    when:
+      - groups['drrly'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
+  - name: define drsplsrc lists
+    ansible.builtin.set_fact:
+      drsplsrc_ip1_list: "{{ drsplsrc_ip1_list | default([]) + ipvar1 if (drsplsrc_ip1_list is defined and drsplsrc_ip1_list != '') else ipvar1 }}"
+      drsplsrc_ip2_list: "{{ drsplsrc_ip2_list | default([]) + ipvar2 if (drsplsrc_ip2_list is defined and drsplsrc_ip2_list != '') else ipvar2 }}"
+    vars:
+      ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
+      ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"
+    loop: "{{ groups['drsplsrc'] }}"
+    loop_control:
+      loop_var: info_item
+    when:
+      - groups['drsplsrc'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
+  - name: define drem7prt lists
+    ansible.builtin.set_fact:
+      drem7prt_ip1_list: "{{ drem7prt_ip1_list | default([]) + ipvar1 if (drem7prt_ip1_list is defined and drem7prt_ip1_list != '') else ipvar1 }}"
+      drem7prt_ip2_list: "{{ drem7prt_ip2_list | default([]) + ipvar2 if (drem7prt_ip2_list is defined and drem7prt_ip2_list != '') else ipvar2 }}"
+    vars:
+      ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
+      ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"
+    loop: "{{ groups['drem7prt'] }}"
+    loop_control:
+      loop_var: info_item
+    when:
+      - groups['drem7prt'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+
+  - name: define drem7mc lists
+    ansible.builtin.set_fact:
+      drem7mc_ip1_list: "{{ drem7mc_ip1_list | default([]) + ipvar1 if (drem7mc_ip1_list is defined and drem7mc_ip1_list != '') else ipvar1 }}"
+      drem7mc_ip2_list: "{{ drem7mc_ip2_list | default([]) + ipvar2 if (drem7mc_ip2_list is defined and drem7mc_ip2_list != '') else ipvar2 }}"
+    vars:
+      ipvar1: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress1') | list }}"
+      ipvar2: "{{ info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='ansible_facts.ipaddress2') | list }}"
+    loop: "{{ groups['drem7mc'] }}"
+    loop_control:
+      loop_var: info_item
+    when:
+      - groups['drem7mc'] is defined
+      - info.results | selectattr('member_item', 'equalto', info_item) | map(attribute='member_item') | list | string is search(info_item)
+  run_once: true

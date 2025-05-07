@@ -1,0 +1,47 @@
+---
+# Tasks to check the database cluster status
+- block:
+  - name: define status
+    ansible.builtin.set_fact:
+      rly_cluster_size_status: 'mariadb: Not found or not active'
+      rly_cluster_status: 'mariadb: Not found or not active'
+      rly_local_state_status: 'mariadb: Not found or not active'
+      rly_incoming_addresses_status: 'mariadb: Not found or not active'
+    when: "service_status|default({})|select('search', 'mariadb: Not (found|active)')|length != 0"
+  - block:
+    - name: get the global status
+      ansible.builtin.shell: |
+        mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="SHOW GLOBAL STATUS WHERE Variable_name IN ('wsrep_ready','wsrep_cluster_size','wsrep_cluster_status','wsrep_local_state_comment','wsrep_last_committed','wsrep_incoming_addresses','wsrep_connected','wsrep_evs_state','wsrep_protocol_version','wsrep_provider_name','wsrep_provider_version','wsrep_cluster_state_uuid','wsrep_cluster_conf_id','wsrep_local_recv_queue_avg','wsrep_sst_donor','wsrep_sst_receive_address');"
+      register: reg_global_status
+      ignore_errors: yes
+      check_mode: no
+      no_log: yes
+    - debug:
+        msg: "{{ reg_global_status|replace(rly_db_pass, 'obfuscated') }}"
+    - name: define rly_cluster_status
+      ansible.builtin.set_fact:
+        rly_cluster_status: "{{ reg_global_status.stderr }}"
+      when:
+        - reg_global_status is failed
+        - reg_global_status.stderr is defined
+        - reg_global_status is search('Access denied')
+    - name: define rly_cluster_size_status
+      ansible.builtin.set_fact:
+        rly_cluster_size_status: "Cluster size is {{ (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last }} instead of {{ '3' if customer.disaster_recovery else '1' if groups['rly']|length == 1 else '2' }}"
+      when: (customer.disaster_recovery and (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last|int != 3) or (not customer.disaster_recovery and (((reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last|int != 1 and groups['rly']|length == 1) or (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_size') | join).split('\t')|last|int != 2 and groups['rly']|length > 1))
+    - name: define rly_cluster_status
+      ansible.builtin.set_fact:
+        rly_cluster_status: "Cluster status is {{ (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_status') | join).split('\t')|last }} instead of Priamry"
+      when: (reg_global_status.stdout_lines | select('search', 'wsrep_cluster_status') | join).split('\t')|last != 'Primary'
+    - name: define rly_local_state_status
+      ansible.builtin.set_fact:
+        rly_local_state_status: "Cluster local state is {{ (reg_global_status.stdout_lines | select('search', 'wsrep_local_state_comment') | join).split('\t')|last }} instead of Synced"
+      when: (reg_global_status.stdout_lines | select('search', 'wsrep_local_state_comment') | join).split('\t')|last != 'Synced'
+    - name: define rly_incoming_addresses_status
+      ansible.builtin.set_fact:
+        rly_incoming_addresses_status: "Cluster incoming addresses is {{ ((reg_global_status.stdout_lines | select('search', 'wsrep_incoming_addresses') | join).split('\t')|last|regex_replace('^,|,$', '')).split(',')|sort|join(',') }} instead of {{ rly_ip1_list[0] + ':3306' }}{{ ',' + rly_ip1_list[1] + ':3306' if groups['rly']|length >= 2 else '' }}{{ ',' + drrly_ip1_list[0] + ':3306' if groups['drrly'] is defined else '' }}"
+      when: ((reg_global_status.stdout_lines | select('search', 'wsrep_incoming_addresses') | join).split('\t')|last|regex_replace('^,|,$', '')).split(',')|sort|join(',') != ((rly_ip1_list[0] + ':3306' + (',' + rly_ip1_list[1] + ':3306' if groups['rly']|length >= 2 else '') + (',' + drrly_ip1_list[0] + ':3306' if groups['drrly'] is defined else ''))).split(',')|sort|join(',')
+    when:
+      - "service_status|default({})|select('search', 'mariadb: Not found')|length == 0"
+      - "service_status|default({})|select('search', 'mariadb: Not active')|length == 0"
+  tags: sanity

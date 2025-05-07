@@ -1,0 +1,79 @@
+---
+# Tasks to check for successful puppet runs
+- block:
+  - name: Check if file exists {{ loop_num }}
+    ansible.builtin.stat:
+      path: "{{ fname }}"
+    register: reg_fname
+    when: fname != ''
+    loop: "{{ em7_files }}"
+    loop_control:
+      loop_var: fname
+  - name: define statuses {{ loop_num }}
+    ansible.builtin.set_fact:
+      cmsp_em7_status: "{{ reg_fname.results|selectattr('fname','search','cmsp_em7.conf')|map(attribute='stat.exists')|list|join }}"
+      em7_debug_status: "{{ reg_fname.results|selectattr('fname','search','em7_debug_rules.conf')|map(attribute='stat.exists')|list|join }}"
+  - block:
+    - name: check for custom proxy files {{ loop_num }}
+      ansible.builtin.shell: |
+        ls -l /opt/em7/share/config/nginx.d | grep custom_proxy | awk '{print $NF}'
+      register: reg_custom_proxy_files
+      check_mode: no
+    - name: define custom_proxy_status {{ loop_num }}
+      ansible.builtin.set_fact:
+        custom_proxy_status: "{{ true if reg_custom_proxy_files.stdout_lines == custom_proxy_files else false }}"
+    when: inventory_hostname is search('em7prt')
+  - name: define facts {{ loop_num }}
+    ansible.builtin.set_fact:
+      repush_prt: "{{ true if inventory_hostname is search('em7prt') and not cmsp_em7_status else false }}"
+      repush_prt_rules: "{{ true if inventory_hostname is search('em7prt') and not custom_proxy_status else false }}"
+      repush_dc: "{{ true if inventory_hostname is search('em7dc') and not cmsp_em7_status else false }}"
+      repush_mc: "{{ true if inventory_hostname is search('em7mc') and not cmsp_em7_status else false }}"
+      repush_db2: "{{ true if inventory_hostname == 'em7db02' and (not cmsp_em7_status or not em7_debug_status) else false }}"
+  - name: define repush_puppet {{ loop_num }}
+    ansible.builtin.set_fact:
+      repush_puppet: "{{ repush_prt or repush_prt_rules or repush_dc or repush_mc or repush_db2 }}"
+  - name: define ppush {{ loop_num }}
+    ansible.builtin.set_fact:
+      ppush: "{{ repush_puppet }}"
+  - block:
+    - name: delete puppet .done file {{ loop_num }}
+      ansible.builtin.file:
+        path: "{{ file_item }}"
+        state: absent
+      when: file_item != ''
+      loop:
+        - /home/em7release/var/platform_tar_deploy_portals.done if repush_prt else ''
+        - /home/em7release/var/platform_tar_deploy_debug_rules.done if repush_prt_rules else ''
+        - /home/em7release/var/platform_tar_deploy_datacollectors.done if repush_dc else ''
+        - /home/em7release/var/platform_tar_deploy_messagecollectors.done if repush_mc else ''
+        - /home/em7release/var/platform_tar_deploy_secondary_db.done if repush_db2 else ''
+      loop_control:
+        loop_var: file_item
+      delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'em7db']|first }}"
+    - name: re-push puppet {{ loop_num }}
+      ansible.builtin.shell: |
+        /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
+      register: reg_repush_puppet
+      no_log: true
+      failed_when:
+        - reg_repush_puppet.stdout is not search('Run of Puppet configuration client already in progress')
+        - reg_repush_puppet.stdout is not search('Applied catalog in')
+    when: repush_puppet
+  vars:
+    em7_files:
+      - "{{ '/etc/rsyslog.d/cmsp_em7.conf' if inventory_hostname is not search('em7db01') else '' }}"
+      - "{{ '/etc/rsyslog.d/em7_debug_rules.conf' if inventory_hostname == 'em7db02' else '' }}"
+    custom_proxy_files:
+      - custom_proxy_splunk-puredash.conf
+      - custom_proxy_splunk-ondemand.conf
+      - custom_proxy_splunk.conf
+      - custom_proxy_splunk-beta.conf
+      - custom_proxy_splunk-puredash_int.conf
+      - custom_proxy_splunk-ondemand_int.conf
+      - custom_proxy_splunk_int.conf
+      - custom_proxy_splunk-beta_int.conf
+      - custom_proxy_location_common.fragment
+      - custom_proxy_customer_impersonate.conf
+      - custom_proxy_common.fragment
+  when: ppush|default(true)

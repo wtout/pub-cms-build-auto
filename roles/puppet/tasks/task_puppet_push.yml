@@ -1,0 +1,86 @@
+---
+# tasks to do a puppet push
+- block:
+  - name: "vm_configuration: make DB01 primary"
+    include_role:
+      name: vm_configuration_ova
+      tasks_from: task_make_db01_primary.yml
+  - name: check if puppet push {{ push_num|default('1')|int }} is already running
+    ansible.builtin.shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "not running"
+    register: ppr1
+    check_mode: no
+  - name: Wait for puppet push {{ push_num|default('1')|int }} to finish
+    ansible.builtin.shell: ps aux | grep "puppet agent" | grep test | grep -v grep || echo "finished"
+    register: ppr2
+    until: ppr2.stdout is search('finished')
+    retries: 180
+    delay: 10
+    when:
+      - not ansible_check_mode
+      - ppr1.stdout is not search('not running')
+  - block:
+    - name: check if puppet agent_catalog_run.lock exists {{ push_num|default('1')|int + 1 }}
+      ansible.builtin.stat:
+        path: "{{ '.puppetlabs/opt/puppet' if inventory_hostname is search('em7') else '/opt/puppetlabs/puppet' }}/cache/state/agent_catalog_run.lock"
+      register: lock_file
+    - name: Wait for puppet agent_catalog_run.lock to disappear {{ push_num|default('1')|int + 1 }}
+      ansible.builtin.wait_for:
+        path: "{{ '.puppetlabs/opt/puppet' if inventory_hostname is search('em7') else '/opt/puppetlabs/puppet' }}/cache/state/agent_catalog_run.lock"
+        state: absent
+        timeout: 180
+      when: lock_file.stat.exists
+    ignore_errors: true
+    when: ppr1 is search('not running')
+  - name: Start puppet push {{ push_num|default('1')|int + 1 }}
+    ansible.builtin.shell: /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
+    register: puppet_push
+    no_log: yes
+    ignore_unreachable: yes 
+    failed_when:
+      - puppet_push.stdout is not search('Run of Puppet configuration client already in progress')
+      - puppet_push.stdout is not search('Applied catalog in')
+  - ansible.builtin.debug:
+      msg: "{{ puppet_push }}"
+    when: puppet_push is unreachable or puppet_push is failed
+  - name: check connection
+    ansible.builtin.wait_for_connection:
+      timeout: 3
+    register: reg_con
+    ignore_errors: yes
+    check_mode: no
+  - block:
+    - name: "vm_creation: Define fldr_name"
+      include_role:
+        name: vm_creation
+        tasks_from: task_define_folder_name.yml
+      when: fldr_name is not defined
+    - name: "vm_fromiso: Poweroff VM"
+      include_role:
+        name: vm_fromiso
+        tasks_from: task_poweroff_vm.yml
+    - name: "vm_fromiso: Poweron VM"
+      include_role:
+        name: vm_fromiso
+        tasks_from: task_poweron_vm.yml
+    - name: check connection
+      ansible.builtin.wait_for_connection:
+        timeout: 3
+      check_mode: no
+    - name: "vm_fromiso: Rename NIC2"
+      include_role:
+        name: vm_fromiso
+        tasks_from: task_rename_nic2_self_healing.yml
+    when: reg_con is failed
+  - ansible.builtin.debug:
+      msg:
+        - "{{ puppet_push.stdout }}"
+    when:
+      - puppet_push.stdout_lines is defined
+      - puppet_push.stdout_lines == [] or puppet_push.stdout_lines|last is not search('Applied catalog')
+  - ansible.builtin.debug:
+      msg:
+        - "{{ puppet_push.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
+    when:
+      - puppet_push.stdout_lines is defined
+      - puppet_push.stdout_lines != []
+      - puppet_push.stdout_lines|last is search('Applied catalog')

@@ -1,0 +1,100 @@
+---
+# handlers file for vm_configuration
+- name: restart chrony
+  ansible.builtin.systemd:
+    name: chronyd
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: yum clean all
+  ansible.builtin.command: yum clean all
+  args:
+    warn: no
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: restart snmpd service
+  ansible.builtin.systemd:
+    name: snmpd
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: restart drbd
+  ansible.builtin.systemd:
+    name: drbd
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify:
+    - mount drbd1
+    - start mysql
+    - start em7
+    - restart pacemaker
+    - restart corosync
+
+- name: mount drbd1
+  ansible.builtin.shell: |
+    {{ 'drbd-overview | grep -i secondary/secondary' if customer.version.release is not search('9.2') else '/sbin/drbdadm status | grep -i r0 | cut -d ":" -f2 | grep -i secondary && /sbin/drbdadm status | grep -i "peer " | cut -d ":" -f2 | grep -i secondary' }} && /sbin/drbdadm primary r0
+    mount /dev/drbd1 /data.local/db
+    df | grep /drbd1
+  become: "{{ true if ansible_user != 'root' else false }}"
+  register: drbd1_status
+  until: drbd1_status.stdout is regex('drbd1|Secondary')
+  failed_when: drbd1_status.stdout is not regex('drbd1|Secondary')
+  retries: 3
+  when:
+    - not ansible_check_mode
+    - inventory_hostname is search('01')
+
+- name: start mysql
+  ansible.builtin.systemd:
+    name: mysql
+    state: started
+  become: "{{ true if ansible_user != 'root' else false }}"
+  when:
+    - inventory_hostname is search('01')
+    - drbd1_status.stdout is not search('Secondary')
+
+- name: start em7
+  ansible.builtin.systemd:
+    name: em7
+    state: started
+  become: "{{ true if ansible_user != 'root' else false }}"
+  when: inventory_hostname is search('01')
+
+- name: restart pacemaker
+  ansible.builtin.systemd:
+    name: pacemaker
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+  register: pacemaker_status
+  until: pacemaker_status is succeeded
+
+- name: restart corosync
+  ansible.builtin.systemd:
+    name: corosync
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: start nfs
+  ansible.builtin.systemd:
+    name: nfs
+    state: started
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: restart network
+  ansible.builtin.systemd:
+    name: network
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: restart firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"

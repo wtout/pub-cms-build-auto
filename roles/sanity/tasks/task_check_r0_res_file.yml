@@ -1,0 +1,30 @@
+---
+# Tasks to check /etc/drbd.d/r0.res file content
+- block:
+  - name: Get hostnames from {{ fname }}
+    ansible.builtin.shell: $(which sed) -n "/em7db/,+8p" {{ fname }} | grep -v '#'
+    register: r0_content
+    check_mode: no
+  - name: define r0_hostname1_status
+    ansible.builtin.set_fact:
+      r0_hostname1_status: "{{ vm.name[:-2] + '01' + ' is not configured in ' + fname }}"
+    when: r0_content.stdout_lines[0] is not search(vm.name[:-2] + '01')
+  - name: define r0_address1_status
+    ansible.builtin.set_fact:
+      r0_address1_status: "192.170.170.9 is not configured in {{ fname }}"
+    when: r0_content.stdout_lines[1] is not search('192.170.170.9')
+  - name: define r0_hostname2_status
+    ansible.builtin.set_fact:
+      r0_hostname2_status: "{{ vm.name[:-2] + '02' + ' is not configured in ' + fname }}"
+    when: r0_content.stdout_lines[3] is not search(vm.name[:-2] + '02')
+  - name: define r0_address2_status
+    ansible.builtin.set_fact:
+      r0_address2_status: "192.170.170.10 is not configured in {{ fname }}"
+    when:
+      - r0_content.stdout_lines[4] is not search('192.170.170.10')
+      - "'dr' not in group_names"
+  when:
+    - groups['em7'] | length > 1
+  vars:
+    fname: '/etc/drbd.d/r0.res'
+  tags: sanity

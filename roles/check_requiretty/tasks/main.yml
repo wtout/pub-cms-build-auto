@@ -1,0 +1,9 @@
+---
+# Tasks for check_requiretty
+- block:
+  - name: gather facts
+    ansible.builtin.setup:
+  - include_tasks: task_check_requiretty.yml
+  when:
+    - check_requiretty | default(false) | bool
+  tags: check_requiretty

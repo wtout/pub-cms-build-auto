@@ -1,0 +1,11 @@
+---
+# tasks to generate ssh_keys
+- block:
+  - name: ensure {{ LOCAL_SSH_DIR }} exists
+    ansible.builtin.file:
+      path: "{{ LOCAL_SSH_DIR }}"
+      state: directory
+      mode: 0700
+  - name: generate the ssh keys pair
+    community.crypto.openssh_keypair:
+      path: "{{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}"

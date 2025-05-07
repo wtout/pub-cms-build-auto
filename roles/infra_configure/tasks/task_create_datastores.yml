@@ -1,0 +1,79 @@
+---
+# tasks file for create_datastores
+- block:
+  - name: Get host model for {{ resource }}
+    community.vmware.vmware_host_facts:
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      esxi_hostname: "{{ resource }}"
+      schema: vsphere
+      properties:
+        - summary.hardware.model
+      validate_certs: no
+    register: reg_host_model
+  - name: define host_model
+    ansible.builtin.set_fact:
+      host_model: "{{ reg_host_model.ansible_facts.summary.hardware.model }}"
+  - name: Get attached disks info on {{ resource }}
+    community.vmware.vmware_host_disk_info:
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      esxi_hostname: "{{ resource }}"
+      validate_certs: no
+    register: storage_devices
+  - name: initialize lists
+    ansible.builtin.set_fact:
+      ds_name: []
+      dnuds_name: []
+      sdid: []
+  - name: define list of storage device IDs
+    ansible.builtin.set_fact:
+      sdid: "{{ sdid|default([]) + ds_item|dict2items|selectattr('key','equalto','canonical_name')|map(attribute='value') | list | unique }}"
+    loop: "{{ storage_devices.hosts_disk_info|dict2items|map(attribute='value')|first|selectattr('device_type','equalto','disk') | list | sort(attribute='capacity_mb', reverse=true) }}"
+    loop_control:
+      loop_var: ds_item
+  - name: define host datastore names
+    ansible.builtin.set_fact:
+      ds_name: "{{ (ds_name|default([]) + [customer_prefix + '-esxi-a-%02d'|format(mycount|int) + '-' + type_item]) | unique }}"
+    vars:
+      mycount: "{{ count|int + 1 }}"
+    loop:
+      - "{{ 'raid-5' if host_model == 'UCSC-C240-M6SX' else 'sas' }}"
+      - "{{ 'raid-10' if host_model == 'UCSC-C240-M6SX' else 'ssd' }}"
+    loop_control:
+      loop_var: type_item
+  - name: define 'donotuse' datastore names
+    ansible.builtin.set_fact:
+      dnuds_name: "{{ dnuds_name|default([]) + [myname] }}"
+    vars:
+      myidx: "{{ idx|int + 1 if sdid|length > 3 else '' }}"
+      mycount: "{{ count|int + 1 }}"
+      myname: "{{ customer_prefix + '-esxi-only-%02d'|format(mycount|int) + '-donotuse' + myidx }}"
+    loop: "{{ sdid[2:] if sdid|length > 2 else [] }}"
+    loop_control:
+      loop_var: dnuds_item
+      index_var: idx
+  - name: Get datastore info on {{ resource }}
+    community.vmware.vmware_datastore_info:
+      hostname: "{{ resource }}"
+      username: "{{ information.hostuser }}"
+      password: "{{ information.hostpass }}"
+      schema: vsphere
+      properties: ["_moId","info.name","info.vmfs.capacity","info.vmfs.extent"]
+      validate_certs: no
+    register: existing_datastores
+  - name: Create Datastores
+    include_tasks:
+      file: task_create_host_datastores.yml
+      apply:
+        vars:
+          hostid: "{{ resource }}"
+          dsname: "{{ ds_item[0] }}"
+          dvcname: "{{ ds_item[1] }}"
+    loop: "{{ (ds_name + dnuds_name|default([])) | zip(sdid) | list | unique }}"
+    loop_control:
+      loop_var: ds_item
+  run_once: true
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

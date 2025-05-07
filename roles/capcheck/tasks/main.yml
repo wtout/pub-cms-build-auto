@@ -1,0 +1,21 @@
+---
+# tasks file for capcheck
+- block:
+  - include_tasks: task_get_required_space.yml
+
+  - block:
+# Not to be used until https://github.com/ansible/ansible/pull/67641 is released
+#    - include_tasks: task_get_hosts_list.yml
+#      when:
+#        - information.resources is not defined or information.resources == []
+
+    - include_tasks: task_get_datastore_info.yml
+    when:
+      - information.deptype == 'h'
+
+  - include_tasks: task_get_host_facts.yml
+    when:
+      - information.deptype == 'a'
+
+  when: capcheck | default(false) | bool
+  tags: ['capcheck', 'vm_creation', 'infra_build_nodes']

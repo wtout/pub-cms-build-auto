@@ -1,0 +1,5 @@
+---
+# Variables for dr em7 hosts
+credentials:
+  username: "{{ SEM7_USER|default('') }}"
+  password: "{{ SEM7_PASS|default('') }}"

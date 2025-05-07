@@ -1,0 +1,39 @@
+---
+# Tasks to check the /etc/hosts file
+- block:
+  - name: Check indexer in {{ fname }} file
+    ansible.builtin.shell: |
+      grep splunk {{ fname }} | grep 'indexer0[1\|2]'
+    register: reg_hosts_idx
+    check_mode: no
+    ignore_errors: yes
+  - name: define splind_hosts_idx_status
+    ansible.builtin.set_fact:
+      splind_hosts_idx_status: "{{ splind_hosts_idx_status|default([]) + ['No splunk-head-indexer is configured in ' + fname] }}"
+    when: reg_hosts_idx.stdout_lines | select('search', 'head') | length == 0
+  - name: define splind_hosts_idx_status
+    ansible.builtin.set_fact:
+      splind_hosts_idx_status: "{{ splind_hosts_idx_status|default([]) + ['No splunk-site-indexer is configured in ' + fname] }}"
+    when: reg_hosts_idx.stdout_lines | select('search', 'site') | length == 0
+  - name: define splind_hosts_idx_status
+    ansible.builtin.set_fact:
+      splind_hosts_idx_status: "{{ splind_hosts_idx_status|default([]) + ['Wrong splunk-head-indexer is configured in ' + fname + '. Got ' + reg_hosts_idx.stdout_lines|select('search', 'head')|first|regex_replace('\t', ' ')|split(' ')|list|first|trim + ' instead of ' + splunk.he_indexer01_ip] }}"
+    when:
+      - reg_hosts_idx.stdout_lines | select('search', 'head') | length > 0
+      - reg_hosts_idx.stdout_lines | select('search', 'head')|first|regex_replace('\t', ' ')|split(' ')|list|first|trim != splunk.he_indexer01_ip
+  - name: define splind_hosts_idx_status
+    ansible.builtin.set_fact:
+      splind_hosts_idx_status: "{{ splind_hosts_idx_status|default([]) + ['Wrong splunk-site1-indexer01 is configured in ' + fname + '. Got ' + (reg_hosts_idx.stdout_lines | select('search', 'site1')|list|join)|regex_replace('\t', ' ')|split(' ')|list|first|trim + ' instead of ' + (spl_ip1_list[0] if groups['spl']|length == 1 else splind_ip1_list[0])] }}"
+    when:
+      - reg_hosts_idx.stdout_lines | select('search', 'site1') | length > 0
+      - (reg_hosts_idx.stdout_lines | select('search', 'site1')|list|join)|regex_replace('\t', ' ')|split(' ')|list|first|trim != (spl_ip1_list[0] if groups['spl']|length == 1 else splind_ip1_list[0])
+
+  - name: define splind_hosts_idx_status
+    ansible.builtin.set_fact:
+      splind_hosts_idx_status: "{{ splind_hosts_idx_status|default([]) + ['Wrong splunk-site2-indexer01 is configured in ' + fname + '. Got ' + (reg_hosts_idx.stdout_lines | select('search', 'site2')|list|join)|regex_replace('\t', ' ')|split(' ')|list|first|trim + ' instead of ' + (spl_ip1_list[0] if groups['spl']|length == 1 else splind_ip1_list[1])] }}"
+    when:
+      - reg_hosts_idx.stdout_lines | select('search', 'site2') | length > 0
+      - (reg_hosts_idx.stdout_lines | select('search', 'site2')|list|join)|regex_replace('\t', ' ')|split(' ')|list|first|trim != (spl_ip1_list[0] if groups['spl']|length == 1 else splind_ip1_list[1])
+  vars:
+    fname: '/etc/hosts'
+  tags: sanity

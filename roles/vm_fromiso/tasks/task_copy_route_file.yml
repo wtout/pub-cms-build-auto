@@ -1,0 +1,12 @@
+---
+# Tasks to copy routes file to host
+- block:
+  - name: copy default route file to VM, attempt {{ try_num }}
+    ansible.builtin.template:
+      src: "templates/{{ 'dr' if 'dr' in group_names else '' }}route-ens160.tmpl"
+      dest: "/etc/sysconfig/network-scripts/route-ens160"
+    become: "{{ true if ansible_user != 'root' else false }}"
+  - name: verify content of route file, attempt {{ try_num }}
+    ansible.builtin.command: grep -i address /etc/sysconfig/network-scripts/route-ens160
+    register: copy_file_status
+  ignore_errors: true

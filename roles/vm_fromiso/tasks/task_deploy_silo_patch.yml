@@ -1,0 +1,31 @@
+---
+# tasks to deploy the silo 12.1.1 patch on EM7 DB01 VM
+- block:
+  - block:
+    - name: copy the patch file to VM
+      ansible.builtin.copy:
+        src: "{{ auto_dir }}/Packages/ISO/{{ silopatch_file }}"
+        dest: '/tmp'
+    - name: import the silo patch
+      ansible.builtin.command: |
+        siloupdate import-patch /tmp/{{ silopatch_file }}
+      async: 900
+      poll: 30
+    rescue:
+    - name: delete patch
+      ansible.builtin.file:
+        path: "/tmp/{{ silopatch_file }}"
+        state: absent
+    - name: copy the patch file to VM
+      ansible.builtin.copy:
+        src: "{{ auto_dir }}/Packages/ISO/{{ silopatch_file }}"
+        dest: '/tmp'
+    - name: import the silo patch
+      ansible.builtin.command: |
+        siloupdate import-patch /tmp/{{ silopatch_file }}
+      async: 900
+      poll: 30
+  - name: fix the license expiration issue
+    ansible.builtin.shell: |
+      sleep 300 && silo_mysql -e "UPDATE siloupdate.preupgrade_config SET enabled=0 WHERE type='lic_expiration'" &
+  become: "{{ true if ansible_user != 'root' else false }}"

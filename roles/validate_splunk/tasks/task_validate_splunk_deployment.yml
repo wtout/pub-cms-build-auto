@@ -1,0 +1,24 @@
+---
+# Tasks to validate Splunk deployment
+- block:
+  - name: run checklist script
+    ansible.builtin.shell: |
+      ./splunk_cli_checklist.sh {{ splvm_type }} {{ vars[('S' if 'dr' in group_names else 'P') + 'SPL_ADMIN_PASS'] }}
+    register: reg_checklist
+    args:
+      chdir: /opt/qsscripts
+    check_mode: no
+    ignore_errors: yes
+    no_log: yes
+    vars:
+      splvm_type: "{{ 'aio' if groups['spl']|length == 1 else 'searchhead' if inventory_hostname is search('splsrc') else 'indexer' if inventory_hostname is search('splind') else 'clustermaster' if inventory_hostname is search('splmas') else 'deployer' }}"
+  - name: define splstatus
+    ansible.builtin.set_fact:
+      splstatus: "{{ splstatus|default([]) | union([loop_item|regex_replace('^.*(FAIL.*)\\\u001b.*$', '\\1')]) }}"
+    loop: "{{ reg_checklist.stdout_lines|select('search', 'FAIL')|list }}"
+    loop_control:
+      loop_var: loop_item
+    no_log: yes
+  - ansible.builtin.assert:
+      that: splstatus|default([]) == []
+      fail_msg: "{{ splstatus|default([]) }}"

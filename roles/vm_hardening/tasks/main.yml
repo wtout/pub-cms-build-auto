@@ -1,0 +1,86 @@
+---
+# tasks file for vm_hardening
+- block:
+  - block:
+    - name: check VM credentials
+      ansible.builtin.wait_for_connection:
+        timeout: 3
+      register: vh_vm_creds
+      ignore_errors: true
+      check_mode: no
+    - name: check if hardening is enabled
+      block:
+        - name: check VM reachable
+          ansible.builtin.command: ping {{ ansible_host }} -c 1
+          register: vh_vm_reachable
+          check_mode: no
+          become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+          delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+        - block:
+          - name: check updated credentials
+            block:
+              - name: switch to {{ vm_svc_user }} user
+                ansible.builtin.set_fact:
+                  ansible_user: "{{ vm_svc_user }}"
+                  ansible_ssh_pass: "{{ vm_svc_pass }}"
+                  ansible_become_pass: "{{ vm_svc_pass }}"
+                no_log: true
+              - name: check updated VM credentials
+                ansible.builtin.wait_for_connection:
+                  timeout: 3
+                register: vh_vm_creds2
+                check_mode: no
+            rescue:
+              - name: define creds_status
+                ansible.builtin.set_fact:
+                  creds_status: 'The VM credentials are invalid'
+          when:
+            - vh_vm_creds is failed
+            - vh_vm_creds.msg is search('Invalid/incorrect')
+      rescue:
+        - block:
+          - name: switch to {{ vm_svc_user }} user
+            ansible.builtin.set_fact:
+              ansible_user: "{{ vm_svc_user }}"
+              ansible_ssh_pass: "{{ vm_svc_pass }}"
+              ansible_become_pass: "{{ vm_svc_pass }}"
+            no_log: true
+          - name: check connection
+            ansible.builtin.wait_for_connection:
+              timeout: 3
+            register: vh_vm_connection
+            ignore_errors: true
+            check_mode: no
+          when:
+            - vh_vm_creds is failed
+            - vh_vm_creds.msg is search('Invalid/incorrect')
+        - block:
+          - name: Notification
+            ansible.builtin.debug:
+              msg: "VM hardening is enabled. Nothing to do"
+          - name: set flag to not harden the VMs
+            ansible.builtin.set_fact:
+              hardv: false
+          when: "vh_vm_creds is succeeded or (vh_vm_creds is failed and vh_vm_connection is not skipped and vh_vm_connection is succeeded)"
+        - name: define creds_status
+          ansible.builtin.set_fact:
+            creds_status: 'The VM IP address is invalid'
+          when:
+            - vh_vm_creds is failed
+            - vh_vm_creds.msg is search('Failed to connect to the host via ssh')
+    - ansible.builtin.assert:
+        that:
+          - creds_status | default('') is not search('invalid')
+        fail_msg: "{{ creds_status | default('') }}"
+    when:
+      - inventory_hostname is not search('em7')
+
+  - block:
+    - include_tasks: task_enable_hardening.yml
+    - include_tasks: task_update_iptables.yml
+    - name: flush handlers
+      meta: flush_handlers
+    when: hardv | default(true) | bool
+  - include_tasks: task_root_never_expire.yml
+  when: harden_vms | default(false) | bool
+  tags: vm_hardening

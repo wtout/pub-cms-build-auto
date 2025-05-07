@@ -1,0 +1,24 @@
+---
+# Tasks to copy the qs_scripts to the EM7 VM
+- block:
+  - name: ensure the /opt/qs_scripts directory exists
+    ansible.builtin.file:
+      path: /opt/qs_scripts
+      state: directory
+      group: root
+      owner: root
+      mode: 0755
+  - name: copy scripts to em7 host
+    ansible.builtin.copy:
+      src: "{{ role_path }}/files/{{ file_item }}"
+      dest: /opt/qs_scripts
+      group: root
+      owner: root
+      mode: 0755
+    loop:
+      - users.sh
+      - password.sh
+    loop_control:
+      loop_var: file_item
+  when: inventory_hostname is search('em7')
+  become: "{{ true if ansible_user != 'root' else false }}"

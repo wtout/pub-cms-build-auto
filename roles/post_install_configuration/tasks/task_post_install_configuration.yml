@@ -1,0 +1,7 @@
+---
+# Tasks to do the post install configuration and clean up
+- block:
+  - include_tasks: task_set_active_de_instance_ip.yml
+    when: inventory_hostname is search('rly')
+  - include_tasks: task_disable_root_access.yml
+  - include_tasks: task_disable_puppet_agent.yml

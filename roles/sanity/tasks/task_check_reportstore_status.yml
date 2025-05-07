@@ -1,0 +1,41 @@
+---
+# Tasks to check the ReportStore status
+- block:
+  - name: get service facts
+    service_facts:
+    register: reg_service_facts
+    no_log: yes
+  - name: define rly_reportstore_status
+    ansible.builtin.set_fact:
+      rly_reportstore_status: "{{ ['mariadb' + ' is not found' if reg_service_facts.ansible_facts.services|dict2items|selectattr('key', 'equalto', 'mariadb' + '.service') is not defined else 'mariadb' + ' is ' + svc_state] }}"
+    vars:
+      svc_state: "{{ reg_service_facts.ansible_facts.services|dict2items|selectattr('key', 'equalto', 'mariadb' + '.service')|map(attribute='value')|map(attribute='state')|list|join }}"
+    when: svc_state is not search('running')
+  - block:
+    - name: get portal server grant from DB
+      ansible.builtin.shell: |
+        mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="select Host,User,Password from mysql.user where user='rsuser' and host='{{ ansible_host.split('.')[:-1]|join('.') + ('.3' if prt_item == 'primary' else '.4') }}';"
+      loop: "{{ prt_designation_list }}"
+      loop_control:
+        loop_var: prt_item
+      when: prt_item != ''
+      register: reg_grant
+      ignore_errors: yes
+      check_mode: no
+      no_log: yes
+    - name: define rly_reportstore_status
+      ansible.builtin.set_fact:
+        rly_reportstore_status: "{{ rly_reportstore_status|default([]) + ['No grants for ' + prt_item + '_em7_portal_server_ip with IP ' + ansible_host.split('.')[:-1]|join('.') + ('.3' if prt_item == 'primary' else '.4')] }}"
+      loop: "{{ prt_designation_list }}"
+      loop_control:
+        loop_var: prt_item
+      when:
+        - prt_item != ''
+        - reg_grant.results|selectattr('prt_item','search',prt_item)|map(attribute='stdout')|join == ''
+    when: svc_state == 'running' or svc_state == 'active'
+    vars:
+      svc_state: "{{ reg_service_facts.ansible_facts.services|dict2items|selectattr('key', 'equalto', 'mariadb' + '.service')|map(attribute='value')|map(attribute='state')|list|join }}"
+      prt_designation_list:
+        - primary
+        - "{{ 'secondary' if vm.name is not search('aio') and 'dr' not in group_names else '' }}"
+  tags: sanity

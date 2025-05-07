@@ -1,0 +1,5 @@
+---
+# Variables for dr splunk hosts
+credentials:
+  username: "{{ SLINUX_SUPERUSER_USER|default('') }}"
+  password: "{{ SLINUX_SUPERUSER_PASS|default('') }}"

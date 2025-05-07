@@ -1,0 +1,56 @@
+---
+# tasks file to configure_vms
+- block:
+  - include_tasks: task_check_silo_patch.yml
+  - include_tasks: task_delete_docker0_self_healing.yml
+    when: groups['em7']|length == 1 and 'em7' in group_names
+  - include_tasks: task_add_users.yml
+  - include_tasks: task_add_qs_scripts.yml
+  - include_tasks: task_add_ngx_cert_script.yml
+  - include_tasks: task_update_rp_filter.yml
+  - include_tasks: task_configure_snmp.yml
+  - include_tasks: task_update_chrony.yml
+  - include_tasks: task_update_repo.yml
+  - include_tasks: task_update_puppet_data_file.yml
+    when: customer.version.em7_iso is not search('em7_x86_64_12.')
+  - include_tasks: task_update_hosts_file.yml
+  - include_tasks: task_coro_install.yml
+    when: ansible_ssh_pass != postppp
+  - block:
+    - name: time laps
+      ansible.builtin.wait_for:
+        timeout: 30
+      async: 35
+      poll: 0
+      register: reg_time_laps
+    - include_tasks: task_increase_sync_rate.yml
+    when:
+      - inventory_hostname is search('em7db')
+      - customer.version.em7_iso is not search('em7_x86_64_12.')
+  - include_tasks: task_update_silo_file.yml
+  - include_tasks: task_install_packages.yml
+  - name: flush handlers
+    meta: flush_handlers
+  - name: check time laps
+    ansible.builtin.async_status:
+      jid: "{{ reg_time_laps.ansible_job_id }}"
+    register: reg_time_check
+    until: reg_time_check.finished
+    retries: 3
+    delay: 12
+    when:
+      - inventory_hostname is search('em7db')
+      - customer.version.em7_iso is not search('em7_x86_64_12.')
+  - include_tasks:
+      file: task_update_conf_file.yml
+      apply:
+        vars:
+          conf_file: "{{ file_item }}"
+    loop:
+      - /etc/siteconfig/mysql.siteconfig
+      - /etc/my.cnf.d/silo_mysql.cnf
+    loop_control:
+      loop_var: file_item
+    when:
+      - customer.version.em7_iso is not search('em7_x86_64_12.')
+  - include_tasks: task_update_exports_file.yml

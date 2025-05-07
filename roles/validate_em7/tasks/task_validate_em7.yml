@@ -1,0 +1,18 @@
+---
+# Tasks to validate EM7
+- block:
+  - include_tasks: task_check_em7_cluster_status.yml
+    when: inventory_hostname is search('em7db')
+  - include_tasks:
+      file: task_check_puppet_run_successful.yml
+      apply:
+        vars:
+          loop_num: "{{ loop_item }}"
+    loop: "{{ range(1, 7 + 1)|list }}"
+    loop_control:
+      loop_var: loop_item
+  - include_tasks: task_disable_prt_guide.yml
+    when: inventory_hostname is search('em7prt')
+  - include_tasks: task_create_em7_report_jobs.yml
+    when: inventory_hostname == 'em7db01' or (groups['em7']|length == 1 and inventory_hostname is search('em7'))
+  - include_tasks: task_validate_em7_deployment.yml

@@ -1,0 +1,24 @@
+---
+# tasks file for vm_fromiso
+- block:
+  - name: "vm_creation: Delete SSH key"
+    include_role:
+      name: vm_creation
+      tasks_from: task_delete_ssh_key.yml
+  - name: "vm_creation: Define folder name"
+    include_role:
+      name: vm_creation
+      tasks_from: task_define_folder_name.yml
+  - block:
+    - include_tasks: task_check_con_creds.yml
+      when:
+        - ansible_ssh_pass != postppp
+    - include_tasks: task_create_vms.yml
+    when: create_vms_iso | default(false) | bool
+
+  - name: "vm_creation: Rollback VMs"
+    include_role:
+      name: vm_creation
+      tasks_from: task_rollback_vms.yml
+    when: rollback_vms_iso | default(false) | bool
+  tags: vm_creation

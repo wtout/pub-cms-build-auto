@@ -1,0 +1,36 @@
+---
+# Variables for em7 message collectors
+user:
+  name: "{{ drvm_vars.em7.em7mc.user.name if drvm_vars.em7.em7mc.user.name is defined else '' }}"
+  password: "{{ drvm_vars.em7.em7mc.user.password if drvm_vars.em7.em7mc.user.password is defined else '' }}"
+
+vm:
+  cpu: "{{ drvm_vars.em7.em7mc.cpu }}"
+  memory: "{{ drvm_vars.em7.em7mc.memory }}"
+  disk0: "{{ drvm_vars.em7.em7mc.disk0 }}"
+  disk1: "{{ drvm_vars.em7.em7mc.disk1 | default(0) }}"
+  disk2: "{{ drvm_vars.em7.em7mc.disk2 | default(0) }}"
+  disk3: "{{ drvm_vars.em7.em7mc.disk3 | default(0) }}"
+  disk_provisioning: "{{ drvm_vars.em7.em7mc.disk_provisioning if drvm_vars.em7.em7mc.disk_provisioning != '' else '' }}"
+  name: "{{ drvm_vars.em7.em7mc.vmname if drvm_vars.em7.em7mc.vmname != '' else (customer.secondary.name_prefix + inventory_hostname[2:-2] + datacenters[datacenter.secondary.name]['deptype'] + inventory_hostname[-2:]) }}"
+
+netconfig:
+  nic1:
+    intname: "{{ drvm_vars.em7.em7mc.nic1.intname }}"
+    ippool: "{{ drvm_vars.em7.em7mc.nic1.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.em7.em7mc.nic1.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.em7.em7mc.nic1.gtw if drvm_vars.em7.em7mc.nic1.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.em7.em7mc.nic1.gtw_octet) if drvm_vars.em7.em7mc.nic1.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.em7.em7mc.nic1.netmask }}"
+    network: "{{ drvm_vars.em7.em7mc.nic1.netname if drvm_vars.em7.em7mc.nic1.netname != '' else ('QS-' + customer.secondary.name_prefix + '-' + customer.secondary.octets | replace(\".\", \"-\") + drvm_vars.em7.em7mc.nic1.netbase) if drvm_vars.em7.em7mc.nic1.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.em7.em7mc.nic1.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.em7.em7mc.nic1.ipv6_gtw | default('') }}"
+
+  nic2:
+    intname: "{{ drvm_vars.em7.em7mc.nic2.intname }}"
+    ippool: "{{ drvm_vars.em7.em7mc.nic2.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.em7.em7mc.nic2.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.em7.em7mc.nic2.gtw if drvm_vars.em7.em7mc.nic2.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.em7.em7mc.nic2.gtw_octet) if drvm_vars.em7.em7mc.nic2.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.em7.em7mc.nic2.netmask }}"
+    network: "{{ drvm_vars.em7.em7mc.nic2.netname if drvm_vars.em7.em7mc.nic2.netname != '' else ('QS-' + customer.secondary.name_prefix + '-' + customer.secondary.octets | replace(\".\", \"-\") + drvm_vars.em7.em7mc.nic2.netbase) if drvm_vars.em7.em7mc.nic2.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.em7.em7mc.nic2.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.em7.em7mc.nic2.ipv6_gtw | default('') }}"

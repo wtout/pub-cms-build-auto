@@ -1,0 +1,45 @@
+---
+# Tasks to rebuild host
+- block:
+  - name: reset SSH password
+    ansible.builtin.set_fact:
+      ansible_ssh_pass: "{{ preppp }}"
+      ansible_become_pass: "{{ preppp }}"
+    no_log: true
+  - name: "vm_configuration: configure vms"
+    include_role:
+      name: vm_configuration_ova
+      tasks_from: task_detect_datastore.yml
+  - name: "vm_creation: delete ssh key"
+    include_role:
+      name: vm_creation
+      tasks_from: task_delete_ssh_key.yml
+  - name: "vm_creation: rollback vms"
+    include_role:
+      name: vm_creation
+      tasks_from: task_delete_vm.yml
+  - name: "vm_creation: get OVA file name"
+    include_role:
+      name: vm_creation
+      tasks_from: task_get_ova_name.yml
+  - name: "vm_creation: create vms"
+    include_role:
+      name: vm_creation
+      tasks_from: task_create_configure_vms.yml
+    vars:
+      vm_ds: "{{ ds2reuse }}"
+      splind_datastore: "{{ ssd2reuse|default('') }}"
+    when:
+      - ds2reuse is defined
+      - ds2reuse != ''
+  - name: "vm_creation: create vms"
+    include_role:
+      name: vm_creation
+      tasks_from: task_create_configure_vms.yml
+    when:
+      - ds2reuse is not defined
+  - name: "vm_configuration: configure vms"
+    include_role:
+      name: vm_configuration_ova
+    vars:
+      configure_vms: true

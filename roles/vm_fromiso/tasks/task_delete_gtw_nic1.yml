@@ -1,0 +1,48 @@
+---
+# Tasks to delete the nic1 gateway setting from interface file
+- block:
+  - name: Wait on VMware Tools to become available
+    community.vmware.vmware_guest_tools_wait:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      validate_certs: false
+      name: "{{ vm.name }}"
+  - block:
+    - name: delete gateway from network file on the non-EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/bin/sed'
+        vm_shell_args: '-i "/^GATEWAY.*$/,+d" /etc/sysconfig/network-scripts/ifcfg-ens160'
+        wait_for_process: true
+      register: delete_nic1gtw
+      until: delete_nic1gtw is succeeded
+      delay: 10
+    - name: restart the network on the non-EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/bin/systemctl'
+        vm_shell_args: 'restart network'
+        wait_for_process: true
+      when: delete_nic1gtw is succeeded
+    when: inventory_hostname is not search('em7')
+  when:
+    - netconfig.nic1.gateway == ''
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

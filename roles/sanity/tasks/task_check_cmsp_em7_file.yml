@@ -1,0 +1,26 @@
+---
+# Tasks to check /etc/rsyslog.d/cmsp_em7.conf file content
+- block:
+  - name: Get IP addresses from {{ fname }}
+    ansible.builtin.shell: $(which cut) -d '@' -f2 {{ fname }} | sort -u
+    register: cmspem7_content
+    check_mode: no
+  - name: define cmspem7_status
+    ansible.builtin.set_fact:
+      cmspem7_status: "The {{ fname }} file is not found"
+    when:
+      - cmspem7_content.stderr is search('No such file or directory')
+  - name: define cmspem7_status
+    ansible.builtin.set_fact:
+      cmspem7_status: "More than one IP address is configured in {{ fname }}"
+    when:
+      - cmspem7_content.stdout_lines|select()|list|length > 1
+  - name: define cmspem7_status
+    ansible.builtin.set_fact:
+      cmspem7_status: "vip.rly {{ customer.secondary.octets + '.52' if 'dr' in group_names else vip.rly }} address is not configured in {{ fname }}"
+    when:
+      - cmspem7_content.stdout_lines|select()|list|length == 1
+      - cmspem7_content.stdout_lines[0] is not search(customer.secondary.octets + '.52' if 'dr' in group_names else vip.rly)
+  vars:
+    fname: '/etc/rsyslog.d/cmsp_em7.conf'
+  tags: sanity

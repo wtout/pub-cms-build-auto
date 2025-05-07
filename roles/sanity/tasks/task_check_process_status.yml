@@ -1,0 +1,45 @@
+---
+# Tasks to check service process status
+- block:
+  - name: check status of processes
+    ansible.builtin.shell: |
+      ps -aef | grep {{ svc_item }} | grep -v grep | wc -l
+    when: svc_item != ''
+    loop:
+      - snmpd
+      - "{{ 'crond' if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
+    loop_control:
+      loop_var: svc_item
+    register: prc_status
+    check_mode: no
+    ignore_errors: true
+  - name: define processes_status
+    ansible.builtin.set_fact:
+      processes_status: "{{ processes_status|default([]) + [svc_item + ' is not running'] }}"
+    vars:
+      num_processes: "{{ prc_status.results|selectattr('svc_item','equalto',svc_item)|map(attribute='stdout')|list|join }}"
+    when:
+      - svc_item != ''
+      - num_processes|int == 0
+    loop:
+      - snmpd
+      - "{{ 'crond' if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
+    loop_control:
+      loop_var: svc_item
+  - name: define processes_status
+    ansible.builtin.set_fact:
+      processes_status: "{{ processes_status|default([]) + ['Number of instances of ' + svc_name + ' is ' + num_processes + ' instead of 1'] }}"
+    vars:
+      num_processes: "{{ prc_status.results|selectattr('svc_item','equalto',svc_item)|map(attribute='stdout')|list|join }}"
+    when:
+      - svc_item != ''
+      - num_processes|int != 0
+      - num_processes|int != 1
+    loop:
+      - snmpd
+      - "{{ 'crond' if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
+    loop_control:
+      loop_var: svc_item
+  - ansible.builtin.debug:
+      msg: "{{ processes_status|default('') }}"
+  tags: sanity

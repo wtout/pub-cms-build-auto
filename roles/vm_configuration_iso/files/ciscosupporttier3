@@ -1,0 +1,10 @@
+Host_Alias  L3_SUDO_HOSTS = ALL
+Runas_Alias L3_SUDO_RUNAS = ALL
+Cmnd_Alias  L3_SUDO_CMNDS = ALL
+
+Cmnd_Alias      L3_SHELLS = /bin/sh, /bin/bash, /sbin/nologin, /usr/bin/sh, /usr/bin/bash, /usr/sbin/nologin, /bin/csh, /bin/zsh, /bin/tcsh, /bin/ksh, /usr/bin/ksh, /usr/bin/rsh, /bin/chsh, /usr/bin/chsh
+Cmnd_Alias      L3_RP = /usr/sbin/visudo, /bin/su, /usr/bin/su, /bin/rm, /usr/bin/rm, /bin/truncate, /usr/bin/truncate
+
+%ciscosupporttier3 L3_SUDO_HOSTS = (L3_SUDO_RUNAS)  L3_SUDO_CMNDS, !L3_SHELLS, !L3_RP
+%access\ -\ linux\ l3\ users@cisco-cms.com L3_SUDO_HOSTS = (L3_SUDO_RUNAS)  L3_SUDO_CMNDS, !L3_SHELLS, !L3_RP
+%role\ -\ linux\ l3\ users@cisco-cms.com L3_SUDO_HOSTS = (L3_SUDO_RUNAS)  L3_SUDO_CMNDS, !L3_SHELLS, !L3_RP

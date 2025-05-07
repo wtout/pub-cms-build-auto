@@ -1,0 +1,24 @@
+ADDRESS0=172.19.251.0
+NETMASK0=255.255.255.0
+GATEWAY0={{ customer.secondary.octets }}.62
+ADDRESS1=172.19.252.0
+NETMASK1=255.255.255.0
+GATEWAY1={{ customer.secondary.octets }}.62
+ADDRESS2=172.19.253.0
+NETMASK2=255.255.255.0
+GATEWAY2={{ customer.secondary.octets }}.62
+ADDRESS3=172.19.254.0
+NETMASK3=255.255.255.0
+GATEWAY3={{ customer.secondary.octets }}.62
+ADDRESS4=172.19.255.0
+NETMASK4=255.255.255.0
+GATEWAY4={{ customer.secondary.octets }}.62
+ADDRESS5=172.30.240.0
+NETMASK5=255.255.255.0
+GATEWAY5={{ customer.secondary.octets }}.62
+ADDRESS6=172.30.251.0
+NETMASK6=255.255.255.0
+GATEWAY6={{ customer.secondary.octets }}.62
+{{ 'ADDRESS7=' + customer.primary.octets + '.0' if (customer.disaster_recovery and inventory_hostname is regex('em7mc|em7dc|em7prt|rly')) else '' }}
+{{ 'NETMASK7=' + '255.255.255' + '.0' if (customer.disaster_recovery and inventory_hostname is regex('em7mc|em7dc|em7prt')) else 'NETMASK7=' + '255.255.255' + '.192' if (customer.disaster_recovery and inventory_hostname is regex('rly')) else '' }}
+{{ 'GATEWAY7=' + customer.secondary.octets + '.62' if (customer.disaster_recovery and inventory_hostname is regex('em7mc|em7dc|em7prt|rly')) else '' }}

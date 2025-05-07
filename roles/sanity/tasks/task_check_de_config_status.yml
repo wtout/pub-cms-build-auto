@@ -1,0 +1,151 @@
+---
+# Tasks to check the dataextractor configuration status
+- block:
+  - name: define status
+    ansible.builtin.set_fact:
+      rly_relay_conf_status: 'mariadb: Not found or not active'
+      rly_active_de_instance_ip_status: 'mariadb: Not found or not active'
+      rly_de_ip_status: 'mariadb: Not found or not active'
+      rly_de_username_status: 'mariadb: Not found or not active'
+    when: "service_status|default({})|select('search', 'mariadb: Not (found|active)')|length != 0"
+  - block:
+    - name: check if {{ data_conf_file }} exists
+      ansible.builtin.stat:
+        path: "{{ data_conf_file }}"
+      register: reg_data_conf_file
+    - name: define rly_relay_conf_status
+      ansible.builtin.set_fact:
+        rly_relay_conf_status: "{{ rly_relay_conf_status|default([]) + [data_conf_file + ' is not found'] }}"
+        rly_active_de_instance_ip_status: "{{ rly_active_de_instance_ip_status|default([]) + [data_conf_file + ' is not found'] }}"
+        rly_de_ip_status: "{{ rly_de_ip_status|default([]) + [data_conf_file + ' is not found'] }}"
+        rly_de_username_status: "{{ rly_de_username_status|default([]) + [data_conf_file + ' is not found'] }}"
+      when: not reg_data_conf_file.stat.exists
+    - name: check if {{ relay_conf_file }} exists
+      ansible.builtin.stat:
+        path: "{{ relay_conf_file }}"
+      register: reg_rly_conf_file
+    - name: define rly_relay_conf_status
+      ansible.builtin.set_fact:
+        rly_relay_conf_status: "{{ rly_relay_conf_status|default([]) + [relay_conf_file + ' is not found'] }}"
+        rly_active_de_instance_ip_status: "{{ rly_active_de_instance_ip_status|default([]) + [relay_conf_file + ' is not found'] }}"
+        rly_de_ip_status: "{{ rly_de_ip_status|default([]) + [relay_conf_file + ' is not found'] }}"
+        rly_de_username_status: "{{ rly_de_username_status|default([]) + [relay_conf_file + ' is not found'] }}"
+      when: not reg_rly_conf_file.stat.exists
+    - block:
+      - name: get admin portal and DB VIPs from {{ data_conf_file }}
+        ansible.builtin.shell: |
+          grep -w 'AdminPortalVIP\|em7_db_vip' {{ data_conf_file }}
+        register: reg_vals
+        check_mode: no
+        ignore_errors: true
+      - name: define facts
+        ansible.builtin.set_fact:
+          actual_em7_db_vip: "{{ reg_vals.stdout_lines[0].split('=')|last if reg_vals.stdout_lines|length >= 1 else '' }}"
+          actual_em7_admin_portal_vip: "{{ reg_vals.stdout_lines[1].split('=')|last if reg_vals.stdout_lines|length >= 2 else '' }}"
+          actual_em7_ap_username: 'automation'
+          actual_em7_db_user_name: 'root'
+      when:
+        - reg_data_conf_file.stat.exists
+        - not reg_rly_conf_file.stat.exists
+    - block:
+      - name: get values from {{ relay_conf_file }}
+        ansible.builtin.shell: |
+          grep -w 'em7_admin_portal_vip\|em7_db_vip\|em7_db_readonly_user_name\|em7_username_to_access_restapi' {{ relay_conf_file }}
+        register: reg_vals
+        check_mode: no
+        ignore_errors: true
+      - name: define facts
+        ansible.builtin.set_fact:
+          actual_em7_db_vip: "{{ reg_vals.stdout_lines[0].split('= ')|last if reg_vals.stdout_lines|length >= 1 else '' }}"
+          actual_em7_admin_portal_vip:  "{{ reg_vals.stdout_lines[1].split('= ')|last if reg_vals.stdout_lines|length >= 1 else '' }}"
+          actual_em7_ap_username: "{{ reg_vals.stdout_lines[2].split('= ')|last if reg_vals.stdout_lines|length >= 1 else '' }}"
+          actual_em7_db_user_name: "{{ reg_vals.stdout_lines[3].split('= ')|last if reg_vals.stdout_lines|length >= 1 else '' }}"
+      when: reg_rly_conf_file.stat.exists
+    - block:
+      - name: get relays IPs from {{ data_conf_file }}
+        ansible.builtin.shell: |
+          grep _relay_server_IP {{ data_conf_file }}
+        register: reg_rly_ip
+        check_mode: no
+        ignore_errors: true
+      - name: define Relay1 IP
+        ansible.builtin.set_fact:
+          actual_relay1: "{{ rly_ip1_list[0] if 'dr' in group_names else reg_rly_ip.stdout_lines[0].split('=')|last if reg_rly_ip.stdout_lines|length >= 1 else '' }}"
+      - name: define Relay2 IP
+        ansible.builtin.set_fact:
+          actual_relay2: "{{ rly_ip1_list[1] if 'dr' in group_names else reg_rly_ip.stdout_lines[1].split('=')|last if reg_rly_ip.stdout_lines|length >= 2 else '' }}"
+        when: groups['rly']|length >= 1
+      - name: get values from data extractor section CCMS
+        ansible.builtin.shell: |
+          $(which su) splunk -c '/opt/CSCO-CMS/DataExtractor/manageDataExtractorConfigs.sh -o list -s CCMS_Data_Extractor' | grep 'em7_ip_address\|em7_user_name\|active_de_instance_ip'
+        register: reg_de_vals
+        check_mode: no
+        ignore_errors: true
+      - name: define em7ap_ip_in_db em7ap_username_db and active_de_ip
+        ansible.builtin.set_fact:
+          active_de_ip: "{{ reg_de_vals.stdout_lines[0].split('= ')|last if reg_de_vals.stdout_lines|length >= 1 else '' }}"
+          em7ap_ip_in_db: "{{ reg_de_vals.stdout_lines[1].split('= ')|last if reg_de_vals.stdout_lines|length >= 2 else '' }}"
+          em7ap_username_db: "{{ reg_de_vals.stdout_lines[2].split('= ')|last if reg_de_vals.stdout_lines|length >= 3 else '' }}"
+      - name: define rly_active_de_instance_ip_status
+        ansible.builtin.set_fact:
+          rly_active_de_instance_ip_status: "{{ 'CCMS Active DE instance IP is not set to the value of any of the relay servers' + ('. Got ' + active_de_ip + ' instead of ' + actual_relay1 + (' or ' + actual_relay2 if groups['rly']|length >= 1 else '') if active_de_ip != '' else '') }}"
+        when:
+          - active_de_ip != actual_relay1
+          - active_de_ip != actual_relay2|default(active_relay1)
+      - name: define rly_de_ip_status
+        ansible.builtin.set_fact:
+          rly_de_ip_status: "{{ rly_de_ip_status|default([]) + ['CCMS DE IP is not correct or not configured as provided check ' + relay_conf_file + (('. Got ' + em7ap_ip_in_db + ' instead of ' + actual_em7_admin_portal_vip) if em7ap_ip_in_db != '' else '')] }}"
+        when:
+          - em7ap_ip_in_db != actual_em7_admin_portal_vip
+      - name: define rly_de_username_status
+        ansible.builtin.set_fact:
+          rly_de_username_status: "{{ rly_de_username_status|default([]) + ['CCMS DE username is not correct or not configured as provided check ' + relay_conf_file + (('. Got ' + em7ap_username_db + ' instead of ' + actual_em7_ap_username) if em7ap_username_db != '' else '')] }}"
+        when:
+          - em7ap_username_db != actual_em7_ap_username
+      - name: get values from data extractor section
+        ansible.builtin.shell: |
+          $(which su) splunk -c '/opt/CSCO-CMS/DataExtractor/manageDataExtractorConfigs.sh -o list -s {{ sec_item }}' | grep -E '{{ vals_string }}'
+        register: reg_de_vals
+        vars:
+          vals_string: "{{ 'db_ip_address|db_user_name' if sec_item is search('EM7') else 'em7_db_ip_address|em7_db_user_name' }}"
+        loop: ['Dynamic_App_Collection', 'Device_Template_Common', 'Device_Template_DynamicApps', 'Dynamic_App', 'EM7_Cause_Code', 'EM7_Resolution_Code']
+        loop_control:
+          loop_var: sec_item
+        check_mode: no
+        ignore_errors: true
+      - name: define cfged_em7db_ip_addr and cfged_em7db_user_name
+        ansible.builtin.set_fact:
+          cfged_em7db_ip_addr: "{{ vals_lines[0].split('= ')|last if vals_lines|length >= 1 else '' }}"
+          cfged_em7db_user_name: "{{ vals_lines[1].split('= ')|last if vals_lines|length >= 2 else '' }}"
+        vars:
+            vals_lines: "{{ reg_de_vals.results|selectattr('sec_item', 'equalto', sec_item)|map(attribute='stdout_lines')|list|join }}"
+            vals_state: "{{ reg_de_vals.results|selectattr('sec_item', 'equalto', sec_item)|map(attribute='failed')|list }}"
+        loop: ['Dynamic_App_Collection', 'Device_Template_Common', 'Device_Template_DynamicApps', 'Dynamic_App', 'EM7_Cause_Code', 'EM7_Resolution_Code']
+        loop_control:
+          loop_var: sec_item
+      - name: define rly_de_ip_status
+        ansible.builtin.set_fact:
+          rly_de_ip_status: "{{ rly_de_ip_status|default([]) + [sec_item + (' EM7' if sec_item is not search('EM7') else '') + ' DB IP Address is not correct or not configured as provided check ' + relay_conf_file + (('. Got ' + cfged_em7db_ip_addr + ' instead of ' + actual_em7_db_vip) if cfged_em7db_ip_addr != '' else '')] }}"
+        loop: ['Dynamic_App_Collection', 'Device_Template_Common', 'Device_Template_DynamicApps', 'Dynamic_App', 'EM7_Cause_Code', 'EM7_Resolution_Code']
+        loop_control:
+          loop_var: sec_item
+        when:
+          - cfged_em7db_ip_addr != actual_em7_db_vip
+      - name: define rly_de_username_status
+        ansible.builtin.set_fact:
+          rly_de_username_status: "{{ rly_de_username_status|default([]) + [sec_item + (' EM7' if sec_item is not search('EM7') else '')  + ' DB Username is not correct or not configured as provided check ' + relay_conf_file + (('. Got ' + cfged_em7db_user_name + ' instead of ' + actual_em7_db_user_name) if cfged_em7db_user_name != '' else '')] }}"
+        loop: ['Dynamic_App_Collection', 'Device_Template_Common', 'Device_Template_DynamicApps', 'Dynamic_App', 'EM7_Cause_Code', 'EM7_Resolution_Code']
+        loop_control:
+          loop_var: sec_item
+        when:
+          - cfged_em7db_user_name != actual_em7_db_user_name
+      when:
+        - reg_data_conf_file.stat.exists
+        - reg_rly_conf_file.stat.exists
+    when:
+      - "service_status|default({})|select('search', 'mariadb: Not found')|length == 0"
+      - "service_status|default({})|select('search', 'mariadb: Not active')|length == 0"
+  vars:
+    data_conf_file: '/opt/puppet/var/data.conf'
+    relay_conf_file: '/opt/install/common-platform/config/relay.conf'
+  tags: sanity

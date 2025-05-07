@@ -1,0 +1,64 @@
+---
+# Tasks to check service status
+- block:
+  - block:
+    - include_tasks: task_check_primary_db.yml
+    when: vm.name is search('em7db')
+  - name: check backup RPM version on relays
+    ansible.builtin.shell: rpm -qa | grep -i csco-cms-backup | sed 's/^.*backup-//;s/\.noarch$//'
+    register: reg_bckp_rpm
+    check_mode: no
+    when:
+      - vm.name is search('rly')
+      - vm.name is not search('atarly')
+  - name: define svc_list
+    ansible.builtin.set_fact:
+      svc_list: "{{ services|select()|list }}"
+    vars:
+      services:
+        - chronyd
+        - "{{ ('smb' if reg_bckp_rpm.stdout != '' and reg_bckp_rpm.stdout is version('9.2.17-8.2', '>=') else 'nfs') if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
+        - "{{ 'relayweb' if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
+        - "{{ 'syslog-ng' if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
+        - "{{ 'trapprocessor' if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
+        - "{{ 'mariadb' if (vm.name is search('rly') and vm.name is not search('atarly')) or (vm.name is search('em7db') and primary_db|default(false)) or vm.name is search('em7[dm]c') or (vm.name is search('em7') and vm.name is search('aio')) else '' }}"
+        - "{{ 'docker' if vm.name is search('rly') and vm.name is not search('atarly') else '' }}"
+        - "{{ 'em7_automation' if (vm.name is search('em7db') and primary_db|default(false)) or (vm.name is search('em7') and vm.name is search('aio')) else '' }}"
+        - "{{ 'em7' if vm.name is search('em7') else '' }}"
+        - "{{ 'nginx' if vm.name is search('em7') else '' }}"
+  - name: get service facts
+    ansible.builtin.service_facts:
+    register: reg_service_facts
+    no_log: yes
+  - name: Check status of service
+    assert:
+      that: svc_state == 'running' or svc_state == 'active'
+      fail_msg: "{{ svc_item + ' is not found' if reg_service_facts.ansible_facts.services|dict2items|selectattr('key', 'equalto', svc_item + '.service') is not defined else svc_item + ' is ' + svc_state }}"
+    vars:
+      svc_state: "{{ reg_service_facts.ansible_facts.services|dict2items|selectattr('key', 'equalto', svc_item + '.service')|map(attribute='value')|map(attribute='state')|list|join }}"
+    loop: "{{ svc_list }}"
+    loop_control:
+      loop_var: svc_item
+    register: svc_status
+    ignore_errors: true
+  - name: define service_status
+    ansible.builtin.set_fact:
+      service_status: "{{ service_status|default([]) + [svc_item + ': Not found'] }}"
+    when:
+      - reg_service_facts.ansible_facts.services|dict2items|selectattr('key', 'equalto', svc_item + '.service') is not defined
+    loop: "{{ svc_list }}"
+    loop_control:
+      loop_var: svc_item
+  - name: define service_status
+    ansible.builtin.set_fact:
+      service_status: "{{ service_status|default([]) + [svc_item + ': ' + svc_state] }}"
+    when:
+      - svc_state != 'running'
+      - svc_state != 'active'
+    vars:
+      svc_state: "{{ reg_service_facts.ansible_facts.services|dict2items|selectattr('key', 'equalto', svc_item + '.service')|map(attribute='value')|map(attribute='state')|list|join }}"
+    loop: "{{ svc_list }}"
+    loop_control:
+      loop_var: svc_item
+  tags: sanity
+

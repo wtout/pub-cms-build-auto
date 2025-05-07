@@ -1,0 +1,17 @@
+---
+# Tasks to create devcrash probe file
+- block:
+  - name: check if {{ fname }} file exists
+    ansible.builtin.stat:
+      path: "{{ fname }}"
+    register: reg_stat
+  - name: create the {{ fname }} file
+    ansible.builtin.file:
+      path: "{{ fname }}"
+      state: touch
+      owner: "{{ (fname|split('/')|first)[1:] }}"
+      group: "{{ (fname|split('/')|first)[1:] }}"
+      mode: 0644
+    when: not reg_stat.stat.exists
+  vars:
+    fname: '~devcrash/.probe'

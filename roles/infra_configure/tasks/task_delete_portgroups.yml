@@ -1,0 +1,22 @@
+---
+# tasks file to delete portgroups
+- block:
+  - name: Define existing {{ 'DR ' if inventory_hostname is search('dr') else '' }}portgroups
+    community.vmware.vmware_portgroup_info:
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      esxi_hostname: "{{ resource }}"
+      validate_certs: no
+    register: existing_portgroups
+
+  - include_tasks:
+      file: task_delete_portgroup.yml
+      apply:
+        vars:
+          portgroup: "{{ portgroup_item }}"
+          esxi_resource: "{{ resource }}"
+    loop: "{{ (existing_portgroups.hosts_portgroup_info|dict2items|first).value }}"
+    loop_control:
+      loop_var: portgroup_item
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

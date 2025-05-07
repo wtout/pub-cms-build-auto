@@ -1,0 +1,13 @@
+---
+# tasks to collect info only if the local user is not "awx" (not using tower)
+- block:
+  - name: get localhost user
+    ansible.builtin.shell: whoami
+    check_mode: no
+    register: local_user
+    delegate_to: localhost
+    run_once: true
+  - include_tasks: task_collect_info.yml
+    when:
+      - local_user.stdout != "awx"
+  tags: always

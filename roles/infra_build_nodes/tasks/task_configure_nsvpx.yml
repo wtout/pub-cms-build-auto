@@ -1,0 +1,240 @@
+---
+# Task file to configure VPX
+- block:
+  - name: Check Netscaler OVA deployment status
+    ansible.builtin.async_status:
+      jid: "{{ nsvpx_deployment.ansible_job_id }}"
+    register: nsvpx_poll_results
+    until: nsvpx_poll_results.finished
+    retries: 60
+
+  - name: Update VM hardware settings with correct NICs
+    community.vmware.vmware_guest:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+      networks:
+        - name: "{{ netconfig.nic1.network }}"
+          device_type: e1000
+        - name: "{{ netconfig.nic2.network }}"
+          device_type: e1000
+      advanced_settings:
+        - key: 'machine.id'
+          value: "ip={{ netconfig.nic1.ipaddress }}&netmask={{ netconfig.nic1.netmask }}&gateway={{ netconfig.nic1.gateway }}"
+      customization:
+        dns_servers: "{{ sysconfig.secondary.dns_servers if 'dr' in group_names else sysconfig.primary.dns_servers }}"
+        hostname: "{{ vm.name }}"
+      validate_certs: no
+      
+  - name: Power on Netscaler
+    community.vmware.vmware_guest_powerstate:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      state: powered-on
+      validate_certs: no
+    register: power
+
+  - name: Check credentials
+    ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+    register: login_result
+    ignore_errors: yes
+    no_log: true
+
+  - block:
+    - ansible.builtin.wait_for:
+        timeout: 30
+    - name: Update admin password
+      ansible.builtin.shell: |
+        set timeout 10
+        spawn sshpass -p {{ credentials.default_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+        expect "Enter new password:"
+        send "{{ credentials.password }}\n"
+        expect "Please re-enter your password:"
+        send "{{ credentials.password }}\n"
+        expect "Done"
+        send "\r"
+        interact
+        exit 0
+      register: reg_update_password
+      no_log: yes
+      args:
+        executable: /usr/bin/expect
+    - block:
+      - name: Check credentials
+        ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+        register: reg_check_creds1
+        no_log: true
+      rescue:
+      - ansible.builtin.wait_for:
+          timeout: 30
+      - name: Update admin password
+        ansible.builtin.shell: |
+          set timeout 10
+          spawn sshpass -p {{ credentials.default_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+          expect "Enter new password:"
+          send "{{ credentials.password }}\n"
+          expect "Please re-enter your password:"
+          send "{{ credentials.password }}\n"
+          expect "Done"
+          send "\r"
+          interact
+          exit 0
+        no_log: yes
+        args:
+          executable: /usr/bin/expect
+      - block:
+        - name: Check credentials
+          ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+          register: reg_check_creds2
+          no_log: true
+        rescue:
+        - ansible.builtin.wait_for:
+            timeout: 30
+        - name: Update admin password
+          ansible.builtin.shell: |
+            set timeout 10
+            spawn sshpass -p {{ credentials.default_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+            expect "Enter new password:"
+            send "{{ credentials.password }}\n"
+            expect "Please re-enter your password:"
+            send "{{ credentials.password }}\n"
+            expect "Done"
+            send "\r"
+            interact
+            exit 0
+          no_log: yes
+          args:
+            executable: /usr/bin/expect
+    - block:
+      - name: Check credentials
+        ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'whoami'
+        register: reg_check_creds3
+        no_log: true
+      rescue:
+      - ansible.builtin.debug:
+          msg: "{{ reg_check_creds3|replace(credentials.password, 'obfuscated') }}"
+      always:
+      - ansible.builtin.assert:
+          that: reg_check_creds3 is succeeded
+          fail_msg: 'Unable to SSH to NSVPX'
+      when:
+        - reg_check_creds2 is defined
+        - reg_check_creds2 is failed
+    when: login_result is failed
+
+  - name: Render configuration file
+    ansible.builtin.template:
+      src: "templates/{{ inventory_hostname }}.conf.j2"
+      dest: "{{ role_path }}/files/{{ vm.name }}.conf"
+
+  - name: Upload Netscaler configuration file
+    vars:
+      conf_file: files/{{ vm.name }}.conf
+    ansible.builtin.uri:
+      url: "http://{{ netconfig.nic1.ipaddress }}/nitro/v1/config/systemfile"
+      method: POST
+      status_code: 201
+      return_content: yes
+      headers:
+        X-NITRO-USER: "{{ credentials.username }}"
+        X-NITRO-PASS: "{{ credentials.password }}"
+      body_format: json
+      body:
+        systemfile:
+          filename: "config"
+          filecontent: "{{ lookup('file', conf_file) | b64encode }}"
+          filelocation: "/tmp/"
+      validate_certs: no
+    environment:
+      http_proxy: ""
+      https_proxy: ""
+    register: upload
+    failed_when: upload.status != 201 and not upload.content is search('1642')
+    async: 120
+    until: upload is succeeded
+    retries: 5
+    delay: 10
+
+  - name: delete configuration file locally
+    ansible.builtin.file:
+      path: "{{ role_path }}/files/{{ vm.name }}.conf"
+      state: absent
+    when: upload is succeeded
+
+  - block:
+    - name: read sshd process ID
+      ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell cat /var/run/sshd.pid 2>/dev/null" | tail -n 2
+      register: sshd_pid
+      failed_when: sshd_pid.stdout == ''
+      check_mode: no
+      no_log: yes
+    rescue:
+    - ansible.builtin.debug:
+        msg: "{{ sshd_pid | replace(credentials.password, 'obfuscated') }}"
+    always:
+    - ansible.builtin.assert:
+        that:
+          - sshd_pid is succeeded
+
+  - block:
+    - name: Apply ssh configuration
+      ansible.builtin.shell: |
+        sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell \"grep '# SSH Hardending' /etc/sshd_config &>/dev/null || echo -e '\n\n# SSH Hardending' >> /etc/sshd_config; grep 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' /etc/sshd_config &>/dev/null || echo -e 'Ciphers aes128-ctr,aes192-ctr,aes256-ctr' >> /etc/sshd_config; grep 'MACs hmac-sha2-256,hmac-sha2-512' /etc/sshd_config &>/dev/null || echo -e 'MACs hmac-sha2-256,hmac-sha2-512' >> /etc/sshd_config; grep 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' /etc/sshd_config &>/dev/null || echo -e 'KexAlgorithms diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha256' >> /etc/sshd_config\""
+        sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} "shell \"cp -f /etc/sshd_config /nsconfig/; kill -1 {{ sshd_pid.stdout_lines|first }}\""
+      register: ssh_config
+      no_log: yes
+      async: 60
+      poll: 10
+    rescue:
+    - ansible.builtin.debug:
+        msg: "{{ ssh_config | replace(credentials.password, 'obfuscated') }}"
+    always:
+    - ansible.builtin.assert:
+        that:
+          - ssh_config is succeeded 
+
+  - block:
+    - name: Apply Netscaler configuration
+      ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'batch -f /tmp/config'
+      register: config01
+      no_log: yes
+      failed_when: config01.rc > 1
+      async: 600
+      poll: 10
+    rescue:
+    - ansible.builtin.debug: var=config01
+    always:
+    - ansible.builtin.assert:
+        that:
+          - not (config01 is failed)
+    when: inventory_hostname is search('01')
+
+  - block:
+    - name: Apply Netscaler configuration
+      ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'batch -f /tmp/config'
+      register: config02
+      no_log: yes
+      failed_when: config02.rc > 1
+      async: 600
+      poll: 10
+    rescue:
+    - ansible.builtin.debug: var=config02
+    always:
+    - ansible.builtin.assert:
+        that:
+          - not (config02 is failed)
+    when: inventory_hostname is search('02')
+
+  - name: Define Netscaler serial number
+    block:
+    - ansible.builtin.shell: sshpass -p {{ credentials.password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T {{ credentials.username }}@{{ netconfig.nic1.ipaddress }} 'shell lmutil lmhostid'
+      register: hostid
+      no_log: yes
+    - ansible.builtin.set_fact:
+        serial_number: "{{ (hostid.stdout.split('\"'))[1] }}"
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

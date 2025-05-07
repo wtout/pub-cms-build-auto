@@ -1,0 +1,10 @@
+---
+# Task file to power-off CSR
+- name: Power off VM
+  community.vmware.vmware_guest_powerstate:
+    hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+    username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+    password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+    name: "{{ vm.name }}"
+    state: powered-off
+    validate_certs: no

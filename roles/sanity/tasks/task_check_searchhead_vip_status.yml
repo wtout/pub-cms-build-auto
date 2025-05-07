@@ -1,0 +1,28 @@
+---
+# Tasks to check the search head VIP in application.properties file
+- block:
+  - name: check if {{ pfname }} exists
+    ansible.builtin.stat:
+      path: "{{ pfname }}"
+    register: reg_app_prop_file
+  - name: define rly_splsrcvip_status
+    ansible.builtin.set_fact:
+      rly_splsrcvip_status: "{{ pfname }} is not found"
+    when: not reg_app_prop_file.stat.exists
+  - block:
+    - name: get splunk search head VIP
+      ansible.builtin.shell: |
+        grep davSplunkIP {{ pfname }} | cut -d '=' -f2
+      register: reg_splsrcvip_config
+      check_mode: no
+      ignore_errors: yes
+    - name: define rly_splsrcvip_status
+      ansible.builtin.set_fact:
+        rly_splsrcvip_status: "Splunk Search head VIP is not configured correctly in {{ pfname }}. Got {{ reg_splsrcvip_config.stdout }} instead of 'splunk-search-head-vip'"
+      when:
+        - reg_splsrcvip_config.stdout != 'splunk-search-head-vip'
+        - reg_splsrcvip_config.stdout != (ansible_host.split('.')[:-1]|join('.') + '.41')
+    when: reg_app_prop_file.stat.exists
+  vars:
+    pfname: '/opt/CSCO-CMS/relayweb/conf/application.properties'
+  tags: sanity

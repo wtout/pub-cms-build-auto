@@ -1,0 +1,21 @@
+---
+# tasks to add/update setting in file
+- block:
+    - name: check if {{ varname|regex_replace('\s*=\s*','') }} is in {{ fname }}
+      ansible.builtin.shell: grep '^{{ varname|regex_replace('\s*=\s*','') }}' {{ fname }}
+      register: var_status
+      check_mode: no
+    - name: Update {{ varname|regex_replace('\s*=\s*','') }} in {{ fname }}
+      ansible.builtin.lineinfile:
+        path: "{{ fname }}"
+        regexp: '^({{ varname }}).*$'
+        line: '\g<1>{{ varvalue }}'
+        backrefs: yes
+  rescue:
+    - name: Add {{ varname|regex_replace('\s*=\s*','') }} to {{ fname }}
+      ansible.builtin.lineinfile:
+        path: "{{ fname }}"
+        line: "{{ varname + varvalue }}"
+        insertafter: "{{ instanza }}"
+        state: present
+  become: "{{ true if ansible_user != 'root' else false }}"

@@ -1,0 +1,90 @@
+[common]
+CurrentVersion={{ customer.version.release|replace('R', '') }}
+TargetVersion={{ customer.version.release|replace('R', '') }}
+primary_relay_server_IP={{ rly_ip1_list|first }}
+secondary_relay_server_IP={{ rly_ip1_list|last }}
+mcIP={{ vars[host_item[:-2] + '_ip1_list'][host_item[-2:]|int - 1] }}
+ipaddress1={{ vars[host_item[:-2] + '_ip1_list'][host_item[-2:]|int - 1] }}
+ipaddress2={{ vars[host_item[:-2] + '_ip2_list'][host_item[-2:]|int - 1] if vars[host_item[:-2] + '_ip2_list'] is defined else '' }}
+isGeoServer=False
+netscalar_ip_list={{ customer.primary.octets }}.53,{{ customer.primary.octets }}.54,{{ customer.primary.octets }}.55
+netscaler_ip1={{ customer.primary.octets + '.53' if hostvars[host_item]['vm']['name'] is not search('aio') else '' }}
+netscaler_ip2={{ customer.primary.octets + '.54' if hostvars[host_item]['vm']['name'] is not search('aio') else '' }}
+netscaler_snip={{ customer.primary.octets }}.55
+is4_ip_01={{ customer.primary.octets }}.6
+isSNOWEnabled=No
+isTelemetryEnabled=No
+isATAEnabled={{ True if groups['atarly'] is defined else False }}
+isRMSMigrationCustomer=False
+{%- if host_item is not search('atarly') -%}
+{% block ata %}
+{{ 'isCommonRelayServer=False' if (host_item is search('rly') and hostvars[host_item]['vm']['name'] is not search('aio')) else '' }}
+{% endblock ata %}
+{% endif %}
+customer_name={{ customer.name }}
+custNamePrefix={{ customer.primary.name_prefix }}
+em7_db_vip={{ vip.db if hostvars[host_item]['vm']['name'] is not search('aio') else em7_ip1_list[0] }}
+em7_AdminPortalVIP={{ vip.prt if hostvars[host_item]['vm']['name'] is not search('aio') else em7_ip1_list[0] }}
+em7_AdminPortalVIPHostName={{ em7prt_hst_list[0] | regex_replace('[a-z]01', 'v01') if em7prt_hst_list is defined else customer.primary.name_prefix + 'em7prtv01' }}
+em7_AdminPortalVIPFQDN={{ (em7prt_hst_list[0] | regex_replace('[a-z]01', 'v01') if em7prt_hst_list is defined else customer.primary.name_prefix + 'em7prtv01') + '.' + sysconfig.primary.domain_name }}
+living_objects_ip=
+splunk_search_head_vip={{ vip.src if hostvars[host_item]['vm']['name'] is not search('aio') else spl_ip1_list[0] }}
+splunk_search_head_vip_FQDN={{ (splsrc_hst_list[0] | regex_replace('[a-z]01', 'hv01') if splsrc_hst_list is defined else customer.primary.name_prefix + 'splsrchv01') + '.' + sysconfig.primary.domain_name }}
+relay_server_vip={{ vip.rly if hostvars[host_item]['vm']['name'] is not search('aio') else vip.rly_db }}
+relayServerDBVIP={{ vip.rly_db }}
+relay_ip_list={{ rly_ip1_list|join(',') }}
+relay1_hostname={{ rly_hst_list|first }}
+relay2_hostname={{ rly_hst_list|last }}
+primary_db_server_ip={{ em7db_ip1_list[0] if em7db_ip1_list is defined else em7_ip1_list[0] }}
+secondary_db_server2_ip={{ em7db_ip1_list[1] if em7db_ip1_list is defined else em7_ip1_list[0] }}
+primary_em7_portal_server_ip={{ em7prt_ip1_list[0] if em7prt_ip1_list is defined else em7_ip1_list[0] }}
+secondary_em7_portal_server_ip={{ em7prt_ip1_list[1] if em7prt_ip1_list is defined else em7_ip1_list[0] }}
+{% if hostvars[host_item]['vm']['name'] is search('aio') -%}
+{{ 'headend_indexer_ip_01=' + splunk.he_indexer01_ip }}
+{{ 'headend_indexer_ip_02=None' }}
+{% endif %}
+server_type={{ 'primary' if (host_item is search('rly01') or hostvars[host_item]['vm']['name'] is search('aio')) else '' if host_item is search('splsrc') else 'secondary' }}
+clm_server_type={{ 'active' if host_item is regex('(dpl|mas).*01') else 'standby' if host_item is regex('(dpl|mas).*02') else '' }}
+dpl_server_type={{ 'active' if host_item is regex('(dpl|mas).*01') else 'standby' if host_item is regex('(dpl|mas).*02') else '' }}
+active_clm_hostname={{ splmas_hst_list[0] if splmas_hst_list is defined else spl_hst_list[0] }}
+active_dpl_hostname={{ spldpl_hst_list[0] if spldpl_hst_list is defined else spl_hst_list[0] }}
+em7_user_name=em7admin
+splunk_user_name=admin
+em7_access_portal_cpu_core_count={{ prt_cpu_list[0] if prt_cpu_list is defined else 2 }}
+em7_access_portal_ram_gb={{ em7prt_mem_list[0] if em7prt_mem_list is defined else em7_mem_list[0] }}
+ntp_source_ip={{ sysconfig.primary.ntp_server }}
+domain_name={{ sysconfig.primary.domain_name }}
+installed_on_appliance={{ 'ESXiResource1' if (host_item[:-2]|int % 2 != 0 or hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h') else 'ESXiResource2' }}
+[headend]
+indexer01_ip={{ splunk.he_indexer01_ip }}
+indexer02_ip=None
+searchhead01_ip={{ splunk.he_searchhead01_ip }}
+searchhead02_ip={{ splunk.he_searchhead02_ip }}
+deployment_server_ip={{ splunk.he_deployment_server_ip }}
+tile_server_ip={{ splunk.tile_server }}
+mom_relay_vip={{ splunk.mom_rly_vip }}
+netflow_collector_ip=None
+is4_vip={{ is4.vip }}
+[em7]
+appliances={{ appliances_list|join(',') }}
+admin_portal_ip_list={{ em7prt_ip1_list|join(',') if em7prt_ip1_list is defined else em7_ip1_list[0] }}
+primary_db_ip={{ em7db_ip1_list[0] if em7db_ip1_list is defined else em7_ip1_list[0] }}
+secondary_db_ip={{ em7db_ip1_list[1] if em7db_ip1_list is defined else em7_ip1_list[0] }}
+dc_ip_list={{ em7dc_ip1_list|join(',') if em7dc_ip1_list is defined else em7_ip1_list[0] }}
+mc_ip_list={{ em7mc_ip1_list|join(',') if em7mc_ip1_list is defined else em7_ip1_list[0] }}
+all_dc_ip_list={{ em7dc_ip1_list|join(',') if em7dc_ip1_list is defined else em7_ip1_list[0] }}
+all_mc_ip_list={{ em7mc_ip1_list|join(',') if em7mc_ip1_list is defined else em7_ip1_list[0] }}
+splunk_proxy={{ customer.primary.name_prefix }}mapprtv01.{{ sysconfig.primary.domain_name }}
+beta_proxy={{ customer.primary.name_prefix }}betaprtv01.{{ sysconfig.primary.domain_name }}
+ondemand_proxy={{ customer.primary.name_prefix }}odrprtv01.{{ sysconfig.primary.domain_name }}
+lo_proxy={{ customer.primary.name_prefix }}prtv01.{{ sysconfig.primary.domain_name }}
+pure_proxy={{ customer.primary.name_prefix }}dashprtv01.{{ sysconfig.primary.domain_name }}
+[is4]
+is4_region=IS4_{{ customer.primary.name_prefix }}
+[telemetry]
+kafka_vip=None
+relayng_vip=None
+splunk_fwder_vip=None
+kafka_ip_list=
+relayng_ip_list=
+telemetry_spl_fwd_ip_list=

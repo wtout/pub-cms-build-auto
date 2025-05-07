@@ -1,0 +1,38 @@
+---
+# Variables for netscaler hosts
+credentials:
+  username: "{{ PNSVPX_USER|default('') }}"
+  default_password: "{{ PDEFAULT_NSVPX_PASS|default('') }}"
+  password: "{{ PNSVPX_PASS|default('') }}"
+
+vm:
+  cpu: "{{ vm_vars.infra.nsvpx.cpu }}"
+  memory: "{{ vm_vars.infra.nsvpx.memory }}"
+  disk0: "{{ vm_vars.infra.nsvpx.disk0 }}"
+  disk1: "{{ vm_vars.infra.nsvpx.disk1 | default(0) }}"
+  disk2: "{{ vm_vars.infra.nsvpx.disk2 | default(0) }}"
+  disk3: "{{ vm_vars.infra.nsvpx.disk3 | default(0) }}"
+  disk_provisioning: "{{ vm_vars.infra.nsvpx.disk_provisioning if vm_vars.infra.nsvpx.disk_provisioning != '' else '' }}"
+  hostmap: "{{ vm_vars.infra.nsvpx.hostmap | default([]) }}"
+  name: "{{ vm_vars.infra.nsvpx.vmname if vm_vars.infra.nsvpx.vmname != '' else (customer.primary.name_prefix + inventory_hostname[:-2] + datacenters[datacenter.primary.name]['deptype'] + inventory_hostname[-2:]) }}"
+
+netconfig:
+  nic1:
+    intname: "{{ vm_vars.infra.nsvpx.nic1.intname }}"
+    ippool: "{{ vm_vars.infra.nsvpx.nic1.ip_pool | default([]) }}"
+    octetpool: "{{ vm_vars.infra.nsvpx.nic1.ip_octetpool | default([]) }}"
+    gateway: "{{ vm_vars.infra.nsvpx.nic1.gtw if vm_vars.infra.nsvpx.nic1.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.nsvpx.nic1.gtw_octet) if vm_vars.infra.nsvpx.nic1.gtw_octet != '' else '' }}"
+    netmask: "{{ vm_vars.infra.nsvpx.nic1.netmask }}"
+    network: "{{ vm_vars.infra.nsvpx.nic1.netname if vm_vars.infra.nsvpx.nic1.netname != '' else ('QS-' + customer.primary.name_prefix + '-' + customer.primary.octets | replace(\".\", \"-\") + vm_vars.infra.nsvpx.nic1.netbase) if vm_vars.infra.nsvpx.nic1.netbase != '' else '' }}"
+    ipv6_pool: "{{ vm_vars.nsvpx.nic1.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ vm_vars.nsvpx.nic1.ipv6_gtw | default('') }}"
+
+  nic2:
+    intname: "{{ vm_vars.infra.nsvpx.nic2.intname }}"
+    ippool: "{{ vm_vars.infra.nsvpx.nic2.ip_pool | default([]) }}"
+    octetpool: "{{ vm_vars.infra.nsvpx.nic2.ip_octetpool | default([]) }}"
+    gateway: "{{ vm_vars.infra.nsvpx.nic2.gtw if vm_vars.infra.nsvpx.nic2.gtw != '' else (customer.primary.octets + '.' + vm_vars.infra.nsvpx.nic2.gtw_octet) if vm_vars.infra.nsvpx.nic2.gtw_octet != '' else '' }}"
+    netmask: "{{ vm_vars.infra.nsvpx.nic2.netmask }}"
+    network: "{{ vm_vars.infra.nsvpx.nic2.netname if vm_vars.infra.nsvpx.nic2.netname != '' else ('QS-' + customer.primary.name_prefix + '-' + customer.primary.octets | replace(\".\", \"-\") + vm_vars.infra.nsvpx.nic2.netbase) if vm_vars.infra.nsvpx.nic2.netbase != '' else '' }}"
+    ipv6_pool: "{{ vm_vars.nsvpx.nic2.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ vm_vars.nsvpx.nic2.ipv6_gtw | default('') }}"

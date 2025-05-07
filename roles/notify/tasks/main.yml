@@ -1,0 +1,86 @@
+---
+# Tasks for notify
+- block:
+  - name: delete svc acct vault file
+    ansible.builtin.file:
+      path: "{{ file_item }}"
+      state: absent
+    loop:
+      - "{{ SVCFILE | default('') }}"
+    loop_control:
+      loop_var: file_item
+    when: file_item != ''
+    check_mode: no
+    become: yes
+  - name: Get playbook status from {{ LFILE }}
+    ansible.builtin.shell: "grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP /{h;b};H;${x;p}' {{ LFILE }} | sed -n '/PLAY RECAP /,+{{ NHOSTS }}p' | grep -v awk | grep -E 'PLAY RECAP|(unreachable|failed)=[1-9]+' || echo 'No Play Recap found'"
+    register: playbook_status
+  - block:
+    - name: define notifcation message
+      ansible.builtin.set_fact:
+        NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [((line_item | regex_replace ('^.*[\\|] ', '')).split(' : ')|first).strip()] }}"
+      loop: "{{ playbook_status.stdout_lines | select('regex', '(unreachable=|failed=)[1-9]+') }}"
+      loop_control:
+        loop_var: line_item
+    - name: write failed hosts list to {{ LFILE }}
+      ansible.builtin.blockinfile:
+        path: "{{ LFILE }}"
+        marker: 'Failed Hosts Block'
+        block: "{{ NOTIF_MSG|join('dashdash') }}"
+      when: NOTIF_MSG|default([]) != []
+    - ansible.builtin.assert:
+        that: NOTIF_MSG|default([]) == []
+    when: invoker is search('cdra')
+  - block:
+    - name: Get user's identity
+      ansible.builtin.shell: head -4 {{ LFILE }}
+      register: userid
+    - name: Check if user requested to abort
+      ansible.builtin.shell: grep "user requested abort!" {{ LFILE }}
+      register: user_abort
+      ignore_errors: true
+    - name: Get playbook execution time from {{ LFILE }}
+      ansible.builtin.shell: |
+        grep 'PLAY RECAP' {{ LFILE }} &>/dev/null && sed -n '/PLAY RECAP /{h;b};H;${x;p}' {{ LFILE }} | sed -n '/PLAY RECAP /,+{{ NHOSTS|int + 2 }}p' | grep -vE 'awk|RECAP|===' | grep '*' &>/dev/null && sed -n '/PLAY RECAP /{h;b};H;${x;p}' {{ LFILE }} | sed -n '/PLAY RECAP /,+{{ NHOSTS|int + 2 }}p' | grep -vE 'awk|RECAP|===' | grep -E '.[0-9]{,3} \*{3,}' | tail -1 | awk '{print $(NF - 1)}' || echo 'No Execution time found'
+      register: playbook_execution
+    - ansible.builtin.set_fact:
+        playbook_time: "{{ playbook_time|default('') + ' ' + time_item.0|regex_replace('^0*', '') + time_item.1 }}"
+      loop: "{{ playbook_execution.stdout.split(':')|zip([ 'h', 'm', 's' ])|list }}"
+      loop_control:
+        loop_var: time_item
+      when: time_item.0|int != 0
+    - ansible.builtin.set_fact:
+        NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [item] | list }}"
+      vars:
+        fe: "{{ playbook_status.stdout | regex_search('(unreachable=|failed=)[1-9]+') }}"
+      loop:
+        - '========================================================='
+        - ' '
+        - "{{ userid.stdout.split('\n') | join('<br/>') | replace ('This script was run', 'Job started') | replace ('#', '') | regex_replace ('(Machine )([a-z]+.[a-z]+)( [0-9])', '\\1**`\\2`**\\3') | replace('<br/>An', 'An') }}"
+        - "**`{{ playbook_dir.split('/')[-2] }}`** Script **`{{ SNAME }} {{ SARG | replace ('dash', '-') | replace ('*', '') }}`** completed {{ 'successfully' if (fe == '' and playbook_status.stdout != 'No Play Recap found') else 'with **`errors`**:' }}{{ ' in ' + '`' + playbook_time + '`' if playbook_execution.stdout is not search('found') else '' }}"
+        - "{{ user_abort.stdout if user_abort is succeeded else '' }}"
+        - "{{ playbook_status.stdout | regex_replace ('[\\*]*', '') | regex_replace ('[^\\.]* PLAY RECAP', '**PLAY RECAP**\n') | regex_replace ('((unreachable=|failed=)[1-9]+)', '**`\\1`**') | regex_replace ('\n.*[\\|] ', '\n') if (fe != '' or playbook_status.stdout == 'No Play Recap found') else '' }}"
+        - ''
+        - "The log file is **`{{ lookup('env', 'MYHOME') }}/Ansible_Logs/{{ LFILE|basename }}`**"
+        - ' '
+        - '========================================================='
+  # The below task implements the following curl command
+  #  - name: Send notification via Webex Teams
+  #    ansible.builtin.shell: >
+  #      export https_proxy="{{ proxy_address }}";
+  #      curl -v --request POST --header "Authorization: Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f" --header "Content-Type: application/json" --data '{"roomId":"Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj","markdown":"howdybot2"}' https://api.ciscospark.com/v1/messages
+    - name: Send notification via Webex Teams
+      ansible.builtin.uri:
+        url: "https://api.ciscospark.com/v1/messages"
+        method: POST
+        headers:
+          Authorization: "Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
+        body_format: form-urlencoded
+        body: 
+          roomId: Y2lzY29zcGFyazovL3VzL1JPT00vNTZlYTZkNzAtNWEyMy0xMWU5LTg1ZDUtODFmZjc3YTdkY2Jj
+          markdown: "{{ NOTIF_MSG | join('\n') }}"
+      environment:
+        http_proxy: "{{ proxy_address|default('') }}"
+        https_proxy: "{{ proxy_address|default('') }}" # Ansible only supports http proxies currently
+    when: invoker is not search('cdra')
+  tags: [ 'never', 'notify' ]

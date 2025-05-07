@@ -1,0 +1,7 @@
+---
+# Tasks to check content of current datetime file
+  - name: check content of current datetime file
+    ansible.builtin.command: "grep 2023 {{ splunk_dir }}/etc/datetime.xml"
+    register: datetime
+    ignore_errors: true
+    tags: splunk_mop

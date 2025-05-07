@@ -1,0 +1,5 @@
+---
+# Variables for em7 hosts
+credentials:
+  username: "{{ PEM7_USER|default('') }}"
+  password: "{{ PEM7_PASS|default('') }}"

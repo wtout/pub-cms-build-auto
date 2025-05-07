@@ -1,0 +1,39 @@
+---
+# Tasks to create the customer cluster
+- block:
+  - name: Create the '{{ information.cluster }}' cluster
+    community.vmware.vmware_cluster:
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      datacenter: "{{ information.datacenter }}"
+      cluster_name: "{{ information.cluster }}"
+      state: present
+      validate_certs: no
+    register: cust_cluster
+
+  - name: Check if {{ 'DR' if inventory_hostname is search('dr') else 'HA' }} hosts are in a different cluster
+    ansible.builtin.assert:
+      that:
+        - host_cluster[host_item] == none or (host_cluster[host_item] != none and host_cluster[host_item] == information.cluster)
+    loop: "{{ information.resources }}"
+    loop_control:
+      loop_var: host_item
+
+  - name: Add hosts to the '{{ information.cluster }}' cluster
+    community.vmware.vmware_host:
+      hostname: "{{ information.address }}"
+      username: "{{ credentials.username }}"
+      password: "{{ credentials.password }}"
+      datacenter: "{{ information.datacenter }}"
+      cluster_name: "{{ information.cluster }}"
+      esxi_hostname: "{{ host_item }}"
+      esxi_username: "{{ information.hostuser }}"
+      esxi_password: "{{ information.hostpass }}"
+      state: present
+      validate_certs: no
+    loop: "{{ information.resources }}"
+    loop_control:
+      loop_var: host_item
+    register: move_hosts
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

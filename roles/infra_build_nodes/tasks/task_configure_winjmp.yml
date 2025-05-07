@@ -1,0 +1,121 @@
+---
+# Task file to configure Windows Jump Server
+- block:
+  - name: Wait for Windows Jump Server OVA deployment
+    ansible.builtin.async_status:
+      jid: "{{ winjmp_deployment.ansible_job_id }}"
+    register: winjmp_poll_results_1
+    until: winjmp_poll_results_1.finished
+    ignore_errors: true
+    retries: 60
+    delay: 60
+
+  - block:
+    - name: First Retry Windows Jump Server Deployment
+      include_tasks: task_deploy_winjmp.yml
+
+    - name: Wait for first retry Windows Jump Server OVA deployment
+      ansible.builtin.async_status:
+        jid: "{{ winjmp_deployment.ansible_job_id }}"
+      register: winjmp_poll_results_2
+      until: winjmp_poll_results_2.finished
+      ignore_errors: true
+      retries: 60
+      delay: 60
+
+    - block:
+      - name: Delete Windows Jump Server
+        community.vmware.vmware_guest:
+          hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+          username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+          password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+          name: "{{ vm.name }}"
+          datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+          state: absent
+          force: yes
+          validate_certs: no
+
+      - name: Second Retry Windows Jump Server Deployment
+        include_tasks: task_deploy_winjmp.yml
+
+      - name: Wait for second retry Windows Jump Server OVA deployment
+        ansible.builtin.async_status:
+          jid: "{{ winjmp_deployment.ansible_job_id }}"
+        register: winjmp_poll_results_3
+        until: winjmp_poll_results_3.finished
+        ignore_errors: true
+        retries: 60
+        delay: 60
+      when:
+        - winjmp_poll_results_2 is failed
+        - winjmp_poll_results_2.msg is not search('already exists.')
+    when:
+      - winjmp_poll_results_1 is failed
+      - winjmp_poll_results_1.msg is not search('already exists.')
+
+  - name: Power on VM
+    community.vmware.vmware_guest_powerstate:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      name: "{{ vm.name }}"
+      state: powered-on
+      validate_certs: no
+    register: power
+    
+  - name: Set VM interfaces
+    community.vmware.vmware_guest:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+      name: "{{ vm.name }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+      networks:
+      - name: "{{ netconfig.nic1.network }}"
+        start_connected: yes
+        wake_on_lan: yes
+      - name: "{{ netconfig.nic2.network }}"
+        start_connected: yes
+        wake_on_lan: yes
+      validate_certs: no
+    register: set_interfaces
+
+  - name: Wait for VM to boot
+    ansible.builtin.pause:
+      seconds: 400
+    when:
+      - power.changed
+      - set_interfaces is changed
+
+  - include_tasks:
+      file:
+        task_apply_interface_configuration_settings.yml
+      apply:
+        vars:
+          myconfig: "{{ config_item }}"
+    loop: "{{ winjmp.interface_configuration }}"
+    loop_control:
+      loop_var: config_item
+  
+  - include_tasks:
+      file:
+        task_add_static_routes.yml
+      apply:
+        vars:
+          myconfig: "{{ config_item }}"
+    loop: "{{ netconfig.static_route_ips }}"
+    loop_control:
+      loop_var: route_ip_item
+
+  - include_tasks:
+      file:
+        task_apply_user_security_settings.yml
+      apply:
+        vars:
+          myconfig: "{{ config_item }}"
+    loop: "{{ winjmp.other_configuration }}"
+    loop_control:
+      loop_var: config_item
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

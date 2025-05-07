@@ -1,0 +1,18 @@
+---
+# Tasks to define VM disk size
+- block:
+  - name: define total disk size per Stack VM
+    ansible.builtin.set_fact:
+      vm: "{{ vm|default({}) | combine(new_var, recursive=true) }}"
+    vars:
+      new_var: "{ 'disk': '{{ vm.disk0|int + vm.disk1|int + vm.disk2|int + vm.disk3|int }}' }"
+    when: inventory_hostname is not search('dr')
+
+  - name: define total disk size per DR VM
+    ansible.builtin.set_fact:
+      vm: "{{ vm|default({}) | combine(new_var, recursive=true) }}"
+    vars:
+      new_var: "{ 'disk': '{{ vm.disk0|int + vm.disk1|int + vm.disk2|int + vm.disk3|int }}' }"
+    when:
+      - inventory_hostname is search('dr')
+      - customer.disaster_recovery

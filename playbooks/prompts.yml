@@ -1,0 +1,8 @@
+---
+# Play to collect sensitive information
+- name: Prompt for credentials
+  hosts: localhost
+  gather_facts: no
+
+  roles:
+    - role: collect_info

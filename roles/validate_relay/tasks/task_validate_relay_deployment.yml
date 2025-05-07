@@ -1,0 +1,38 @@
+---
+# Tasks to validate relay deployment
+- block:
+  - name: Disable requiretty on host
+    ansible.builtin.replace:
+      path: '/etc/sudoers'
+      regexp: '^(Defaults.*requiretty)$'
+      replace: '#\g<1>'
+    register: reg_disable_rtty
+    become: true
+    vars:
+      ansible_ssh_pipelining: no
+  - name: run validation script
+    ansible.builtin.shell: |
+      ./relay_deploy_validate.sh {{ vars[('S' if 'dr' in group_names else 'P') + 'RLY_DB_PASS'] }} {{ vars[('S' if 'dr' in group_names else 'P') + 'SPL_ADMIN_PASS'] }}
+    register: reg_rly_validate
+    args:
+      chdir: /opt/qsscripts
+    check_mode: no
+    ignore_errors: yes
+    no_log: yes
+  - name: Re-enable requiretty on host
+    ansible.builtin.replace:
+      path: '/etc/sudoers'
+      regexp: '^#(Defaults.*requiretty)$'
+      replace: '\g<1>'
+    become: true
+    when: reg_disable_rtty is changed
+  - name: define rlystatus
+    ansible.builtin.set_fact:
+      rlystatus: "{{ rlystatus|default([]) | union([loop_item|regex_replace('^.*(FAIL.*)\\\u001b.*$', '\\1')]) }}"
+    loop: "{{ reg_rly_validate.stdout_lines|select('search', 'FAIL')|list }}"
+    loop_control:
+      loop_var: loop_item
+    no_log: yes
+  - ansible.builtin.assert:
+      that: rlystatus|default([]) == []
+      fail_msg: "{{ rlystatus|default([]) }}"

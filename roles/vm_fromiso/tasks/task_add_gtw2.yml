@@ -1,0 +1,103 @@
+---
+# Tasks to add GTW to NIC2 interface file on the VM
+- block:
+  - block:
+    - name: Delete gateway from ens160 interface file on the EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/usr/bin/sudo'
+        vm_shell_args: '-S sh -c "/bin/sed -i \"/^GATEWAY=.*$/,+d\" /etc/sysconfig/network-scripts/ifcfg-ens160" <<< {{ ansible_ssh_pass }}'
+        wait_for_process: true
+      register: em7_intfile160
+      until: em7_intfile160 is succeeded
+    - name: Add gateway to ens192 interface file on the EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/usr/bin/sudo'
+        vm_shell_args: '-S sh -c "grep \"GATEWAY={{ netconfig.nic2.gateway }}\" /etc/sysconfig/network-scripts/ifcfg-ens192 || /bin/echo -e \"GATEWAY={{ netconfig.nic2.gateway }}\" >> /etc/sysconfig/network-scripts/ifcfg-ens192" <<< {{ ansible_ssh_pass }}'
+        wait_for_process: true
+      register: em7_intfile192
+      until: em7_intfile192 is succeeded
+    - name: restart the network on the EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/usr/bin/sudo'
+        vm_shell_args: '-S sh -c "/bin/systemctl restart {{ net_svc }}" <<< {{ ansible_ssh_pass }}'
+        wait_for_process: true
+      register: em7_restart_net
+      until: em7_restart_net is succeeded
+      vars:
+        net_svc: "{{ 'NetworkManager' if iso_installer is search('em7_x86_64_12.') else 'network' }}"
+    when: inventory_hostname is search('em7')
+  - block:
+    - name: Delete gateway from ens160 interface file on the non-EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/bin/sh'
+        vm_shell_args: '-c "/bin/sed -i \"/^GATEWAY=.*$/,+d\" /etc/sysconfig/network-scripts/ifcfg-ens160"'
+        wait_for_process: true
+      register: intfile160
+      until: intfile160 is succeeded
+    - name: Add gateway to ens192 interface file on the non-EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/bin/sh'
+        vm_shell_args: '-c "grep \"GATEWAY={{ netconfig.nic2.gateway }}\" /etc/sysconfig/network-scripts/ifcfg-ens192 || /bin/echo -e \"GATEWAY={{ netconfig.nic2.gateway }}\" >> /etc/sysconfig/network-scripts/ifcfg-ens192"'
+        wait_for_process: true
+      register: intfile192
+      until: intfile192 is succeeded
+    - name: restart the network on the non-EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: "{{ ansible_user }}"
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/bin/sh'
+        vm_shell_args: '-c "/bin/systemctl restart network"'
+        wait_for_process: true
+      register: restart_net
+      until: restart_net is succeeded
+    when:
+      - inventory_hostname is not search('em7')
+  when:
+    - netconfig.nic1.gateway == ''
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

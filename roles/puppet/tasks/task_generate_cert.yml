@@ -1,0 +1,32 @@
+---
+# Tasks to generate certificate for vm
+- block:
+  - name: check if puppet agent is installed
+    ansible.builtin.shell: $(which yum) list installed puppet-agent || echo "No puppet-agent installed"
+    check_mode: no
+    register: puppet_installed
+    until: puppet_installed is succeeded
+    ignore_errors: true
+  - block:
+    - name: Download Puppet to VM
+      ansible.builtin.get_url:
+        url: "https://{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}:8140/packages/current/install.bash"
+        dest: /tmp
+        url_username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'puppet']|first]['ansible_user'] }}"
+        url_password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'puppet']|first]['ansible_ssh_pass'] }}"
+        validate_certs: no
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      register: download_action
+      until: download_action is succeeded
+      retries: 7
+    - name: Install Puppet on VM
+      ansible.builtin.command: bash /tmp/install.bash
+      register: puppet_install
+      until: puppet_install is succeeded
+      retries: 5
+      delay: 5
+      when: download_action is succeeded
+    when: "'No puppet-agent installed' in puppet_installed.stdout"
+    become: "{{ true if ansible_user != 'root' else false }}"
+  - include_tasks: task_disable_puppet_sync.yml

@@ -1,0 +1,25 @@
+---
+# Tasks to check the splunk cronjobs
+- block:
+  - name: get number of cronjobs for splunk user
+    ansible.builtin.shell: |
+      $(which su) splunk -c 'crontab -l 2>/dev/null | grep "/opt/CSCO-CMS/DataExtractor" | wc -l'
+    register: reg_cronjob_number
+    ignore_errors: yes
+    check_mode: no
+  - name: define rly_splunk_cronjob_status
+    ansible.builtin.set_fact:
+      rly_splunk_cronjob_status: 'No crontab for splunk user'
+    when:
+      - reg_cronjob_number.stdout|int == 0
+  - name: define rly_splunk_cronjob_status
+    ansible.builtin.set_fact:
+      rly_splunk_cronjob_status: 'Number of splunk cronjobs is not as expected. Please investigate'
+    when:
+      - reg_cronjob_number.stdout|int != 0
+      - reg_cronjob_number.stdout|int != 55
+  when:
+    - service_status|default({})|select('search', 'mariadb is not found')|length == 0
+    - service_status|default({})|select('search', 'mariadb is not active')|length == 0
+  tags: sanity
+  

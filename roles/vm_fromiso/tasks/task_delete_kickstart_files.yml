@@ -1,0 +1,55 @@
+---
+# Tasks to delete the kickstart files from vsphere and locally
+- block:
+  - include_tasks: task_poweroff_vm.yml
+  - include_tasks: task_disconnect_cdrom.yml
+  - include_tasks: task_poweron_vm.yml
+
+  - block:
+    - name: check existing VM reachable
+      ansible.builtin.command: ping {{ ansible_host }} -c 1
+      register: vcr_vm_reachable2
+      ignore_errors: true
+      check_mode: no
+      until: vcr_vm_reachable2 is succeeded
+      retries: 6
+      delay: 10
+      when: vcr_vm_reachable is succeeded
+    - name: check created VM reachable
+      ansible.builtin.command: ping {{ netconfig.nic1.ipaddress if netconfig.nic1.gateway != '' else netconfig.nic2.ipaddress }} -c 1
+      register: vcr_vm_reachable2
+      ignore_errors: true
+      check_mode: no
+      until: vcr_vm_reachable2 is succeeded
+      retries: 6
+      delay: 10
+      when: vcr_vm_reachable is failed
+    when: not ansible_check_mode
+
+  - name: delete kickstart ISO file from vsphere
+    community.vmware.vsphere_file:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+      datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}"
+      path: "{{ 'ISO/' + hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+      state: absent
+      validate_certs: false
+    environment:
+      http_proxy: ''
+      https_proxy: ''
+    async: 30
+    poll: 0
+    ignore_errors: true
+    when: not ansible_check_mode
+  - name: delete kickstart files locally
+    ansible.builtin.file:
+      path: "{{ role_path }}/files/{{ file_item }}"
+      state: absent
+    loop:
+      - "{{ vm.name }}-kickstart.iso"
+      - "{{ vm.name }}-kickstart.cfg"
+    loop_control:
+      loop_var: file_item
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"

@@ -1,0 +1,36 @@
+---
+# Variables for splunk cluster masters
+user:
+  name: "{{ drvm_vars.spl.splmas.user.name if drvm_vars.spl.splmas.user.name is defined else '' }}"
+  password: "{{ drvm_vars.spl.splmas.user.password if drvm_vars.spl.splmas.user.password is defined else '' }}"
+
+vm:
+  cpu: "{{ drvm_vars.spl.splmas.cpu }}"
+  memory: "{{ drvm_vars.spl.splmas.memory }}"
+  disk0: "{{ drvm_vars.spl.splmas.disk0 }}"
+  disk1: "{{ drvm_vars.spl.splmas.disk1 | default(0) }}"
+  disk2: "{{ drvm_vars.spl.splmas.disk2 | default(0) }}"
+  disk3: "{{ drvm_vars.spl.splmas.disk3 | default(0) }}"
+  disk_provisioning: "{{ drvm_vars.spl.splmas.disk_provisioning if drvm_vars.spl.splmas.disk_provisioning != '' else '' }}"
+  name: "{{ drvm_vars.spl.splmas.vmname if drvm_vars.spl.splmas.vmname != '' else (customer.secondary.name_prefix + inventory_hostname[2:-2] + datacenters[datacenter.secondary.name]['deptype'] + inventory_hostname[-2:]) }}"
+
+netconfig:
+  nic1:
+    intname: "{{ drvm_vars.spl.splmas.nic1.intname }}"
+    ippool: "{{ drvm_vars.spl.splmas.nic1.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.spl.splmas.nic1.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.spl.splmas.nic1.gtw if drvm_vars.spl.splmas.nic1.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.spl.splmas.nic1.gtw_octet) if drvm_vars.spl.splmas.nic1.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.spl.splmas.nic1.netmask }}"
+    network: "{{ drvm_vars.spl.splmas.nic1.netname if drvm_vars.spl.splmas.nic1.netname != '' else ('QS-' + customer.secondary.name_prefix + '-' + customer.secondary.octets | replace(\".\", \"-\") + drvm_vars.spl.splmas.nic1.netbase) if drvm_vars.spl.splmas.nic1.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.spl.splmas.nic1.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.spl.splmas.nic1.ipv6_gtw | default('') }}"
+
+  nic2:
+    intname: "{{ drvm_vars.spl.splmas.nic2.intname }}"
+    ippool: "{{ drvm_vars.spl.splmas.nic2.ip_pool | default([]) }}"
+    octetpool: "{{ drvm_vars.spl.splmas.nic2.ip_octetpool | default([]) }}"
+    gateway: "{{ drvm_vars.spl.splmas.nic2.gtw if drvm_vars.spl.splmas.nic2.gtw != '' else (customer.secondary.octets + '.' + drvm_vars.spl.splmas.nic2.gtw_octet) if drvm_vars.spl.splmas.nic2.gtw_octet != '' else '' }}"
+    netmask: "{{ drvm_vars.spl.splmas.nic2.netmask }}"
+    network: "{{ drvm_vars.spl.splmas.nic2.netname if drvm_vars.spl.splmas.nic2.netname != '' else ('QS-' + customer.secondary.name_prefix + '-' + customer.secondary.octets | replace(\".\", \"-\") + drvm_vars.spl.splmas.nic2.netbase) if drvm_vars.spl.splmas.nic2.netbase != '' else '' }}"
+    ipv6_pool: "{{ drvm_vars.spl.splmas.nic2.ipv6_pool | default([]) }}"
+    ipv6_gtw: "{{ drvm_vars.spl.splmas.nic2.ipv6_gtw | default('') }}"

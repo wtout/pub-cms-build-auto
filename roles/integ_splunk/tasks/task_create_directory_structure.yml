@@ -1,0 +1,70 @@
+---
+# Tasks to create the directory structure
+- block:
+  - name: create the directory structure
+    ansible.builtin.file:
+      path: "{{ dir_item }}"
+      state: directory
+    loop:
+      - "{{ spl_wd }}"
+      - "{{ spl_wd }}/dev"
+      - "{{ spl_wd }}/deploy"
+    loop_control:
+      loop_var: dir_item
+  - name: create the splunkApps symolic link
+    ansible.builtin.file:
+      path: "{{ spl_wd }}/deploy/splunkApps"
+      src: "{{ spl_wd }}/dev/{{ mdr_splunkenv_reponame }}"
+      state: link
+      force: yes
+  - name: Ensure {{ auto_dir }}/Packages/Splunk exists
+    ansible.builtin.file:
+      path: "{{ auto_dir }}/Packages/Splunk"
+      state: directory
+      mode: 0777
+    become: yes
+  - name: get list of Splunk artifacts
+    ansible.builtin.find:
+      paths: "{{ auto_dir }}/Packages/Splunk"
+      file_type: file
+      patterns: '*.rpm'
+    register: artifacts_list
+  - block:
+    - name: Download Splunk artifacts
+      ansible.builtin.get_url:
+        url: "{{ spl_rpm_url }}"
+        dest: "{{ auto_dir }}/Packages/Splunk/"
+      register: download_action
+      until: download_action is succeeded
+      retries: 7
+    - name: get list of Splunk artifacts
+      ansible.builtin.find:
+        paths: "{{ auto_dir }}/Packages/Splunk"
+        file_type: file
+        patterns: '*.rpm'
+      register: artifacts_list1
+    - name: check that Splunk artifacts are found
+      ansible.builtin.assert:
+        that:
+          - artifacts_list1.matched >= 1
+        fail_msg: 'Unable to find Splunk artifacts. Aborting!'
+    when: artifacts_list.matched == 0
+  - ansible.builtin.debug:
+      msg:
+        - "{{ link_item.path }}"
+    loop: "{{ artifacts_list.files if artifacts_list.matched > 0 else artifacts_list1.files }}"
+    loop_control:
+      loop_var: link_item
+  - name: create the splunk artifacts symbolic links
+    ansible.builtin.file:
+      path: "{{ spl_wd }}/deploy/{{ link_item.path | basename }}"
+      src: "{{ link_item.path }}"
+      state: link
+      force: yes
+    loop: "{{ artifacts_list.files if artifacts_list.matched > 0 else artifacts_list1.files }}"
+    loop_control:
+      loop_var: link_item
+  delegate_to: localhost
+  become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+  run_once: true
+  

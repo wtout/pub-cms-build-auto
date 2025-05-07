@@ -1,0 +1,43 @@
+---
+# Tasks to install Splunk on hosts
+- block:
+  - name: Deploy Splunk headend (core)
+    ansible.builtin.shell: |
+      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+      DEPLOY_HOME={{ spl_wd }}
+      export ANSIBLE_LOG_PATH DEPLOY_HOME
+      ./build_core.sh  --environment={{ customer.env_identifier }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+    register: he_install
+    args:
+      chdir: "{{ spl_ansible_path }}"
+    when:
+      - inventory_hostname is not search('splfwd')
+      - "reg_cluster_status|default({'failed': false}) is failed"
+  - block:
+    - name: check if customer has already been deployed
+      ansible.builtin.shell:
+        grep -r {{ vm.name }} {{ tmpl_dest }}/deployed_customers.yml
+      register: reg_deployed_customer
+      ignore_errors: yes
+      check_mode: no
+    - name: Deploy Splunk heavy forwarder (customer)
+      ansible.builtin.shell: |
+        ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+        DEPLOY_HOME={{ spl_wd }}
+        export ANSIBLE_LOG_PATH DEPLOY_HOME
+        ./build_customer.sh  --environment={{ customer.env_identifier }} --customerhost={{ vm.name }} --corepass=vault-password-file --extras="--extra-vars @ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh" 1>/dev/null
+      register: cu_install
+      args:
+        chdir: "{{ spl_ansible_path }}"
+      when:
+        - reg_deployed_customer is failed
+    - ansible.builtin.debug:
+        msg: "Splunk has already been deployed on {{ vm.name }}"
+      when: reg_deployed_customer is succeeded
+    when:
+      - inventory_hostname is search('splfwd')
+  - name: define delete_proxy
+    ansible.builtin.set_fact:
+      delete_proxy: "{{ he_install is succeeded or cu_install is succeeded }}"
+  delegate_to: localhost
+  run_once: true

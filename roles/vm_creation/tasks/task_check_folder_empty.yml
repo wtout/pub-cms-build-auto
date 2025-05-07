@@ -1,0 +1,17 @@
+---
+# tasks to determine whether or not the folder is empty
+- block:
+  - name: Get the{{ ' DR' if (vm_names is defined and vm_name in vm_names) else '' }} VMs in {{ folder_name }}
+    community.vmware.vmware_vm_info:
+      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + (('' if folder_name is regex('^/') else '/') + folder_name if folder_name != '' else '') }}"
+#      show_net: false
+      validate_certs: no
+    check_mode: no
+    register: vm_info
+    delegate_to: localhost
+  - name: define folder_empty
+    ansible.builtin.set_fact:
+      folder_empty: "{{ folder_empty|default(true) and vm_info.virtual_machines == [] }}"

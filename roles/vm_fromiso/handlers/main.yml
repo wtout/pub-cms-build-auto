@@ -1,0 +1,165 @@
+---
+# handlers file for vm_fromiso
+- name: restart chrony
+  ansible.builtin.systemd:
+    name: chronyd
+    state: restarted
+    daemon_reload: yes
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: expand disk0
+  community.general.parted:
+    device: /dev/sda
+    unit: MiB
+    number: 2
+  become: "{{ true if ansible_user != 'root' else false }}"
+  register: parted_info
+  changed_when: parted_info is succeeded
+  notify: define parted_start
+
+- name: define parted_start
+  ansible.builtin.set_fact:
+    parted_start: "{{ task_item.begin | default(0) }}"
+  loop: "{{ parted_info.partitions }}"
+  loop_control:
+    loop_var: task_item
+  when: task_item.num == 2
+  changed_when: parted_info is succeeded
+  notify: delete old disk0 partition
+
+- name: delete old disk0 partition
+  community.general.parted:
+    device: /dev/sda
+    number: 2
+    state: absent
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: create new disk0 partition
+
+- name: create new disk0 partition
+  community.general.parted:
+    device: /dev/sda
+    number: 2
+    flags: [ lvm ]
+    part_start: "{{ parted_start }}MiB"
+    state: present
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: reboot vm
+
+- name: reboot vm
+  ansible.builtin.reboot:
+    post_reboot_delay: 10
+    reboot_timeout: 60
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: expand disk1
+  ansible.builtin.shell: |
+    {{ 'parted --script /dev/sdb mklabel gpt mkpart vgroup2 0% 100% set 1 lvm on' if vm.name is search('mdr|stdal') else '' }}
+    pvcreate /dev/{{ 'sdb1' if vm.name is search('mdr|stdal') else 'sdb' }}
+    vgcreate vgroup2 /dev/{{ 'sdb1' if vm.name is search('mdr|stdal') else 'sdb' }}
+    lvcreate -l100%FREE -n opt /dev/vgroup2
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: create disk1 filesystem
+
+- name: create disk1 filesystem
+  ansible.builtin.filesystem:
+    fstype: ext4
+    device: /dev/vgroup2/opt
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: set opt mount points
+
+- name: set opt mount points
+  ansible.posix.mount:
+    name: /opt
+    src: /dev/mapper/vgroup2-opt
+    fstype: ext4
+    opts: defaults
+    state: mounted
+    dump: '1'
+    passno: '2'
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: set permissions and ownership of /opt
+
+- name: set permissions and ownership of /opt
+  ansible.builtin.file:
+    path: /opt
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: expand disk2
+  ansible.builtin.shell: |
+    parted --script /dev/sdc mklabel gpt mkpart vgroup3 0% 100% set 1 lvm on
+    pvcreate /dev/sdc1
+    vgcreate vgroup3 /dev/sdc1
+    lvcreate -l100%FREE -n data01 /dev/vgroup3
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: create disk2 filesystem
+  when: vm.name is search('mdr|stdal')
+
+- name: create disk2 filesystem
+  ansible.builtin.filesystem:
+    fstype: ext4
+    device: /dev/vgroup3/data01
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: set data01 mount points
+
+- name: set data01 mount points
+  ansible.posix.mount:
+    name: /data01
+    src: /dev/mapper/vgroup3-data01
+    fstype: ext4
+    opts: defaults
+    state: mounted
+    dump: '1'
+    passno: '2'
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: set permissions and ownership of /data01
+
+- name: set permissions and ownership of /data01
+  ansible.builtin.file:
+    path: /data01
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+  become: "{{ true if ansible_user != 'root' else false }}"
+
+- name: expand disk3
+  ansible.builtin.shell: |
+    parted --script /dev/sdd mklabel gpt mkpart vgroup4 0% 100% set 1 lvm on
+    pvcreate /dev/sdd1
+    vgcreate vgroup4 /dev/sdd1
+    lvcreate -l100%FREE -n data02 /dev/vgroup4
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: create disk3 filesystem
+  when: vm.name is search('mdr|stdal')
+
+- name: create disk3 filesystem
+  ansible.builtin.filesystem:
+    fstype: ext4
+    device: /dev/vgroup4/data02
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: set data02 mount points
+
+- name: set data02 mount points
+  ansible.posix.mount:
+    name: /data02
+    src: /dev/mapper/vgroup4-data02
+    fstype: ext4
+    opts: defaults
+    state: mounted
+    dump: '1'
+    passno: '2'
+  become: "{{ true if ansible_user != 'root' else false }}"
+  notify: set permissions and ownership of /data02
+
+- name: set permissions and ownership of /data02
+  ansible.builtin.file:
+    path: /data02
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+  become: "{{ true if ansible_user != 'root' else false }}"

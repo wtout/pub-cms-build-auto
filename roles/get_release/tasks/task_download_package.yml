@@ -1,0 +1,76 @@
+---
+# Tasks to download the release package
+- block:
+  - name: check if /data exists
+    ansible.builtin.stat:
+      path: /data
+    register: mntpnt
+  - name: define Packages location
+    ansible.builtin.set_fact:
+      pkg_dir: "{{ '/data' if mntpnt.stat.exists else auto_dir }}"
+  - name: ensure Packages directory exists under {{ auto_dir }}
+    ansible.builtin.file:
+      path: "{{ auto_dir }}/Packages"
+      state: "{{ 'link' if mntpnt.stat.exists else 'directory' }}"
+      src: "{{ (pkg_dir + '/Packages') if mntpnt.stat.exists else '' }}"
+      force: "{{ 'yes' if mntpnt.stat.exists else 'no' }}"
+  - block:
+    - name: check if package {{ customer.version.release }} exists
+      ansible.builtin.stat:
+        path: "{{ pkg_dir }}/Packages/{{ customer.version.release }}"
+      register: package_exists
+    - block:
+      - name: create Packages directory if it does not exist
+        ansible.builtin.file:
+          path: "{{ pkg_dir }}/Packages/{{ customer.version.release }}"
+          state: directory
+      - name: download the package for release version {{ customer.version.release }}
+        ansible.builtin.shell: "wget --no-proxy -np -nH -nd -r -R index.html {{ artifactory.baseurl }}/artifactory/cms-quicksilver-release/{{ customer.version.release }}/Puppet/ -A ova,ova.sha1"
+        args:
+          chdir: "{{ pkg_dir }}/Packages/{{ customer.version.release }}"
+        async: 7200
+        poll: 30
+      - name: find list of files in the downloaded package
+        ansible.builtin.find:
+          paths: "{{ pkg_dir }}/Packages/{{ customer.version.release }}"
+          file_type: file
+          patterns: '*.ova, *.tar, *.zip, *.gz, *.tgz, *.conf'
+          recurse: yes
+          get_checksum: yes
+        register: files_list
+
+      - name: get included hash
+        ansible.builtin.shell: cat {{ hash_file }}
+        vars:
+          hash_file: "{{ file_item.path + '.sha1' }}"
+        loop: "{{ files_list.files }}"
+        loop_control:
+          loop_var: file_item
+        register: included_hash
+        when:
+          - files_list.matched >= 1
+          - groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']
+
+      - name: check the integrity of the package contents
+        ansible.builtin.assert:
+          that:
+            - file_item.checksum == hash
+          fail_msg: "The package {{ file_item.path }} was corrupted during download"
+        vars:
+          hash_file: "{{ file_item.path + '.sha1' }}"
+          hash_localhost: "{{ '' if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else lookup('file', hash_file) }}"
+          hash_bastion: "{{ included_hash.results | selectattr('file_item.path', 'equalto', file_item.path) | map(attribute='stdout') | list | join('') if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else '' }}"
+          hash: "{{ hash_bastion|default([])|string if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else hash_localhost }}"
+        loop: "{{ files_list.files }}"
+        loop_control:
+          loop_var: file_item
+        when: files_list.matched >= 1
+      when:
+        - not (package_exists.stat.exists and package_exists.stat.isdir is defined and (package_exists.stat.isdir or package_exists.stat.islnk))
+    when:
+      - customer.name | lower is not search('mdr')
+      - bfova | default(false) | bool
+      - invoker is search('cdra')
+      - customer.version.release is defined
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  run_once: true

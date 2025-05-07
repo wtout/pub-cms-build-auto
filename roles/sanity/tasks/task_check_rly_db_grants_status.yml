@@ -1,0 +1,94 @@
+---
+# Tasks to check relay database grants
+- block:
+  - name: get DB grants
+    ansible.builtin.shell: |
+      mysql -u {{ rly_db_user }} -p{{ rly_db_pass }} --execute="select Host, User from mysql.user;"
+    register: reg_db_grants
+    ignore_errors: yes
+    check_mode: no
+    no_log: yes
+  - debug:
+      msg: "{{ reg_db_grants|replace(rly_db_pass, 'obfuscated') }}"
+  - name: define rly_db_grants_status
+    ansible.builtin.set_fact:
+      rly_db_grants_status: "{{ reg_db_grants.stderr }}"
+    when:
+      - reg_db_grants is failed
+      - reg_db_grants.stderr is defined
+      - reg_db_grants is search('Access denied')
+  - name: define rly_db_grants_status
+    ansible.builtin.set_fact:
+      rly_db_grants_status: "{{ 'The following DB grants are missing: ' + req_db_grants|difference(reg_db_grants.stdout_lines[1:])|join(',') }}"
+    when: req_db_grants | difference(reg_db_grants.stdout_lines[1:]) | length != 0
+  vars:
+    aio_db_grants:
+      - "127.0.0.1\troot"
+      - "{{ customer.primary.octets }}.1\trelayuser"
+      - "{{ customer.primary.octets }}.1\troot"
+      - "{{ customer.primary.octets }}.1\trsuser"
+      - "{{ customer.primary.octets }}.13\trelayuser"
+      - "{{ customer.primary.octets }}.13\trsuser"
+      - "{{ customer.primary.octets }}.53\trelayuser"
+      - "{{ customer.primary.octets }}.53\troot"
+      - "{{ customer.primary.octets }}.53\trsuser"
+      - "{{ customer.primary.octets }}.54\trelayuser"
+      - "{{ customer.primary.octets }}.54\troot"
+      - "{{ customer.primary.octets }}.54\trsuser"
+      - "{{ customer.primary.octets }}.55\trelayuser"
+      - "{{ customer.primary.octets }}.55\troot"
+      - "{{ customer.primary.octets }}.55\trsuser"
+      - "::1\troot"
+      - "localhost\tflushuser"
+      - "localhost\trelayuser"
+      - "localhost\troot"
+      - "relay-db-vip\trelayuser"
+    dist_db_grants:
+      - "127.0.0.1\troot"
+      - "{{ customer.primary.octets }}.1\tdataextuser"
+      - "{{ customer.primary.octets }}.1\trelayuser"
+      - "{{ customer.primary.octets }}.1\troot"
+      - "{{ customer.primary.octets }}.1\trsuser"
+      - "{{ customer.primary.octets }}.10\trelayuser"
+      - "{{ customer.primary.octets }}.11\trelayuser"
+      - "{{ customer.primary.octets }}.12\trelayuser"
+      - "{{ customer.primary.octets }}.13\trelayuser"
+      - "{{ customer.primary.octets }}.14\trelayuser"
+      - "{{ customer.primary.octets }}.15\trelayuser"
+      - "{{ customer.primary.octets }}.16\trelayuser"
+      - "{{ customer.primary.octets }}.17\trelayuser"
+      - "{{ customer.primary.octets }}.18\trelayuser"
+      - "{{ customer.primary.octets }}.2\tdataextuser"
+      - "{{ customer.primary.octets }}.2\trelayuser"
+      - "{{ customer.primary.octets }}.2\trsuser"
+      - "{{ customer.primary.octets }}.3\trelayuser"
+      - "{{ customer.primary.octets }}.3\trsuser"
+      - "{{ customer.primary.octets }}.4\trelayuser"
+      - "{{ customer.primary.octets }}.4\trsuser"
+      - "{{ customer.primary.octets }}.53\tdataextuser"
+      - "{{ customer.primary.octets }}.53\trelayuser"
+      - "{{ customer.primary.octets }}.53\troot"
+      - "{{ customer.primary.octets }}.53\trsuser"
+      - "{{ customer.primary.octets }}.54\tdataextuser"
+      - "{{ customer.primary.octets }}.54\trelayuser"
+      - "{{ customer.primary.octets }}.54\troot"
+      - "{{ customer.primary.octets }}.54\trsuser"
+      - "{{ customer.primary.octets }}.55\tdataextuser"
+      - "{{ customer.primary.octets }}.55\trelayuser"
+      - "{{ customer.primary.octets }}.55\troot"
+      - "{{ customer.primary.octets }}.55\trsuser"
+      - "{{ customer.primary.octets }}.9\trelayuser"
+      - "::1\troot"
+      - "localhost\tbkpuser"
+      - "localhost\tflushuser"
+      - "localhost\trelayuser"
+      - "localhost\troot"
+      - "relay-db-vip\tdataextuser"
+      - "relay-db-vip\trelayuser"
+      - "relay-vip\tdataextuser"
+      - "{{ hostvars['rly01']['vm']['name'] }}\tdataextuser"
+    req_db_grants: "{{ aio_db_grants|default([]) if groups['em7']|length == 1 else dist_db_grants }}"
+  when:
+    - service_status|default({})|select('search', 'mariadb is not found')|length == 0
+    - service_status|default({})|select('search', 'mariadb is not active')|length == 0
+  tags: sanity
