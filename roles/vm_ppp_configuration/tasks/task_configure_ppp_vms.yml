@@ -1,34 +1,42 @@
 ---
 # tasks file to configure_ppp_vms
-- block:
-  - include_tasks: task_verify_relay.yml
-  - include_tasks:
-      file:
-        task_stop_service.yml
-      apply:
-        vars:
-          - svc_name: "{{ svc_item }}"
-    loop:
-      - mariadb
-      - puppet
-      - garb
-    loop_control:
-      loop_var: svc_item
-
-  - include_tasks: task_update_server_cnf_file.yml
-  - include_tasks: task_galera_new_cluster.yml
-
-  - include_tasks:
-      file:
-        task_start_service.yml
-      apply:
-        vars:
-          - svc_name: "{{ svc_item }}"
-    loop:
-      - mariadb
-    loop_control:
-      loop_var: svc_item
-
-  - include_tasks: task_query_db.yml
-  - include_tasks: task_update_common_properties_file.yml
+- name: Configure_ppp_vms
   when: inventory_hostname is search('rly')
+  block:
+    - name: Verify relay
+      ansible.builtin.include_tasks: task_verify_relay.yml
+    - name: Stop service
+      ansible.builtin.include_tasks:
+        file:
+          task_stop_service.yml
+        apply:
+          vars:
+            - svc_name: "{{ svc_item }}"
+      loop:
+        - mariadb
+        - puppet
+        - garb
+      loop_control:
+        loop_var: svc_item
+
+    - name: Update server cnf file
+      ansible.builtin.include_tasks: task_update_server_cnf_file.yml
+    - name: Galera new cluster
+      ansible.builtin.include_tasks: task_galera_new_cluster.yml
+
+    - name: Start service
+      ansible.builtin.include_tasks:
+        file:
+          task_start_service.yml
+        apply:
+          vars:
+            - svc_name: "{{ svc_item }}"
+      loop:
+        - mariadb
+      loop_control:
+        loop_var: svc_item
+
+    - name: Query DB
+      ansible.builtin.include_tasks: task_query_db.yml
+    - name: Update common properties file
+      ansible.builtin.include_tasks: task_update_common_properties_file.yml

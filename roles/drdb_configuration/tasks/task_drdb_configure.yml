@@ -1,14 +1,20 @@
 ---
 # tasks file to configure DR DB
-- block:
-  - include_tasks: task_check_dbpeer_reachable.yml
-  - include_role:
-      name: vm_configuration_ova
-      tasks_from: task_make_db01_primary.yml
-  - include_role:
-      name: puppet
-      tasks_from: task_em7_check_license.yml
-  - include_tasks: task_copy_proxy_license.yml
-  - include_tasks: task_stop_services.yml
-  - include_tasks: task_coro_install.yml
-  - include_tasks: task_update_dbpassword_silo_conf.yml
+- name: Check dbpeer reachable
+  ansible.builtin.include_tasks: task_check_dbpeer_reachable.yml
+- name: Make DB01 primary
+  ansible.builtin.include_role:
+    name: vm_configuration_ova
+    tasks_from: task_make_db01_primary.yml
+- name: EM7 check license
+  ansible.builtin.include_role:
+    name: puppet
+    tasks_from: task_em7_check_license.yml
+- name: Copy proxy license
+  ansible.builtin.include_tasks: task_copy_proxy_license.yml
+- name: Stop services
+  ansible.builtin.include_tasks: task_stop_services.yml
+- name: Coro install
+  ansible.builtin.include_tasks: task_coro_install.yml
+- name: Update dbpassword silo.conf
+  ansible.builtin.include_tasks: task_update_dbpassword_silo_conf.yml

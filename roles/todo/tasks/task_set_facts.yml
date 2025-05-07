@@ -1,5 +1,5 @@
 ---
-- name: define configure_ssh_keys
+- name: Define configure_ssh_keys
   ansible.builtin.set_fact:
     configure_ssh_keys: true
   when:
@@ -9,7 +9,7 @@
     - bastion.address != ['']
   tags: ssh_keys
 
-- name: define rollback_ssh_keys
+- name: Define rollback_ssh_keys
   ansible.builtin.set_fact:
     rollback_ssh_keys: true
   when:
@@ -19,111 +19,118 @@
     - bastion.address != ['']
   tags: ssh_keys
 
-- name: define add_dns_records
+- name: Define add_dns_records
   ansible.builtin.set_fact:
     add_dns_records: true
-  when: 
+  when:
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
+  tags: ['infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never']
 
-- name: define rollback_dns_records
+- name: Define rollback_dns_records
   ansible.builtin.set_fact:
     rollback_dns_records: true
-  when: 
+  when:
     - rollback | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-  tags: [ 'infra_dns_records', 'infra_configure', 'never' ]
+  tags: ['infra_dns_records', 'infra_configure', 'never']
 
-- name: define configure_infra
+- name: Define configure_infra
   ansible.builtin.set_fact:
     configure_infra: true
   when:
     - deploy | default(false) | bool
     - "'vcenter' in group_names or (customer.disaster_recovery and 'drvcenter' in group_names)"
     - information.deptype is not search('h')
-  tags: [ 'infra_configure', 'infra_build_nodes', 'never' ]
+  tags: ['infra_configure', 'infra_build_nodes', 'never']
 
-- name: define rollback_infra
+- name: Define rollback_infra
   ansible.builtin.set_fact:
     rollback_infra: true
   when:
     - rollback | default(false) | bool
     - "'vcenter' in group_names or (customer.disaster_recovery and 'drvcenter' in group_names)"
     - information.deptype is not search('h')
-  tags: [ 'infra_configure', 'never' ]
+  tags: ['infra_configure', 'never']
 
-- name: define capcheck
+- name: Define capcheck
   ansible.builtin.set_fact:
     capcheck: true
   when:
     - deploy | default(false) | bool
     - "'vcenter' in group_names or (customer.disaster_recovery and 'drvcenter' in group_names)"
-  tags: [ 'capcheck', 'vm_creation', 'infra_build_nodes' ]
-  
-- name: define build_infra_nodes
+  tags: ['capcheck', 'vm_creation', 'infra_build_nodes']
+
+- name: Define build_infra_nodes
   ansible.builtin.set_fact:
     build_infra_nodes: true
   when:
     - deploy | default(false) | bool
-    - (groups['infra'] is defined and 'infra' in group_names) or (groups['nexus'] is defined and 'nexus' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names)
-  tags: [ 'infra_build_nodes', 'never' ]
+    - (groups['infra'] is defined and 'infra' in group_names) or (groups['nexus'] is defined and 'nexus' in group_names) or \
+      (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names)
+  tags: ['infra_build_nodes', 'never']
 
-- name: define rollback_infra_nodes
+- name: Define rollback_infra_nodes
   ansible.builtin.set_fact:
     rollback_infra_nodes: true
   when:
     - rollback | default(false) | bool
-    - (groups['infra'] is defined and 'infra' in group_names) or (groups['nexus'] is defined and 'nexus' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names)
-  tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
+    - (groups['infra'] is defined and 'infra' in group_names) or (groups['nexus'] is defined and 'nexus' in group_names) or \
+      (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names)
+  tags: ['infra_build_nodes', 'infra_configure', 'never']
 
-- name: define check_csr_license
+- name: Define check_csr_license
   ansible.builtin.set_fact:
     check_csr_license: true
   when:
     - deploy | default(false) | bool
     - (groups['infra'] is defined and 'csr' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drcsr' in group_names)
-  tags: [ 'infra_check_csr_license', 'vm_creation' ]
+  tags: ['infra_check_csr_license', 'vm_creation']
 
-- name: define get_release
+- name: Define get_release
   ansible.builtin.set_fact:
     get_release: true
   when:
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-  tags: [ 'get_release', 'infra_build_nodes', 'infra_license', 'vm_creation', 'vm_configuration', 'puppet', 'integ_splunk' ]
+  tags: ['get_release', 'infra_build_nodes', 'infra_license', 'vm_creation', 'vm_configuration', 'puppet', 'integ_splunk']
 
-- name: define create_vms_iso
+- name: Define create_vms_iso
   ansible.builtin.set_fact:
     create_vms_iso: true
   when:
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-    - customer.name | lower is search('mdr|stdal') or customer.version.release[1:]|replace('.', '')|int > 9217 or inventory_hostname is search('em7db') or (groups['em7']|length == 1 and 'em7' in group_names) or (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.')) #or not bfova | default(false) | bool
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+    - customer.name | lower is search('mdr|stdal') or customer.version.release[1:]|replace('.', '')|int > 9217 or inventory_hostname is search('em7db') or \
+      (groups['em7']|length == 1 and 'em7' in group_names) or (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.')) \
+      # or not bfova | default(false) | bool
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_creation
 
-- name: define rollback_vms_iso
+- name: Define rollback_vms_iso
   ansible.builtin.set_fact:
     rollback_vms_iso: true
   when:
     - rollback | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_creation
 
-- name: define harden_vms
+- name: Define harden_vms
   ansible.builtin.set_fact:
     harden_vms: true
   when:
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - inventory_hostname is not search('em7')
-    - customer.name | lower is search('mdr|stdal') or customer.version.release[1:]|replace('.', '')|int > 9217 #or not bfova | default(false) | bool
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+    - customer.name | lower is search('mdr|stdal') or customer.version.release[1:]|replace('.', '')|int > 9217 # or not bfova | default(false) | bool
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_hardening
 
-- name: define install_splunk
+- name: Define install_splunk
   ansible.builtin.set_fact:
     install_splunk: true
   when:
@@ -132,7 +139,7 @@
     - customer.name | lower is search('mdr')
   tags: integ_splunk
 
-- name: define create_vms_ova
+- name: Define create_vms_ova
   ansible.builtin.set_fact:
     create_vms_ova: true
   when:
@@ -143,64 +150,72 @@
     - inventory_hostname is not search('em7db')
     - not (groups['em7']|length == 1 and 'em7' in group_names)
     - not (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.'))
-#    - bfova | default(false) | bool
+   # - bfova | default(false) | bool
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_creation
 
-- name: define deploy_drs
+- name: Define deploy_drs
   ansible.builtin.set_fact:
     deploy_drs: true
   when:
     - deploy | default(false) | bool
-    - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' or (customer.disaster_recovery and hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h')
+    - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' or \
+      (customer.disaster_recovery and hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h')
     - "'stack' in group_names"
     - customer.name | lower is not search('mdr|stdal')
-  tags: [ 'drs_creation', 'vm_creation' ]
+  tags: ['drs_creation', 'vm_creation']
 
-- name: define rollback_drs
+- name: Define rollback_drs
   ansible.builtin.set_fact:
     rollback_drs: true
   when:
     - rollback | default(false) | bool
-    - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' or (customer.disaster_recovery and hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h')
+    - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' or \
+      (customer.disaster_recovery and hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h')
     - "'stack' in group_names"
     - customer.name | lower is not search('mdr|stdal')
-  tags: [ 'drs_creation', 'vm_creation' ]
+  tags: ['drs_creation', 'vm_creation']
 
-- name: define check_drs_creation
+- name: Define check_drs_creation
   ansible.builtin.set_fact:
     check_drs_creation: true
   when:
     - deploy | default(false) | bool
-    - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' or (customer.disaster_recovery and hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h')
+    - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' or \
+      (customer.disaster_recovery and hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h')
     - "'stack' in group_names"
     - customer.name | lower is not search('mdr|stdal')
-  tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]
+  tags: ['drs_status', 'drs_creation', 'vm_creation']
 
-- name: define check_drs_removal
+- name: Define check_drs_removal
   ansible.builtin.set_fact:
     check_drs_removal: true
   when:
     - rollback | default(false) | bool
-    - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' or (customer.disaster_recovery and hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h')
+    - hostvars[groups['vcenter'][0]]['information']['deptype'] == 'h' or \
+      (customer.disaster_recovery and hostvars[groups['drvcenter'][0]]['information']['deptype'] == 'h')
     - "'stack' in group_names"
     - customer.name | lower is not search('mdr|stdal')
-  tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]
+  tags: ['drs_status', 'drs_creation', 'vm_creation']
 
-- name: define configure_vms_iso
+- name: Define configure_vms_iso
   ansible.builtin.set_fact:
     configure_vms_iso: true
   when:
     - deploy | default(false) | bool
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
-    - customer.version.release[1:]|replace('.', '')|int > 9217 or inventory_hostname is search('em7db') or (groups['em7']|length == 1 and 'em7' in group_names) or (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.')) #or not bfova | default(false) | bool
+    - customer.version.release[1:]|replace('.', '')|int > 9217 or inventory_hostname is search('em7db') or \
+      (groups['em7']|length == 1 and 'em7' in group_names) or (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.')) \
+      # or not bfova | default(false) | bool
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: [ 'vm_configuration' ]
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: ['vm_configuration']
 
-- name: define configure_vms_ova
+- name: Define configure_vms_ova
   ansible.builtin.set_fact:
     configure_vms_ova: true
   when:
@@ -211,12 +226,13 @@
     - inventory_hostname is not search('em7db')
     - not (groups['em7']|length == 1 and 'em7' in group_names)
     - not (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.'))
-#    - bfova | default(false) | bool
+   # - bfova | default(false) | bool
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: [ 'vm_configuration' ]
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: ['vm_configuration']
 
-- name: define push_puppet
+- name: Define push_puppet
   ansible.builtin.set_fact:
     push_puppet: true
   when:
@@ -225,12 +241,13 @@
     - customer.name | lower is not search('mdr|stdal')
     - customer.version.release[1:]|replace('.', '')|int <= 9217
     - not (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.'))
-#    - bfova | default(false) | bool
+   # - bfova | default(false) | bool
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: puppet
 
-- name: define rollback_puppet
+- name: Define rollback_puppet
   ansible.builtin.set_fact:
     rollback_puppet: true
   when:
@@ -239,12 +256,13 @@
     - customer.name | lower is not search('mdr|stdal')
     - customer.version.release[1:]|replace('.', '')|int <= 9217
     - not (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.'))
-#    - bfova | default(false) | bool
+   # - bfova | default(false) | bool
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: puppet
 
-- name: define configure_ppp_vms
+- name: Define configure_ppp_vms
   ansible.builtin.set_fact:
     configure_ppp_vms: true
   when:
@@ -253,12 +271,13 @@
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
     - customer.version.release[1:]|replace('.', '')|int <= 9217
-#    - bfova | default(false) | bool
+   # - bfova | default(false) | bool
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: vm_ppp_configuration
 
-- name: define splunk_mop_fix
+- name: Define splunk_mop_fix
   ansible.builtin.set_fact:
     splunk_mop_fix: true
   when:
@@ -266,13 +285,14 @@
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
     - customer.version.release[1:]|replace('.', '')|int <= 9217
-#    - bfova | default(false) | bool
+   # - bfova | default(false) | bool
     - invoker is not search('cdra')
     - customer.version.release[1:] is search('9.1.3')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
   tags: splunk_mop
 
-- name: define sanity_check
+- name: Define sanity_check
   ansible.builtin.set_fact:
     sanity_check: true
   when:
@@ -281,10 +301,11 @@
     - customer.name | lower is not search('mdr|stdal')
     - not (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.'))
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: [ 'sanity' ]
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: ['sanity']
 
-- name: define validate_em7
+- name: Define validate_em7
   ansible.builtin.set_fact:
     validate_em7: true
   when:
@@ -294,10 +315,11 @@
     - customer.name | lower is not search('mdr|stdal')
     - not (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.'))
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: [ 'validate_em7', 'never' ]
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: ['validate_em7', 'never']
 
-- name: define validate_splunk
+- name: Define validate_splunk
   ansible.builtin.set_fact:
     validate_splunk: true
   when:
@@ -306,10 +328,11 @@
     - "'spl' in group_names or (customer.disaster_recovery and 'drspl' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: [ 'validate_splunk', 'never' ]
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: ['validate_splunk', 'never']
 
-- name: define validate_relay
+- name: Define validate_relay
   ansible.builtin.set_fact:
     validate_relay: true
   when:
@@ -318,10 +341,11 @@
     - "'rly' in group_names or (customer.disaster_recovery and 'drrly' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: [ 'validate_relay', 'never' ]
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: ['validate_relay', 'never']
 
-- name: define drdb_configure
+- name: Define drdb_configure
   ansible.builtin.set_fact:
     drdb_configure: true
   when:
@@ -331,10 +355,11 @@
     - customer.name | lower is not search('mdr|stdal')
     - not (inventory_hostname is search('em7') and customer.version.em7_iso is search('em7_x86_64_12.'))
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: [ 'drdb_configuration', 'never' ]
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: ['drdb_configuration', 'never']
 
-- name: define post_install_configuration
+- name: Define post_install_configuration
   ansible.builtin.set_fact:
     post_install_configuration: true
   when:
@@ -342,12 +367,13 @@
     - "'stack' in group_names or (customer.disaster_recovery and 'dr' in group_names)"
     - customer.name | lower is not search('mdr|stdal')
     - invoker is not search('cdra')
-    - not ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
-  tags: [ 'post_install_configuration', 'never' ]
+    - not \
+      ((groups['infra'] is defined and 'infra' in group_names) or (customer.disaster_recovery and groups['drinfra'] is defined and 'drinfra' in group_names))
+  tags: ['post_install_configuration', 'never']
 
-#- name: define check_requiretty
-#  ansible.builtin.set_fact:
-#    check_requiretty: true
-#  when:
-#    - deploy | default(false) | bool
-#    - inventory_hostname in groups['stack'] or ('dr' in group_names and customer.disaster_recovery)
+# - name: Define check_requiretty
+#   ansible.builtin.set_fact:
+#     check_requiretty: true
+#   when:
+#     - deploy | default(false) | bool
+#     - inventory_hostname in groups['stack'] or ('dr' in group_names and customer.disaster_recovery)

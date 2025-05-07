@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test splunk_mop
+  hosts: localhost
   remote_user: root
   roles:
     - splunk_mop

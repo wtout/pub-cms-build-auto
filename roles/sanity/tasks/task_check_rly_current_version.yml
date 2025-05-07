@@ -1,23 +1,23 @@
 ---
 # Tasks to check the current version
 - name: Checking current version
+  vars:
+    fileid: '/opt/puppet/var/data.conf'
   block:
-    - name: check current version
-      ansible.builtin.shell: |
+    - name: Check current version
+      ansible.builtin.command: |
         grep -wi currentversion {{ fileid }}
-      check_mode: no
       register: cv
-    - name: define current_version status
+      changed_when: false
+      check_mode: false
+    - name: Define current_version status
       ansible.builtin.set_fact:
         rly_current_version_status: "{{ 'The current release version is not ' + customer.version.release | replace('R', '') }}"
       when:
         - cv.stdout is not search(customer.version.release | replace('R', ''))
   rescue:
-    - name: define current_version status
+    - name: Define current_version status
       ansible.builtin.set_fact:
         rly_current_version_status: "{{ fileid + ' is not found' }}"
       when:
         - cv.stderr is search('No such file or directory')
-  vars:
-    fileid: '/opt/puppet/var/data.conf'
-  tags: sanity

@@ -1,90 +1,98 @@
 ---
 # Tasks to check coral services status
-- block:
-  - name: check if coral container is up
-    ansible.builtin.shell: |
-      {{ 'sudo -S' if ansible_user != 'root' else '' }} $(which docker) ps {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}
-    register: reg_docker_ps
-    args:
-      warn: false
-    check_mode: no
-    no_log: yes
-  - ansible.builtin.debug:
-      msg: "{{ reg_docker_ps|replace(ansible_ssh_pass, 'obfuscated') }}"
-  - name: define rly_coral_services_status
-    ansible.builtin.set_fact:
-      rly_coral_services_status: ['Coral container is not up']
-    when: reg_docker_ps.stdout_lines|last is not regex('ago[\\s]+Up[\\s][A-Za-z0-9]+')
-  - block:
-    - name: define coral container name
-      ansible.builtin.set_fact:
-        container_name: "{{ (reg_docker_ps.stdout_lines|select('search', 'coral-services ')|list|last).split(' ')|last }}"
-    - name: get coral version
-      ansible.builtin.shell: |
-        {{ 'sudo -S' if ansible_user != 'root' else '' }} $(which docker) exec {{ container_name }} cat VERSION {{ '<<< ' + ansible_password if ansible_user != 'root' else '' }}
-      register: reg_coral_version
-      args:
-        warn: false
-      check_mode: no
-    - name: define coral services list
-      ansible.builtin.set_fact:
-        rly_coral_services: "{{ coral_services|select()|list }}"
-      vars:
-        coral_services:
-          - flower RUNNING
-          - log_catcher RUNNING
-          - logrotate RUNNING
-          - mongo_monitoring RUNNING
-          - mongod RUNNING
-          - mongodb_maint RUNNING
-          - node RUNNING
-          - post-up RUNNING
-          - rabbit_monitoring RUNNING
-          - rabbitmq RUNNING
-          - "{{ 'rabbitmq-controller EXITED' if reg_coral_version.stdout is version('21.0.3', '<') else '' }}"
-          - setup {{ 'RUNNING' if (groups['rly']|length == 1 or reg_coral_version.stdout is version('19.1.1', '=')) else 'EXITED' }}
-          - web:nginx RUNNING
-          - web:uwsgi RUNNING
-          - "{{ 'workers:core.1 RUNNING' if reg_coral_version.stdout is version('19.1.1', '<') else '' }}"
-          - workers:default.1 RUNNING
-          - workers:important.1 RUNNING
-          - workers:local.1 RUNNING
-          - "{{ 'workers:retries.1 RUNNING' if reg_coral_version.stdout is version('19.1.1', '<') else '' }}"
-          - workers:schedule.1 RUNNING
-          - workers:subtask.1 RUNNING
-          - workers:subtask.2 RUNNING
-          - workers:task.1 RUNNING
-    - name: check coral services on the container
-      ansible.builtin.shell: |
-        {{ 'sudo -S' if ansible_user != 'root' else '' }} docker exec {{ (reg_docker_ps.stdout.split('\n')|last).split('   ') | select() | last }} supervisorctl status {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | awk '{print $1" "$2}'
-      register: reg_coral_services
-      args:
-        warn: false
-      check_mode: no
-      no_log: yes
-    - ansible.builtin.debug:
-        msg: "{{ reg_coral_services|replace(ansible_ssh_pass, 'obfuscated') }}"
-    - block:
-      - name: get the faulty services list
-        ansible.builtin.set_fact:
-          flty_svc_list: "{{ flty_svc_list|default([]) | union([svc_item.split(' ')|first]) }}"
-        loop: "{{ reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) }}"
-        loop_control:
-          loop_var: svc_item
-      - name: define rly_coral_services_status
-        ansible.builtin.set_fact:
-          rly_coral_services_status: "{{ rly_coral_services_status|default([]) + ([svc_item + ' is not running in the container'] if svc_expected and not svc_registered else [svc_item + ' is not expected in the container'] if not svc_expected and svc_registered else [svc_item + ' expected state is ' + state_expected + ', got ' + state_registered] if svc_expected and svc_registered and state_expected != state_registered else ['']) }}"
-        vars:
-          svc_expected: "{{ true if rly_coral_services | select('search', svc_item + ' ')|list|length == 1 else false }}"
-          svc_registered: "{{ true if reg_coral_services.stdout_lines | select('search', svc_item + ' ')|list|length == 1 else false }}"
-          state_expected: "{{ (rly_coral_services|select('search', svc_item + ' ')|join).split(' ')|list|last }}"
-          state_registered: "{{ (reg_coral_services.stdout_lines|select('search', svc_item + ' ')|list|join).split(' ')|last }}"
-        loop: "{{ flty_svc_list }}"
-        loop_control:
-          loop_var: svc_item
-      when: reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) | length >= 1
-    when:
-      - reg_docker_ps.stdout_lines|last is regex('ago[\\s]+Up[\\s][0-9]+')
+- name: Check coral services status
   when:
-    - service_status|default({})|select('search', 'docker is not found')|length == 0
-  tags: sanity
+    - service_status | default({}) | select('search', 'docker is not found') | length == 0
+  block:
+    # yamllint disable rule:line-length
+    - name: Check if coral container is up
+      ansible.builtin.shell: |
+        {{ 'sudo -S' if ansible_user != 'root' else '' }} $(which docker) ps {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}
+      args:
+        warn: false
+      register: reg_docker_ps
+      changed_when: false
+      check_mode: false
+      no_log: true
+    - name: Debug message
+      ansible.builtin.debug:
+        msg: "{{ reg_docker_ps | replace(ansible_ssh_pass, 'obfuscated') }}"
+    - name: Define rly_coral_services_status
+      ansible.builtin.set_fact:
+        rly_coral_services_status: ['Coral container is not up']
+      when: reg_docker_ps.stdout_lines | last is not regex('ago[\\s]+Up[\\s][A-Za-z0-9]+')
+    - name: Getting coral services status
+      when:
+        - reg_docker_ps.stdout_lines | last is regex('ago[\\s]+Up[\\s][0-9]+')
+      block:
+        - name: Define coral container name
+          ansible.builtin.set_fact:
+            container_name: "{{ (reg_docker_ps.stdout_lines | select('search', 'coral-services ') | list | last).split(' ') | last }}"
+        - name: Get coral version
+          ansible.builtin.shell: |
+            {{ 'sudo -S' if ansible_user != 'root' else '' }} $(which docker) exec {{ container_name }} cat VERSION {{ '<<< ' + ansible_password if ansible_user != 'root' else '' }}
+          args:
+            warn: false
+          register: reg_coral_version
+          changed_when: false
+          check_mode: false
+        - name: Define coral services list
+          ansible.builtin.set_fact:
+            rly_coral_services: "{{ coral_services | select() | list }}"
+          vars:
+            coral_services:
+              - flower RUNNING
+              - log_catcher RUNNING
+              - logrotate RUNNING
+              - mongo_monitoring RUNNING
+              - mongod RUNNING
+              - mongodb_maint RUNNING
+              - node RUNNING
+              - post-up RUNNING
+              - rabbit_monitoring RUNNING
+              - rabbitmq RUNNING
+              - "{{ 'rabbitmq-controller EXITED' if reg_coral_version.stdout is version('21.0.3', '<') else '' }}"
+              - setup {{ 'RUNNING' if (groups['rly'] | length == 1 or reg_coral_version.stdout is version('19.1.1', '=')) else 'EXITED' }}
+              - web:nginx RUNNING
+              - web:uwsgi RUNNING
+              - "{{ 'workers:core.1 RUNNING' if reg_coral_version.stdout is version('19.1.1', '<') else '' }}"
+              - workers:default.1 RUNNING
+              - workers:important.1 RUNNING
+              - workers:local.1 RUNNING
+              - "{{ 'workers:retries.1 RUNNING' if reg_coral_version.stdout is version('19.1.1', '<') else '' }}"
+              - workers:schedule.1 RUNNING
+              - workers:subtask.1 RUNNING
+              - workers:subtask.2 RUNNING
+              - workers:task.1 RUNNING
+        - name: Check coral services on the container
+          ansible.builtin.shell:
+            cmd: set -o pipefail && {{ 'sudo -S' if ansible_user != 'root' else '' }} docker exec {{ (reg_docker_ps.stdout.split('\n') | last).split('   ') | select() | last }} supervisorctl status {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | awk '{print $1" "$2}'
+            executable: /bin/bash
+          register: reg_coral_services
+          changed_when: false
+          check_mode: false
+          no_log: true
+        - name: Debug message
+          ansible.builtin.debug:
+            msg: "{{ reg_coral_services | replace(ansible_ssh_pass, 'obfuscated') }}"
+        - name: Get faulty services status
+          when: reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) | length >= 1
+          block:
+            - name: Get the faulty services list
+              ansible.builtin.set_fact:
+                flty_svc_list: "{{ flty_svc_list | default([]) | union([svc_item.split(' ') | first]) }}"
+              loop: "{{ reg_coral_services.stdout_lines | symmetric_difference(rly_coral_services) }}"
+              loop_control:
+                loop_var: svc_item
+            - name: Define rly_coral_services_status
+              ansible.builtin.set_fact:
+                rly_coral_services_status: "{{ rly_coral_services_status | default([]) + ([svc_item + ' is not running in the container'] if svc_expected and not svc_registered else [svc_item + ' is not expected in the container'] if not svc_expected and svc_registered else [svc_item + ' expected state is ' + state_expected + ', got ' + state_registered] if svc_expected and svc_registered and state_expected != state_registered else ['']) }}"
+              vars:
+                svc_expected: "{{ true if rly_coral_services | select('search', svc_item + ' ') | list | length == 1 else false }}"
+                svc_registered: "{{ true if reg_coral_services.stdout_lines | select('search', svc_item + ' ') | list | length == 1 else false }}"
+                state_expected: "{{ (rly_coral_services | select('search', svc_item + ' ') | join).split(' ') | list | last }}"
+                state_registered: "{{ (reg_coral_services.stdout_lines | select('search', svc_item + ' ') | list | join).split(' ') | last }}"
+              loop: "{{ flty_svc_list }}"
+              loop_control:
+                loop_var: svc_item
+    # yamllint enable rule:line-length

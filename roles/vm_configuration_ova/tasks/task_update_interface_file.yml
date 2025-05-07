@@ -1,45 +1,47 @@
 ---
 # tasks to update /etc/sysconfig/network-scripts/ifcfg-<intname> on EM7 VM
-- block:
-  - name: Check if IPV6INIT is in interface file
-    ansible.builtin.replace:
-      path: "{{ file_item }}"
-      regexp: '^IPV6INIT=.*$'
-    register: str_exists
-    failed_when: str_exists is not changed
-    ignore_errors: true
-    check_mode: yes
-    loop: "{{ file_path }}"
-    loop_control:
-      loop_var: file_item
-  - name: Add IPV6INIT to interface file
-    ansible.builtin.lineinfile:
-      path: "{{ file_item }}"
-      line: 'IPV6INIT=no'
-      insertafter: '^PEERDNS=no'
-    loop: "{{ file_path }}"
-    loop_control:
-      loop_var: file_item
-    when: str_exists.results | selectattr('file_item', 'equalto', file_item) | map(attribute='failed') | list | first
-  - name: Update IPV6INIT in interface file
-    ansible.builtin.replace:
-      path: "{{ file_item }}"
-      regexp: '^(IPV6INIT=).*$'
-      replace: '\g<1>no'
-    loop: "{{ file_path }}"
-    loop_control:
-      loop_var: file_item
-    notify: restart network
-  - name: Delete lines from interface file
-    ansible.builtin.replace:
-      path: "{{ file_item }}"
-      regexp: '^.*$'
-      replace: ''
-      after: 'IPV6INIT=no'
-    loop: "{{ file_path }}"
-    loop_control:
-      loop_var: file_item
-    notify: restart network
-  become: "{{ true if inventory_hostname is search('em7') else false }}"
+- name: Update interface file
+  become: "{{ true if ansible_user != 'root' else false }}"
   vars:
-    file_path: "{{ ['/etc/sysconfig/network-scripts/ifcfg-ens160'] + ['/etc/sysconfig/network-scripts/ifcfg-ens192'] if netconfig.nic2.ipaddress != '' else ['/etc/sysconfig/network-scripts/ifcfg-ens160'] }}"
+    file_path: "{{ ['/etc/sysconfig/network-scripts/ifcfg-ens160'] + ['/etc/sysconfig/network-scripts/ifcfg-ens192'] if netconfig.nic2.ipaddress != '' else \
+      ['/etc/sysconfig/network-scripts/ifcfg-ens160'] }}"
+  block:
+    - name: Check if IPV6INIT is in interface file
+      ansible.builtin.replace:
+        path: "{{ file_item }}"
+        regexp: '^IPV6INIT=.*$'
+      register: str_exists
+      failed_when: str_exists is not changed
+      ignore_errors: true
+      check_mode: true
+      loop: "{{ file_path }}"
+      loop_control:
+        loop_var: file_item
+    - name: Add IPV6INIT to interface file
+      ansible.builtin.lineinfile:
+        path: "{{ file_item }}"
+        line: 'IPV6INIT=no'
+        insertafter: '^PEERDNS=no'
+      loop: "{{ file_path }}"
+      loop_control:
+        loop_var: file_item
+      when: str_exists.results | selectattr('file_item', 'equalto', file_item) | map(attribute='failed') | list | first
+    - name: Update IPV6INIT in interface file
+      ansible.builtin.replace:
+        path: "{{ file_item }}"
+        regexp: '^(IPV6INIT=).*$'
+        replace: '\g<1>no'
+      loop: "{{ file_path }}"
+      loop_control:
+        loop_var: file_item
+      notify: Restart network
+    - name: Delete lines from interface file
+      ansible.builtin.replace:
+        path: "{{ file_item }}"
+        regexp: '^.*$'
+        replace: ''
+        after: 'IPV6INIT=no'
+      loop: "{{ file_path }}"
+      loop_control:
+        loop_var: file_item
+      notify: Restart network

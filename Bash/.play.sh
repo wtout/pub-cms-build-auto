@@ -1,4 +1,4 @@
-source $(dirname "${0}")/common_parameters.sh
+source "$(dirname "${0}")/common_parameters.sh"
 
 # Main
 PID="${$}"
@@ -17,9 +17,9 @@ SYS_DEF="Definitions/${ENAME}.yml"
 SYS_ALL="${INVENTORY_PATH}/group_vars/all.yml"
 SVCVAULT="vars/.svc_acct_creds_${ENAME}.yml"
 CONTAINERNAME="$(whoami | cut -d '@' -f1)_${ENAME}"
-[[ "$(basename ${0})" == *"deploy"* && "${ENAME}" == *"mdr"* ]] && create_dir "${MDR_AUTO_LOCATION}"
+[[ $(basename ${0}) == *"deploy"* && ${ENAME} == *"mdr"* ]] && create_dir "${MDR_AUTO_LOCATION}"
 NEW_ARGS=$(clean_arguments '--envname' "${ENAME}" "${@}")
-[[ "$(basename ${0})" == *"deploy"* && "${ENAME}" != *"mdr"* ]] && check_deffile
+[[ $(basename ${0}) == *"deploy"* && ${ENAME} != *"mdr"* ]] && check_deffile
 set -- && set -- "${@}" "${NEW_ARGS}"
 for cnum in {1..3}
 do

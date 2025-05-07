@@ -1,62 +1,71 @@
 ---
 # Tasks to ensure EM7 DB01 is primary
-- block:
-  - block:
-    - name: check VM reachable
-      ansible.builtin.shell: ping {{ hostvars[groups['em7db']|first]['ansible_host'] }} -c 1
-      register: db01_vm_reachable
-      become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
-      check_mode: no
-      ignore_errors: true
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    - block:
-      - name: check VM credentials
-        ansible.builtin.wait_for_connection:
-          timeout: 3
-        register: vm_creds
-        ignore_errors: true
-        check_mode: no
-      - name: Update SSH password
-        ansible.builtin.set_fact:
-          ansible_ssh_pass: "{{ postppp }}"
-          ansible_become_pass: "{{ postppp }}"
-        no_log: true
-        when:
-          - vm_creds is failed
-          - vm_creds.msg is search('Invalid/incorrect username/password')
-      delegate_to: "{{ groups['em7db']|first }}"
-      delegate_facts: yes
-      when: db01_vm_reachable is succeeded
-  - name: check if db vip is reachable
-    ansible.builtin.command: ping {{ vip.db }} -c 1
-    retries: 3
-    delay: 5
-    register: db_vip_reachable1
-    ignore_errors: true
-  - name: check if mysql is running on db01
-    ansible.builtin.command: systemctl status mysql
-    register: mysql_service_check
-    check_mode: no
-    ignore_errors: true
-    delegate_to: "{{ groups['em7db']|first }}"
-    when: db01_vm_reachable is succeeded
-  - include_tasks:
-      file: task_reboot_em7dbs.yml
-      apply:
-        vars:
-          db_element: 'first'
-    when: db01_vm_reachable is failed
-  - include_tasks:
-      file: task_reboot_em7dbs.yml
-      apply:
-        vars:
-          db_element: 'last'
-    when:
-      - db01_vm_reachable is failed or db_vip_reachable1 is failed or (mysql_service_check.stdout is not regex('Permission denied, please try again') and mysql_service_check.stdout is regex('dead|failed'))
+- name: Ensure EM7 DB01 is primary
   when:
     - em7_play_hosts_list | length > 0
-    - inventory_hostname == em7_play_hosts_list|first
+    - inventory_hostname == em7_play_hosts_list | first
     - groups['em7db'] is defined
-    - ansible_play_hosts|reject('search', 'dr|bastion|puppet|vcenter|nexus')|select('search','em7db')|list|length > 0
+    - ansible_play_hosts | reject('search', 'dr|bastion|puppet|vcenter|nexus') | select('search','em7db') | list | length > 0
   vars:
     em7_play_hosts_list: "{{ ansible_play_hosts | select('search', 'em7.*') | list }}"
+  block:
+    - name: Determine the correct credentials
+      block:
+        - name: Check VM reachable
+          ansible.builtin.command: ping {{ hostvars[groups['em7db'] | first]['ansible_host'] }} -c 1
+          register: db01_vm_reachable
+          changed_when: false
+          become: "{{ true if host_os | lower is search('almalinux|ubuntu') else false }}"
+          check_mode: false
+          ignore_errors: true
+          delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+        - name: Update credentials
+          delegate_to: "{{ groups['em7db'] | first }}"
+          delegate_facts: true
+          when: db01_vm_reachable is succeeded
+          block:
+            - name: Check VM credentials
+              ansible.builtin.wait_for_connection:
+                timeout: 3
+              register: vm_creds
+              ignore_errors: true
+              check_mode: false
+            - name: Update SSH password
+              ansible.builtin.set_fact:
+                ansible_ssh_pass: "{{ postppp }}"
+                ansible_become_pass: "{{ postppp }}"
+              no_log: true
+              when:
+                - vm_creds is failed
+                - vm_creds.msg is search('Invalid/incorrect username/password')
+    - name: Check if db vip is reachable
+      ansible.builtin.command: ping {{ vip.db }} -c 1
+      retries: 3
+      delay: 5
+      register: db_vip_reachable1
+      changed_when: false
+      ignore_errors: true
+    - name: Check if mysql is running on db01
+      ansible.builtin.command: systemctl status mysql
+      register: mysql_service_check
+      changed_when: false
+      check_mode: false
+      ignore_errors: true
+      delegate_to: "{{ groups['em7db'] | first }}"
+      when: db01_vm_reachable is succeeded
+    - name: Reboot EM7 DBs
+      ansible.builtin.include_tasks:
+        file: task_reboot_em7dbs.yml
+        apply:
+          vars:
+            db_element: 'first'
+      when: db01_vm_reachable is failed
+    - name: Reboot EM7 DBs
+      ansible.builtin.include_tasks:
+        file: task_reboot_em7dbs.yml
+        apply:
+          vars:
+            db_element: 'last'
+      when:
+        - db01_vm_reachable is failed or db_vip_reachable1 is failed or \
+           (mysql_service_check.stdout is not regex('Permission denied, please try again') and mysql_service_check.stdout is regex('dead|failed'))

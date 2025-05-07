@@ -1,6 +1,6 @@
 ---
 # Task file to delete portgroups
-- name: Delete {{ 'DR ' if inventory_hostname is search('dr') else '' }}portgroup
+- name: Delete {{ ('DR ' if inventory_hostname is search('dr') else '') + 'portgroup' }}
   community.vmware.vmware_portgroup:
     hostname: "{{ information.address }}"
     username: "{{ credentials.username }}"

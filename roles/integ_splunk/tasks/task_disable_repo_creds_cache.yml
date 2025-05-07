@@ -1,12 +1,15 @@
 ---
 # Tasks to disable caching of repo credentials
-- block:
-  - name: Disable caching of repo credentials
-    ansible.builtin.command: git config --global --unset credential.helper
-  - name: Delete global gitconfig
-    ansible.builtin.file:
-      path: '~/.gitconfig'
-      state: absent
+- name: Disabling caching of repo credentials
   when: clone_repos is succeeded
   delegate_to: localhost
   run_once: true
+  block:
+    - name: Disable caching of repo credentials
+      ansible.builtin.command: git config --global --unset credential.helper
+      register: disable_cache
+      changed_when: disable_cache.rc == 0
+    - name: Delete global gitconfig
+      ansible.builtin.file:
+        path: '~/.gitconfig'
+        state: absent

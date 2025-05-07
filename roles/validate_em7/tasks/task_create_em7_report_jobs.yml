@@ -1,34 +1,39 @@
 ---
 # Tasks to create EM7 Report jobs and schedules
-- block:
-  - name: check if offer.yml file exists locally
-    ansible.builtin.stat:
-      path: "{{ auto_dir }}/Packages/licenses/offer.yml"
-    register: reg_local_offer
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  - name: copy offer.yml file to primary DB
-    ansible.builtin.copy:
-      dest: '~/offer.yml'
-      src: "{{ auto_dir }}/Packages/licenses/offer.yml"
-    when: reg_local_offer.stat.exists
+- name: Check if offer.yml file exists locally
+  ansible.builtin.stat:
+    path: "{{ auto_dir }}/Packages/licenses/offer.yml"
+  register: reg_local_offer
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+- name: Copy offer.yml file to primary DB
+  ansible.builtin.copy:
+    dest: '~/offer.yml'
+    src: "{{ auto_dir }}/Packages/licenses/offer.yml"
+    mode: '644'
+  when: reg_local_offer.stat.exists
 
-  - name: check if offer.yml file exists on the primary db
-    ansible.builtin.stat:
-      path: '~/offer.yml'
-    register: reg_pdb_offer
-  - name: ensure offer.yml file is present on the primary db
-    ansible.builtin.assert:
-      that: reg_pdb_offer.stat.exists
-      fail_msg: 'The offer.yml file is not present on the primary DB'
+- name: Check if offer.yml file exists on the primary db
+  ansible.builtin.stat:
+    path: '~/offer.yml'
+  register: reg_pdb_offer
+- name: Ensure offer.yml file is present on the primary db
+  ansible.builtin.assert:
+    that: reg_pdb_offer.stat.exists
+    fail_msg: 'The offer.yml file is not present on the primary DB'
 
-  - name: Run the deploy_report.py script
-    ansible.builtin.shell: |
-      python bin/deploy_report.py -c yml/master_report_R9-1-0.yml -o /home/em7release/offer.yml
-    args:
-      chdir: /usr/local/cms_solution/cms_solution_9.2.17/9.2.0/
-    register: reg_deploy_report
-    ignore_errors: yes
-    no_log: yes
-  - ansible.builtin.assert:
-      that: reg_deploy_report is succeeded
-      fail_msg: "{{ reg_deploy_report }}"
+- name: Creating the EM7 report jobs
+  block:
+    - name: Run the deploy_report.py script
+      ansible.builtin.shell: |
+        python bin/deploy_report.py -c yml/master_report_R9-1-0.yml -o /home/em7release/offer.yml
+      args:
+        chdir: /usr/local/cms_solution/cms_solution_9.2.17/9.2.0/
+      register: reg_deploy_report
+      changed_when: reg_deploy_report.rc == 0
+      ignore_errors: true
+      no_log: true
+  rescue:
+    - name: Assert that creating the EM7 report jobs was successful
+      ansible.builtin.assert:
+        that: reg_deploy_report is succeeded
+        fail_msg: "{{ reg_deploy_report }}"

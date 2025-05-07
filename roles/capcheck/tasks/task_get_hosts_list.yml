@@ -1,26 +1,25 @@
 ---
 # tasks to get hosts list
-- block:
-  - name: Get hosts info
-    community.vmware.vmware_host_service_info:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      cluster_name: "{{ cluster_name[0] if cluster_name is defined else information.cluster }}"
-      validate_certs: no
-    register: host_info
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    no_log: true
-  - name: define hosts_list
-    ansible.builtin.set_fact:
-      hosts_list: "{{ hosts_list|default([]) + [host_item.key] }}"
-    loop:  "{{ host_info.host_service_info|dict2items }}"
-    loop_control:
-      loop_var: host_item
-      label: "{{ host_item }}"
-    no_log: true
-  - name: define information.resources
-    ansible.builtin.set_fact:
-      information: "{{ information | combine(new_item, recursive=true) }}"
-    vars:
-      new_item: "{'resources': \"{{ hosts_list | sort }}\"}"
+- name: Get hosts info
+  community.vmware.vmware_host_service_info:
+    hostname: "{{ information.address }}"
+    username: "{{ credentials.username }}"
+    password: "{{ credentials.password }}"
+    cluster_name: "{{ cluster_name[0] if cluster_name is defined else information.cluster }}"
+    validate_certs: false
+  register: host_info
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  no_log: true
+- name: Define hosts_list
+  ansible.builtin.set_fact:
+    hosts_list: "{{ hosts_list | default([]) + [host_item.key] }}"
+  loop: "{{ host_info.host_service_info | dict2items }}"
+  loop_control:
+    loop_var: host_item
+    label: "{{ host_item }}"
+  no_log: true
+- name: Define information.resources
+  ansible.builtin.set_fact:
+    information: "{{ information | combine(new_item, recursive=true) }}"
+  vars:
+    new_item: "{'resources': \"{{ hosts_list | sort }}\"}"

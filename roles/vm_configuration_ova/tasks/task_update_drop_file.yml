@@ -1,46 +1,52 @@
 ---
 # tasks to update /etc/firewalld/zones/drop.xml on EM7 VM
-- block:
-  - name: Update drop.xml on VM
-    ansible.builtin.replace:
-      path: /etc/firewalld/zones/drop.xml
-      regexp: '^(.*{{ task_item.param }}")[0-9]+[\\.][0-9]+[\\.][0-9]+([\\.][0-9]+.*)$'
-      replace: '\g<1>{{ task_item.value }}\g<2>'
-    loop:
-      - { param: 'source address=', value: "{{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}" }
-    loop_control:
-      loop_var: task_item
-    notify: restart firewalld
-  - name: check if ipv4 block exists
-    ansible.builtin.replace:
-      path: /etc/firewalld/zones/drop.xml
-      regexp: |
-        ^  <rule family="ipv4">$
-        ^    <source address=".*{{ loop_item }}"/>$
-        ^    <port protocol="tcp" port="7707"/>$
-        ^    <accept/>$
-        ^  </rule>$
-    loop:
-      - '13'
-      - '14'
-      - '40'
-    loop_control:
-      loop_var: loop_item
-    check_mode: yes
-    register: block_exists
-    failed_when: block_exists is not changed
-    ignore_errors: true
-  - name: Add missing ipv4 block to drop.xml
-    ansible.builtin.lineinfile:
-      path: /etc/firewalld/zones/drop.xml
-      line: "  <rule family=\"ipv4\">\n    <source address=\"{{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}.{{ loop_item }}\"/>\n    <port protocol=\"tcp\" port=\"7707\"/>\n    <accept/>\n  </rule>"
-      insertbefore: '</zone>'
-    loop:
-      - '13'
-      - '14'
-      - '40'
-    loop_control:
-      loop_var: loop_item
-    when: block_exists.results | selectattr('loop_item', 'equalto', loop_item) | map(attribute='failed') | list | first
+- name: Update /etc/firewalld/zones/drop.xml on EM7 VM
   when: inventory_hostname is regex('em7(dc|mc)')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
+  block:
+    - name: Update drop.xml on VM
+      ansible.builtin.replace:
+        path: /etc/firewalld/zones/drop.xml
+        regexp: '^(.*{{ task_item.param }}")[0-9]+[\\.][0-9]+[\\.][0-9]+([\\.][0-9]+.*)$'
+        replace: '\g<1>{{ task_item.value }}\g<2>'
+      loop:
+        - { param: 'source address=', value: "{{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}" }
+      loop_control:
+        loop_var: task_item
+      notify: Restart firewalld
+    - name: Check if ipv4 block exists
+      ansible.builtin.replace:
+        path: /etc/firewalld/zones/drop.xml
+        regexp: |
+          ^  <rule family="ipv4">$
+          ^    <source address=".*{{ loop_item }}"/>$
+          ^    <port protocol="tcp" port="7707"/>$
+          ^    <accept/>$
+          ^  </rule>$
+      loop:
+        - '13'
+        - '14'
+        - '40'
+      loop_control:
+        loop_var: loop_item
+      check_mode: true
+      register: block_exists
+      failed_when: block_exists is not changed
+      ignore_errors: true
+    - name: Add missing ipv4 block to drop.xml
+      ansible.builtin.lineinfile:
+        path: /etc/firewalld/zones/drop.xml
+        line: "  {{ rf }}\n    {{ sa }}\n    {{ pp }}\n    <accept/>\n  </rule>"
+        insertbefore: '</zone>'
+      loop:
+        - '13'
+        - '14'
+        - '40'
+      loop_control:
+        loop_var: loop_item
+      when: block_exists.results | selectattr('loop_item', 'equalto', loop_item) | map(attribute='failed') | list | first
+      vars:
+        octets: "{{ customer.secondary.octets if 'dr' in group_names else customer.primary.octets }}"
+        rf: "<rule family=\"ipv4\">"
+        sa: "<source address=\"{{ octets }}.{{ loop_item }}\"/>"
+        pp: "<port protocol=\"tcp\" port=\"7707\"/>"

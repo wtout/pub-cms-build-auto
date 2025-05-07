@@ -1,31 +1,36 @@
 ---
 # Tasks to check cron jobs
-- block:
-  - name: checking cron jobs
-    block:
-      - name: Check cron jobs
-        ansible.builtin.shell: |
-          crontab -l
-        check_mode: no
-        register: reg_crontab
-    rescue:
-      - debug:
-          msg:
-            - "{{ reg_crontab }}"
-  - name: define crontab_status status
-    ansible.builtin.set_fact:
-      crontab_status: "{{ crontab_status|default([]) + ['cronjob ' + cron_item + ' is not configured'] }}"
-    when: reg_crontab.stdout_lines|select('search', cron_item)|list == []
-    loop: "{{ mas_cronjob_list if 'splmas' in group_names else dpl_cronjob_list }}"
-    loop_control:
-      loop_var: cron_item
-  - ansible.builtin.assert:
-      that: crontab_status|default('') == ''
-      fail_msg: "{{ crontab_status|default('') }}"
+- name: Check cron jobs
   when: inventory_hostname is search('spl(mas|dpl)02')
   vars:
+    myhost: "{{ inventory_hostname[:-2] + '01' }}"
     mas_cronjob_list:
-      - 00 21 * * * rsync -avzh splunk@{{ inventory_hostname[:-2] + '01' }}:~/etc/system/local/server.conf ~/etc/system/local/primaryserver.conf | tee -a ~/logs/sync.log
-      - 00 21 * * * rsync -avzh splunk@{{ inventory_hostname[:-2] + '01' }}:~/etc/master-apps/ ~/etc/master-apps/ | tee -a ~/logs/sync.log
+      - 00 21 * * * rsync -avzh splunk@{{ myhost }}:~/etc/system/local/server.conf ~/etc/system/local/primaryserver.conf | tee -a ~/logs/sync.log
+      - 00 21 * * * rsync -avzh splunk@{{ myhost }}:~/etc/master-apps/ ~/etc/master-apps/ | tee -a ~/logs/sync.log
     dpl_cronjob_list:
-      - 00 21 * * * rsync -avzh splunk@{{ inventory_hostname[:-2] + '01' }}:~/etc/shcluster/ ~/etc/shcluster/ | tee -a ~/logs/sync.log
+      - 00 21 * * * rsync -avzh splunk@{{ myhost }}:~/etc/shcluster/ ~/etc/shcluster/ | tee -a ~/logs/sync.log
+  block:
+    - name: Checking cron jobs
+      block:
+        - name: Check cron jobs
+          ansible.builtin.command: |
+            crontab -l
+          register: reg_crontab
+          changed_when: false
+          check_mode: false
+      rescue:
+        - name: Debug message
+          ansible.builtin.debug:
+            msg:
+              - "{{ reg_crontab }}"
+    - name: Define crontab_status status
+      ansible.builtin.set_fact:
+        crontab_status: "{{ crontab_status | default([]) + ['cronjob ' + cron_item + ' is not configured'] }}"
+      when: reg_crontab.stdout_lines | select('search', cron_item) | list == []
+      loop: "{{ mas_cronjob_list if 'splmas' in group_names else dpl_cronjob_list }}"
+      loop_control:
+        loop_var: cron_item
+    - name: Assert crontab jobs are present
+      ansible.builtin.assert:
+        that: crontab_status | default('') == ''
+        fail_msg: "{{ crontab_status | default('') }}"

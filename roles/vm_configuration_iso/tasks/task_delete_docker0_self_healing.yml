@@ -1,16 +1,18 @@
 ---
 # tasks to delete docker0 on the EM7 VMs with self healing mechanism
-- block:
-  - name: enable docker0 removal
-    ansible.builtin.set_fact:
-      delete_docker0: true
-  - ansible.builtin.include_tasks:
-      file: task_delete_docker0.yml
-      apply:
-        vars:
-          loop_counter: "{{ nic_idx|int + 1 }}"
-    loop: "{{ range(1, 3 + 1)|list }}"
-    loop_control:
-      loop_var: nic_item
-      index_var: nic_idx
+- name: Delete docker0
   become: "{{ true if ansible_user != 'root' else false }}"
+  block:
+    - name: Enable docker0 removal
+      ansible.builtin.set_fact:
+        delete_docker0: true
+    - name: Delete docker0
+      ansible.builtin.include_tasks:
+        file: task_delete_docker0.yml
+        apply:
+          vars:
+            loop_counter: "{{ nic_idx | int + 1 }}"
+      loop: "{{ range(1, 3 + 1) | list }}"
+      loop_control:
+        loop_var: nic_item
+        index_var: nic_idx

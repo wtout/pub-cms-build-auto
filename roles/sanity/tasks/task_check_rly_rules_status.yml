@@ -1,23 +1,24 @@
 ---
 # Tasks to check rules number status
-- block:
-  - name: check if {{ fileid }} exists
-    ansible.builtin.stat:
-      path: "{{ fileid }}"
-    register: file_status
-  - name: define rly_rules_status
-    ansible.builtin.set_fact:
-      rly_rules_status: "{{ rly_rules_status|default([]) + [fileid + ' is not found'] }}"
-    when: not file_status.stat.exists
-  - block:
-    - name: check the number of rules in {{ fileid }}
-      ansible.builtin.shell: |
-        wc -l {{ fileid }} | awk '{print $1}'
+- name: Check if {{ fileid + ' exists' }}
+  ansible.builtin.stat:
+    path: "{{ fileid }}"
+  register: file_status
+- name: Define rly_rules_status
+  ansible.builtin.set_fact:
+    rly_rules_status: "{{ rly_rules_status | default([]) + [fileid + ' is not found'] }}"
+  when: not file_status.stat.exists
+- name: Get the relay rules status
+  when: file_status.stat.exists
+  block:
+    - name: Check the number of rules in {{ fileid }}
+      ansible.builtin.shell:
+        cmd: set -o pipefail && wc -l {{ fileid }} | awk '{print $1}'
+        executable: /bin/bash
       register: reg_rulesnum
-      check_mode: no
-    - name: define rly_rules_status
+      changed_when: false
+      check_mode: false
+    - name: Define rly_rules_status
       ansible.builtin.set_fact:
-        rly_rules_status: "{{ rly_rules_status|default([]) + [' Number of rules in ' + fileid + ' is ' + reg_rulesnum.stdout + ' instead of ' + rulesnum] }}"
-      when: reg_rulesnum.stdout|int != rulesnum|int
-    when: file_status.stat.exists
-  tags: sanity
+        rly_rules_status: "{{ rly_rules_status | default([]) + [' Number of rules in ' + fileid + ' is ' + reg_rulesnum.stdout + ' instead of ' + rulesnum] }}"
+      when: reg_rulesnum.stdout | int != rulesnum | int

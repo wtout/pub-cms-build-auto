@@ -1,20 +1,25 @@
 ---
 # Tasks to update python3 command in files
-- block:
-  - name: find files containing python3
-    ansible.builtin.shell: |
-      grep -rw python3 {{ spl_ansible_path }} | grep -vE 'python3.9|roles' | cut -d ':' -f1 | sort -u
-    register: reg_found_files
-  - ansible.builtin.debug:
-      msg: "{{ reg_found_files }}"
-  - name: replace python3 with python3.9
-    ansible.builtin.replace:
-      path: "{{ file_item }}"
-      regexp: 'python3'
-      replace: 'python3.9'
-    loop: "{{ reg_found_files.stdout_lines }}"
-    loop_control:
-      loop_var: file_item
+- name: Update python3 command in files
   delegate_to: localhost
-  become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+  become: "{{ true if host_os | lower is search('almalinux|ubuntu') else false }}"
   run_once: true
+  block:
+    - name: Find files containing python3
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail && grep -rw python3 {{ spl_ansible_path }} | grep -vE 'python3.9|roles' | cut -d ':' -f1 | sort -u
+        executable: /bin/bash
+      register: reg_found_files
+      changed_when: false
+    - name: Information message
+      ansible.builtin.debug:
+        msg: "{{ reg_found_files }}"
+    - name: Replace python3 with python3.9
+      ansible.builtin.replace:
+        path: "{{ file_item }}"
+        regexp: 'python3'
+        replace: 'python3.9'
+      loop: "{{ reg_found_files.stdout_lines }}"
+      loop_control:
+        loop_var: file_item

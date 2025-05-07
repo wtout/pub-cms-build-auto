@@ -1,75 +1,75 @@
 ---
 # Tasks to create DRS anti-affinity rules for hosted VMs
-- block:
-  - name: define list of guests to check
-    ansible.builtin.set_fact:
-      guest_list: "{{ guest_list|default([]) | union(groups[guest_item]) }}"
-    loop: "{{ play_stack_group_list }}"
-    loop_control:
-      loop_var: guest_item
-
-  - name: Get the guest info
-    community.vmware.vmware_guest_info:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
-      name: "{{ hostvars[host_item]['vm']['name'] }}"
-      schema: "vsphere"
-      properties: ["overallStatus"]
-      validate_certs: no
-    loop: "{{ guest_list | intersect(groups['stack']) }}"
-    loop_control:
-      loop_var: host_item
-    check_mode: no
-    register: vmguest_info
-    ignore_errors: true
-    when:
-      - groups[host_item[:-2]] | length > 1
-
-  - name: Get list of DRS rules to Create
-    ansible.builtin.set_fact:
-      drs_rules_list: "{{ drs_rules_list|default([]) | union([pair_name + '-anti-affinity-rule']) }}"
-    vars:
-      host_num: "{{ host_item[-2:] }}"
-      peer_num: "{{ host_item[-2:]|int - 1 if host_item[-2:]|int % 2 == 0 else host_item[-2:]|int + 1 }}"
-      peer_name: "{{ host_item[:-2] + '%02d' | format(peer_num|int) }}"
-      pair_name: "{{ (hostvars[host_item]['vm']['name'] + '-' + hostvars[peer_name]['vm']['name']) if host_num|int < peer_num|int else (hostvars[peer_name]['vm']['name'] + '-' + hostvars[host_item]['vm']['name']) }}"
-      host_status: "{{ vmguest_info.results | selectattr('host_item', 'equalto', host_item) | map(attribute='instance.overallStatus') | list | join is search('green') }}"
-      peer_status: "{{ vmguest_info.results | selectattr('host_item', 'equalto', peer_name) | map(attribute='instance.overallStatus') | list | join is search('green') }}"
-    loop: "{{ guest_list | intersect(groups['stack']) }}"
-    loop_control:
-      loop_var: host_item
-    when:
-      - vmguest_info is succeeded
-      - groups[host_item[:-2]] | length > 1
-      - host_status
-      - peer_status
-
-  - name: Create DRS anti-affinity rule
-    community.vmware.vmware_vm_vm_drs_rule:
-      hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
-      cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
-      validate_certs: no
-      vms:
-        - "{{ rule_item.split('-')[0] }}"
-        - "{{ rule_item.split('-')[1] }}"
-      affinity_rule: false
-      enabled: yes
-      state: present
-      drs_rule_name: "{{ rule_item }}"
-      mandatory: true
-    loop: "{{ drs_rules_list }}"
-    loop_control:
-      loop_var: rule_item
-    register: create_drs
-    when:
-      - drs_rules_list is defined
-      - drs_rules_list | length >= 1
-      - not ansible_check_mode
-    async: 60
-    poll: 0
+- name: Create DRS rules
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Define list of guests to check
+      ansible.builtin.set_fact:
+        guest_list: "{{ guest_list | default([]) | union(groups[guest_item]) }}"
+      loop: "{{ play_stack_group_list }}"
+      loop_control:
+        loop_var: guest_item
+    - name: Get the guest info
+      community.vmware.vmware_guest_info:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups['vcenter'][0]]['information']['datacenter'] }}"
+        name: "{{ hostvars[host_item]['vm']['name'] }}"
+        schema: "vsphere"
+        properties: ["overallStatus"]
+        validate_certs: false
+      loop: "{{ guest_list | intersect(groups['stack']) }}"
+      loop_control:
+        loop_var: host_item
+      check_mode: false
+      register: vmguest_info
+      ignore_errors: true
+      when:
+        - groups[host_item[:-2]] | length > 1
+    # yamllint disable rule:line-length
+    - name: Get list of DRS rules to Create
+      ansible.builtin.set_fact:
+        drs_rules_list: "{{ drs_rules_list | default([]) | union([pair_name + '-anti-affinity-rule']) }}"
+      vars:
+        host_num: "{{ host_item[-2:] }}"
+        peer_num: "{{ host_item[-2:] | int - 1 if host_item[-2:] | int % 2 == 0 else host_item[-2:] | int + 1 }}"
+        peer_name: "{{ host_item[:-2] + '%02d' | format(peer_num | int) }}"
+        pair_name: "{{ (hostvars[host_item]['vm']['name'] + '-' + hostvars[peer_name]['vm']['name']) if host_num | int < peer_num | int else (hostvars[peer_name]['vm']['name'] + '-' + hostvars[host_item]['vm']['name']) }}"
+        host_status: "{{ vmguest_info.results | selectattr('host_item', 'equalto', host_item) | map(attribute='instance.overallStatus') | list | join is search('green') }}"
+        peer_status: "{{ vmguest_info.results | selectattr('host_item', 'equalto', peer_name) | map(attribute='instance.overallStatus') | list | join is search('green') }}"
+      loop: "{{ guest_list | intersect(groups['stack']) }}"
+      loop_control:
+        loop_var: host_item
+      when:
+        - vmguest_info is succeeded
+        - groups[host_item[:-2]] | length > 1
+        - host_status
+        - peer_status
+    # yamllint enable rule:line-length
+    - name: Create DRS anti-affinity rule
+      community.vmware.vmware_vm_vm_drs_rule:
+        hostname: "{{ hostvars[groups['vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups['vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups['vcenter'][0]]['credentials']['password'] }}"
+        cluster_name: "{{ hostvars[groups['vcenter'][0]]['information']['cluster'] }}"
+        validate_certs: false
+        vms:
+          - "{{ rule_item.split('-')[0] }}"
+          - "{{ rule_item.split('-')[1] }}"
+        affinity_rule: false
+        enabled: true
+        state: present
+        drs_rule_name: "{{ rule_item }}"
+        mandatory: true
+      loop: "{{ drs_rules_list }}"
+      loop_control:
+        loop_var: rule_item
+      register: create_drs
+      when:
+        - drs_rules_list is defined
+        - drs_rules_list | length >= 1
+        - not ansible_check_mode
+      async: 60
+      poll: 0

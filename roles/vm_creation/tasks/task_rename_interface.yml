@@ -1,32 +1,34 @@
 ---
 # Tasks to rename nic2 on the VM
-- block:
-  - name: check if ens224 file exists
-    ansible.builtin.stat:
-      path: '/etc/sysconfig/network-scripts/ifcfg-ens224'
-    register: int_file
-  - block:
-    - name: rename the nic2 interface file on the VM
-      ansible.builtin.copy:
-        src: '/etc/sysconfig/network-scripts/ifcfg-ens224'
-        dest: '/etc/sysconfig/network-scripts/ifcfg-ens192'
-        remote_src: yes
-    - name: rename the nic2 in the interface file on the VM
-      ansible.builtin.replace:
-        path: '/etc/sysconfig/network-scripts/ifcfg-ens192'
-        regexp: '^(.*)ens224'
-        replace: '\g<1>ens192'
-      register: rename_nic
-    - name: delete nic2 old interface file
-      ansible.builtin.file:
-        path: '/etc/sysconfig/network-scripts/ifcfg-ens224'
-        state: absent
-    - name: reboot vm
-      ansible.builtin.reboot:
-        post_reboot_delay: 10
-        reboot_timeout: 180
-      when: rename_nic is changed
-    when: int_file.stat.exists
+- name: Renaming NIC2 block
   become: "{{ true if ansible_user != 'root' else false }}"
-  when:
-    - netconfig.nic2.ipaddress != ''
+  when: netconfig.nic2.ipaddress != ''
+  block:
+    - name: Check if ens224 file exists
+      ansible.builtin.stat:
+        path: '/etc/sysconfig/network-scripts/ifcfg-ens224'
+      register: int_file
+    - name: Rename NIC2
+      when: int_file.stat.exists
+      block:
+        - name: Rename the nic2 interface file on the VM
+          ansible.builtin.copy:
+            src: '/etc/sysconfig/network-scripts/ifcfg-ens224'
+            dest: '/etc/sysconfig/network-scripts/ifcfg-ens192'
+            remote_src: true
+            mode: '644'
+        - name: Rename the nic2 in the interface file on the VM
+          ansible.builtin.replace:
+            path: '/etc/sysconfig/network-scripts/ifcfg-ens192'
+            regexp: '^(.*)ens224'
+            replace: '\g<1>ens192'
+          register: rename_nic
+        - name: Delete nic2 old interface file
+          ansible.builtin.file:
+            path: '/etc/sysconfig/network-scripts/ifcfg-ens224'
+            state: absent
+        - name: Reboot vm
+          ansible.builtin.reboot:
+            post_reboot_delay: 10
+            reboot_timeout: 180
+          when: rename_nic is changed

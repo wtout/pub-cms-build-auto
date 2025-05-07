@@ -4,6 +4,7 @@
   ansible.builtin.shell: |
     git config --global credential.helper cache
     git config --global credential.helper "cache --timeout=12000"
+  register: reg_cache_cred
+  changed_when: reg_cache_cred.rc == 0
   delegate_to: localhost
   run_once: true
-  

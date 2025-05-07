@@ -1,24 +1,27 @@
 ---
 # tasks file for vm_fromiso
-- block:
-  - name: "vm_creation: Delete SSH key"
-    include_role:
-      name: vm_creation
-      tasks_from: task_delete_ssh_key.yml
-  - name: "vm_creation: Define folder name"
-    include_role:
-      name: vm_creation
-      tasks_from: task_define_folder_name.yml
-  - block:
-    - include_tasks: task_check_con_creds.yml
-      when:
-        - ansible_ssh_pass != postppp
-    - include_tasks: task_create_vms.yml
-    when: create_vms_iso | default(false) | bool
-
-  - name: "vm_creation: Rollback VMs"
-    include_role:
-      name: vm_creation
-      tasks_from: task_rollback_vms.yml
-    when: rollback_vms_iso | default(false) | bool
+- name: Main block
   tags: vm_creation
+  block:
+    - name: "Vm_creation: Delete SSH key"
+      ansible.builtin.include_role:
+        name: vm_creation
+        tasks_from: task_delete_ssh_key.yml
+    - name: "Vm_creation: Define folder name"
+      ansible.builtin.include_role:
+        name: vm_creation
+        tasks_from: task_define_folder_name.yml
+    - name: Create VMs
+      when: create_vms_iso | default(false) | bool
+      block:
+        - name: Check connection credentials
+          ansible.builtin.include_tasks: task_check_con_creds.yml
+          when:
+            - ansible_ssh_pass != postppp
+        - name: Create VMs
+          ansible.builtin.include_tasks: task_create_vms.yml
+    - name: "Vm_creation: Rollback VMs"
+      ansible.builtin.include_role:
+        name: vm_creation
+        tasks_from: task_rollback_vms.yml
+      when: rollback_vms_iso | default(false) | bool

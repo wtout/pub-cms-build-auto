@@ -2,21 +2,28 @@
 # Tasks to delete the gateway from network file with self healing
 - name: Delete GTW
   block:
-    - include_tasks: task_delete_gtw_from_network_file.yml
+    - name: Delete gateway from network file
+      ansible.builtin.include_tasks: task_delete_gtw_from_network_file.yml
   rescue:
-    - include_tasks: task_delete_vm.yml
-    - include_tasks: task_deploy_ova_self_healing.yml
-    - include_tasks: task_update_disks_self_healing.yml
-    - include_tasks: task_update_hardware.yml
-    - include_tasks: task_enable_root_login.yml
-    - include_tasks: task_delete_gtw_from_network_file.yml
+    - name: Delete VM
+      ansible.builtin.include_tasks: task_delete_vm.yml
+    - name: Deploy OVA self healing
+      ansible.builtin.include_tasks: task_deploy_ova_self_healing.yml
+    - name: Update disks self healing
+      ansible.builtin.include_tasks: task_update_disks_self_healing.yml
+    - name: Update hardware
+      ansible.builtin.include_tasks: task_update_hardware.yml
+    - name: Enable root login
+      ansible.builtin.include_tasks: task_enable_root_login.yml
+    - name: Delete gateway from network file
+      ansible.builtin.include_tasks: task_delete_gtw_from_network_file.yml
   always:
-    - name: define gtw_rebuild
+    - name: Define gtw_rebuild
       ansible.builtin.set_fact:
-        gtw_rebuild: "{{ delete_em7gtw|default({'failed': false}) is failed or delete_gtw|default({'failed': false}) is failed }}"
-    - name: check if rebuild is still required
+        gtw_rebuild: "{{ delete_em7gtw | default({'failed': false}) is failed or delete_gtw | default({'failed': false}) is failed }}"
+    - name: Check if rebuild is still required
       ansible.builtin.assert:
         that:
-          - not gtw_rebuild|default(false)
+          - not gtw_rebuild | default(false)
         success_msg: 'Deleted the gateway from the network file successfully'
         fail_msg: 'Unable to delete the gateway from the network file successfully'

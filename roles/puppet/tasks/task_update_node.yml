@@ -1,80 +1,89 @@
 ---
 # Tasks to update node
-- block:
-  - include_tasks:
-      file: task_update_class.yml
-      apply:
-        vars:
-          - update_action: "{{ action }}"
-    loop: "{{ ansible_play_hosts }}"
-    loop_control:
-      loop_var: host_item
-    when:
-      - inventory_hostname == host_item
-  - block:
-    - name: read content of {{ class_name }} file
-      ansible.builtin.slurp:
-        src: "/opt/puppet/qs_scripts/{{ class_name }}"
-      register: class_file
-      run_once: true
-    - name: sort the content of the {{ class_name }} file
-      ansible.builtin.copy:
-        content: "{{ (class_file['content'] | b64decode).split('\n') | difference('') | unique | sort | join('\n') }}\n"
-        dest: "/opt/puppet/qs_scripts/{{ class_name }}"
-        force: true
-      run_once: true
-    become: true
-    when:
-      - action_result.changed
-      - action == 'add'
-  - name: get key token for {{ class_name }}
-    ansible.builtin.shell: grep '^{{ class_name }}' /opt/puppet/qs_scripts/keys.txt | awk -F '::' '{print $NF}'
-    register: class_key
-    check_mode: no
-    run_once: true
-  - name: get list of hostnames from {{ class_name }}
-    ansible.builtin.shell: cat /opt/puppet/qs_scripts/{{ class_name }}
-    register: hostnames_list
-    check_mode: no
-    run_once: true
-  - block:
-    - name: Initialize class_hostnames_list
-      ansible.builtin.set_fact:
-        class_hostnames_list: []
-      run_once: true
-    - name: define list of class hostnames
-      ansible.builtin.set_fact:
-        class_hostnames_list: "{{ class_hostnames_list + [mystring] }}"
-      vars:
-        mystring: '["=",["fact","hostname"],"{{ hostname_item }}"]'
-      loop: "{{ hostnames_list.stdout_lines }}"
-      loop_control:
-        loop_var: hostname_item
-      when:
-        - hostname_item != ''
-      run_once: true
-      no_log: true
-    - name: Update puppet class rules
-      ansible.builtin.uri:
-        url: "https://{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}:4433/classifier-api/v1/groups/{{ class_key.stdout }}"
-        method: POST
-        headers:
-          Content-Type: "application/json"
-        body_format: json
-        client_cert: /etc/puppetlabs/puppet/ssl/certs/{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}.pem
-        client_key: /etc/puppetlabs/puppet/ssl/private_keys/{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}.pem
-        validate_certs: no
-        body: "{\"rule\":[\"or\",{{ class_hostnames_list | join(',') }}]}"
-      register: puppet_class
-      become: true
-      until:
-        - puppet_class.status == 200
-      retries: 3
-      failed_when: puppet_class is failed
-      when:
-        - not ansible_check_mode
-      no_log: true
-      run_once: true
-    when:
-      - hostnames_list.stdout_lines | length >= 1
+- name: Update node
   delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
+  block:
+    - name: Update class
+      ansible.builtin.include_tasks:
+        file: task_update_class.yml
+        apply:
+          vars:
+            - update_action: "{{ action }}"
+      loop: "{{ ansible_play_hosts }}"
+      loop_control:
+        loop_var: host_item
+      when:
+        - inventory_hostname == host_item
+    - name: Get content of class file
+      when:
+        - action_result.changed
+        - action == 'add'
+      become: true
+      block:
+        - name: Read content of {{ class_name + ' file' }}
+          ansible.builtin.slurp:
+            src: "/opt/puppet/qs_scripts/{{ class_name }}"
+          register: class_file
+          run_once: true
+        - name: Sort the content of the {{ class_name + ' file' }}
+          ansible.builtin.copy:
+            content: "{{ (class_file['content'] | b64decode).split('\n') | difference('') | unique | sort | join('\n') }}\n"
+            dest: "/opt/puppet/qs_scripts/{{ class_name }}"
+            mode: '644'
+            force: true
+          run_once: true
+    - name: Get key token for {{ class_name }}
+      ansible.builtin.shell:
+        cmd: set -o pipefail && grep '^{{ class_name }}' /opt/puppet/qs_scripts/keys.txt | awk -F '::' '{print $NF}'
+        executable: /bin/bash
+      register: class_key
+      changed_when: false
+      check_mode: false
+      run_once: true
+    - name: Get list of hostnames from {{ class_name }}
+      ansible.builtin.command: cat /opt/puppet/qs_scripts/{{ class_name }}
+      register: hostnames_list
+      changed_when: false
+      check_mode: false
+      run_once: true
+    - name: Updating class rules
+      when:
+        - hostnames_list.stdout_lines | length >= 1
+      block:
+        - name: Initialize class_hostnames_list
+          ansible.builtin.set_fact:
+            class_hostnames_list: []
+          run_once: true
+        - name: Define list of class hostnames
+          ansible.builtin.set_fact:
+            class_hostnames_list: "{{ class_hostnames_list + [mystring] }}"
+          vars:
+            mystring: '["=",["fact","hostname"],"{{ hostname_item }}"]'
+          loop: "{{ hostnames_list.stdout_lines }}"
+          loop_control:
+            loop_var: hostname_item
+          when:
+            - hostname_item != ''
+          run_once: true
+          no_log: true
+        - name: Update puppet class rules
+          ansible.builtin.uri:
+            url: "https://{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}:4433/classifier-api/v1/groups/{{ class_key.stdout }}"
+            method: POST
+            headers:
+              Content-Type: "application/json"
+            body_format: json
+            client_cert: /etc/puppetlabs/puppet/ssl/certs/{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}.pem
+            client_key: /etc/puppetlabs/puppet/ssl/private_keys/{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}.pem
+            validate_certs: false
+            body: "{\"rule\":[\"or\",{{ class_hostnames_list | join(',') }}]}"
+          register: puppet_class
+          become: true
+          until:
+            - puppet_class.status == 200
+          retries: 3
+          failed_when: puppet_class is failed
+          when:
+            - not ansible_check_mode
+          no_log: true
+          run_once: true

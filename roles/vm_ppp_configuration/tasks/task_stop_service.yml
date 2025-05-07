@@ -1,6 +1,6 @@
 ---
 # Tasks to stop {{ svc_name }} on the relay
-- name: stop {{ svc_name }}
+- name: Stop {{ svc_name }}
   ansible.builtin.systemd:
     name: "{{ svc_name }}"
     state: stopped

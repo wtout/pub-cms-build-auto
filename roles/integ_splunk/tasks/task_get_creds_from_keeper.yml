@@ -1,44 +1,50 @@
 ---
 # Tasks to get Core and Customer information from keeper
-- block:
-  - name: Load Core Credentials into the Password Vault
-    ansible.builtin.shell: |
-      sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ keeper_token_filename }}
-    args:
-      chdir: "{{ spl_ansible_path }}"
-    register: reg_core_creds
-    failed_when: "'Error: getting ' in reg_core_creds.stdout"
-    until: reg_core_creds is succeeded
-    retries: 5
-    ignore_errors: true
-    no_log: true
-    when: inventory_hostname is not search('splfwd')
-  - ansible.builtin.assert:
-      that: reg_core_creds.stdout_lines | select('search', '(E|e)rror:') | list | join == ''
-      fail_msg: "{{ reg_core_creds.stdout_lines | select('search', '(E|e)rror:') }}"
-    when:
-      - reg_core_creds is failed
-      - inventory_hostname is not search('splfwd')
-  - name: Load Customer Credentials into the Customer Password Vault
-    ansible.builtin.shell: |
-      sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} --sshcred=build --cert={{ keeper_token_filename }}
-    args:
-      chdir: "{{ spl_ansible_path }}"
-    register: reg_cust_creds
-    failed_when: "'Error: getting ' in reg_cust_creds.stdout"
-    until: reg_cust_creds is succeeded
-    retries: 5
-    ignore_errors: true
-    no_log: true
-    when: inventory_hostname is search('splfwd')
-  - ansible.builtin.assert:
-      that: reg_cust_creds.stdout_lines | select('search', '(E|e)rror:') | list | join == ''
-      fail_msg: "{{ reg_cust_creds.stdout_lines | select('search', '(E|e)rror:') }}"
-    when:
-      - reg_cust_creds is failed
-      - inventory_hostname is search('splfwd')
+- name: Get core and cusotmer information
   delegate_to: localhost
   run_once: true
   environment:
-    http_proxy: "{{ proxy_address|default('') }}"
-    https_proxy: "{{ proxy_address|default('') }}"
+    http_proxy: "{{ proxy_address | default('') }}"
+    https_proxy: "{{ proxy_address | default('') }}"
+  block:
+    - name: Load Core Credentials into the Password Vault
+      ansible.builtin.command: |
+        sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --sshcred=build --cert={{ keeper_token_filename }}
+      args:
+        chdir: "{{ spl_ansible_path }}"
+      register: reg_core_creds
+      changed_when: reg_core_creds.rc == 0
+      failed_when: "'Error: getting ' in reg_core_creds.stdout"
+      until: reg_core_creds is succeeded
+      retries: 5
+      ignore_errors: true
+      no_log: true
+      when: inventory_hostname is not search('splfwd')
+    - name: Assert that core credentials were loaded without error
+      ansible.builtin.assert:
+        that: reg_core_creds.stdout_lines | select('search', '(E|e)rror:') | list | join == ''
+        fail_msg: "{{ reg_core_creds.stdout_lines | select('search', '(E|e)rror:') }}"
+      when:
+        - reg_core_creds is failed
+        - inventory_hostname is not search('splfwd')
+    - name: Load Customer Credentials into the Customer Password Vault
+      ansible.builtin.command: |
+        sh keeper_control.sh --host={{ keeper_host }} --buildenv={{ customer.env_identifier }}  --customer_sname={{ customer.shortname }} \
+        --sshcred=build --cert={{ keeper_token_filename }}
+      args:
+        chdir: "{{ spl_ansible_path }}"
+      register: reg_cust_creds
+      changed_when: reg_cust_creds.rc == 0
+      failed_when: "'Error: getting ' in reg_cust_creds.stdout"
+      until: reg_cust_creds is succeeded
+      retries: 5
+      ignore_errors: true
+      no_log: true
+      when: inventory_hostname is search('splfwd')
+    - name: Assert that customer credentials were loaded without error
+      ansible.builtin.assert:
+        that: reg_cust_creds.stdout_lines | select('search', '(E|e)rror:') | list | join == ''
+        fail_msg: "{{ reg_cust_creds.stdout_lines | select('search', '(E|e)rror:') }}"
+      when:
+        - reg_cust_creds is failed
+        - inventory_hostname is search('splfwd')

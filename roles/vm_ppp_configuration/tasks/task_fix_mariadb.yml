@@ -1,17 +1,17 @@
 ---
 # tasks to fix mariadb if it fails to start on relay
-- block:
-  - name: change bootstrap setting in /data01/mysql_data/mysql/grastate.dat
-    ansible.builtin.replace:
-      path: /data01/mysql_data/mysql/grastate.dat
-      regexp: '^({{ task_item.param }}) (.*)$'
-      replace: '\g<1> {{ task_item.value }}'
-    loop:
-      - { param: 'safe_to_bootstrap:', value: '1' }
-    loop_control:
-      loop_var: task_item
-  - name: Run galera_new_cluster on relay
-    ansible.builtin.shell: galera_new_cluster
-    register: gnc
-    until: gnc.stderr == ''
-    retries: 3
+- name: Change bootstrap setting in /data01/mysql_data/mysql/grastate.dat
+  ansible.builtin.replace:
+    path: /data01/mysql_data/mysql/grastate.dat
+    regexp: '^({{ task_item.param }}) (.*)$'
+    replace: '\g<1> {{ task_item.value }}'
+  loop:
+    - { param: 'safe_to_bootstrap:', value: '1' }
+  loop_control:
+    loop_var: task_item
+- name: Run galera_new_cluster on relay
+  ansible.builtin.command: galera_new_cluster
+  register: gnc
+  changed_when: gnc.rc == 0
+  until: gnc.stderr == ''
+  retries: 3

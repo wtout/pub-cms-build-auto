@@ -1,24 +1,29 @@
 ---
 # tasks to validate bastion credentials
-- block:
-  - name: Validate bastion credentials
-    ansible.builtin.shell: ansible {{ bastion_host }} -i {{ INVPATH }} -m ping -e @{{ VFILE }} --vault-password-file {{ SCRTFILE }} -T 5
-    args:
-      chdir: "{{ auto_dir }}"
-    register: bastion_creds
-    failed_when: "'SUCCESS' not in bastion_creds.stdout"
-    check_mode: no
-    ignore_errors: true
-    when:
-      - hostvars[groups['bastion']|first]['ansible_user'] != ''
-      - hostvars[groups['bastion']|first]['ansible_ssh_pass'] != ''
-  - ansible.builtin.set_fact:
-      b_list: "{{ (b_list|default('') + bastion_host) if b_list|default('') == '' else (b_list|default('') + ', ' + bastion_host) }}"
-    when: "hostvars[groups['bastion']|first]['ansible_user'] == '' or hostvars[groups['bastion']|first]['ansible_ssh_pass'] == '' or bastion_creds is failed"
-  - ansible.builtin.set_fact:
-      abort_play: "{{ abort_play | default(false) or 'yes'|bool }}"
-      err_msg: "{{ b_list }}: {{ bastion_creds.stdout_lines | select('search','msg\":')|list|first|split('msg\": ')|last|regex_replace('\"','') }}"
-    when: "hostvars[groups['bastion']|first]['ansible_user'] == '' or hostvars[groups['bastion']|first]['ansible_ssh_pass'] == '' or bastion_creds is failed"
-  - ansible.builtin.set_fact:
-      delete_creds: yes
-    when: "hostvars[groups['bastion']|first]['ansible_user'] == '' or hostvars[groups['bastion']|first]['ansible_ssh_pass'] == '' or bastion_creds is failed and bastion_creds.stdout is regex('Invalid/incorrect [username|password].*: Permission denied')"
+- name: Validate bastion credentials
+  ansible.builtin.command: ansible {{ bastion_host }} -i {{ INVPATH }} -m ping -e @{{ VFILE }} --vault-password-file {{ SCRTFILE }} -T 5
+  args:
+    chdir: "{{ auto_dir }}"
+  register: bastion_creds
+  changed_when: false
+  failed_when: "'SUCCESS' not in bastion_creds.stdout"
+  check_mode: false
+  ignore_errors: true
+  when:
+    - hostvars[groups['bastion'] | first]['ansible_user'] != ''
+    - hostvars[groups['bastion'] | first]['ansible_ssh_pass'] != ''
+# yamllint disable rule:line-length
+- name: Define b_list
+  ansible.builtin.set_fact:
+    b_list: "{{ (b_list | default('') + bastion_host) if b_list | default('') == '' else (b_list | default('') + ', ' + bastion_host) }}"
+  when: "hostvars[groups['bastion'] | first]['ansible_user'] == '' or hostvars[groups['bastion'] | first]['ansible_ssh_pass'] == '' or bastion_creds is failed"
+- name: Define abort_play and err_msg
+  ansible.builtin.set_fact:
+    abort_play: "{{ abort_play | default(false) or true | bool }}"
+    err_msg: "{{ b_list }}: {{ bastion_creds.stdout_lines | select('search', 'msg\":') | list | first | split('msg\": ') | last | regex_replace('\"', '') }}"
+  when: "hostvars[groups['bastion'] | first]['ansible_user'] == '' or hostvars[groups['bastion'] | first]['ansible_ssh_pass'] == '' or bastion_creds is failed"
+- name: Define delete_creds
+  ansible.builtin.set_fact:
+    delete_creds: true
+  when: "hostvars[groups['bastion'] | first]['ansible_user'] == '' or hostvars[groups['bastion'] | first]['ansible_ssh_pass'] == '' or bastion_creds is failed and bastion_creds.stdout is regex('Invalid/incorrect [username|password].*: Permission denied')"
+# yamllint enable rule:line-length

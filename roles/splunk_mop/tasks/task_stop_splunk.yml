@@ -1,17 +1,20 @@
 ---
 # Tasks to stop splunk
-- block:
-  - name: check if splunk is running
-    ansible.builtin.command: "{{ splunk_dir }}/bin/splunk status"
-    register: splunk_status1
-    ignore_errors: true  
+- name: Check if splunk is running
+  ansible.builtin.command: "{{ splunk_dir }}/bin/splunk status"
+  register: splunk_status1
+  changed_when: false
+  ignore_errors: true
 
-  - block:
-    - name: stop splunk
+- name: Stopping splunk
+  when: splunk_status1.stdout is search('is running')
+  block:
+    - name: Stop splunk
       ansible.builtin.command: "{{ splunk_dir }}/bin/splunk stop"
-    - name: verify splunk is stopped
+      register: stop_splunk
+      changed_when: stop_splunk.rc == 0
+    - name: Verify splunk is stopped
       ansible.builtin.command: "{{ splunk_dir }}/bin/splunk status"
       register: splunk_status2
+      changed_when: false
       failed_when: splunk_status2.stdout is search ('is running')
-    when: splunk_status1.stdout is search('is running')
-  tags: splunk_mop

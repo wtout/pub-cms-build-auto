@@ -1,34 +1,36 @@
 ---
 # Tasks to apply datetime fix
-- block:
-  - ansible.builtin.find:
-      patterns: ['datetime.xml.[0-9]{4,}-.*']
-      paths: "{{ splunk_dir }}/etc/"
-      use_regex: yes
-    register: backup_file
+- name: Find datetime.xml files
+  ansible.builtin.find:
+    patterns: ['datetime.xml.[0-9]{4,}-.*']
+    paths: "{{ splunk_dir }}/etc/"
+    use_regex: true
+  register: backup_file
 
-  - name: copy new datetime.xml to correct location
-    ansible.builtin.copy:
-      remote_src: yes
-      src: /opt/install/cfg/datetime.xml
-      dest: "{{ splunk_dir }}/etc/datetime.xml"
-      backup: "{{ 'no' if backup_file.matched != 0 else 'yes' }}"
-      owner: splunk
-      group: splunk
-      mode: 0444
-  
-  - name: check new datetime file
-    ansible.builtin.lineinfile:
-      path: "{{ splunk_dir }}/etc/datetime.xml"
-      line: '2023'
-      state: present
-    check_mode: yes
+- name: Copy new datetime.xml to correct location
+  ansible.builtin.copy:
+    remote_src: true
+    src: /opt/install/cfg/datetime.xml
+    dest: "{{ splunk_dir }}/etc/datetime.xml"
+    backup: "{{ 'no' if backup_file.matched != 0 else 'yes' }}"
+    owner: splunk
+    group: splunk
+    mode: '444'
 
-  - name: start splunk
-    ansible.builtin.command: "{{ splunk_dir }}/bin/splunk start"
-    
-  - name: check if splunk was started successfully
-    ansible.builtin.command: "{{ splunk_dir }}/bin/splunk status"
-    register: splunk_status3
-    failed_when: splunk_status3.stdout is search('is not running')
-  tags: splunk_mop
+- name: Check new datetime file
+  ansible.builtin.lineinfile:
+    path: "{{ splunk_dir }}/etc/datetime.xml"
+    line: '2023'
+    state: present
+  check_mode: true
+
+- name: Start splunk
+  ansible.builtin.command: "{{ splunk_dir }}/bin/splunk start"
+  register: start_splunk
+  changed_when: start_splunk.rc == 0
+
+- name: Check if splunk was started successfully
+  ansible.builtin.command: "{{ splunk_dir }}/bin/splunk status"
+  register: splunk_status3
+  changed_when: false
+  failed_when: splunk_status3.stdout is search('is not running')

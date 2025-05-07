@@ -1,89 +1,96 @@
 ---
 # tasks file to create port groups
-- block:
-  - name: get list of network names from inventory
-    ansible.builtin.shell: |
-      echo {{ drvm_vars if customer_prefix == customer.secondary.name_prefix else vm_vars }} | sed -e 's/,/\n/g' | grep netname | awk -F 'netname: ' '{print $NF}' | sort -u | sed -e 's/"//g' -e '/^$/d'
-    register: net_names
-    check_mode: no
-  - name: define network names to create on {{ resource }}
-    ansible.builtin.set_fact:
-      net1: "{{ mynet1 if mynet1 != '' else customer_prefix + '-Customer-Net-Internet' }}"
-      net2: "{{ mynet2 if mynet2 != '' else customer_prefix + '-Customer-Net-Outside' }}"
-      net3: "{{ mynet3 if mynet3 != '' else customer_prefix + '-Internal-Net' }}"
-      net4: "{{ mynet4 if mynet4 != '' else customer_prefix + '-Loadbalancer-Net' }}"
-      net5: "{{ mynet5 if mynet5 != '' else customer_prefix + '-Customer-Net-Inside' }}"
-      net6: "{{ mynet6 if mynet6 != '' else customer_prefix + '-EM7-DB-Heartbeat-Link' }}"
-    vars:
-      mynet1: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Internet') | list | join }}"
-      mynet2: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Outside') | list | join }}"
-      mynet3: "{{ net_names.stdout_lines | default([]) | select('search', 'Internal-Net') | list | join }}"
-      mynet4: "{{ net_names.stdout_lines | default([]) | select('search', 'Loadbalancer-Net') | list | join }}"
-      mynet5: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Inside') | list | join }}"
-      mynet6: "{{ net_names.stdout_lines | default([]) | select('search', 'EM7-DB-Heartbeat-Link') | list | join }}"
-  - name: get port groups on {{ resource }}
-    community.vmware.vmware_portgroup_info:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      esxi_hostname: "{{ resource }}"
-      validate_certs: no
-    register: pg_info
-
-  - name: define existing vlan_id on {{ resource }}
-    ansible.builtin.set_fact:
-      exs_int_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net3) | map(attribute='vlan_id') | list | join }}"
-      exs_lb_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net4) | map(attribute='vlan_id') | list | join }}"
-      exs_custin_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net5) | map(attribute='vlan_id') | list | join }}"
-      exs_hbl_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net6) | map(attribute='vlan_id') | list | join }}"
-    vars:
-      my_pg_base: "{{ pg_info.hosts_portgroup_info|dict2items|map(attribute='value')|first }}"
-
-  - name: define existing vlan_id lists on {{ resource }}
-    ansible.builtin.set_fact:
-      exs_int_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Internal-Net') | map(attribute='vlan_id') | list }}"
-      exs_lb_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Loadbalancer-Net') | map(attribute='vlan_id') | list }}"
-      exs_custin_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Customer-Net-Inside') | map(attribute='vlan_id') | list }}"
-      exs_hbl_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'EM7-DB-Heartbeat-Link') | map(attribute='vlan_id') | list }}"
-    vars:
-      my_pg_base: "{{ pg_info.hosts_portgroup_info|dict2items|map(attribute='value')|first }}"
-
-  - name: define vlan_id to create on {{ resource }}
-    ansible.builtin.set_fact:
-      int_vlan_id: "{{ information.internal_net_vlan_id if information.internal_net_vlan_id != '' else exs_int_vlan_id if exs_int_vlan_id != '' else exs_int_vlan_id_list|sort|last|int + 1 if exs_int_vlan_id_list != [] else '100' }}"
-      lb_vlan_id: "{{ information.loadbalancer_net_vlan_id if information.loadbalancer_net_vlan_id != '' else exs_lb_vlan_id if exs_lb_vlan_id != '' else exs_lb_vlan_id_list|sort|last|int + 1 if exs_lb_vlan_id_list != [] else '120' }}"
-      custin_vlan_id: "{{ information.customer_net_inside_vlan_id if information.customer_net_inside_vlan_id != '' else exs_custin_vlan_id if exs_custin_vlan_id != '' else exs_custin_vlan_id_list|sort|last|int + 1 if exs_custin_vlan_id_list != [] else '200' }}"
-      hbl_vlan_id: "{{ information.em7db_heartbeat_link_vlan_id if information.em7db_heartbeat_link_vlan_id != '' else exs_hbl_vlan_id if exs_hbl_vlan_id != '' else exs_hbl_vlan_id_list|sort|last|int + 1 if exs_hbl_vlan_id_list != [] else '300' }}"
-
-  - name: Create port groups on {{ resource }}
-    community.vmware.vmware_portgroup:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      hosts: "{{ resource }}"
-      switch: "{{ portgroup_item.switch }}"
-      portgroup: "{{ portgroup_item.name }}"
-      vlan_id: "{{ portgroup_item.vlan_id | default('0') }}"
-      teaming:
-        failback: yes
-        load_balancing: failover_explicit
-        network_failure_detection: link_status_only
-        notify_switches: yes
-        active_adapters: "{{ active_adapter }}"
-        standby_adapters: "{{ standby_adapter }}"
-      validate_certs: no
-    loop:
-      - { name: "{{ net1 }}", switch: 'vSwitch0', nic_adapter: 'vmnic0' }
-      - { name: "{{ net2 }}", switch: 'vSwitch1', nic_adapter: 'vmnic1' }
-      - { name: "{{ net3 }}", switch: 'vSwitch2', nic_adapter: 'vmnic2', vlan_id: "{{ int_vlan_id }}" }
-      - { name: "{{ net4 }}", switch: 'vSwitch2', nic_adapter: 'vmnic2', vlan_id: "{{ lb_vlan_id }}" }
-      - { name: "{{ net5 }}", switch: "{{ nic3_vswitch }}", nic_adapter: 'vmnic3', vlan_id: "{{ custin_vlan_id }}" }
-      - { name: "{{ net6 }}", switch: 'vSwitch4', nic_adapter: 'vmnic4', vlan_id: "{{ hbl_vlan_id }}" }
-    loop_control:
-      loop_var: portgroup_item
-    vars:
-      nic3_vswitch: "{{ 'vSwitch3' if information.resources|length <= 2 else 'vSwitch2' }}"
-      standby_adapter: "{{ portgroup_item.nic_adapter if portgroup_item.name is search('-Customer-Net-Inside') and information.resources|length > 2 and information.resources[0] != resource else omit }}"
-      active_adapter: "{{ 'vmnic2' if standby_adapter is search('vmnic3') else portgroup_item.nic_adapter }}"
+- name: Create port groups
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Get list of network names from inventory
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail && echo {{ myvars }} | sed -e 's/,/\n/g' | grep netname | awk -F 'netname: ' '{print $NF}' | sort -u | sed -e 's/"//g' -e '/^$/d'
+        executable: /bin/bash
+      register: net_names
+      changed_when: false
+      check_mode: false
+      vars:
+        myvars: "{{ drvm_vars if customer_prefix == customer.secondary.name_prefix else vm_vars }}"
+    - name: Define network names to create on {{ resource }}
+      ansible.builtin.set_fact:
+        net1: "{{ mynet1 if mynet1 != '' else customer_prefix + '-Customer-Net-Internet' }}"
+        net2: "{{ mynet2 if mynet2 != '' else customer_prefix + '-Customer-Net-Outside' }}"
+        net3: "{{ mynet3 if mynet3 != '' else customer_prefix + '-Internal-Net' }}"
+        net4: "{{ mynet4 if mynet4 != '' else customer_prefix + '-Loadbalancer-Net' }}"
+        net5: "{{ mynet5 if mynet5 != '' else customer_prefix + '-Customer-Net-Inside' }}"
+        net6: "{{ mynet6 if mynet6 != '' else customer_prefix + '-EM7-DB-Heartbeat-Link' }}"
+      vars:
+        mynet1: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Internet') | list | join }}"
+        mynet2: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Outside') | list | join }}"
+        mynet3: "{{ net_names.stdout_lines | default([]) | select('search', 'Internal-Net') | list | join }}"
+        mynet4: "{{ net_names.stdout_lines | default([]) | select('search', 'Loadbalancer-Net') | list | join }}"
+        mynet5: "{{ net_names.stdout_lines | default([]) | select('search', 'Customer-Net-Inside') | list | join }}"
+        mynet6: "{{ net_names.stdout_lines | default([]) | select('search', 'EM7-DB-Heartbeat-Link') | list | join }}"
+    - name: Get port groups on {{ resource }}
+      community.vmware.vmware_portgroup_info:
+        hostname: "{{ information.address }}"
+        username: "{{ credentials.username }}"
+        password: "{{ credentials.password }}"
+        esxi_hostname: "{{ resource }}"
+        validate_certs: false
+      register: pg_info
+    - name: Define existing vlan_id on {{ resource }}
+      ansible.builtin.set_fact:
+        exs_int_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net3) | map(attribute='vlan_id') | list | join }}"
+        exs_lb_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net4) | map(attribute='vlan_id') | list | join }}"
+        exs_custin_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net5) | map(attribute='vlan_id') | list | join }}"
+        exs_hbl_vlan_id: "{{ my_pg_base | selectattr('portgroup', 'equalto', net6) | map(attribute='vlan_id') | list | join }}"
+      vars:
+        my_pg_base: "{{ pg_info.hosts_portgroup_info | dict2items | map(attribute='value') | first }}"
+    - name: Define existing vlan_id lists on {{ resource }}
+      ansible.builtin.set_fact:
+        exs_int_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Internal-Net') | map(attribute='vlan_id') | list }}"
+        exs_lb_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Loadbalancer-Net') | map(attribute='vlan_id') | list }}"
+        exs_custin_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'Customer-Net-Inside') | map(attribute='vlan_id') | list }}"
+        exs_hbl_vlan_id_list: "{{ my_pg_base | selectattr('portgroup', 'search', 'EM7-DB-Heartbeat-Link') | map(attribute='vlan_id') | list }}"
+      vars:
+        my_pg_base: "{{ pg_info.hosts_portgroup_info | dict2items | map(attribute='value') | first }}"
+    - name: Define vlan_id to create on {{ resource }}
+      ansible.builtin.set_fact:
+        int_vlan_id: "{{ information.internal_net_vlan_id if information.internal_net_vlan_id != '' else exs_int_vlan_id if \
+          exs_int_vlan_id != '' else exs_int_vlan_id_list | sort | last | int + 1 if exs_int_vlan_id_list != [] else '100' }}"
+        lb_vlan_id: "{{ information.loadbalancer_net_vlan_id if information.loadbalancer_net_vlan_id != '' else exs_lb_vlan_id if \
+          exs_lb_vlan_id != '' else exs_lb_vlan_id_list | sort | last | int + 1 if exs_lb_vlan_id_list != [] else '120' }}"
+        custin_vlan_id: "{{ information.customer_net_inside_vlan_id if information.customer_net_inside_vlan_id != '' else exs_custin_vlan_id if \
+          exs_custin_vlan_id != '' else exs_custin_vlan_id_list | sort | last | int + 1 if exs_custin_vlan_id_list != [] else '200' }}"
+        hbl_vlan_id: "{{ information.em7db_heartbeat_link_vlan_id if information.em7db_heartbeat_link_vlan_id != '' else exs_hbl_vlan_id if \
+          exs_hbl_vlan_id != '' else exs_hbl_vlan_id_list | sort | last | int + 1 if exs_hbl_vlan_id_list != [] else '300' }}"
+    - name: Create port groups on {{ resource }}
+      community.vmware.vmware_portgroup:
+        hostname: "{{ information.address }}"
+        username: "{{ credentials.username }}"
+        password: "{{ credentials.password }}"
+        hosts: "{{ resource }}"
+        switch: "{{ portgroup_item.switch }}"
+        portgroup: "{{ portgroup_item.name }}"
+        vlan_id: "{{ portgroup_item.vlan_id | default('0') }}"
+        teaming:
+          failback: true
+          load_balancing: failover_explicit
+          network_failure_detection: link_status_only
+          notify_switches: true
+          active_adapters: "{{ active_adapter }}"
+          standby_adapters: "{{ standby_adapter }}"
+        validate_certs: false
+      loop:
+        - { name: "{{ net1 }}", switch: 'vSwitch0', nic_adapter: 'vmnic0' }
+        - { name: "{{ net2 }}", switch: 'vSwitch1', nic_adapter: 'vmnic1' }
+        - { name: "{{ net3 }}", switch: 'vSwitch2', nic_adapter: 'vmnic2', vlan_id: "{{ int_vlan_id }}" }
+        - { name: "{{ net4 }}", switch: 'vSwitch2', nic_adapter: 'vmnic2', vlan_id: "{{ lb_vlan_id }}" }
+        - { name: "{{ net5 }}", switch: "{{ nic3_vswitch }}", nic_adapter: 'vmnic3', vlan_id: "{{ custin_vlan_id }}" }
+        - { name: "{{ net6 }}", switch: 'vSwitch4', nic_adapter: 'vmnic4', vlan_id: "{{ hbl_vlan_id }}" }
+      loop_control:
+        loop_var: portgroup_item
+      vars:
+        nic3_vswitch: "{{ 'vSwitch3' if information.resources | length <= 2 else 'vSwitch2' }}"
+        standby_adapter: "{{ portgroup_item.nic_adapter if portgroup_item.name is search('-Customer-Net-Inside') and \
+          information.resources | length > 2 and information.resources[0] != resource else omit }}"
+        active_adapter: "{{ 'vmnic2' if standby_adapter is search('vmnic3') else portgroup_item.nic_adapter }}"

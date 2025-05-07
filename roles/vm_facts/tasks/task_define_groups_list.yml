@@ -1,19 +1,18 @@
 ---
 # Tasks to define groups list
-- block:
-  - name: get list of groups in stack
-    ansible.builtin.set_fact:
-      group_list: "{{ group_list|default([]) | union([host_item[:-2]]) }}"
-    loop: "{{ groups['stack'] }}"
-    loop_control:
-      loop_var: host_item
-    run_once: true
+- name: Get list of groups in stack
+  ansible.builtin.set_fact:
+    group_list: "{{ group_list | default([]) | union([host_item[:-2]]) }}"
+  loop: "{{ groups['stack'] }}"
+  loop_control:
+    loop_var: host_item
+  run_once: true
 
-  - name: get list of groups in dr
-    ansible.builtin.set_fact:
-      drgroup_list: "{{ drgroup_list|default([]) | union([host_item[:-2]]) }}"
-    loop: "{{ groups['dr'] }}"
-    loop_control:
-      loop_var: host_item
-    run_once: true
-    when:  customer.disaster_recovery
+- name: Get list of groups in dr
+  ansible.builtin.set_fact:
+    drgroup_list: "{{ drgroup_list | default([]) | union([host_item[:-2]]) }}"
+  loop: "{{ groups['dr'] }}"
+  loop_control:
+    loop_var: host_item
+  run_once: true
+  when: customer.disaster_recovery

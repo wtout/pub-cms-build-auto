@@ -1,10 +1,13 @@
 ---
 # Task file to add DNS records
-- block:
-  - include_tasks: task_create_dns_records.yml
-    when:
-      - add_dns_records | default(false) | bool
-  - include_tasks: task_rollback_dns_records.yml
-    when:
-      - rollback_dns_records | default(false) | bool
-  tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
+- name: Main infra DNS block
+  tags: ['infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never']
+  block:
+    - name: Create DNS records
+      ansible.builtin.include_tasks: task_create_dns_records.yml
+      when:
+        - add_dns_records | default(false) | bool
+    - name: Rollback DNS records
+      ansible.builtin.include_tasks: task_rollback_dns_records.yml
+      when:
+        - rollback_dns_records | default(false) | bool

@@ -1,7 +1,7 @@
 ---
 # tasks to generate ssh_keys
-- name: generate the ssh keys pair
+- name: Generate the ssh keys pair
   community.crypto.openssh_keypair:
-    path: "{{ LOCAL_SSH_DIR }}/{{ SSH_KEY_FILE }}"
+    path: "{{ local_ssh_dir }}/{{ ssh_key_file }}"
   delegate_to: localhost
   run_once: true

@@ -1,40 +1,42 @@
 ---
 # Tasks to validate EM7 deployment
-- block:
-  - name: Disable requiretty on host
-    ansible.builtin.replace:
-      path: '/etc/sudoers'
-      regexp: '^(Defaults.*requiretty)$'
-      replace: '#\g<1>'
-    register: reg_disable_rtty
-    become: true
-    vars:
-      ansible_ssh_pipelining: no
-  - name: run validation script
-    ansible.builtin.shell: |
-      ./em7_cli_checklist.sh {{ em7vm_type }}
-    register: reg_em7_validate
-    args:
-      chdir: /home/em7release/var/em7qs_utils
-    check_mode: no
-    ignore_errors: yes
-    no_log: yes
-    vars:
-      em7vm_type: "{{ 'aio' if groups['em7']|length == 1 else 'db' if inventory_hostname is search('em7db') else 'ap' if inventory_hostname is search('em7prt') else 'mc' if inventory_hostname is search('em7mc') else 'dc' }}"
-  - name: Re-enable requiretty on host
-    ansible.builtin.replace:
-      path: '/etc/sudoers'
-      regexp: '^#(Defaults.*requiretty)$'
-      replace: '\g<1>'
-    become: true
-    when: reg_disable_rtty is changed
-  - name: define em7status
-    ansible.builtin.set_fact:
-      em7status: "{{ em7status|default([]) | union([loop_item|regex_replace('^.*(FAIL.*)\\\u001b.*$', '\\1')]) }}"
-    loop: "{{ reg_em7_validate.stdout_lines|select('search', 'FAIL')|list }}"
-    loop_control:
-      loop_var: loop_item
-    no_log: yes
-  - ansible.builtin.assert:
-      that: em7status|default([]) == []
-      fail_msg: "{{ em7status|default([]) }}"
+- name: Disable requiretty on host
+  ansible.builtin.replace:
+    path: '/etc/sudoers'
+    regexp: '^(Defaults.*requiretty)$'
+    replace: '#\g<1>'
+  register: reg_disable_rtty
+  become: true
+  vars:
+    ansible_ssh_pipelining: false
+- name: Run validation script
+  ansible.builtin.shell: |
+    ./em7_cli_checklist.sh {{ em7vm_type }}
+  args:
+    chdir: /home/em7release/var/em7qs_utils
+  register: reg_em7_validate
+  changed_when: reg_em7_validate.rc == 0
+  check_mode: false
+  ignore_errors: true
+  no_log: true
+  vars:
+    em7vm_type: "{{ 'aio' if groups['em7'] | length == 1 else 'db' if inventory_hostname is search('em7db') else \
+      'ap' if inventory_hostname is search('em7prt') else 'mc' if inventory_hostname is search('em7mc') else 'dc' }}"
+- name: Re-enable requiretty on host
+  ansible.builtin.replace:
+    path: '/etc/sudoers'
+    regexp: '^#(Defaults.*requiretty)$'
+    replace: '\g<1>'
+  become: true
+  when: reg_disable_rtty is changed
+- name: Define em7status
+  ansible.builtin.set_fact:
+    em7status: "{{ em7status | default([]) | union([loop_item | regex_replace('^.*(FAIL.*)\\\u001b.*$', '\\1')]) }}"
+  loop: "{{ reg_em7_validate.stdout_lines | select('search', 'FAIL') | list }}"
+  loop_control:
+    loop_var: loop_item
+  no_log: true
+- name: Assert that EM7 deployment is successful
+  ansible.builtin.assert:
+    that: em7status | default([]) == []
+    fail_msg: "{{ em7status | default([]) }}"

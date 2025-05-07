@@ -1,25 +1,28 @@
 ---
 # Tasks to switch to environment branch
-- block:
-  - name: check if the {{ branch_name }} branch exists in {{ repo_name }}
-    ansible.builtin.shell: |
-      git branch -a
-    args:
-      chdir: "{{ spl_wd }}/dev/{{ repo_name }}"
-    register: reg_branches
-    check_mode: no
-  - name: define branch name
-    ansible.builtin.set_fact:
-      bn: "{{ branch_name if reg_branches.stdout_lines|select('search', '/' + branch_name)|length == 1 else 'master' }}"
-  - name: checkout {{ bn }} branch
-    ansible.builtin.shell: |
-      git checkout -f {{ bn }}
-    register: reg_checkout
-    args:
-      chdir: "{{ spl_wd }}/dev/{{ repo_name }}"
-    environment:
-      https_proxy: "{{ proxy_address }}"
-    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+- name: Switch to environment branch
   when: clone_repos is succeeded
   delegate_to: localhost
   run_once: true
+  block:
+    - name: Check if the {{ branch_name + ' branch exists in ' + repo_name }}
+      ansible.builtin.command: |
+        git branch -a
+      args:
+        chdir: "{{ spl_wd }}/dev/{{ repo_name }}"
+      register: reg_branches
+      changed_when: false
+      check_mode: false
+    - name: Define branch name
+      ansible.builtin.set_fact:
+        bn: "{{ branch_name if reg_branches.stdout_lines | select('search', '/' + branch_name) | length == 1 else 'master' }}"
+    - name: Checkout {{ bn + ' branch' }}
+      ansible.builtin.command: |
+        git checkout -f {{ bn }}
+      args:
+        chdir: "{{ spl_wd }}/dev/{{ repo_name }}"
+      register: reg_checkout
+      changed_when: reg_checkout.rc == 0
+      environment:
+        https_proxy: "{{ proxy_address }}"
+      become: "{{ true if host_os | lower is search('almalinux|ubuntu') else false }}"

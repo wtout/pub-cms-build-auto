@@ -1,12 +1,14 @@
 ---
 # handlers file for vm_hardening
-- name: save iptables
+- name: Save iptables # noqa: command-instead-of-module
   ansible.builtin.command: service iptables save
+  register: save_iptables
+  changed_when: save_iptables.rc == 0
   become: "{{ true if ansible_user != 'root' else false }}"
 
-- name: restart iptables
+- name: Restart iptables
   ansible.builtin.systemd:
     name: iptables
     state: restarted
-    daemon_reload: yes
+    daemon_reload: true
   become: "{{ true if ansible_user != 'root' else false }}"

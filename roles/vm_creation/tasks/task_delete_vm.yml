@@ -1,122 +1,134 @@
 ---
 # tasks to delete VM
-- block:
-  - include_tasks: task_define_folder_name.yml
-    when: fldr_name is undefined
-  - block:
-    - name: check if VM exists
-      community.vmware.vmware_guest_info:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        name: "{{ vm.name }}"
-        schema: vsphere
-        validate_certs: no
-      no_log: yes
-      delegate_to: localhost
-    rescue:
-    - name: define vm_status
-      ansible.builtin.set_fact:
-        vm_status: 'The VM does not exist'
-  - block:
-    - name: Get the VM datastore
-      community.vmware.vmware_guest_info:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        name: "{{ vm.name }}"
-        validate_certs: no
-      check_mode: no
-      register: reg_vmguest_info
-    - name: Power-off VM
-      community.vmware.vmware_guest:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        name: "{{ vm.name }}"
-        state: poweredoff
-        validate_certs: no
+- name: Delete VM
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Define folder name
+      ansible.builtin.include_tasks: task_define_folder_name.yml
+      when: fldr_name is undefined
+    - name: Check if VM exists
+      block:
+        - name: Check if VM exists
+          community.vmware.vmware_guest_info:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            name: "{{ vm.name }}"
+            schema: vsphere
+            validate_certs: false
+          no_log: true
+          delegate_to: localhost
+      rescue:
+        - name: Define vm_status
+          ansible.builtin.set_fact:
+            vm_status: 'The VM does not exist'
     - name: Delete VM
-      community.vmware.vmware_guest:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        name: "{{ vm.name }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        state: absent
-        validate_certs: no
-    - block:
-      - name: get list of directories or files from datastore
-        uri:
-          url: "https://{{ vcenter_address }}/folder?dcPath={{ vcenter_datacenter }}&dsName={{ ds_item }}"
-          user: "{{ vcenter_username }}"
-          password: "{{ vcenter_password }}"
-          return_content: yes
-          validate_certs: no
-        register: reg_datastore_content
-        until: reg_datastore_content is succeeded
-        no_log: yes
-        loop: "{{ reg_vmguest_info.instance.hw_datastores }}"
-        loop_control:
-          loop_var: ds_item
-        vars:
-          vcenter_address: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-          vcenter_username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-          vcenter_password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-          vcenter_datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      - name: define datastore_content
-        ansible.builtin.set_fact:
-          datastore_content: "{{ datastore_content|default([]) | union(line_item|select('search', vm.name)|list) | flatten }}"
-        no_log: yes
-        loop: "{{ reg_datastore_content.results }}"
-        loop_control:
-          loop_var: file_item
-        vars:
-          line_item: "{{ file_item.content.split('/folder/')[1:] }}"
-      - name: define list of VM files folders
-        ansible.builtin.set_fact:
-          vmfldr_list: "{{ vmfldr_list|default([]) + [fldr_item.split('?dcPath')|first + ':' + (fldr_item.split('dsName=')|last).split('\">')|first] }}"
-        loop: "{{ datastore_content }}"
-        loop_control:
-          loop_var: fldr_item
-      - block:
-#        - include_tasks:
-#            file: task_get_vm_files.yml
-#            apply:
-#              vars:
-#                vm_datastore: "{{ vmfldr_item.split(':')|last }}"
-#                vm_folder: "{{ vmfldr_item.split(':')|first }}"
-#          loop: "{{ vmfldr_list }}"
-#          loop_control:
-#            loop_var: vmfldr_item
-#          when: vmfldr_list|default([]) != []
-#        - name: Delete VM files
-#          community.vmware.vsphere_file:
-#            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-#            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-#            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-#            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-#            datastore: "{{ vmfile_item.split(':')|last }}"
-#            path: "{{ vmfile_item.split(':')|first }}/{{ file_name }}"
-#            state: absent
-#            validate_certs: no
-#          loop: "{{ vmfile_list|default([]) }}"
-#          loop_control:
-#            loop_var: vmfile_item
-#          vars:
-#            file_name: "{{ vmfile_item.split(':')[1] }}"
-#          when: vmfile_list|default([]) != []
-        - ansible.builtin.assert:
-            that: vmfldr_list == []
-            fail_msg: "{{ ['The following folders need to be deleted manually in vcenter'] + vmfldr_list|join(',')|replace(':',' in ')|split(',') }}"
-        when: vmfldr_list is defined
-      when: ansible_run_tags is not search('infra_configure')
-    when: vm_status|default('') == ''
-  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != [''] and bastion.address != [''] and bastion.address != ['']) else 'localhost' }}"
+      when: vm_status | default('') == ''
+      block:
+        - name: Get the VM datastore
+          community.vmware.vmware_guest_info:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            name: "{{ vm.name }}"
+            validate_certs: false
+          check_mode: false
+          register: reg_vmguest_info
+        - name: Power-off VM
+          community.vmware.vmware_guest:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+            folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+              ('/' + fldr_name if fldr_name != '' else '') }}"
+            name: "{{ vm.name }}"
+            state: poweredoff
+            validate_certs: false
+        - name: Delete VM
+          community.vmware.vmware_guest:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            name: "{{ vm.name }}"
+            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
+            folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+              ('/' + fldr_name if fldr_name != '' else '') }}"
+            state: absent
+            validate_certs: false
+        - name: Get list of folders
+          when: ansible_run_tags is not search('infra_configure')
+          block:
+            - name: Get list of directories or files from datastore
+              ansible.builtin.uri:
+                url: "https://{{ vcenter_address }}/folder?dcPath={{ vcenter_datacenter }}&dsName={{ ds_item }}"
+                user: "{{ vcenter_username }}"
+                password: "{{ vcenter_password }}"
+                return_content: true
+                validate_certs: false
+              register: reg_datastore_content
+              until: reg_datastore_content is succeeded
+              no_log: true
+              loop: "{{ reg_vmguest_info.instance.hw_datastores }}"
+              loop_control:
+                loop_var: ds_item
+              vars:
+                vcenter_address: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+                vcenter_username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+                vcenter_password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+                vcenter_datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            - name: Define datastore_content
+              ansible.builtin.set_fact:
+                datastore_content: "{{ datastore_content | default([]) | union(line_item | select('search', vm.name) | list) | flatten }}"
+              no_log: true
+              loop: "{{ reg_datastore_content.results }}"
+              loop_control:
+                loop_var: file_item
+              vars:
+                line_item: "{{ file_item.content.split('/folder/')[1:] }}"
+            - name: Define list of VM files folders
+              ansible.builtin.set_fact:
+                vmfldr_list: "{{ vmfldr_list | default([]) + [fldr_item.split('?dcPath') | first + ':' + (fldr_item.split('dsName=') | last).split('\">') | \
+                  first] }}"
+              loop: "{{ datastore_content }}"
+              loop_control:
+                loop_var: fldr_item
+            - name: Display list of folders to delete
+              when: vmfldr_list is defined
+              block:
+              #  - name: Get VM files
+              #    ansible.builtin.include_tasks:
+              #      file: task_get_vm_files.yml
+              #      apply:
+              #        vars:
+              #          vm_datastore: "{{ vmfldr_item.split(':') | last }}"
+              #          vm_folder: "{{ vmfldr_item.split(':') | first }}"
+              #    loop: "{{ vmfldr_list }}"
+              #    loop_control:
+              #      loop_var: vmfldr_item
+              #    when: vmfldr_list | default([]) != []
+              #  - name: Delete VM files
+              #    community.vmware.vsphere_file:
+              #      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+              #      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+              #      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+              #      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+              #      datastore: "{{ vmfile_item.split(':') | last }}"
+              #      path: "{{ vmfile_item.split(':') | first }}/{{ file_name }}"
+              #      state: absent
+              #      validate_certs: false
+              #    loop: "{{ vmfile_list | default([]) }}"
+              #    loop_control:
+              #      loop_var: vmfile_item
+              #    vars:
+              #      file_name: "{{ vmfile_item.split(':')[1] }}"
+              #    when: vmfile_list | default([]) != []
+                - name: Assert VM folder list is not empty
+                  ansible.builtin.assert:
+                    that: vmfldr_list == []
+                    fail_msg: "{{ ['The following folders need to be deleted manually in vcenter'] + vmfldr_list | join(',') | replace(':', ' in ') | \
+                      split(',') }}"

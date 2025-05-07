@@ -1,28 +1,47 @@
 ---
 # tasks to update the DB cluster virtual IP
-- block:
-  - block:
-    - name: check the cluster virtual IP
-      ansible.builtin.shell: cibadmin --query | grep {{ vip.db }} || echo 'Priamry VIP not configured'
-      register: cluster_vip
-      check_mode: no
-    - name: configure the cluster virtual IP
-      shell: crm_resource -r virtual_ip -p ip -v {{ vip.db }}
-      when: cluster_vip.stdout is search('VIP not configured')
-      notify: restart pacemaker
-    when:
-      - inventory_hostname is search('02')
-      - "'em7db' in group_names"
-  - block:
-    - name: check the DR cluster virtual IP
-      ansible.builtin.shell: cibadmin --query | grep {{ vip.db | replace(customer.primary.octets, customer.secondary.octets) }} || echo 'DR VIP not configured'
-      register: drcluster_vip
-      check_mode: no
-    - name: configure the DR cluster virtual IP
-      shell: crm_resource -r virtual_ip -p ip -v {{ vip.db | replace(customer.primary.octets, customer.secondary.octets) }}
-      when: drcluster_vip.stdout is search('DR VIP not configured')
-      notify: restart pacemaker
-    when:
-      - inventory_hostname is search('01')
-      - "'drem7db' in group_names"
+- name: Update DB cluster virtual IP
   become: "{{ true if ansible_user != 'root' else false }}"
+  block:
+    - name: Update HA cluster virtual IP
+      when:
+        - inventory_hostname is search('02')
+        - "'em7db' in group_names"
+      block:
+        - name: Check the cluster virtual IP
+          ansible.builtin.shell:
+            cmd: set -o pipefail && cibadmin --query | grep {{ vip.db }} || echo 'Priamry VIP not configured'
+            executable: /bin/bash
+          register: cluster_vip
+          changed_when: false
+          check_mode: false
+        - name: Configure the cluster virtual IP
+          ansible.builtin.shell:
+            cmd: set -o pipefail && crm_resource -r virtual_ip -p ip -v {{ vip.db }}
+            executable: /bin/bash
+          reigster: configure_vip
+          changed_when: configure_vip.rc == 0
+          when: cluster_vip.stdout is search('VIP not configured')
+          notify: Restart pacemaker
+    - name: Update DR cluster virtual IP
+      when:
+        - inventory_hostname is search('01')
+        - "'drem7db' in group_names"
+      block:
+        - name: Check the DR cluster virtual IP
+          ansible.builtin.shell:
+            cmd: |
+              set -o pipefail && \
+              cibadmin --query | grep {{ vip.db | replace(customer.primary.octets, customer.secondary.octets) }} || echo 'DR VIP not configured'
+            executable: /bin/bash
+          register: drcluster_vip
+          changed_when: false
+          check_mode: false
+        - name: Configure the DR cluster virtual IP
+          ansible.builtin.shell:
+            cmd: set -o pipefail && crm_resource -r virtual_ip -p ip -v {{ vip.db | replace(customer.primary.octets, customer.secondary.octets) }}
+            executable: /bin/bash
+          register: configure_drvip
+          changed_when: configure_drvip.rc == 0
+          when: drcluster_vip.stdout is search('DR VIP not configured')
+          notify: Restart pacemaker

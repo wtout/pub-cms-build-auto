@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test post_install_configuration
+  hosts: localhost
   remote_user: root
   roles:
-    - roles/post_install_configuration
+    - post_install_configuration

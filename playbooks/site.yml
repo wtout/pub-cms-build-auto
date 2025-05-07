@@ -4,7 +4,7 @@
   hosts: all
   any_errors_fatal: true
   max_fail_percentage: 0
-  gather_facts: no
+  gather_facts: false
 
   roles:
     - role: check_creds
@@ -14,7 +14,7 @@
   hosts: all
   any_errors_fatal: true
   max_fail_percentage: 0
-  gather_facts: no
+  gather_facts: false
 
   roles:
     - role: todo
@@ -25,198 +25,238 @@
   hosts: all
   any_errors_fatal: true
   max_fail_percentage: 0
-  gather_facts: no
+  gather_facts: false
 
   tasks:
-    - block:
-      - include_role:
-          name: ssh_keys
-        when: configure_ssh_keys | default(false) | bool
-        tags: ssh_keys
-      - include_role:
-          name: infra_configure
-        when: configure_infra | default(false) | bool
-        tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]
-      - include_role:
-          name: capcheck
-        when: capcheck | default(false) | bool
-        tags: ['capcheck', 'vm_creation', 'infra_build_nodes']
-      - include_role:
-          name: get_release
-        when: get_release | default(false) | bool
-        tags: [ 'get_release', 'infra_build_nodes', 'infra_license', 'vm_creation', 'vm_configuration', 'puppet', 'integ_splunk' ]
-      - include_role:
-          name: infra_dns_records
-        when: add_dns_records | default(false) | bool
-        tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
-      - include_role:
-          name: infra_build_nodes
-        when: build_infra_nodes | default(false) | bool
-        tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
-      - include_role:
-          name: infra_check_csr_license
-        when: check_csr_license | default(false) | bool
-        tags: [ 'infra_check_csr_license', 'vm_creation' ]
+    - name: Preparation
       when: deploy | default(false) | bool
+      block:
+        - name: SSH keys
+          ansible.builtin.include_role:
+            name: ssh_keys
+          when: configure_ssh_keys | default(false) | bool
+          tags: ssh_keys
+        - name: Infra configure
+          ansible.builtin.include_role:
+            name: infra_configure
+          when: configure_infra | default(false) | bool
+          tags: ['infra_configure', 'infra_build_nodes', 'capcheck']
+        - name: Capcheck
+          ansible.builtin.include_role:
+            name: capcheck
+          when: capcheck | default(false) | bool
+          tags: ['capcheck', 'vm_creation', 'infra_build_nodes']
+        - name: Get release
+          ansible.builtin.include_role:
+            name: get_release
+          when: get_release | default(false) | bool
+          tags: ['get_release', 'infra_build_nodes', 'infra_license', 'vm_creation', 'vm_configuration', 'puppet', 'integ_splunk']
+        - name: Infra DNS records
+          ansible.builtin.include_role:
+            name: infra_dns_records
+          when: add_dns_records | default(false) | bool
+          tags: ['infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never']
+        - name: Infra build nodes
+          ansible.builtin.include_role:
+            name: infra_build_nodes
+          when: build_infra_nodes | default(false) | bool
+          tags: ['infra_build_nodes', 'infra_configure', 'never']
+        - name: Infra check CSR license
+          ansible.builtin.include_role:
+            name: infra_check_csr_license
+          when: check_csr_license | default(false) | bool
+          tags: ['infra_check_csr_license', 'vm_creation']
 
 # Play to create the VMs from ISO
 - name: Deploy VMs from ISO
   hosts: all
-  strategy: free
-  gather_facts: no
+  strategy: free # noqa: run-once[play]
+  gather_facts: false
 
   tasks:
-    - block:
-      - include_role:
-          name: vm_fromiso
-        when: create_vms_iso | default(false) | bool
-        tags: vm_creation
-      - include_role:
-          name: vm_hardening
-        when: harden_vms | default(false) | bool
-        tags: vm_hardening
+    - name: Deploy from ISO
       when: deploy | default(false) | bool
+      block:
+        - name: VM from ISO
+          ansible.builtin.include_role:
+            name: vm_fromiso
+          when: create_vms_iso | default(false) | bool
+          tags: vm_creation
+        - name: VM hardening
+          ansible.builtin.include_role:
+            name: vm_hardening
+          when: harden_vms | default(false) | bool
+          tags: vm_hardening
 
 # Play to create the VMs from OVA
 - name: Deploy VMs from OVA
   hosts: all
-  gather_facts: no
+  gather_facts: false
 
   tasks:
-    - block:
-      - include_role:
-          name: vm_creation
-        when: create_vms_ova | default(false) | bool
-        tags: vm_creation
+    - name: Deploy from OVA
       when: deploy | default(false) | bool
+      block:
+        - name: VM from OVA
+          ansible.builtin.include_role:
+            name: vm_creation
+          when: create_vms_ova | default(false) | bool
+          tags: vm_creation
 
 # Play to deploy MDR stack
 - name: Deploy MDR stack
   hosts: all
   any_errors_fatal: true
   max_fail_percentage: 0
-  gather_facts: no
+  gather_facts: false
 
   tasks:
-    - block:
-      - include_role:
-          name: integ_splunk
-        when: install_splunk | default(false) | bool
-        tags: integ_splunk
+    - name: Deploy MDR
       when: deploy | default(false) | bool
+      block:
+        - name: Integrate Splunk
+          ansible.builtin.include_role:
+            name: integ_splunk
+          when: install_splunk | default(false) | bool
+          tags: integ_splunk
 
 # Play to configure the VMs and to run the puppet push
 - name: Configure VMs
   hosts: all
-  gather_facts: no
+  gather_facts: false
 
   tasks:
-    - block:
-      - include_role:
-          name: drs_creation
-        when: deploy_drs | default(false) | bool
-        tags: [ 'drs_creation', 'vm_creation' ]
-      - include_role:
-          name: vm_configuration_iso
-        when: configure_vms_iso | default(false) | bool
-        tags: vm_configuration
-      - include_role:
-          name: vm_configuration_ova
-        when: configure_vms_ova | default(false) | bool
-        tags: vm_configuration
-      - include_role:
-          name: puppet
-        when: push_puppet | default(false) | bool
-        tags: puppet
-      - include_role:
-          name: vm_ppp_configuration
-        when: configure_ppp_vms | default(false) | bool
-        tags: vm_ppp_configuration
-      - include_role:
-          name: splunk_mop
-        when: splunk_mop_fix | default(false) | bool
-        tags: splunk_mop
-      - include_role:
-          name: drs_status
-        when: check_drs_creation | default(false) | bool
-        tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]
-      - include_role:
-          name: drdb_configuration
-        when: drdb_configure | default(false) | bool
-        tags: [ 'drdb_configuration', 'never' ]
+    - name: Configure VM
       when: deploy | default(false) | bool
+      block:
+        - name: DRS creation
+          ansible.builtin.include_role:
+            name: drs_creation
+          when: deploy_drs | default(false) | bool
+          tags: ['drs_creation', 'vm_creation']
+        - name: VM configuration ISO
+          ansible.builtin.include_role:
+            name: vm_configuration_iso
+          when: configure_vms_iso | default(false) | bool
+          tags: vm_configuration
+        - name: VM configuration OVA
+          ansible.builtin.include_role:
+            name: vm_configuration_ova
+          when: configure_vms_ova | default(false) | bool
+          tags: vm_configuration
+        - name: Puppet
+          ansible.builtin.include_role:
+            name: puppet
+          when: push_puppet | default(false) | bool
+          tags: puppet
+        - name: VM post puppet push configuration
+          ansible.builtin.include_role:
+            name: vm_ppp_configuration
+          when: configure_ppp_vms | default(false) | bool
+          tags: vm_ppp_configuration
+        - name: Splunk MOP
+          ansible.builtin.include_role:
+            name: splunk_mop
+          when: splunk_mop_fix | default(false) | bool
+          tags: splunk_mop
+        - name: DRS status
+          ansible.builtin.include_role:
+            name: drs_status
+          when: check_drs_creation | default(false) | bool
+          tags: ['drs_status', 'drs_creation', 'vm_creation']
+        - name: DRDB configuration
+          ansible.builtin.include_role:
+            name: drdb_configuration
+          when: drdb_configure | default(false) | bool
+          tags: ['drdb_configuration', 'never']
 
 # Play to check the VMs
 - name: Check VMs
   hosts: all
-  gather_facts: no
+  gather_facts: false
 
   tasks:
-    - block:
-      - include_role:
-          name: sanity
-        when: sanity_check | default(false) | bool
-        tags: sanity
-      - include_role:
-          name: validate_em7
-        when: validate_em7 | default(false) | bool
-        tags: [ 'validate_em7', 'never' ]
-      - include_role:
-          name: validate_splunk
-        when: validate_splunk | default(false) | bool
-        tags: [ 'validate_splunk', 'never' ]
-      - include_role:
-          name: validate_relay
-        when: validate_relay | default(false) | bool
-        tags: [ 'validate_relay', 'never' ]
-      - include_role:
-          name: post_install_configuration
-        when: post_install_configuration | default(false) | bool
-        tags: [ 'post_install_configuration', 'never' ]
+    - name: Check VMs
       when: deploy | default(false) | bool
+      block:
+        - name: Sanity
+          ansible.builtin.include_role:
+            name: sanity
+          when: sanity_check | default(false) | bool
+          tags: sanity
+        - name: Validate EM7
+          ansible.builtin.include_role:
+            name: validate_em7
+          when: validate_em7 | default(false) | bool
+          tags: ['validate_em7', 'never']
+        - name: Validate Splunk
+          ansible.builtin.include_role:
+            name: validate_splunk
+          when: validate_splunk | default(false) | bool
+          tags: ['validate_splunk', 'never']
+        - name: Validate relay
+          ansible.builtin.include_role:
+            name: validate_relay
+          when: validate_relay | default(false) | bool
+          tags: ['validate_relay', 'never']
+        - name: Post install configuration
+          ansible.builtin.include_role:
+            name: post_install_configuration
+          when: post_install_configuration | default(false) | bool
+          tags: ['post_install_configuration', 'never']
 
 # Play to delete the VMs
 - name: Rollback VMs
   hosts: all
   order: reverse_inventory
-  gather_facts: no
+  gather_facts: false
 
   tasks:
-    - block:
-      - include_role:
-          name: puppet
-        when: rollback_puppet | default(false) | bool
-        tags: puppet
-      - include_role:
-          name: drs_creation
-        when: rollback_drs | default(false) | bool
-        tags: [ 'drs_creation', 'vm_creation' ]
-      - include_role:
-          name: vm_creation
-        when: rollback_vms_ova | default(false) | bool
-        tags: vm_creation
-      - include_role:
-          name: vm_fromiso
-        when: rollback_vms_iso | default(false) | bool
-        tags: vm_creation
-      - include_role:
-          name: infra_build_nodes
-        when: rollback_infra_nodes | default(false) | bool
-        tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
-      - include_role:
-          name: infra_dns_records
-        when: rollback_dns_records | default(false) | bool
-        tags: [ 'infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never' ]
-      - include_role:
-          name: infra_configure
-        when: rollback_infra | default(false) | bool
-        tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]
-      - include_role:
-          name: drs_status
-        when: check_drs_removal | default(false) | bool
-        tags: [ 'drs_status', 'drs_creation', 'vm_creation' ]
-      - include_role:
-          name: ssh_keys
-        when: rollback_ssh_keys | default(false) | bool
-        tags: ssh_keys
+    - name: Rollback VMs
       when: rollback | default(false) | bool
+      block:
+        - name: Puppet
+          ansible.builtin.include_role:
+            name: puppet
+          when: rollback_puppet | default(false) | bool
+          tags: puppet
+        - name: DRS creation
+          ansible.builtin.include_role:
+            name: drs_creation
+          when: rollback_drs | default(false) | bool
+          tags: ['drs_creation', 'vm_creation']
+        - name: VM from OVA
+          ansible.builtin.include_role:
+            name: vm_creation
+          when: rollback_vms_ova | default(false) | bool
+          tags: vm_creation
+        - name: VM from ISO
+          ansible.builtin.include_role:
+            name: vm_fromiso
+          when: rollback_vms_iso | default(false) | bool
+          tags: vm_creation
+        - name: Infra build nodes
+          ansible.builtin.include_role:
+            name: infra_build_nodes
+          when: rollback_infra_nodes | default(false) | bool
+          tags: ['infra_build_nodes', 'infra_configure', 'never']
+        - name: Infra DNS records
+          ansible.builtin.include_role:
+            name: infra_dns_records
+          when: rollback_dns_records | default(false) | bool
+          tags: ['infra_dns_records', 'infra_configure', 'infra_build_nodes', 'never']
+        - name: Infra configure
+          ansible.builtin.include_role:
+            name: infra_configure
+          when: rollback_infra | default(false) | bool
+          tags: ['infra_configure', 'infra_build_nodes', 'capcheck']
+        - name: DRS status
+          ansible.builtin.include_role:
+            name: drs_status
+          when: check_drs_removal | default(false) | bool
+          tags: ['drs_status', 'drs_creation', 'vm_creation']
+        - name: SSH keys
+          ansible.builtin.include_role:
+            name: ssh_keys
+          when: rollback_ssh_keys | default(false) | bool
+          tags: ssh_keys

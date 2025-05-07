@@ -1,39 +1,43 @@
 ---
 # tasks to update {{ conf_file }} on EM7 VM
-- block:
-  - name: updating max_connections
-    block:
-      - name: get max_connections value
-        ansible.builtin.shell:
-          cmd: silo_mysql -e "select @@global.max_connections;"|grep -v '-'
-        register: reg_max_connections
-        check_mode: no
-        failed_when: reg_max_connections.stdout_lines|last != '1000'
-    rescue:
-      - name: set max_connections in db
-        ansible.builtin.shell:
-          cmd: silo_mysql -e "SET GLOBAL max_connections = 1000;"
-    when:
-      - inventory_hostname is search('01')
-
-  - include_tasks:
-      file: task_update_setting.yml
-      apply:
-        vars:
-          fname: "{{ conf_file }}"
-          varname: "{{ task_item.param }}"
-          varvalue: "{{ task_item.value }}"
-          instanza: "{{ '^innodb_io_capacity_max.*' if task_item.param is search('event_scheduler') else '[mysqld]' }}"
-    loop:
-      - { param: "{{ 'max_connections' + myequal }}", value: '1000' }
-      - { param: "{{ 'innodb_io_capacity' + myequal }}", value: "{{ '2721' if groups['em7']|length == 1 else '2521'}}" }
-      - { param: "{{ 'innodb_io_capacity_max' + myequal }}", value: "{{ '3888' if groups['em7']|length == 1 else '3602'}}" }
-      - { param: "{{ '' if groups['em7']|length == 1 else ('event_scheduler' + myequal) }}", value: 'ON' }
-    loop_control:
-      loop_var: task_item
-    when: task_item.param != ''
-    vars:
-      myequal: "{{ '=' if conf_file is search('siteconfig') else ' = ' }}"
-
-  when: inventory_hostname is search('em7db') or (groups['em7']|length == 1 and 'em7' in group_names)
+- name: Update configuration file
+  when: inventory_hostname is search('em7db') or (groups['em7'] | length == 1 and 'em7' in group_names)
   become: "{{ true if ansible_user != 'root' else false }}"
+  block:
+    - name: Updating max_connections
+      when: inventory_hostname is search('01')
+      block:
+        - name: Get max_connections value
+          ansible.builtin.shell:
+            cmd: set -o pipefail && silo_mysql -e "select @@global.max_connections;" | grep -v '-'
+            executable: /bin/bash
+          register: reg_max_connections
+          changed_when: false
+          check_mode: false
+          failed_when: reg_max_connections.stdout_lines | last != '1000'
+      rescue:
+        - name: Set max_connections in db
+          ansible.builtin.shell:
+            cmd: sset -o pipefail && ilo_mysql -e "SET GLOBAL max_connections = 1000;"
+            executable: /bin/bash
+          register: set_max_conns
+          changed_when: set_max_conns.rc == 0
+    - name: Update setting
+      ansible.builtin.include_tasks:
+        file: task_update_setting.yml
+        apply:
+          vars:
+            fname: "{{ conf_file }}"
+            varname: "{{ task_item.param }}"
+            varvalue: "{{ task_item.value }}"
+            instanza: "{{ '^innodb_io_capacity_max.*' if task_item.param is search('event_scheduler') else '[mysqld]' }}"
+      loop:
+        - { param: "{{ 'max_connections' + myequal }}", value: '1000' }
+        - { param: "{{ 'innodb_io_capacity' + myequal }}", value: "{{ '2721' if groups['em7'] | length == 1 else '2521' }}" }
+        - { param: "{{ 'innodb_io_capacity_max' + myequal }}", value: "{{ '3888' if groups['em7'] | length == 1 else '3602' }}" }
+        - { param: "{{ '' if groups['em7'] | length == 1 else ('event_scheduler' + myequal) }}", value: 'ON' }
+      loop_control:
+        loop_var: task_item
+      when: task_item.param != ''
+      vars:
+        myequal: "{{ '=' if conf_file is search('siteconfig') else ' = ' }}"

@@ -1,92 +1,96 @@
 ---
 # tasks to get cluster name
-- block:
-  - name: Get host info
-    community.vmware.vmware_host_facts:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      esxi_hostname: "{{ host_item }}"
-      validate_certs: no
-    loop: "{{ information.resources }}"
-    loop_control:
-      loop_var: host_item
-    register: host_facts
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+- name: Get host info
+  community.vmware.vmware_host_facts:
+    hostname: "{{ information.address }}"
+    username: "{{ credentials.username }}"
+    password: "{{ credentials.password }}"
+    esxi_hostname: "{{ host_item }}"
+    validate_certs: false
+  loop: "{{ information.resources }}"
+  loop_control:
+    loop_var: host_item
+  register: host_facts
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
 
-  - name: define host cluster
-    ansible.builtin.set_fact:
-      host_cluster: "{{ host_cluster|default({}) | combine( {loop_item.host_item: loop_item.ansible_facts.cluster} ) }}"
-    loop: "{{ host_facts.results }}"
-    loop_control:
-      loop_var: loop_item
-      label: "{{ loop_item.ansible_facts.ansible_hostname }}"
+- name: Define host cluster
+  ansible.builtin.set_fact:
+    host_cluster: "{{ host_cluster | default({}) | combine({loop_item.host_item: loop_item.ansible_facts.cluster}) }}"
+  loop: "{{ host_facts.results }}"
+  loop_control:
+    loop_var: loop_item
+    label: "{{ loop_item.ansible_facts.ansible_hostname }}"
 
-  - ansible.builtin.debug:
-      msg:
-        - "{{ host_cluster[host_item] }}"
-    loop: "{{ information.resources }}"
-    loop_control:
-      loop_var: host_item
+- name: Display Host's cluseter
+  ansible.builtin.debug:
+    msg:
+      - "{{ host_cluster[host_item] }}"
+  loop: "{{ information.resources }}"
+  loop_control:
+    loop_var: host_item
 
-  - name: define AIO host cluster
-    ansible.builtin.set_fact:
-      cluster_host: "{{ cluster_host|default([]) + [host_cluster|dict2items|selectattr('key', 'match', information.resources[0])|map(attribute='value')|list|first] }}"
-    when:
-      - "'vcenter' in group_names"
-      - information.resources|length == 1
+- name: Define AIO host cluster
+  ansible.builtin.set_fact:
+    cluster_host: "{{ cluster_host | default([]) + [host_cluster | dict2items | selectattr('key', 'match', information.resources[0]) | map(attribute='value') \
+      | list | first] }}"
+  when:
+    - "'vcenter' in group_names"
+    - information.resources | length == 1
 
-  - name: define hosts cluster membership
-    ansible.builtin.set_fact:
-      cluster_host: "{{ cluster_host|default([]) + [host_cluster|dict2items|selectattr('key', 'match', information.resources[loop_item])|map(attribute='value')|list|first] }}"
-    loop: "{{ range(0, information.resources|length) }}"
-    loop_control:
-      loop_var: loop_item
-    when: information.resources|length >= 1
-  - name: verify that hosts are in the same cluster
-    ansible.builtin.assert:
-      that:
-        - "cluster_host|unique|length == 1"
-      fail_msg: "{{ 'HA' if 'vcenter' in group_names else 'DR' }} hosts cannot be in different clusters. Aborting"
-    when:
-      - configure_infra|default(false)
-      - information.resources|length > 1
+- name: Define hosts cluster membership
+  ansible.builtin.set_fact:
+    cluster_host: "{{ cluster_host | default([]) + [host_cluster | dict2items | selectattr('key', 'match', information.resources[loop_item]) | \
+      map(attribute='value') | list | first] }}"
+  loop: "{{ range(0, information.resources | length) }}"
+  loop_control:
+    loop_var: loop_item
+  when: information.resources | length >= 1
+- name: Verify that hosts are in the same cluster
+  ansible.builtin.assert:
+    that:
+      - "cluster_host | unique | length == 1"
+    fail_msg: "{{ 'HA' if 'vcenter' in group_names else 'DR' }} hosts cannot be in different clusters. Aborting"
+  when:
+    - configure_infra | default(false)
+    - information.resources | length > 1
 
-  - name: verify that DR hosts are not in the same cluster as HA hosts
-    ansible.builtin.assert:
-      that:
-        - "cluster_host|unique != hostvars[groups['vcenter']|first]['cluster_host']|unique"
-      fail_msg: "DR hosts cannot be in the same cluster as the HA hosts. Aborting"
-    when:
-      - configure_infra|default(false)
-      - "'drvcenter' in group_names"
-      - hostvars[groups['vcenter']|first]['cluster_host']|default([]) != []
-      - hostvars[groups['vcenter']|first]['cluster_host']|default([])|unique|join != 'None'
-      - cluster_host != []
-      - cluster_host|unique|join != 'None'
+- name: Verify that DR hosts are not in the same cluster as HA hosts
+  ansible.builtin.assert:
+    that:
+      - "cluster_host | unique != hostvars[groups['vcenter'] | first]['cluster_host'] | unique"
+    fail_msg: "DR hosts cannot be in the same cluster as the HA hosts. Aborting"
+  when:
+    - configure_infra | default(false)
+    - "'drvcenter' in group_names"
+    - hostvars[groups['vcenter'] | first]['cluster_host'] | default([]) != []
+    - hostvars[groups['vcenter'] | first]['cluster_host'] | default([]) | unique | join != 'None'
+    - cluster_host != []
+    - cluster_host | unique | join != 'None'
 
-  - ansible.builtin.debug:
-      msg: "{{ myhadr + myhst + myclst }} {{ ('Primary' if 'vcenter' in group_names else 'Secondary') + ' cluster name spcified in definition file will be ignored' if cluster_host|unique|join != 'None' else '' }}"
-    vars:
-      myhadr: "{{ 'HA' if 'vcenter' in group_names else 'DR' }}"
-      myhst: "{{ ' hosts are' if information.resources|length > 1 else ' Host is' }}"
-      myclst: "{{ ' already in the ' + cluster_host|unique|join + ' cluster.' if cluster_host|unique|join != 'None' else ' not in any cluster' }}"
-    when:
-      - information.resources|length >= 1
-      - cluster_host != []
-      - cluster_host|unique|join != information.cluster
+- name: Display ignore message
+  ansible.builtin.debug:
+    msg: "{{ myhadr + myhst + myclst }} {{ ('Primary' if 'vcenter' in group_names else 'Secondary') + \
+      ' cluster name spcified in definition file will be ignored' if cluster_host | unique | join != 'None' else '' }}"
+  vars:
+    myhadr: "{{ 'HA' if 'vcenter' in group_names else 'DR' }}"
+    myhst: "{{ ' hosts are' if information.resources | length > 1 else ' Host is' }}"
+    myclst: "{{ ' already in the ' + cluster_host | unique | join + ' cluster.' if cluster_host | unique | join != 'None' else ' not in any cluster' }}"
+  when:
+    - information.resources | length >= 1
+    - cluster_host != []
+    - cluster_host | unique | join != information.cluster
 
-  - name: update vcenter's information with cluster names
-    ansible.builtin.set_fact:
-      information: "{{ information|default({}) | combine(new_item, recursive=true) }}"
-    vars:
-      new_item: "{'{{ task_item.key }}': '{{ task_item.value }}'}"
-    loop:
-      - { key: 'cluster', value: "{{ cluster_host|unique|join }}" }
-    loop_control:
-      loop_var: task_item
-      label: "{{ task_item }}"
-    when:
-      - task_item.value != ''
-      - task_item.value != 'None'
-    no_log: true
+- name: Update vcenter's information with cluster names
+  ansible.builtin.set_fact:
+    information: "{{ information | default({}) | combine(new_item, recursive=true) }}"
+  vars:
+    new_item: "{'{{ task_item.key }}': '{{ task_item.value }}'}"
+  loop:
+    - { key: 'cluster', value: "{{ cluster_host | unique | join }}" }
+  loop_control:
+    loop_var: task_item
+    label: "{{ task_item }}"
+  when:
+    - task_item.value != ''
+    - task_item.value != 'None'
+  no_log: true
