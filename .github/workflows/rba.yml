@@ -109,6 +109,9 @@ jobs:
       - name: Create /data/Packages directory
         run: |
           sudo mkdir -p /data/Packages
+      - name: Create ${HOME}/certificates Directory
+        run: |
+          mkdir -p ${HOME}/certificates
       - name: Create Bash/vp.sh
         run: |
           echo -e "#! /bin/bash\necho ansible" > Bash/vp.sh
