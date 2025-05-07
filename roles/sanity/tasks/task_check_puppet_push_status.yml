@@ -1,25 +1,26 @@
 ---
 # Tasks to check if puppet has been pushed
-- block:
-  - name: get list of done files
-    ansible.builtin.find:
-      paths: "{{ puppet_folder }}"
-      patterns: '*.done'
-    register: pupp_files
-    no_log: true
-  - ansible.builtin.debug:
-      msg:
-        - "Found {{ pupp_files.matched }} .done files"
-  - name: define puppet_push_status
-    ansible.builtin.set_fact:
-      puppet_push_status: 'Puppet push was not started'
-    when: pupp_files.matched == 0
-  - name: define puppet_push_status
-    ansible.builtin.set_fact:
-      puppet_push_status: 'Puppet push did not complete successfully'
-    when:
-      - pupp_files.matched > 0
-      - pupp_files.matched < 32
+- name: Check if puppet has been pushed
   vars:
     puppet_folder: "{{ '/home/em7release/var' if inventory_hostname is search('em7') else '/opt/puppet/var' }}"
-  tags: sanity
+  block:
+    - name: Get list of done files
+      ansible.builtin.find:
+        paths: "{{ puppet_folder }}"
+        patterns: '*.done'
+      register: pupp_files
+      no_log: true
+    - name: Information message
+      ansible.builtin.debug:
+        msg:
+          - "Found {{ pupp_files.matched }} .done files"
+    - name: Define puppet_push_status
+      ansible.builtin.set_fact:
+        puppet_push_status: 'Puppet push was not started'
+      when: pupp_files.matched == 0
+    - name: Define puppet_push_status
+      ansible.builtin.set_fact:
+        puppet_push_status: 'Puppet push did not complete successfully'
+      when:
+        - pupp_files.matched > 0
+        - pupp_files.matched < 32

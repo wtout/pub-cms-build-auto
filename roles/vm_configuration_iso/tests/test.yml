@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test vm_configuration_iso
+  hosts: localhost
   remote_user: root
   roles:
-    - vm_configuration
+    - vm_configuration_iso

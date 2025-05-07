@@ -1,33 +1,35 @@
 ---
 # tasks file for vm_configuration
-- block:
-  - name: check VM reachable
-    ansible.builtin.shell: ping {{ ansible_host }} -c 1
-    register: vco_vm_reachable
-    ignore_errors: true
-    check_mode: no
-    become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  - block:
-    - name: check original credentials
-      block:
-        - name: check VM credentials
-          ansible.builtin.wait_for_connection:
-            timeout: 3
-          register: vco_vm_creds
-          check_mode: no
-      rescue:
-        - name: Update SSH password
-          ansible.builtin.set_fact:
-            ansible_ssh_pass: "{{ postppp }}"
-            ansible_become_pass: "{{ postppp }}"
-          no_log: true
-          when:
-            - vco_vm_creds.msg is search('Invalid/incorrect username/password')
-      when:
-        - ansible_ssh_pass != postppp
-
-    - include_tasks: task_configure_vms.yml
-    when: vco_vm_reachable is succeeded
+- name: Main vm_configuration block
   when: configure_vms_ova | default(false) | bool
   tags: vm_configuration
+  block:
+    - name: Check VM reachable
+      ansible.builtin.command: ping {{ ansible_host }} -c 1
+      register: vco_vm_reachable
+      changed_when: false
+      ignore_errors: true
+      check_mode: false
+      become: "{{ true if host_os | lower is search('almalinux|ubuntu') else false }}"
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - name: Determine the correct credentials
+      when: vco_vm_reachable is succeeded
+      block:
+        - name: Check original credentials
+          when: ansible_ssh_pass != postppp
+          block:
+            - name: Check VM credentials
+              ansible.builtin.wait_for_connection:
+                timeout: 3
+              register: vco_vm_creds
+              check_mode: false
+          rescue:
+            - name: Update SSH password
+              ansible.builtin.set_fact:
+                ansible_ssh_pass: "{{ postppp }}"
+                ansible_become_pass: "{{ postppp }}"
+              no_log: true
+              when:
+                - vco_vm_creds.msg is search('Invalid/incorrect username/password')
+        - name: Configure VMs
+          ansible.builtin.include_tasks: task_configure_vms.yml

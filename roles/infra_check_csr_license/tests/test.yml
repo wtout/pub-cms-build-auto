@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test infra_check_csr_license
+  hosts: localhost
   remote_user: root
   roles:
     - infra_check_csr_license

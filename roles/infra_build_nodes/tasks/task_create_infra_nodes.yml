@@ -1,119 +1,113 @@
 ---
 # Task file to create infra nodes
-- block:
-  - name: "vm_creation: Define folder name"
-    include_role:
-      name: vm_creation
-      tasks_from: task_define_folder_name.yml
-    when: inventory_hostname is not search('nexus')
-
-  - name: "vm_creation: get onprem datastore"
-    include_role:
-      name: vm_creation
-      tasks_from: task_get_onprem_datastore.yml
-    when: inventory_hostname is not search('nexus')
-
-  - name: Deploy Windows Jump Servers From OVA
-    include_tasks: task_deploy_winjmp.yml
-    when: inventory_hostname is search('winjmp')
-
-  - name: Deploy Loadbalancers From OVA
-    include_tasks: task_deploy_nsvpx_ova.yml
-    when:
-      - inventory_hostname is search('nsvpx')
-      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is not search('h') or hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('Staging|STG|PAE-HX-DC')
-
-  - name: Deploy And Configure CSRs
-    block:
-      - name: Create CSR customized OVA file
-        ansible.builtin.include_tasks:
-          file: task_create_customized_ova.yml
-          apply:
-            vars:
-              host_index: "{{ loop_item }}"
-        loop: "{{ range(0,groups['csr']|length) }}"
-        loop_control:
-          loop_var: loop_item
-        when:
-          - inventory_hostname in groups['csr']
-          - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
-      - name: Create DR CSR customized OVA file
-        ansible.builtin.include_tasks:
-          file: task_create_customized_ova.yml
-          apply:
-            vars:
-              host_index: "{{ loop_item }}"
-        loop: "{{ range(0,groups['drcsr']|length) }}"
-        loop_control:
-          loop_var: loop_item
-        when:
-          - customer.disaster_recovery
-          - inventory_hostname in groups['drcsr']
-          - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
-      - name: Deploy CSR From OVA
-        include_tasks: task_deploy_csr_ova.yml
-      - name: Delete CSR customized OVA file
-        ansible.builtin.include_tasks: task_delete_customized_ova.yml
-        when: hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
-      - name: Configure CSR
-        include_tasks: task_configure_csr.yml
-      - name: License CSR
-        include_tasks: task_license_csr.yml
-      - name: Check CSR license
-        ansible.builtin.include_role:
-          name: infra_check_csr_license
-          tasks_from: task_check_csr_license.yml
-    when: inventory_hostname is search('csr')
-
-  - name: Update Nexus Switch
-    include_tasks:
-      file: task_update_nexus.yml
-      apply:
-        vars:
-          dhcp_address: "{{ hostvars['csr01']['dhcp_address'] }}"
-          dr_route: no
-    when:
-      - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
-      - ansible_play_batch | select('search', 'csr') | list | length >= 1
-      - inventory_hostname is search('nexus')
-      - hostvars['csr01']['dhcp_address'] is defined
-      - hostvars['csr01']['dhcp_address'] != ''
-
-  - name: Update DR Nexus Switch
-    include_tasks:
-      file: task_update_nexus.yml
-      apply:
-        vars:
-          dhcp_address: "{{ hostvars['drcsr01']['dhcp_address'] }}"
-          dr_route: yes
-    when:
-      - customer.disaster_recovery
-      - ansible_play_batch | select('search', 'dr') | list | length >= 1
-      - ansible_play_batch | select('search', 'drcsr') | list | length >= 1
-      - inventory_hostname is search('nexus')
-      - hostvars['drcsr01']['dhcp_address'] is defined
-      - hostvars['drcsr01']['dhcp_address'] != ''
-
-  - name: Configure Netscalers
-    include_tasks: task_configure_nsvpx.yml
-    when:
-      - inventory_hostname is search('nsvpx')
-      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is not search('h') or hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('Staging|STG|PAE-HX-DC')
-
-  - name: Send Webex Teams Notification With CSR/Netscaler Serial Numbers
-    include_tasks: task_notify_teams.yml
-    when: not inventory_hostname is search('nexus')
-
-  - name: Configure Windows Jump Severs
-    include_tasks: task_configure_winjmp.yml
-    when: inventory_hostname is search('winjmp')
-
-  - name: "vm_creation: Define folder name"
-    include_role:
-      name: vm_creation
-      tasks_from: task_define_folder_name.yml
-
-  - name: "vm_creation: Update custom attributes"
-    include_role:
-      name: vm_creation
-      tasks_from: task_update_custom_attributes.yml
+- name: "Vm_creation: Define folder name"
+  ansible.builtin.include_role:
+    name: vm_creation
+    tasks_from: task_define_folder_name.yml
+  when: inventory_hostname is not search('nexus')
+- name: "Vm_creation: get onprem datastore"
+  ansible.builtin.include_role:
+    name: vm_creation
+    tasks_from: task_get_onprem_datastore.yml
+  when: inventory_hostname is not search('nexus')
+- name: Deploy Windows Jump Servers From OVA
+  ansible.builtin.include_tasks: task_deploy_winjmp.yml
+  when: inventory_hostname is search('winjmp')
+- name: Deploy Loadbalancers From OVA
+  ansible.builtin.include_tasks: task_deploy_nsvpx_ova.yml
+  when:
+    - inventory_hostname is search('nsvpx')
+    - mydeptype is not search('h') or mydc is search('Staging|STG|PAE-HX-DC')
+  vars:
+    mydeptype: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] }}"
+    mydc: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+- name: Deploy And Configure CSRs
+  when: inventory_hostname is search('csr')
+  block:
+    - name: Create CSR customized OVA file
+      ansible.builtin.include_tasks:
+        file: task_create_customized_ova.yml
+        apply:
+          vars:
+            host_index: "{{ loop_item }}"
+      loop: "{{ range(0, groups['csr'] | length) }}"
+      loop_control:
+        loop_var: loop_item
+      when:
+        - inventory_hostname in groups['csr']
+        - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
+    - name: Create DR CSR customized OVA file
+      ansible.builtin.include_tasks:
+        file: task_create_customized_ova.yml
+        apply:
+          vars:
+            host_index: "{{ loop_item }}"
+      loop: "{{ range(0, groups['drcsr'] | length) }}"
+      loop_control:
+        loop_var: loop_item
+      when:
+        - customer.disaster_recovery
+        - inventory_hostname in groups['drcsr']
+        - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
+    - name: Deploy CSR From OVA
+      ansible.builtin.include_tasks: task_deploy_csr_ova.yml
+    - name: Delete CSR customized OVA file
+      ansible.builtin.include_tasks: task_delete_customized_ova.yml
+      when: hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
+    - name: Configure CSR
+      ansible.builtin.include_tasks: task_configure_csr.yml
+    - name: License CSR
+      ansible.builtin.include_tasks: task_license_csr.yml
+    - name: Check CSR license
+      ansible.builtin.include_role:
+        name: infra_check_csr_license
+        tasks_from: task_check_csr_license.yml
+- name: Update Nexus Switch
+  ansible.builtin.include_tasks:
+    file: task_update_nexus.yml
+    apply:
+      vars:
+        dhcp_address: "{{ hostvars['csr01']['dhcp_address'] }}"
+        dr_route: false
+  when:
+    - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
+    - ansible_play_batch | select('search', 'csr') | list | length >= 1
+    - inventory_hostname is search('nexus')
+    - hostvars['csr01']['dhcp_address'] is defined
+    - hostvars['csr01']['dhcp_address'] != ''
+- name: Update DR Nexus Switch
+  ansible.builtin.include_tasks:
+    file: task_update_nexus.yml
+    apply:
+      vars:
+        dhcp_address: "{{ hostvars['drcsr01']['dhcp_address'] }}"
+        dr_route: true
+  when:
+    - customer.disaster_recovery
+    - ansible_play_batch | select('search', 'dr') | list | length >= 1
+    - ansible_play_batch | select('search', 'drcsr') | list | length >= 1
+    - inventory_hostname is search('nexus')
+    - hostvars['drcsr01']['dhcp_address'] is defined
+    - hostvars['drcsr01']['dhcp_address'] != ''
+- name: Configure Netscalers
+  ansible.builtin.include_tasks: task_configure_nsvpx.yml
+  when:
+    - inventory_hostname is search('nsvpx')
+    - mydeptype is not search('h') or mydc is search('Staging|STG|PAE-HX-DC')
+  vars:
+    mydeptype: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] }}"
+    mydc: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+- name: Send Webex Teams Notification With CSR/Netscaler Serial Numbers
+  ansible.builtin.include_tasks: task_notify_teams.yml
+  when: not inventory_hostname is search('nexus')
+- name: Configure Windows Jump Severs
+  ansible.builtin.include_tasks: task_configure_winjmp.yml
+  when: inventory_hostname is search('winjmp')
+- name: "Vm_creation: Define folder name"
+  ansible.builtin.include_role:
+    name: vm_creation
+    tasks_from: task_define_folder_name.yml
+- name: "Vm_creation: Update custom attributes"
+  ansible.builtin.include_role:
+    name: vm_creation
+    tasks_from: task_update_custom_attributes.yml

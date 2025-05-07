@@ -1,25 +1,25 @@
 ---
 # Tasks to detect datastore
-- block:
-  - name: Get the VM info
-    community.vmware.vmware_guest_info:
-      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      name: "{{ vm.name }}"
-      validate_certs: no
-    check_mode: no
-    register: vmguest_info
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  - name: define ds2reuse
-    ansible.builtin.set_fact:
-      ds2reuse: "{{ vmguest_info.instance.hw_datastores[0] }}"
-  - name: define ssd2reuse
-    ansible.builtin.set_fact:
-      ssd2reuse: "{{ vmguest_info.instance.hw_datastores[1] }}"
-    when:
-      - vmguest_info.instance.hw_datastores|length > 1
-      - inventory_hostname is search('splind')
-  when:
-    - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == ''
+- name: Detect datastore
+  when: hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == ''
+  block:
+    - name: Get the VM info
+      community.vmware.vmware_guest_info:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        name: "{{ vm.name }}"
+        validate_certs: false
+      check_mode: false
+      register: vmguest_info
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - name: Define ds2reuse
+      ansible.builtin.set_fact:
+        ds2reuse: "{{ vmguest_info.instance.hw_datastores[0] }}"
+    - name: Define ssd2reuse
+      ansible.builtin.set_fact:
+        ssd2reuse: "{{ vmguest_info.instance.hw_datastores[1] }}"
+      when:
+        - vmguest_info.instance.hw_datastores | length > 1
+        - inventory_hostname is search('splind')

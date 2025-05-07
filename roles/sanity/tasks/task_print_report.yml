@@ -1,32 +1,8 @@
 ---
 # Tasks to produce the sanity test report
-- block:
-  - name: define list of services
-    ansible.builtin.set_fact:
-      svcs_list: "{{ vars[inventory_hostname[:-2]|replace('dr', '') + '_svc_list'] }}"
-    when: vars[inventory_hostname[:-2]|replace('dr', '') + '_svc_list'] is defined
-  - name: Sanity test report message (credentials)
-    ansible.builtin.set_fact:
-      report_message: "{{ report_message|default([]) | union(['creds_status'] | product([creds_status|default('OK')]) | map('join', ': ')) | flatten }}"
-  - name: Sanity test report message (puppet push)
-    ansible.builtin.set_fact:
-      report_message: "{{ report_message|default([]) | union(['puppet_push_status'] | product([puppet_push_status|default('OK')]) | map('join', ': ')) | flatten }}"
-    when: creds_status is not defined
-
-  - name: Sanity test report message
-    ansible.builtin.set_fact:
-      report_message: "{{ report_message|default([]) | union([svc_item + '_status'] | product([vars[svc_item + '_status']|default('OK')]) | map('join', ': ')) | flatten }}"
-    loop: "{{ svcs_list|default([]) }}"
-    loop_control:
-      loop_var: svc_item
-    when:
-      - creds_status is not defined
-    no_log: true
-  - name: Sanity test report
-    ansible.builtin.debug:
-      msg: "{{ report_message|default([]) }}"
+- name: Produce the sanity test report
   vars:
-    rly_svc_list: ['rly_current_version', 'rly_rpms', 'service', 'rly_errors', 'rly_rules', 'rly_db', 'rly_deconfigcount', 'rly_syslogrulescount', 'rly_cluster_size', 'rly_cluster', 'rly_local_state', 'rly_incoming_addresses', 'rly_db_grants', 'rly_reportstore', 'rly_coral_services', 'rly_splsrcvip', 'rly_active_de_instance_ip', 'rly_de_ip', 'rly_de_username', 'rly_relaywebport', 'rly_chrony_server', 'rly_chrony_leap', 'processes', 'rly_splunk', 'rly_relayweb_conf', 'splind_hosts_idx', 'chrony', 'rly_splunk_cronjob', 'rly_backup_dir', 'rly_data01_dir', 'rly_swap', 'rly_app_prop', 'rly_config_prop', 'user_expiry', 'rly_backup_cronjob', 'ownership', 'sudoers_user']
+    rly_svc_list: ['rly_current_version', 'rly_rpms', 'service', 'rly_errors', 'rly_rules', 'rly_db', 'rly_deconfigcount', 'rly_syslogrulescount', 'rly_cluster_size', 'rly_cluster', 'rly_local_state', 'rly_incoming_addresses', 'rly_db_grants', 'rly_reportstore', 'rly_coral_services', 'rly_splsrcvip', 'rly_active_de_instance_ip', 'rly_de_ip', 'rly_de_username', 'rly_relaywebport', 'rly_chrony_server', 'rly_chrony_leap', 'processes', 'rly_splunk', 'rly_relayweb_conf', 'splind_hosts_idx', 'chrony', 'rly_splunk_cronjob', 'rly_backup_dir', 'rly_data01_dir', 'rly_swap', 'rly_app_prop', 'rly_config_prop', 'user_expiry', 'rly_backup_cronjob', 'ownership', 'sudoers_user'] # noqa: yaml[line-length]
     atarly_svc_list: ['service', 'processes', 'chrony', 'sudoers_user']
     lnxjmp_svc_list: ['service', 'processes', 'chrony', 'sudoers_user']
     em7_svc_list: ['service', 'chrony', 'cmspem7', 'licensed', 'sudoers_user']
@@ -34,9 +10,33 @@
     em7prt_svc_list: ['service', 'chrony', 'cmspem7', 'sudoers_user']
     em7dc_svc_list: ['service', 'chrony', 'cmspem7', 'sudoers_user']
     em7mc_svc_list: ['service', 'chrony', 'cmspem7', 'rpfilter', 'sudoers_user']
-    spl_svc_list: ['service', 'processes', 'user_expiry', 'splunk', 'chrony', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor','passwordless_ssh', 'sudoers_user']
+    spl_svc_list: ['service', 'processes', 'user_expiry', 'splunk', 'chrony', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor', 'passwordless_ssh', 'sudoers_user'] # noqa: yaml[line-length]
     splmas_svc_list: ['service', 'processes', 'user_expiry', 'splunk', 'chrony', 'indexer_discovery', 'ownership', 'sudoers_user']
     spldpl_svc_list: ['service', 'processes', 'user_expiry', 'splunk', 'chrony', 'indexer_discovery', 'ownership', 'sudoers_user']
-    splsrc_svc_list: ['service', 'processes', 'user_expiry', 'splunk', 'chrony', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor','passwordless_ssh', 'sudoers_user']
+    splsrc_svc_list: ['service', 'processes', 'user_expiry', 'splunk', 'chrony', 'indexer_discovery', 'ownership', 'shcluster', 'reportpdfextractor', 'passwordless_ssh', 'sudoers_user'] # noqa: yaml[line-length]
     splind_svc_list: ['service', 'processes', 'user_expiry', 'splunk', 'chrony', 'ownership', 'sudoers_user']
-  tags: sanity
+  block:
+    - name: Define list of services
+      ansible.builtin.set_fact:
+        svcs_list: "{{ vars[inventory_hostname[:-2] | replace('dr', '') + '_svc_list'] }}"
+      when: vars[inventory_hostname[:-2] | replace('dr', '') + '_svc_list'] is defined
+    - name: Sanity test report message (credentials)
+      ansible.builtin.set_fact:
+        report_message: "{{ report_message | default([]) | union(['creds_status'] | product([creds_status | default('OK')]) | map('join', ': ')) | flatten }}"
+    - name: Sanity test report message (puppet push)
+      ansible.builtin.set_fact:
+        report_message: "{{ report_message | default([]) | union(['puppet_push_status'] | product([puppet_push_status | default('OK')]) | map('join', ': ')) | flatten }}" # noqa: yaml[line-length]
+      when: creds_status is not defined
+
+    - name: Sanity test report message
+      ansible.builtin.set_fact:
+        report_message: "{{ report_message | default([]) | union([svc_item + '_status'] | product([vars[svc_item + '_status'] | default('OK')]) | map('join', ': ')) | flatten }}" # noqa: yaml[line-length]
+      loop: "{{ svcs_list | default([]) }}"
+      loop_control:
+        loop_var: svc_item
+      when:
+        - creds_status is not defined
+      no_log: true
+    - name: Sanity test report
+      ansible.builtin.debug:
+        msg: "{{ report_message | default([]) }}"

@@ -1,8 +1,7 @@
 ---
 # Tasks file to manage service
-- block:
-  - name: "{{ 'stop' if action is search('stop') else 'start' }} {{ service }}"
-    ansible.builtin.systemd:
-      name: "{{ service }}"
-      state: "{{ action }}"
-    become: "{{ true if ansible_user != 'root' else false }}"
+- name: "{{ ('Stop ' if action is search('stop') else 'Start ') + service }}"
+  ansible.builtin.systemd:
+    name: "{{ service }}"
+    state: "{{ action }}"
+  become: "{{ true if ansible_user != 'root' else false }}"

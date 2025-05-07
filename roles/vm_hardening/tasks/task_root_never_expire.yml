@@ -1,8 +1,9 @@
 ---
 # tasks to set the root user to never expire on VM
-- block:
-  - name: set the root user to never expire
-    ansible.builtin.shell: |
-      chage -d $(date +%Y-%m-%d) -E -1 -I -1 -M -1  root
+- name: Set the root user to never expire
+  ansible.builtin.shell: |
+    chage -d $(date +%Y-%m-%d) -E -1 -I -1 -M -1  root
+  register: root_never_expire
+  changed_when: root_never_expire.rc == 0
   become: "{{ true if ansible_user != 'root' else false }}"
   when: not ansible_check_mode

@@ -1,8 +1,9 @@
 ---
 # Task file to configure CSRs
-- block:
-  - block:
-    - name: define csr NICs
+- name: Update hardware settings and define ansible_host and DHCP address
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Define csr NICs
       ansible.builtin.set_fact:
         nic1:
           - name: "{{ netconfig.nic1.network }}"
@@ -28,7 +29,7 @@
             netmask: "{{ netconfig.nic4.netmask }}"
             gateway: "{{ netconfig.nic4.gateway }}"
             device_type: vmxnet3
-    - name: define csr NIC5
+    - name: Define csr NIC5
       ansible.builtin.set_fact:
         nic5:
           - name: "{{ netconfig.nic5.network }}"
@@ -48,12 +49,10 @@
         hardware:
           memory_mb: "{{ vm.memory | int * 1024 }}"
           num_cpus: "{{ vm.cpu | int }}"
-        networks: "{{ nic1 + nic2 + nic3 + nic4 + nic5|default([]) }}"
-        validate_certs: no
-        
+        networks: "{{ nic1 + nic2 + nic3 + nic4 + nic5 | default([]) }}" # noqa: args[module]
+        validate_certs: false
     - name: Power on VM
       ansible.builtin.include_tasks: task_poweron_csr.yml
-
     - name: Gather VM info
       community.vmware.vmware_guest_info:
         hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
@@ -61,41 +60,41 @@
         password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
         name: "{{ vm.name }}"
         datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        validate_certs: no
+        validate_certs: false
       register: csr_info
       until: csr_info.instance.ipv4 != None
       retries: 20
       delay: 30
-    - set_fact:
+    - name: Define ansible_host and dhcp_address
+      ansible.builtin.set_fact:
         ansible_host: "{{ csr_info.instance.ipv4 }}"
-        dhcp_address: "{{ csr_info.instance.ipv4 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is not search('h') else omit }}"
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}" 
-
-  - name: Apply CSR configuration
-    cisco.ios.ios_config:
-      lines: "{{ interface_item.properties }}"
-      parents: "{{ interface_item.name }}"
-    loop: "{{ interfaces }}"
-    loop_control:
-      loop_var: interface_item
-
-  - name: Set NTP server
-    cisco.ios.ios_ntp_global:
-      config:
-        servers:
-          - server: "{{ ntp_server }}"
-        source: "{{ ntp_source }}"
-      state: merged
-  - name: Disable the router's Web GUIs
-    cisco.ios.ios_command:
-      commands:
-        - configure terminal
-        - no ip http server
-        - no ip http secure-server
-        - end
-  - name: Save CSR configuration
-    cisco.ios.ios_command:
-      commands:
-        - command: Copy running-config startup-config
-          prompt: '[confirm]'
-          answer: "\r"
+        dhcp_address: "{{ csr_info.instance.ipv4 if mydeptype is not search('h') else omit }}"
+      vars:
+        mydeptype: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] }}"
+- name: Apply CSR configuration
+  cisco.ios.ios_config:
+    lines: "{{ interface_item.properties }}"
+    parents: "{{ interface_item.name }}"
+  loop: "{{ interfaces }}"
+  loop_control:
+    loop_var: interface_item
+- name: Set NTP server
+  cisco.ios.ios_ntp_global:
+    config:
+      servers:
+        - server: "{{ ntp_server }}"
+      source: "{{ ntp_source }}"
+    state: merged
+- name: Disable the router's Web GUIs
+  cisco.ios.ios_command:
+    commands:
+      - configure terminal
+      - no ip http server
+      - no ip http secure-server
+      - end
+- name: Save CSR configuration
+  cisco.ios.ios_command:
+    commands:
+      - command: Copy running-config startup-config
+        prompt: '[confirm]'
+        answer: "\r"

@@ -1,17 +1,15 @@
 ---
 # Tasks to check the NTP server address
-- block:
-  - name: Check NTP server address
-    ansible.builtin.lineinfile:
-      path: "{{ chrony_file }}"
-      line: "server {{ server_address }} iburst"
-      insertafter: '^# Please consider.*$'
-    check_mode: yes
-    register: ntp_srvr_addr
-    vars:
-      server_address: "{% if 'dr' in group_names %} {%- if sysconfig.secondary.ntp_server|type_debug == 'list' %} {{- sysconfig.secondary.ntp_server|join(',')|split(', ')|first -}} {% else %} {{- sysconfig.secondary.ntp_server -}} {% endif -%} {% else %} {%- if sysconfig.primary.ntp_server|type_debug == 'list' %} {{- sysconfig.primary.ntp_server|join(',')|split(', ')|first -}} {% else %} {{- sysconfig.primary.ntp_server -}} {% endif -%} {% endif %}"
-  - name: define chrony status
-    ansible.builtin.set_fact:
-      chrony_status: 'NTP server address is not configured'
-    when: ntp_srvr_addr is changed
-  tags: sanity
+- name: Check NTP server address
+  ansible.builtin.lineinfile:
+    path: "{{ chrony_file }}"
+    line: "server {{ server_address }} iburst"
+    insertafter: '^# Please consider.*$'
+  check_mode: true
+  register: ntp_srvr_addr
+  vars:
+    server_address: "{% if 'dr' in group_names %}{%- if sysconfig.secondary.ntp_server | type_debug == 'list' %}{{- sysconfig.secondary.ntp_server | join(',') | split(', ') | first -}} {% else %}{{- sysconfig.secondary.ntp_server -}} {% endif -%} {% else %}{%- if sysconfig.primary.ntp_server | type_debug == 'list' %}{{- sysconfig.primary.ntp_server | join(',') | split(', ') | first -}} {% else %}{{- sysconfig.primary.ntp_server -}} {% endif -%} {% endif %}" # noqa: yaml[line-length]
+- name: Define chrony status
+  ansible.builtin.set_fact:
+    chrony_status: 'NTP server address is not configured'
+  when: ntp_srvr_addr is changed

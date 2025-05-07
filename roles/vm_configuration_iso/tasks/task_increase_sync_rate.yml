@@ -1,31 +1,38 @@
 ---
 # tasks to increase sync rate on the primary EM7 DB
-- block:
-    - name: Check if primary
-      ansible.builtin.shell: grep 'ro:' /proc/drbd | awk -F 'ro:' '{print $NF}' | cut -d '/' -f1
-      register: reg_primary_check
-      failed_when: reg_primary_check.stdout == ''
-      until: reg_primary_check is succeeded
-      args:
-        warn: no
-    - name: resync rate adjustment
-      block:
-        - name: get the current sync rate
-          ansible.builtin.shell: |
-            grep speed: /proc/drbd
-          register: reg_current_sync_rate
-          check_mode: no
-        - name: Increase the sync rate
-          ansible.builtin.shell: /sbin/drbdadm disk-options --c-plan-ahead=0 --resync-rate={{ mysync_rate }}M all
-          register: reg_sync_rate
-          when:
-            - "reg_current_sync_rate.stdout|regex_replace('^.*speed: (.+)[\\,].*[\\(].*$', '\\1')|int < mysync_rate|int"
-      rescue:
-        - name: status message
-          ansible.builtin.debug:
-            msg: 'Unable to change the sync rate'
-      when: reg_primary_check.stdout == 'Primary'
+- name: Increase sync rate
   when: "'em7db' in group_names"
   become: "{{ true if ansible_user != 'root' else false }}"
   vars:
-    mysync_rate: "{{ '900' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] is search('paevcenter0(1|3)') else '300' }}"
+    mysync_rate: "{{ '900' \
+      if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] is search('paevcenter0(1|3)') else '300' }}"
+  block:
+    - name: Check if primary
+      ansible.builtin.shell:
+        cmd: set -o pipefail && grep 'ro:' /proc/drbd | awk -F 'ro:' '{print $NF}' | cut -d '/' -f1
+        executable: /bin/bash
+      register: reg_primary_check
+      changed_when: false
+      failed_when: reg_primary_check.stdout == ''
+      until: reg_primary_check is succeeded
+      args:
+        warn: false
+    - name: Resync rate adjustment
+      when: reg_primary_check.stdout == 'Primary'
+      block:
+        - name: Get the current sync rate
+          ansible.builtin.command: |
+            grep speed: /proc/drbd
+          register: reg_current_sync_rate
+          changed_when: false
+          check_mode: false
+        - name: Increase the sync rate
+          ansible.builtin.command: /sbin/drbdadm disk-options --c-plan-ahead=0 --resync-rate={{ mysync_rate }}M all
+          register: reg_sync_rate
+          changed_when: reg_sync_rate.rc == 0
+          when:
+            - "reg_current_sync_rate.stdout | regex_replace('^.*speed: (.+)[\\,].*[\\(].*$', '\\1') | int < mysync_rate | int"
+      rescue:
+        - name: Status message
+          ansible.builtin.debug:
+            msg: 'Unable to change the sync rate'

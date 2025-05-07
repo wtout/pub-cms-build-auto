@@ -1,17 +1,21 @@
 ---
 # Tasks to create the Packer builder file
-- block:
-  - name: get ISO info
-    ansible.builtin.stat:
-      path: "{{ auto_dir }}/{{ iso_dir }}/{{ iso_installer }}"
-      checksum_algorithm: sha512
-      get_checksum: yes
-    register: iso_info
-  - ansible.builtin.assert:
-      that: iso_info.stat.exists
-      fail_msg: "{{ auto_dir }}/{{ iso_dir }}/{{ iso_installer }} is not found" 
-  - name: Create Packer builder
-    ansible.builtin.template:
-      src: "templates/{{ '12' if iso_installer is search('em7_x86_64_12.') else '' }}build-{{ inventory_hostname[:-2] | regex_replace('drem7', 'em7') }}.json.j2"
-      dest: "{{ role_path }}/files/{{ vm.name }}-builder.json"
+- name: Create Packer builder
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Get ISO info
+      ansible.builtin.stat:
+        path: "{{ auto_dir }}/{{ iso_dir }}/{{ iso_installer }}"
+        checksum_algorithm: sha512
+        get_checksum: true
+      register: iso_info
+    - name: Assert ISO installer exists
+      ansible.builtin.assert:
+        that: iso_info.stat.exists
+        fail_msg: "{{ auto_dir }}/{{ iso_dir }}/{{ iso_installer }} is not found"
+    - name: Create Packer builder
+      ansible.builtin.template:
+        src: "templates/{{ '12' if iso_installer is search('em7_x86_64_12.') else '' }}build-{{ inventory_hostname[:-2] | \
+          regex_replace('drem7', 'em7') }}.json.j2"
+        dest: "{{ role_path }}/files/{{ vm.name }}-builder.json"
+        mode: '644'

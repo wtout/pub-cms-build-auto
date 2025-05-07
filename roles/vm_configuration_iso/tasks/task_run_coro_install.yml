@@ -1,69 +1,89 @@
 ---
 # tasks to install corosync on EM7 DB VM
-- block:
-  - name: check if /etc/drbd.d/r0.res exists
-    ansible.builtin.stat:
-      path: /etc/drbd.d/r0.res
-    register: res_file
-
-  - block:
-    - name: define the answers for DB01
-      ansible.builtin.set_fact:
-        answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\nyy1\\ny1\\n{{ vm.name | regex_replace('01$', '02') }}\\n{{ netconfig.nic2.ipaddress | regex_replace('[\\.]9$', '.10') }}\\n{{ netconfig.nic1.ipaddress | regex_replace('[\\.]13$', '.14') }}\\n{{ vip.db }}\\n26\\ny"
+- name: Install corosync on EM7 DB
+  block:
+    - name: Check if /etc/drbd.d/r0.res exists
+      ansible.builtin.stat:
+        path: /etc/drbd.d/r0.res
+      register: res_file
+    - name: Define answers for DB01
+      when: inventory_hostname is search('01')
+      block:
+        - name: Define the answers for DB01
+          ansible.builtin.set_fact:
+            answers: "{{ ans1 }}1\\nyy1\\ny1\\n{{ ans2 }}\\n{{ ans3 }}\\n{{ ans4 }}\\n{{ vip.db }}\\n26\\ny"
+          when: customer.version.em7_iso is search('em7_x86_64_12.')
+          vars:
+            ans1: "{{ 'yes\\n' if res_file.stat.exists else '' }}"
+            ans2: "{{ vm.name | regex_replace('01$', '02') }}"
+            ans3: "{{ netconfig.nic2.ipaddress | regex_replace('[\\.]9$', '.10') }}"
+            ans4: "{{ netconfig.nic1.ipaddress | regex_replace('[\\.]13$', '.14') }}"
+        - name: Define the answers for DB01
+          ansible.builtin.set_fact:
+            answers: "{{ ans1 }}1\\n1\\ny\\ny\\n1\\n{{ ans2 }}\\n{{ ans3 }}\\n{{ ans4 }}\\n{{ vip.db }}\\n26\\ny"
+          when: customer.version.em7_iso is not search('em7_x86_64_12.')
+          vars:
+            ans1: "{{ 'yes\\n' if res_file.stat.exists else '' }}"
+            ans2: "{{ vm.name | regex_replace('01$', '02') }}"
+            ans3: "{{ netconfig.nic2.ipaddress | regex_replace('[\\.]9$', '.10') }}"
+            ans4: "{{ netconfig.nic1.ipaddress | regex_replace('[\\.]13$', '.14') }}"
+    - name: Define answers for DB02
+      when: inventory_hostname is search('02')
+      block:
+        - name: Define the answers for DB02
+          ansible.builtin.set_fact:
+            answers: "{{ ans1 }}1\\nny{{ ans2 }}\\nyy"
+          when: customer.version.em7_iso is search('em7_x86_64_12.')
+          vars:
+            ans1: "{{ 'yes\\n' if res_file.stat.exists else '' }}"
+            ans2: "{{ netconfig.nic1.ipaddress | regex_replace('[\\.]14$', '.13') }}"
+        - name: Define the answers for DB02
+          ansible.builtin.set_fact:
+            answers: "{{ ans1 }}1\\n2\\nyy1\\n{{ ans2 }}\\n{{ ans3 }}\\n{{ ans4 }}\\ny"
+          when: customer.version.em7_iso is not search('em7_x86_64_12.')
+          vars:
+            ans1: "{{ 'yes\\n' if res_file.stat.exists else '' }}"
+            ans2: "{{ vm.name | regex_replace('02$', '01') }}"
+            ans3: "{{ netconfig.nic2.ipaddress | regex_replace('[\\.]10$', '.9') }}"
+            ans4: "{{ netconfig.nic1.ipaddress | regex_replace('[\\.]14$', '.13') }}"
+    - name: Allow coro_install script to run with sudo
+      ansible.builtin.shell:
+        grep '^#.*${SUDO_COMMAND}xx' /opt/em7/bin/coro_install || sed -i '/${SUDO_COMMAND}xx/,+3 s/^/#/' /opt/em7/bin/coro_install
+      register: allow_sudo_coro_install
+      changed_when: allow_sudo_coro_install.rc == 0
       when: customer.version.em7_iso is search('em7_x86_64_12.')
-    - name: define the answers for DB01
-      ansible.builtin.set_fact:
-        answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n1\\ny\\ny\\n1\\n{{ vm.name | regex_replace('01$', '02') }}\\n{{ netconfig.nic2.ipaddress | regex_replace('[\\.]9$', '.10') }}\\n{{ netconfig.nic1.ipaddress | regex_replace('[\\.]13$', '.14') }}\\n{{ vip.db }}\\n26\\ny"
-      when: customer.version.em7_iso is not search('em7_x86_64_12.')
-    when: inventory_hostname is search('01')
-
-  - block:
-    - name: define the answers for DB02
-      ansible.builtin.set_fact:
-        answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\nny{{ netconfig.nic1.ipaddress | regex_replace('[\\.]14$', '.13') }}\\nyy"
-      when: customer.version.em7_iso is search('em7_x86_64_12.')
-    - name: define the answers for DB02
-      ansible.builtin.set_fact:
-        answers: "{{ 'yes\\n' if res_file.stat.exists else '' }}1\\n2\\nyy1\\n{{ vm.name | regex_replace('02$', '01') }}\\n{{ netconfig.nic2.ipaddress | regex_replace('[\\.]10$', '.9') }}\\n{{ netconfig.nic1.ipaddress | regex_replace('[\\.]14$', '.13') }}\\ny"
-      when: customer.version.em7_iso is not search('em7_x86_64_12.')
-    when: inventory_hostname is search('02')
-
-  - name: Allow coro_install script to run with sudo
-    ansible.builtin.shell:
-      grep '^#.*${SUDO_COMMAND}xx' /opt/em7/bin/coro_install || sed -i '/${SUDO_COMMAND}xx/,+3 s/^/#/' /opt/em7/bin/coro_install
-    when: customer.version.em7_iso is search('em7_x86_64_12.')
-
-  - name: run coro_install script
-    ansible.builtin.shell: |
-      echo -e "{{ answers }}" | /opt/em7/bin/coro_install
-    register: coro_install_status1
-    until: coro_install_status1 is succeeded
-    delay: 30
-    ignore_errors: true
-    failed_when:
-      - coro_install_status1.rc != 0
-      - coro_install_status1.rc != 32
-
-  - block:
-    - name: "vm_fromiso: Reboot VM"
-      include_role:
-        name: vm_fromiso
-        tasks_from: task_reboot_vm.yml
-    - name: re-run coro_install script
-      ansible.builtin.shell: |
-        echo -e "{{ answers }}" | /opt/em7/bin/coro_install
-      register: coro_install_status2
-      until: coro_install_status2 is succeeded
+    - name: Run coro_install script
+      ansible.builtin.shell:
+        cmd: set -o pipefail && echo -e "{{ answers }}" | /opt/em7/bin/coro_install
+        executable: /bin/bash
+      register: coro_install_status1
+      changed_when: coro_install_status1.rc == 0
+      until: coro_install_status1 is succeeded
       delay: 30
+      ignore_errors: true
       failed_when:
-        - coro_install_status2.rc != 0
-        - coro_install_status2.rc != 32
-    when: coro_install_status1.stdout is search('please start and IP the heartbeat interface')
-
-  - name: Disallow coro_install script to run with sudo
-    ansible.builtin.shell:
-      grep '^#.*${SUDO_COMMAND}xx' /opt/em7/bin/coro_install && sed -i '/${SUDO_COMMAND}xx/,+3 s/^#//' /opt/em7/bin/coro_install
-    when: customer.version.em7_iso is search('em7_x86_64_12.')
-
-  when: inventory_hostname is search('em7db')
-  become: "{{ true if ansible_user != 'root' else false }}"
+        - coro_install_status1.rc != 0
+        - coro_install_status1.rc != 32
+    - name: Re-run coro_install script
+      when: coro_install_status1.stdout is search('please start and IP the heartbeat interface')
+      block:
+        - name: "Vm_fromiso: Reboot VM"
+          ansible.builtin.include_role:
+            name: vm_fromiso
+            tasks_from: task_reboot_vm.yml
+        - name: Re-run coro_install script
+          ansible.builtin.shell:
+            cmd: set -o pipefail && echo -e "{{ answers }}" | /opt/em7/bin/coro_install
+            executable: /bin/bash
+          register: coro_install_status2
+          changed_when: coro_install_status2.rc == 0
+          until: coro_install_status2 is succeeded
+          delay: 30
+          failed_when:
+            - coro_install_status2.rc != 0
+            - coro_install_status2.rc != 32
+    - name: Disallow coro_install script to run with sudo
+      ansible.builtin.shell: grep '^#.*${SUDO_COMMAND}xx' /opt/em7/bin/coro_install && sed -i '/${SUDO_COMMAND}xx/,+3 s/^#//' /opt/em7/bin/coro_install
+      register: disallow_sudo_coro_install
+      changed_when: disallow_sudo_coro_install.rc == 0
+      when: customer.version.em7_iso is search('em7_x86_64_12.')

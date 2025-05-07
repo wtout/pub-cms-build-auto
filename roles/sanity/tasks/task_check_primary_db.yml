@@ -1,11 +1,12 @@
 ---
 # Tasks file to determine the primary DB node
-- block:
-  - name: get primary DB
-    ansible.builtin.shell: cat /proc/drbd | grep 'ro:' | awk -F 'ro:' '{print $NF}' | cut -d '/' -f1
-    register: primary_check
-    check_mode: no
-  - name: define primary DB
-    ansible.builtin.set_fact:
-      primary_db: "{{ true if primary_check.stdout is search('Primary') else false }}"
-  tags: sanity
+- name: Get primary DB
+  ansible.builtin.shell:
+    cmd: set -o pipefail && cat /proc/drbd | grep 'ro:' | awk -F 'ro:' '{print $NF}' | cut -d '/' -f1
+    executable: /bin/bash
+  register: primary_check
+  changed_when: false
+  check_mode: false
+- name: Define primary DB
+  ansible.builtin.set_fact:
+    primary_db: "{{ true if primary_check.stdout is search('Primary') else false }}"

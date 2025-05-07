@@ -1,11 +1,12 @@
 ---
 # Tasks file for infra_build_nodes
-- block:
-  - name: Deploy Infra Nodes
-    include_tasks: task_create_infra_nodes.yml
-    when: build_infra_nodes | default(false) | bool
+- name: Main infra_build_nodes block
+  tags: ['infra_build_nodes', 'infra_configure', 'never']
+  block:
+    - name: Deploy Infra Nodes
+      ansible.builtin.include_tasks: task_create_infra_nodes.yml
+      when: build_infra_nodes | default(false) | bool
 
-  - name: Rollback Infra Nodes
-    include_tasks: task_rollback_infra_nodes.yml
-    when: rollback_infra_nodes | default(false) | bool
-  tags: [ 'infra_build_nodes', 'infra_configure', 'never' ]
+    - name: Rollback Infra Nodes
+      ansible.builtin.include_tasks: task_rollback_infra_nodes.yml
+      when: rollback_infra_nodes | default(false) | bool

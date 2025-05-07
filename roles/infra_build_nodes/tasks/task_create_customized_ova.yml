@@ -1,12 +1,18 @@
 ---
 # Tasks to create the customized CSR OVA file
-- block:
-  - name: Create bootstrap file
-    ansible.builtin.template:
-      src: "templates/iosxe_config.txt.tmpl"
-      dest: "{{ role_path }}/files/iosxe_config.txt"
-  - name: Create customized OVA file
-    ansible.builtin.shell: |
-      cot -f inject-config {{ ova_dir }}/{{ ova_names.csr }} -o {{ role_path }}/files/{{ ova_names.csr|replace('CSR/',vm.name + '_')|replace('.ova','_customized.ova') }} -e {{ role_path }}/files/iosxe_config.txt
+- name: Create customized CSR OVA file
+  when: inventory_hostname[-1] | int == loop_item | int + 1
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  when: inventory_hostname[-1]|int == loop_item|int + 1
+  block:
+    - name: Create bootstrap file
+      ansible.builtin.template:
+        src: "templates/iosxe_config.txt.tmpl"
+        dest: "{{ role_path }}/files/iosxe_config.txt"
+        mode: '644'
+    # yamllint disable rule:line-length
+    - name: Create customized OVA file
+      ansible.builtin.shell: |
+        cot -f inject-config {{ ova_dir }}/{{ ova_names.csr }} -o {{ role_path }}/files/{{ ova_names.csr | replace('CSR/', vm.name + '_') | replace('.ova', '_customized.ova') }} -e {{ role_path }}/files/iosxe_config.txt
+      register: reg_customized_ova
+      changed_when: reg_customized_ova.rc == 0
+    # yamllint enable rule:line-length

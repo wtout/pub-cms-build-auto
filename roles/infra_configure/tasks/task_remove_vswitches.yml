@@ -1,22 +1,23 @@
 ---
 # tasks file to remove vswitches
-- block:
-  - name: Define existing {{ 'DR ' if inventory_hostname is search('dr') else '' }}vSwitches
-    community.vmware.vmware_vswitch_info:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      esxi_hostname: "{{ resource }}"
-      validate_certs: no
-    register: existing_vswitches
-
-  - include_tasks:
-      file: task_delete_vswitch.yml
-      apply:
-        vars:
-          vswitch: "{{ vswitch_item }}"
-          esxi_resource: "{{ resource }}"
-    loop: "{{ (existing_vswitches.hosts_vswitch_info|dict2items|first).value|difference('vSwitch0') }}"
-    loop_control:
-      loop_var: vswitch_item
+- name: Remove vswitches
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Define existing {{ ('DR ' if inventory_hostname is search('dr') else '') + 'vSwitches' }}
+      community.vmware.vmware_vswitch_info:
+        hostname: "{{ information.address }}"
+        username: "{{ credentials.username }}"
+        password: "{{ credentials.password }}"
+        esxi_hostname: "{{ resource }}"
+        validate_certs: false
+      register: existing_vswitches
+    - name: Delete vswitch
+      ansible.builtin.include_tasks:
+        file: task_delete_vswitch.yml
+        apply:
+          vars:
+            vswitch: "{{ vswitch_item }}"
+            esxi_resource: "{{ resource }}"
+      loop: "{{ (existing_vswitches.hosts_vswitch_info | dict2items | first).value | difference('vSwitch0') }}"
+      loop_control:
+        loop_var: vswitch_item

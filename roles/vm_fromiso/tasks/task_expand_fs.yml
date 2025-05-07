@@ -1,90 +1,107 @@
 ---
 # tasks to expand the file system
-- block:
-  - name: define desired fs sizes
-    ansible.builtin.set_fact:
-      dss: 8192
-      dhs: 2560
-
-  - block:
-    - name: rescan partition
-      ansible.builtin.shell: |
-        echo 1 > /sys/class/block/sda/device/rescan
-    - name: Fix GPT partition /dev/sda3
-      ansible.builtin.shell: |
-        set timeout 120
-        spawn parted /dev/sda print free
-        expect "Fix/Ignore/Cancel?"
-        send "F\r"
-        expect "Fix/Ignore?"
-        send "F\r"
-        expect "#"
-        send "\r"
-        interact
-        exit 0
-      args:
-        executable: /usr/bin/expect
-    - name: Read device information
-      community.general.parted:
-        device: /dev/sda
-        unit: MiB
-      register: sda_info
-    - name: expand partition /dev/sda3
-      community.general.parted:
-        align: none
-        device: /dev/sda
-        number: "{{ sda_info.partitions | length }}"
-        label: "{{ sda_info.disk.table }}"
-        part_end: "100%"
-        resize: true
-        state: present
-    - name: resize partition
-      ansible.builtin.shell: |
-        pvresize /dev/sda{{ sda_info.partitions | length }}
-    when: inventory_hostname is search('em7prt')
-
-  - name: get the swap size
-    ansible.builtin.shell: |
-      free -m | grep -i swap | awk '{print $2}'
-    register: swap_size
-    check_mode: no
-  - block:
-    - name: define swap size increase
-      ansible.builtin.set_fact:
-        ssi: "{{ dss - swap_size.stdout|int }}"
-    - name: expand swap size
-      ansible.builtin.shell: |
-        swapoff -v /dev/mapper/em7vg-swap
-        lvresize /dev/mapper/em7vg-swap --size +{{ ssi|int }}M
-        mkswap /dev/mapper/em7vg-swap
-        swapon -v /dev/mapper/em7vg-swap
-    - name: verify new swap size
-      ansible.builtin.shell: |
-        free -m | grep -i swap | awk '{print $2}'
-      register: new_swap_size
-      failed_when: new_swap_size.stdout|int < dss
-    when: swap_size.stdout|int < dss
-
-  - name: get the /home size
-    ansible.builtin.shell: |
-      df -B 1M | grep /home | awk '{print $2}'
-    register: home_size
-    check_mode: no
-  - block:
-    - name: define home size increase
-      ansible.builtin.set_fact:
-        hsi: "{{ dhs - home_size.stdout|int }}"
-    - name: expand home size
-      ansible.builtin.shell: |
-        lvresize /dev/mapper/em7vg-home --size +{{ hsi|int }}M
-        xfs_growfs /home
-    - name: verify new home size
-      ansible.builtin.shell: |
-        df -B 1M | grep /home | awk '{print $2}'
-      register: new_home_size
-      failed_when: new_home_size.stdout|int < dhs
-    when: home_size.stdout|int < dhs
-
-  when:
-    - inventory_hostname is search('em7')
+- name: Expand file system
+  when: inventory_hostname is search('em7')
   become: "{{ true if ansible_user != 'root' else false }}"
+  block:
+    - name: Define desired fs sizes
+      ansible.builtin.set_fact:
+        dss: 8192
+        dhs: 2560
+    - name: Expand /dev/sda3
+      when: inventory_hostname is search('em7prt')
+      block:
+        - name: Rescan partition
+          ansible.builtin.shell: |
+            echo 1 > /sys/class/block/sda/device/rescan
+          register: rescan_partition
+          changed_when: rescan_partition.rc == 0
+        - name: Fix GPT partition /dev/sda3
+          ansible.builtin.shell: |
+            set timeout 120
+            spawn parted /dev/sda print free
+            expect "Fix/Ignore/Cancel?"
+            send "F\r"
+            expect "Fix/Ignore?"
+            send "F\r"
+            expect "#"
+            send "\r"
+            interact
+            exit 0
+          args:
+            executable: /usr/bin/expect
+          register: fix_partition
+          changed_when: fix_partition.rc == 0
+        - name: Read device information
+          community.general.parted:
+            device: /dev/sda
+            unit: MiB
+          register: sda_info
+        - name: Expand partition /dev/sda3
+          community.general.parted:
+            align: none
+            device: /dev/sda
+            number: "{{ sda_info.partitions | length }}"
+            label: "{{ sda_info.disk.table }}"
+            part_end: "100%"
+            resize: true
+            state: present
+        - name: Resize partition
+          ansible.builtin.shell: |
+            pvresize /dev/sda{{ sda_info.partitions | length }}
+          register: resize_partition
+          changed_when: resize_partition.rc == 0
+    - name: Get the swap size
+      ansible.builtin.shell:
+        cmd: set -o pipefail && free -m | grep -i swap | awk '{print $2}'
+        executable: /bin/bash
+      register: swap_size
+      changed_when: false
+      check_mode: false
+    - name: Expand swap size
+      when: swap_size.stdout|int < dss
+      block:
+        - name: Define swap size increase
+          ansible.builtin.set_fact:
+            ssi: "{{ dss - swap_size.stdout | int }}"
+        - name: Expand swap size
+          ansible.builtin.shell: |
+            swapoff -v /dev/mapper/em7vg-swap
+            lvresize /dev/mapper/em7vg-swap --size +{{ ssi | int }}M
+            mkswap /dev/mapper/em7vg-swap
+            swapon -v /dev/mapper/em7vg-swap
+          register: expand_swap
+          changed_when: expand_swap.rc == 0
+        - name: Verify new swap size
+          ansible.builtin.shell:
+            cmd: set -o pipefail && free -m | grep -i swap | awk '{print $2}'
+            executable: /bin/bash
+          register: new_swap_size
+          changed_when: false
+          failed_when: new_swap_size.stdout|int < dss
+    - name: Get the /home size
+      ansible.builtin.shell:
+        cmd: set -o pipefail && df -B 1M | grep /home | awk '{print $2}'
+        executable: /bin/bash
+      register: home_size
+      changed_when: false
+      check_mode: false
+    - name: Expand home size
+      when: home_size.stdout | int < dhs
+      block:
+        - name: Define home size increase
+          ansible.builtin.set_fact:
+            hsi: "{{ dhs - home_size.stdout | int }}"
+        - name: Expand home size
+          ansible.builtin.shell: |
+            lvresize /dev/mapper/em7vg-home --size +{{ hsi | int }}M
+            xfs_growfs /home
+          register: expand_home
+          changed_when: expand_home.rc == 0
+        - name: Verify new home size
+          ansible.builtin.shell:
+            cmd: set -o pipefail && df -B 1M | grep /home | awk '{print $2}'
+            executable: /bin/bash
+          register: new_home_size
+          changed_when: false
+          failed_when: new_home_size.stdout|int < dhs

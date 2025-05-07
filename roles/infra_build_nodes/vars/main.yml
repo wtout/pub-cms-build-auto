@@ -15,58 +15,60 @@ onprem_csr:
     com.cisco.c8000v.enable-ssh-server.1: 'True'
     com.cisco.c8000v.mgmt-ipv4-addr.1: 'dhcp'
     com.cisco.c8000v.mgmt-ipv4-gateway.1: 'dhcp'
-    com.cisco.c8000v.privilege-password.1 : "{{ credentials.password }}"
-    com.cisco.c8000v.hostname.1 : "{{ vm.name }}"
-    com.cisco.c8000v.domain-name.1 : "{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"
-    com.cisco.c8000v.license.1 : 'network-essentials'
+    com.cisco.c8000v.privilege-password.1: "{{ credentials.password }}"
+    com.cisco.c8000v.hostname.1: "{{ vm.name }}"
+    com.cisco.c8000v.domain-name.1: "{{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}"
+    com.cisco.c8000v.license.1: 'network-essentials'
 
 winjmp:
   interface_configuration:
     - name: Rename interface 1
       command: interface set interface name = "{{ netconfig.nic1.default_netname }}" newname = "{{ netconfig.nic1.intname }}"
       shell: c:\windows\system32\netsh.exe
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Set IP Address for QS Head-end connection
       command: interface ip set address "{{ netconfig.nic1.intname }}" static {{ netconfig.nic1.ipaddress }} {{ netconfig.nic1.netmask }}
       shell: c:\windows\system32\netsh.exe
-      ignore_errors: no
+      ignore_errors: false
 
+    # yamllint disable rule:line-length
     - name: Set primary DNS entry for interface 1
       command: interface ip set dns "{{ netconfig.nic1.intname }}" static {{ sysconfig.secondary.dns_servers[0] if 'dr' in group_names else sysconfig.primary.dns_servers[0] }} primary
       shell: c:\windows\system32\netsh.exe
-      ignore_errors: no
+      ignore_errors: false
 
     - name: Add secondary DNS entry for interface 1
       command: interface ip add dns "{{ netconfig.nic1.intname }}" {{ sysconfig.secondary.dns_servers[1] if 'dr' in group_names else sysconfig.primary.dns_servers[1] }} index=2
       shell: c:\windows\system32\netsh.exe
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Rename interface 2
       command: interface set interface name = "{{ netconfig.nic2.default_netname }}" newname = "{{ netconfig.nic2.intname }}"
       shell: c:\windows\system32\netsh.exe
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Set IP address for interface 2
       command: interface ip set address "{{ netconfig.nic2.intname }}" static {{ netconfig.nic2.ipaddress }} {{ netconfig.nic2.netmask }} {{ netconfig.nic2.gateway }}
       shell: c:\windows\system32\netsh.exe
-      ignore_errors: no
+      ignore_errors: false
+    # yamllint enable rule:line-length
 
   other_configuration:
     - name: Configure firewall to all Remote Desktop connectivity
       command: 'advfirewall firewall set rule name"Remote Desktop (TCP-IN)" new enable=yes'
       shell: c:\windows\system32\netsh.exe
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Set profile directory
       command: /S c:\temp\profiles.reg
       shell: c:\windows\regedit.exe
-      ignore_errors: no
+      ignore_errors: false
 
     - name: Remove Authenticated Users group from D drive
       command: D:\ /remove:g "Authenticated Users"
       shell: c:\windows\system32\icacls.exe
-      ignore_errors: no
+      ignore_errors: false
 
 nsvpx:
   configuration:
@@ -110,7 +112,7 @@ nsvpx:
         comment: Net SNMP poller 1
 
       - name: Net-SNMP-2
-        ipaddress: "{{ rly_ip2_list[1] if (rly_ip2_list is defined and rly_ip2_list|length > 1) else '' }}"
+        ipaddress: "{{ rly_ip2_list[1] if (rly_ip2_list is defined and rly_ip2_list | length > 1) else '' }}"
         comment: Net SNMP poller 2
 
       - name: Net-SNMP-3
@@ -118,7 +120,7 @@ nsvpx:
         comment: Net SNMP poller 3
 
       - name: Net-SNMP-4
-        ipaddress: "{{ rly_ip1_list[1] if (rly_ip1_list is defined and rly_ip1_list|length > 1) else '' }}"
+        ipaddress: "{{ rly_ip1_list[1] if (rly_ip1_list is defined and rly_ip1_list | length > 1) else '' }}"
         comment: Net SNMP poller 4
 
     services:
@@ -371,7 +373,7 @@ nsvpx:
         lb_method: ROUNDROBIN
         sessionless: ENABLED
         clt_timeout: 120
-        
+
       - name: SplunkSearch-VIP
         type: SSL_BRIDGE
         ipaddress: "{{ vip.src }}"
@@ -447,37 +449,37 @@ nsvpx:
     lb_server_binds:
       - name: EM7App01-INTService-VIP
         service: EM7App01-INTService
-        
+
       - name: EM7App01-INTService-VIP
         service: EM7App02-INTService
 
       - name: EM7MC01Trap-VIP
         service: EM7MC01Trap
-        
+
       - name: EM7MC01Trap-VIP
         service: EM7MC02Trap
 
       - name: EM7MC01Syslog-VIP
         service: EM7MC01Syslog
-        
+
       - name: EM7MC01Syslog-VIP
         service: EM7MC02Syslog
 
       - name: SplunkSearch-VIP
         service: SplunkSearch-01
-        
+
       - name: SplunkSearch-VIP
         service: SplunkSearch-02
 
       - name: EM7App01-VIP
         service: EM7httpsApp01
-        
+
       - name: EM7App01-VIP
         service: EM7httpsApp02
 
       - name: NETSNMP-TrapService-VIP
         service: NETSNMP-TrapService-01
-        
+
       - name: NETSNMP-TrapService-VIP
         service: NETSNMP-TrapService-02
 
@@ -549,7 +551,7 @@ nsvpx:
       - name: nsrpcs-{{ customer.primary.octets }}.123-3008
         eccCurveName: P_521
 
-drnsvpx: 
+drnsvpx:
   configuration:
     servers:
       - name: EM7App01
@@ -747,7 +749,6 @@ drnsvpx:
         clt_timeout: 9000
         svr_timeout: 9000
 
-
       - name: NETSNMP_04_3306
         server: Net-SNMP-4
         type: TCP
@@ -757,7 +758,6 @@ drnsvpx:
         sp: "ON"
         clt_timeout: 9000
         svr_timeout: 9000
-
 
       - name: NETSNMP_03_5000
         server: Net-SNMP-3
@@ -826,7 +826,7 @@ drnsvpx:
         lb_method: ROUNDROBIN
         sessionless: ENABLED
         clt_timeout: 120
-        
+
       - name: SplunkSearch-VIP
         type: SSL_BRIDGE
         ipaddress: "{{ vip.src }}"
@@ -902,37 +902,37 @@ drnsvpx:
     lb_server_binds:
       - name: EM7App01-INTService-VIP
         service: EM7App01-INTService
-        
+
       - name: EM7App01-INTService-VIP
         service: EM7App02-INTService
 
       - name: EM7MC01Trap-VIP
         service: EM7MC01Trap
-        
+
       - name: EM7MC01Trap-VIP
         service: EM7MC02Trap
 
       - name: EM7MC01Syslog-VIP
         service: EM7MC01Syslog
-        
+
       - name: EM7MC01Syslog-VIP
         service: EM7MC02Syslog
 
       - name: SplunkSearch-VIP
         service: SplunkSearch-01
-        
+
       - name: SplunkSearch-VIP
         service: SplunkSearch-02
 
       - name: EM7App01-VIP
         service: EM7httpsApp01
-        
+
       - name: EM7App01-VIP
         service: EM7httpsApp02
 
       - name: NETSNMP-TrapService-VIP
         service: NETSNMP-TrapService-01
-        
+
       - name: NETSNMP-TrapService-VIP
         service: NETSNMP-TrapService-02
 
@@ -1003,4 +1003,3 @@ drnsvpx:
 
       - name: nsrpcs-{{ customer.secondary.octets }}.123-3008
         eccCurveName: P_521
-        

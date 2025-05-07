@@ -1,25 +1,6 @@
 ---
 # Tasks to check the users status
-- block:
-  - name: get list of users
-    ansible.builtin.shell: |
-      {{ 'sudo -S' if ansible_user != 'root' else '' }} ls /etc/sudoers.d/ {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}
-    register: reg_users_list
-    args:
-      warn: false
-    check_mode: no
-    ignore_errors: true
-    no_log: yes
-  - ansible.builtin.debug:
-      msg: "{{ reg_users_list|replace(ansible_ssh_pass, 'obfuscated') }}"
-  - block:
-    - name: get the missing users list
-      ansible.builtin.set_fact:
-        missing_users_list: "{{ req_users_list | difference(reg_users_list.stdout_lines) | select() }}"
-    - name: define sudoers_user_status
-      ansible.builtin.set_fact:
-        sudoers_user_status: "{{ missing_users_list|join(', ') + (' are ' if missing_users_list|length > 1 else ' is ') + 'missing from /etc/sudoers.d/' }}"
-    when: req_users_list | difference(reg_users_list.stdout_lines) | select() | length >= 1
+- name: Check the users status
   vars:
     req_users_list:
       - ansible
@@ -31,5 +12,27 @@
       - ciscosupporttier3
       - ciscosupporttier4
       - "{{ 'splunk' if inventory_hostname is not search('lnxjmp') else '' }}"
-  tags: sanity
-  
+  block:
+    - name: Get list of users
+      ansible.builtin.shell:
+        cmd: set -o pipefail && {{ 'sudo -S' if ansible_user != 'root' else '' }} ls /etc/sudoers.d/ {{ mypassstr }}
+        executable: /bin/bash
+      vars:
+        mypassstr: "{{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}"
+      register: reg_users_list
+      changed_when: false
+      check_mode: false
+      ignore_errors: true
+      no_log: true
+    - name: Debug message
+      ansible.builtin.debug:
+        msg: "{{ reg_users_list | replace(ansible_ssh_pass, 'obfuscated') }}"
+    - name: Get sudoers user status
+      when: req_users_list | difference(reg_users_list.stdout_lines) | select() | length >= 1
+      block:
+        - name: Get the missing users list
+          ansible.builtin.set_fact:
+            missing_users_list: "{{ req_users_list | difference(reg_users_list.stdout_lines) | select() }}"
+        - name: Define sudoers_user_status
+          ansible.builtin.set_fact:
+            sudoers_user_status: "{{ missing_users_list | join(', ') + (' are ' if missing_users_list | length > 1 else ' is ') + 'missing from /etc/sudoers.d/' }}" # noqa: yaml[line-length]

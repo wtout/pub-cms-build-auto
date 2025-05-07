@@ -1,14 +1,20 @@
 ---
 # Tasks to check atarly sanity
-- block:
-  - include_tasks: task_check_puppet_push_status.yml
-    when: customer.version.release[1:]|replace('.', '')|int <= 9217
-  - block:
-    - include_tasks: task_check_service_status.yml
-    - include_tasks: task_check_process_status.yml
-    - include_tasks: task_check_chrony_server_status.yml
-    - include_tasks: task_check_chrony_file.yml
-    - include_tasks: task_check_rly_splunk_status.yml
-    - include_tasks: task_check_sudoers_user_status.yml
+- name: Check atarly sanity
   when: inventory_hostname is search('atarly')
-  tags: sanity
+  block:
+    - name: Check puppet push status
+      ansible.builtin.include_tasks: task_check_puppet_push_status.yml
+      when: customer.version.release[1:]|replace('.', '')|int <= 9217
+    - name: Check service status
+      ansible.builtin.include_tasks: task_check_service_status.yml
+    - name: Check process status
+      ansible.builtin.include_tasks: task_check_process_status.yml
+    - name: Check chrony server status
+      ansible.builtin.include_tasks: task_check_chrony_server_status.yml
+    - name: Check chrony file
+      ansible.builtin.include_tasks: task_check_chrony_file.yml
+    - name: Check relay Splunk status
+      ansible.builtin.include_tasks: task_check_rly_splunk_status.yml
+    - name: Check sudoers user status
+      ansible.builtin.include_tasks: task_check_sudoers_user_status.yml

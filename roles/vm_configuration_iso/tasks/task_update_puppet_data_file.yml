@@ -1,69 +1,78 @@
 ---
 # tasks to update data.conf on VM
-- block:
-  - block:
-    - name: define list of hosts that need data.conf
-      ansible.builtin.set_fact:
-        data_conf_hosts: "{{ (groups['stack'] + groups['dr']) | reject('search', infra_nodes|unique|join('|')) if customer.disaster_recovery and ansible_play_hosts|reject('search', 'vcenter|nexus')|sort == groups['dr']|sort else ansible_play_hosts | reject('search', 'bastion|puppet|vcenter|nexus|' + infra_nodes|unique|join('|')) }}"
-      vars:
-        infra_nodes: "{{ groups['infra']|regex_replace('[0-9]{2,}', '') if groups['infra'] is defined else ['none'] }}"
-    - name: create the files directory
+- name: Update data.conf on VM
+  vars:
+    hosts_in_play: "{{ ansible_play_hosts | reject('search', 'bastion|vcenter|puppet|nexus') }}"
+  block:
+    - name: Render data.conf locally
+      delegate_to: localhost
+      run_once: true
+      block:
+        - name: Define list of hosts that need data.conf
+          ansible.builtin.set_fact:
+            data_conf_hosts: "{{ (groups['stack'] + groups['dr']) | reject('search', infra_nodes | unique | join('|')) if \
+              customer.disaster_recovery and ansible_play_hosts | reject('search', 'vcenter|nexus') | sort == groups['dr'] | sort else \
+              ansible_play_hosts | reject('search', 'bastion|puppet|vcenter|nexus|' + infra_nodes | unique | join('|')) }}"
+          vars:
+            infra_nodes: "{{ groups['infra'] | regex_replace('[0-9]{2,}', '') if groups['infra'] is defined else ['none'] }}"
+        - name: Create the files directory
+          ansible.builtin.file:
+            path: "{{ role_path }}/files"
+            state: directory
+            mode: '755'
+        - name: Render data.conf file
+          ansible.builtin.template:
+            src: "{{ role_path }}/templates/{{ customer.version.release[1:4].split('.') | join }}-{{ 'dr' if host_item is search('dr') else '' }}data.conf.tmpl"
+            dest: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
+            mode: '644'
+          loop: "{{ data_conf_hosts }}"
+          loop_control:
+            loop_var: host_item
+    - name: Copy data.conf to VM
+      become: "{{ true if ansible_user != 'root' else false }}"
+      block:
+        - name: Create the puppet directory
+          ansible.builtin.file:
+            path: /opt/puppet/var
+            state: directory
+            mode: '755'
+        - name: Copy data.conf to VM
+          ansible.builtin.copy:
+            src: "{{ role_path }}/files/{{ vm.name }}-data.conf"
+            dest: '/opt/puppet/var/data.conf'
+            mode: '644'
+          when: not ansible_check_mode
+    - name: Bolt-on DR
+      when:
+        - customer.disaster_recovery
+        - hosts_in_play | difference(groups['dr']) | length == 0
+        - hosts_in_play | select('search', 'drlnxjmp') | length >= 1
+      delegate_to: "{{ groups['drlnxjmp'] | first }}"
+      run_once: true
+      block:
+        - name: Define location to store HA files on DR lnxjmp
+          ansible.builtin.set_fact:
+            hafiles_storage: '/opt/HAfiles'
+        - name: Create directory to store HA files on DR lnxjmp
+          ansible.builtin.file:
+            path: "{{ hafiles_storage }}"
+            state: directory
+            mode: '755'
+        - name: Copy HA data.conf files to DR lnxjmp
+          ansible.builtin.copy:
+            dest: "{{ hafiles_storage }}"
+            src: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
+            mode: '644'
+          loop: "{{ data_conf_hosts | difference(groups['dr']) }}"
+          loop_control:
+            loop_var: host_item
+          when: not ansible_check_mode
+    - name: Delete local file
       ansible.builtin.file:
-        path: "{{ role_path }}/files"
-        state: directory
-    - name: render data.conf file
-      ansible.builtin.template:
-        src: "{{ role_path }}/templates/{{ customer.version.release[1:4].split('.')|join }}-{{ 'dr' if host_item is search('dr') else '' }}data.conf.tmpl"
-        dest: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
+        path: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
+        state: absent
       loop: "{{ data_conf_hosts }}"
       loop_control:
         loop_var: host_item
-    delegate_to: localhost
-    run_once: true
-
-  - block:
-    - name: Create the puppet directory
-      ansible.builtin.file:
-        path: /opt/puppet/var
-        state: directory
-    - name: copy data.conf to VM
-      ansible.builtin.copy:
-        src: "{{ role_path }}/files/{{ vm.name }}-data.conf"
-        dest: '/opt/puppet/var/data.conf'
-      when: not ansible_check_mode
-    become: "{{ true if ansible_user != 'root' else false }}"
-
-  - block:
-    - name: define location to store HA files on DR lnxjmp
-      ansible.builtin.set_fact:
-        hafiles_storage: '/opt/HAfiles'
-    - name: create directory to store HA files on DR lnxjmp
-      ansible.builtin.file:
-        path: "{{ hafiles_storage }}"
-        state: directory
-    - name: copy HA data.conf files to DR lnxjmp
-      ansible.builtin.copy:
-        dest: "{{ hafiles_storage }}"
-        src: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
-      loop: "{{ data_conf_hosts | difference(groups['dr']) }}"
-      loop_control:
-        loop_var: host_item
-      when: not ansible_check_mode
-    delegate_to: "{{ groups['drlnxjmp']|first }}"
-    run_once: true
-    when:
-      - customer.disaster_recovery
-      - hosts_in_play | difference(groups['dr']) | length == 0
-      - hosts_in_play | select('search', 'drlnxjmp') | length >= 1
-
-  - name: delete local file
-    ansible.builtin.file:
-      path: "{{ role_path }}/files/{{ hostvars[host_item]['vm']['name'] }}-data.conf"
-      state: absent
-    loop: "{{ data_conf_hosts }}"
-    loop_control:
-      loop_var: host_item
-    delegate_to: localhost
-    run_once: true
-  vars:
-    hosts_in_play: "{{ ansible_play_hosts | reject('search', 'bastion|vcenter|puppet|nexus') }}"
+      delegate_to: localhost
+      run_once: true

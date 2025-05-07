@@ -1,51 +1,58 @@
 ---
 # Tasks to check the cronjobs
-- block:
-  - name: check if cms_backup rpm is installed
-    ansible.builtin.shell: $(which rpm) -qa | grep -i cms-backup
-    register: reg_bk_rpm
-    check_mode: no
-    ignore_errors: yes
-  - block:
-    - block:
-      - name: check if there is a backup cronjob
-        ansible.builtin.shell: |
-          {{ 'sudo -S' if ansible_user != 'root' else '' }} crontab -l {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | grep qs
-        register: reg_bk_cronjob1
-        ignore_errors: yes
-        args:
-          warn: false
-        check_mode: no
-      - ansible.builtin.set_fact:
-          reg_bk_cronjob: "{{ reg_bk_cronjob1 }}"
+- name: Check if cms_backup rpm is installed
+  ansible.builtin.shell: $(which rpm) -qa | grep -i cms-backup
+  register: reg_bk_rpm
+  changed_when: false
+  check_mode: false
+  ignore_errors: true
+- name: Get cronjobs status
+  when: curver != ''
+  no_log: "{{ true if ansible_user != 'root' else false }}"
+  vars:
+    curver: "{{ reg_bk_rpm.stdout.split('-') | last | replace('.noarch', '') }}"
+  block:
+    - name: Check cronjob if version is equal to 2.0
       when: curver is version('2.0', '=')
-    - block:
-      - name: check if there is a backup cronjob
-        ansible.builtin.shell: |
-          {{ 'sudo -S' if ansible_user != 'root' else '' }} crontab -l -u cmsbackup {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}
-        register: reg_bk_cronjob2
-        ignore_errors: yes
-        args:
-          warn: false
-        check_mode: no
-      - ansible.builtin.set_fact:
-          reg_bk_cronjob: "{{ reg_bk_cronjob2 }}"
+      block:
+        - name: Check if there is a backup cronjob
+          ansible.builtin.shell: |
+            {{ 'sudo -S' if ansible_user != 'root' else '' }} crontab -l {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }} | grep qs
+          args:
+            warn: false
+          register: reg_bk_cronjob1
+          changed_when: false
+          ignore_errors: true
+          check_mode: false
+        - name: Define reg_bk_cronjob
+          ansible.builtin.set_fact:
+            reg_bk_cronjob: "{{ reg_bk_cronjob1 }}"
+    - name: Check cronjob if version is greater than 2.0
       when: curver is version('2.0', '>')
-    - ansible.builtin.debug:
-        msg: "{{ reg_bk_cronjob|replace(ansible_ssh_pass, 'obfuscated') }}"
+      block:
+        - name: Check if there is a backup cronjob
+          ansible.builtin.shell: |
+            {{ 'sudo -S' if ansible_user != 'root' else '' }} crontab -l -u cmsbackup {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}
+          args:
+            warn: false
+          register: reg_bk_cronjob2
+          changed_when: false
+          ignore_errors: true
+          check_mode: false
+        - name: Define reg_bk_cronjob
+          ansible.builtin.set_fact:
+            reg_bk_cronjob: "{{ reg_bk_cronjob2 }}"
+    - name: Debug message
+      ansible.builtin.debug:
+        msg: "{{ reg_bk_cronjob | replace(ansible_ssh_pass, 'obfuscated') }}"
       when: ansible_user != 'root'
-    - name: define rly_backup_cronjob_status
+    - name: Define rly_backup_cronjob_status
       ansible.builtin.set_fact:
         rly_backup_cronjob_status: 'No backup cronjob found'
       when:
-        - reg_bk_cronjob.stdout_lines|length == 0
-    no_log: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
-    when: curver != ''
-    vars:
-      curver: "{{ reg_bk_rpm.stdout.split('-')|last|replace('.noarch', '') }}"
-  - name: define rly_backup_cronjob_status
-    ansible.builtin.set_fact:
-      rly_backup_cronjob_status: 'No backup rpm found'
-    when:
-      - reg_bk_rpm.stdout == ''
-  tags: sanity
+        - reg_bk_cronjob.stdout_lines | length == 0
+- name: Define rly_backup_cronjob_status
+  ansible.builtin.set_fact:
+    rly_backup_cronjob_status: 'No backup rpm found'
+  when:
+    - reg_bk_rpm.stdout == ''

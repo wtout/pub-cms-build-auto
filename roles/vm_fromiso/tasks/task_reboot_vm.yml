@@ -1,6 +1,6 @@
 ---
 # tasks to reboot the EM7 VMs
-- name: reboot the VM
+- name: Reboot the VM
   ansible.builtin.reboot:
     post_reboot_delay: 10
     reboot_timeout: 300

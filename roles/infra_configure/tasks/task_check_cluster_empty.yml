@@ -1,23 +1,24 @@
 ---
 # tasks to determine whether or not the cluster is empty
-- block:
-  - name: Get the{{ ' DR' if (drvm_names is defined and vm_name in drvm_names) else '' }} guest_info
-    community.vmware.vmware_guest_info:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      datacenter: "{{ information.datacenter }}"
-      name: "{{ vm_name }}"
-      validate_certs: no
-    check_mode: no
-    register: vmguest_info
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-  - name: define cluster_empty
-    ansible.builtin.set_fact:
-      cluster_empty: "{{ cluster_empty|default(true) and not vm_in_cluster }}"
-  #    cluster_empty: "{{ cluster_empty|default(true) and not (vm_in_cluster and vm_on) }}"
-    vars:
-      clus_name: "{{ information.cluster }}"
-      vm_in_cluster: "{{ true if vmguest_info.instance.hw_cluster == clus_name else false }}"
-  #    vm_on: "{{ true if vmguest_info.instance.hw_power_status|lower is search('poweredon') else false }}"
+- name: Check if cluster is empty
   when: cluster_empty | default(true)
+  block:
+    - name: Get the{{ (' DR' if (drvm_names is defined and vm_name in drvm_names) else '') + ' guest_info' }}
+      community.vmware.vmware_guest_info:
+        hostname: "{{ information.address }}"
+        username: "{{ credentials.username }}"
+        password: "{{ credentials.password }}"
+        datacenter: "{{ information.datacenter }}"
+        name: "{{ vm_name }}"
+        validate_certs: false
+      check_mode: false
+      register: vmguest_info
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+    - name: Define cluster_empty
+      ansible.builtin.set_fact:
+        cluster_empty: "{{ cluster_empty | default(true) and not vm_in_cluster }}"
+    #    cluster_empty: "{{ cluster_empty | default(true) and not (vm_in_cluster and vm_on) }}"
+      vars:
+        clus_name: "{{ information.cluster }}"
+        vm_in_cluster: "{{ true if vmguest_info.instance.hw_cluster == clus_name else false }}"
+    #    vm_on: "{{ true if vmguest_info.instance.hw_power_status | lower is search('poweredon') else false }}"

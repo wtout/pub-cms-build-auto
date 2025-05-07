@@ -1,22 +1,21 @@
 ---
 # Tasks to define hosts variables
-- block:
-  - name: Define hosts varaibles lists
-    include_tasks:
-      file: task_define_hosts_variables_lists.yml
-      apply:
-        vars:
-          vm_group: "{{ group_item }}"
-    loop: "{{ group_list }}"
-    loop_control:
-      loop_var: group_item
-  - name: Define DR hosts variables lists
-    include_tasks:
-      file: task_define_dr_hosts_variables_lists.yml
-      apply:
-        vars:
-          vm_group: "{{ group_item }}"
-    loop: "{{ drgroup_list }}"
-    loop_control:
-      loop_var: group_item
-    when:  customer.disaster_recovery
+- name: Define hosts varaibles lists
+  ansible.builtin.include_tasks:
+    file: task_define_hosts_variables_lists.yml
+    apply:
+      vars:
+        vm_group: "{{ group_item }}"
+  loop: "{{ group_list }}"
+  loop_control:
+    loop_var: group_item
+- name: Define DR hosts variables lists
+  ansible.builtin.include_tasks:
+    file: task_define_dr_hosts_variables_lists.yml
+    apply:
+      vars:
+        vm_group: "{{ group_item }}"
+  loop: "{{ drgroup_list }}"
+  loop_control:
+    loop_var: group_item
+  when: customer.disaster_recovery

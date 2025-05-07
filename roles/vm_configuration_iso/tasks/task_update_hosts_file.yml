@@ -1,53 +1,58 @@
 ---
 # tasks to update /etc/hosts on VM
-- block:
-  - block:
-    - name: define list of hosts that need /etc/hosts file
-      ansible.builtin.set_fact:
-        etc_hosts_hosts: "{{ (groups['stack'] + groups['dr']) | reject('search', infra_nodes|unique|join('|')) if customer.disaster_recovery and ansible_play_hosts|reject('search', 'vcenter|nexus')|sort == groups['dr']|sort else ansible_play_hosts | reject('search', 'bastion|puppet|vcenter|nexus|' + infra_nodes|unique|join('|')) }}"
-      vars:
-        infra_nodes: "{{ groups['infra']|regex_replace('[0-9]{2,}', '') if groups['infra'] is defined else ['none'] }}"
-    - name: define loop list
-      ansible.builtin.set_fact:
-        loop_list: "{{ ([etc_hosts_hosts|intersect(groups['stack'])|first] if etc_hosts_hosts|intersect(groups['stack'])|length > 0 else []) | union([etc_hosts_hosts|intersect(groups['dr'])|first] if customer.disaster_recovery and etc_hosts_hosts|intersect(groups['dr'])|length > 0 else []) }}"
-    - name: render hosts file
-      ansible.builtin.template:
-        src: "{{ role_path }}/templates/{{ customer.version.release[1:4].split('.')|join }}-{{ 'dr' if host_item is search('dr') else '' }}hosts.tmpl"
-        dest: "{{ role_path }}/files/{{ 'dr' if host_item is search('dr') else '' }}hosts"
+- name: Update /etc/hosts file
+  vars:
+    hosts_in_play: "{{ ansible_play_hosts | reject('search', 'bastion|vcenter|puppet|nexus') }}"
+  block:
+    - name: Create /etc/hosts file locally
+      run_once: true
+      block:
+        - name: Define list of hosts that need /etc/hosts file
+          ansible.builtin.set_fact:
+            etc_hosts_hosts: "{{ (groups['stack'] + groups['dr']) | reject('search', infra_nodes | unique | join('|')) if customer.disaster_recovery and \
+              ansible_play_hosts | reject('search', 'vcenter|nexus') | sort == groups['dr'] | sort else \
+              ansible_play_hosts | reject('search', 'bastion|puppet|vcenter|nexus|' + infra_nodes | unique | join('|')) }}"
+          vars:
+            infra_nodes: "{{ groups['infra'] | regex_replace('[0-9]{2,}', '') if groups['infra'] is defined else ['none'] }}"
+        - name: Define loop list
+          ansible.builtin.set_fact:
+            loop_list: "{{ ([etc_hosts_hosts | intersect(groups['stack']) | first] if etc_hosts_hosts | intersect(groups['stack']) | length > 0 else \
+              []) | union([etc_hosts_hosts | intersect(groups['dr']) | first] if customer.disaster_recovery and \
+              etc_hosts_hosts | intersect(groups['dr']) | length > 0 else []) }}"
+        - name: Render hosts file
+          ansible.builtin.template:
+            src: "{{ role_path }}/templates/{{ customer.version.release[1:4].split('.') | join }}-{{ 'dr' if host_item is search('dr') else '' }}hosts.tmpl"
+            dest: "{{ role_path }}/files/{{ 'dr' if host_item is search('dr') else '' }}hosts"
+            mode: '644'
+          loop: "{{ loop_list }}"
+          loop_control:
+            loop_var: host_item
+          delegate_to: localhost
+    - name: Copy hosts file to VM
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/{{ 'dr' if inventory_hostname is search('dr') else '' }}hosts"
+        dest: '/etc/hosts'
+        mode: '644'
+      become: "{{ true if ansible_user != 'root' else false }}"
+      when: not ansible_check_mode
+    - name: Copy HA hosts file to DR lnxjmp
+      ansible.builtin.copy:
+        dest: "{{ hafiles_storage }}/hosts"
+        src: "{{ role_path }}/files/hosts"
+        mode: '644'
+      when:
+        - not ansible_check_mode
+        - customer.disaster_recovery
+        - hosts_in_play | difference(groups['dr']) | length == 0
+        - hosts_in_play | select('search', 'drlnxjmp') | length >= 1
+      delegate_to: "{{ groups['drlnxjmp'] | first }}"
+      run_once: true
+    - name: Delete local file
+      ansible.builtin.file:
+        path: "{{ role_path }}/files/{{ 'dr' if host_item is search('dr') else '' }}hosts"
+        state: absent
       loop: "{{ loop_list }}"
       loop_control:
         loop_var: host_item
       delegate_to: localhost
-    run_once: true
-
-  - name: Copy hosts file to VM
-    ansible.builtin.copy:
-      src: "{{ role_path }}/files/{{ 'dr' if inventory_hostname is search('dr') else '' }}hosts"
-      dest: '/etc/hosts'
-    become: "{{ true if ansible_user != 'root' else false }}"
-    when: not ansible_check_mode
-
-  - block:
-    - name: copy HA hosts file to DR lnxjmp
-      ansible.builtin.copy:
-        dest: "{{ hafiles_storage}}/hosts"
-        src: "{{ role_path }}/files/hosts"
-      when: not ansible_check_mode
-    delegate_to: "{{ groups['drlnxjmp']|first }}"
-    run_once: true
-    when:
-      - customer.disaster_recovery
-      - hosts_in_play | difference(groups['dr']) | length == 0
-      - hosts_in_play | select('search', 'drlnxjmp') | length >= 1
-
-  - name: delete local file
-    ansible.builtin.file:
-      path: "{{ role_path }}/files/{{ 'dr' if host_item is search('dr') else '' }}hosts"
-      state: absent
-    loop: "{{ loop_list }}"
-    loop_control:
-      loop_var: host_item
-    delegate_to: localhost
-    run_once: true
-  vars:
-    hosts_in_play: "{{ ansible_play_hosts | reject('search', 'bastion|vcenter|puppet|nexus') }}"
+      run_once: true

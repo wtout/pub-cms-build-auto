@@ -1,29 +1,29 @@
 ---
 # tasks to get cluster name
-- block:
-  - name: Get cluster facts
-    community.vmware.vmware_cluster_info:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      datacenter: "{{ information.datacenter }}"
-      validate_certs: no
-    register: cluster_info
-    check_mode: no
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-  - name: define cluster_name
-    ansible.builtin.set_fact:
-      cluster_name: "{{ cluster_name|default([]) | union([cluster_item.key]) }}"
-    loop:  "{{ cluster_info.clusters|dict2items }}"
-    loop_control:
-      loop_var: cluster_item
-      label: "{{ cluster_item }}"
-
-  - name: define information.cluster
-    ansible.builtin.set_fact:
-      information: "{{ information | default({}) | combine(new_item, recursive=true) }}"
-    vars:
-      new_item: "{'cluster': '{{ cluster_name|first }}'}"
-
+- name: Get cluster name
   no_log: true
+  block:
+    - name: Get cluster facts
+      community.vmware.vmware_cluster_info:
+        hostname: "{{ information.address }}"
+        username: "{{ credentials.username }}"
+        password: "{{ credentials.password }}"
+        datacenter: "{{ information.datacenter }}"
+        validate_certs: false
+      register: cluster_info
+      check_mode: false
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+
+    - name: Define cluster_name
+      ansible.builtin.set_fact:
+        cluster_name: "{{ cluster_name | default([]) | union([cluster_item.key]) }}"
+      loop: "{{ cluster_info.clusters | dict2items }}"
+      loop_control:
+        loop_var: cluster_item
+        label: "{{ cluster_item }}"
+
+    - name: Define information.cluster
+      ansible.builtin.set_fact:
+        information: "{{ information | default({}) | combine(new_item, recursive=true) }}"
+      vars:
+        new_item: "{'cluster': '{{ cluster_name | first }}'}"

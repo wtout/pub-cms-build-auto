@@ -1,163 +1,163 @@
 ---
 # tasks file for infra_configure
-- block:
-  - block:
-    - name: Deploy HA infrastructure
+- name: Infra configure
+  tags: ['infra_configure', 'infra_build_nodes', 'capcheck']
+  block:
+    - name: Configure infrastructure
+      when: configure_infra | default(false) | bool
       block:
-      - name: Create HA Datastores
-        include_tasks:
-          file: task_create_datastores.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-              customer_prefix: "{{ customer.primary.name_prefix }}"
-              count: "{{ count_idx }}"
-        loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-          index_var: count_idx
-      - name: Add HA VSwitches
-        include_tasks: 
-          file: task_add_vswitches.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-        loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-      - name: Create HA Portgroups
-        include_tasks:
-          file: task_create_portgroups.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-              customer_prefix: "{{ customer.primary.name_prefix }}"
-        loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-      - name: Create Cluster
-        include_tasks: task_create_cluster.yml
-      when:
-        - "'vcenter' in group_names"
-        - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
-
-    - name: Deploy DR infrastructure
+        - name: Deploy HA infrastructure
+          when:
+            - "'vcenter' in group_names"
+            - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
+          block:
+            - name: Create HA Datastores
+              ansible.builtin.include_tasks:
+                file: task_create_datastores.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+                    customer_prefix: "{{ customer.primary.name_prefix }}"
+                    count: "{{ count_idx }}"
+              loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+                index_var: count_idx
+            - name: Add HA VSwitches
+              ansible.builtin.include_tasks:
+                file: task_add_vswitches.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+              loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+            - name: Create HA Portgroups
+              ansible.builtin.include_tasks:
+                file: task_create_portgroups.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+                    customer_prefix: "{{ customer.primary.name_prefix }}"
+              loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+            - name: Create Cluster
+              ansible.builtin.include_tasks: task_create_cluster.yml
+        - name: Deploy DR infrastructure
+          when:
+            - customer.disaster_recovery
+            - "'drvcenter' in group_names"
+            - ansible_play_batch | select('search', 'dr') | reject('search', 'vcenter|bastion|puppet|nexus') | list | length >= 1
+          block:
+            - name: Create DR Datastores
+              ansible.builtin.include_tasks:
+                file: task_create_datastores.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+                    customer_prefix: "{{ customer.secondary.name_prefix }}"
+                    count: "{{ count_idx }}"
+              loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+                index_var: count_idx
+            - name: Add DR VSwitches
+              ansible.builtin.include_tasks:
+                file: task_add_vswitches.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+              loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+            - name: Create DR Portgroups
+              ansible.builtin.include_tasks:
+                file: task_create_portgroups.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+                    customer_prefix: "{{ customer.secondary.name_prefix }}"
+              loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+            - name: Create DR Cluster
+              ansible.builtin.include_tasks: task_create_cluster.yml
+    - name: Rollback infrastructure
+      when: rollback_infra | default(false) | bool
       block:
-      - name: Create DR Datastores
-        include_tasks:
-            file: task_create_datastores.yml
-            apply:
-              vars:
-                resource: "{{ resource_item }}"
-                customer_prefix: "{{ customer.secondary.name_prefix }}"
-                count: "{{ count_idx }}"
-        loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-          index_var: count_idx
-      - name: Add DR VSwitches
-        include_tasks: 
-          file: task_add_vswitches.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-        loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-      - name: Create DR Portgroups
-        include_tasks:
-          file: task_create_portgroups.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-              customer_prefix: "{{ customer.secondary.name_prefix }}"
-        loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-      - name: Create DR Cluster
-        include_tasks: task_create_cluster.yml
-      when:
-        - customer.disaster_recovery
-        - "'drvcenter' in group_names"
-        - ansible_play_batch | select('search', 'dr') | reject('search', 'vcenter|bastion|puppet|nexus') | list | length >= 1
-    when: configure_infra | default(false) | bool
-
-  - block:
-    - name: Rollback HA infrastructure
-      block:
-      - name: Delete HA Datastores
-        include_tasks:
-          file: task_delete_datastores.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-              customer_prefix: "{{ customer.primary.name_prefix }}"
-              count: "{{ count_idx }}"
-        loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-          index_var: count_idx
-      - name: Delete HA VSwitches
-        include_tasks:
-          file: task_remove_vswitches.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-        loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-      - name: Delete HA Portgroups
-        include_tasks:
-          file: task_delete_portgroups.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-        loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-      - name: Delete Cluster
-        include_tasks: task_delete_cluster.yml
-      when:
-        - "'vcenter' in group_names"
-        - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
-
-    - name: Rollback DR Infrastructure
-      block:
-      - name: Delete DR Datastores
-        include_tasks:
-          file: task_delete_datastores.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-              customer_prefix: "{{ customer.secondary.name_prefix }}"
-              count: "{{ count_idx }}"
-        loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-          index_var: count_idx
-      - name: Delete DR VSwitches
-        include_tasks:
-          file: task_remove_vswitches.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-        loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-      - name: Delete DR Portgroups
-        include_tasks:
-          file: task_delete_portgroups.yml
-          apply:
-            vars:
-              resource: "{{ resource_item }}"
-        loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
-        loop_control:
-          loop_var: resource_item
-      - include_tasks: task_delete_cluster.yml
-      when:
-        - customer.disaster_recovery
-        - "'drvcenter' in group_names"
-        - ansible_play_batch | select('search', 'dr') | reject('search', 'vcenter|bastion|puppet|nexus') | list | length >= 1
-    when: rollback_infra | default(false) | bool
-  tags: [ 'infra_configure', 'infra_build_nodes', 'capcheck' ]
-  
+        - name: Rollback HA infrastructure
+          when:
+            - "'vcenter' in group_names"
+            - ansible_play_batch | reject('search', 'dr|vcenter|bastion|puppet|nexus') | list | length >= 1
+          block:
+            - name: Delete HA Datastores
+              ansible.builtin.include_tasks:
+                file: task_delete_datastores.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+                    customer_prefix: "{{ customer.primary.name_prefix }}"
+                    count: "{{ count_idx }}"
+              loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+                index_var: count_idx
+            - name: Delete HA VSwitches
+              ansible.builtin.include_tasks:
+                file: task_remove_vswitches.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+              loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+            - name: Delete HA Portgroups
+              ansible.builtin.include_tasks:
+                file: task_delete_portgroups.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+              loop: "{{ hostvars[groups['vcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+            - name: Delete Cluster
+              ansible.builtin.include_tasks: task_delete_cluster.yml
+        - name: Rollback DR Infrastructure
+          when:
+            - customer.disaster_recovery
+            - "'drvcenter' in group_names"
+            - ansible_play_batch | select('search', 'dr') | reject('search', 'vcenter|bastion|puppet|nexus') | list | length >= 1
+          block:
+            - name: Delete DR Datastores
+              ansible.builtin.include_tasks:
+                file: task_delete_datastores.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+                    customer_prefix: "{{ customer.secondary.name_prefix }}"
+                    count: "{{ count_idx }}"
+              loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+                index_var: count_idx
+            - name: Delete DR VSwitches
+              ansible.builtin.include_tasks:
+                file: task_remove_vswitches.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+              loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+            - name: Delete DR Portgroups
+              ansible.builtin.include_tasks:
+                file: task_delete_portgroups.yml
+                apply:
+                  vars:
+                    resource: "{{ resource_item }}"
+              loop: "{{ hostvars[groups['drvcenter'][0]]['information']['resources'] }}"
+              loop_control:
+                loop_var: resource_item
+            - name: Delete Cluster
+              ansible.builtin.include_tasks: task_delete_cluster.yml

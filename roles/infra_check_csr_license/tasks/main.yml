@@ -1,39 +1,45 @@
 ---
 # tasks file for infra_check_csr_license
-- block:
-  - block:
-    - name: Gather VM info
-      community.vmware.vmware_guest_info:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        name: "{{ vm.name }}"
-        datacenter: "{{ datacenter.primary.name if 'stack' in group_names else datacenter.secondary.name }}"
-        validate_certs: no
-      register: csr_info
-      until: csr_info.instance.ipv4 != None
-      ignore_errors: true
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    - ansible.builtin.assert:
-        that:
-          - csr_info is succeeded
-        fail_msg: 'The CSR VM is not found. Aborting playbook execution!'
-    - set_fact:
-        ansible_host: "{{ csr_info.instance.ipv4 }}"
-    when: not ignore|default(false)
-
-  - name: check licensed state
-    block:
-      - name: Check if CSR is licensed
-        ansible.builtin.include_tasks: task_check_csr_license.yml
-      - ansible.builtin.set_fact:
-          is_licensed: true
-    rescue:
-      - ansible.builtin.set_fact:
-          is_licensed: false
-    always:
-      - ansible.builtin.assert:
-          that: is_licensed
-        when: not ignore|default(false)
+- name: Check CSR license
   when: inventory_hostname is search('csr')
-  tags: [ 'infra_check_csr_license', 'vm_creation' ]
+  tags: ['infra_check_csr_license', 'vm_creation']
+  block:
+    - name: Get CSR ansible_host
+      when: not ignore | default(false)
+      block:
+        - name: Gather VM info
+          community.vmware.vmware_guest_info:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            name: "{{ vm.name }}"
+            datacenter: "{{ datacenter.primary.name if 'stack' in group_names else datacenter.secondary.name }}"
+            validate_certs: false
+          register: csr_info
+          until: csr_info.instance.ipv4 != None
+          ignore_errors: true
+          delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+        - name: Assert that CSR information was gathered successfully
+          ansible.builtin.assert:
+            that:
+              - csr_info is succeeded
+            fail_msg: 'The CSR VM is not found. Aborting playbook execution!'
+        - name: Define ansible_host
+          ansible.builtin.set_fact:
+            ansible_host: "{{ csr_info.instance.ipv4 }}"
+    - name: Check licensed state
+      block:
+        - name: Check if CSR is licensed
+          ansible.builtin.include_tasks: task_check_csr_license.yml
+        - name: Define is_licensed
+          ansible.builtin.set_fact:
+            is_licensed: true
+      rescue:
+        - name: Define is_licensed
+          ansible.builtin.set_fact:
+            is_licensed: false
+      always:
+        - name: Assert the CSR is licensed
+          ansible.builtin.assert:
+            that: is_licensed
+          when: not ignore | default(false)

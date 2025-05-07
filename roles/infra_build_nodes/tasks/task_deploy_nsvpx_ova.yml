@@ -6,16 +6,16 @@
     username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
     password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
     datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-    disk_provisioning: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] is search('PAE-HX-DC|Staging|STG') else 'thick' }}"
+    disk_provisioning: "{{ vm.disk_provisioning if vm.disk_provisioning != '' else 'thin' if mydc is search('PAE-HX-DC|Staging|STG') else 'thick' }}"
     cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-    datastore: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != '' else vm_ds }}"
-    folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
+    datastore: "{{ myds_cluster if myds_cluster != '' else vm_ds }}"
+    folder: "{{ mydc + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
     name: "{{ vm.name }}"
     networks: {}
     ova: "{{ ova_dir }}/{{ ova_names.nsvpx }}"
-    power_on: no
-    allow_duplicates: no
-    validate_certs: no
+    power_on: false
+    allow_duplicates: false
+    validate_certs: false
   environment:
     http_proxy: ''
     https_proxy: ''
@@ -23,3 +23,6 @@
   async: 1200
   poll: 0
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  vars:
+    myds_cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] }}"
+    mydc: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"

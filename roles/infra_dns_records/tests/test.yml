@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test infra_dns_records
+  hosts: localhost
   remote_user: root
   roles:
     - infra_dns_records

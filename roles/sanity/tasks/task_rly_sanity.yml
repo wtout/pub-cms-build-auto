@@ -1,51 +1,80 @@
 ---
 # Tasks to check RLY sanity
-- block:
-  - include_tasks: task_check_puppet_push_status.yml
-    when: customer.version.release[1:]|replace('.', '')|int <= 9217
-  - block:
-    - include_tasks: task_check_rly_current_version.yml
-    - include_tasks: task_check_rly_rpms_status.yml
-    - include_tasks: task_check_service_status.yml
-    - include_tasks: task_check_rly_logged_errors_status.yml
-    - name: check rules
-      include_tasks:
+- name: Check relay sanity
+  when:
+    - inventory_hostname is search('rly')
+    - inventory_hostname is not search('atarly')
+  block:
+    - name: Check puppet push status
+      ansible.builtin.include_tasks: task_check_puppet_push_status.yml
+      when: customer.version.release[1:] | replace('.', '') | int <= 9217
+    - name: Check relay current version
+      ansible.builtin.include_tasks: task_check_rly_current_version.yml
+    - name: Check relay rpms status
+      ansible.builtin.include_tasks: task_check_rly_rpms_status.yml
+    - name: Check service status
+      ansible.builtin.include_tasks: task_check_service_status.yml
+    - name: Check relay logged errors status
+      ansible.builtin.include_tasks: task_check_rly_logged_errors_status.yml
+    - name: Check rules
+      ansible.builtin.include_tasks:
         file: task_check_rly_rules_status.yml
         apply:
           vars:
             fileid: "{{ file_item.name }}"
             rulesnum: "{{ file_item.number }}"
       loop:
-        - { name: '/etc/syslog-ng/conf.d/priority_em7-message-collector-vip_WL.conf', number: "{{ 1185 if groups['rly']|length == 1 else 1273 }}" }
-        - { name: '/etc/syslog-ng/conf.d/priority_em7-message-collector-vip_BL.conf', number: "{{ 91 if groups['rly']|length == 1 else 115 }}" }
+        - { name: '/etc/syslog-ng/conf.d/priority_em7-message-collector-vip_WL.conf', number: "{{ 1185 if groups['rly'] | length == 1 else 1273 }}" }
+        - { name: '/etc/syslog-ng/conf.d/priority_em7-message-collector-vip_BL.conf', number: "{{ 91 if groups['rly'] | length == 1 else 115 }}" }
       loop_control:
         loop_var: file_item
-    - include_tasks: task_check_rly_dbs.yml
-    - include_tasks: task_check_rly_db_cluster_status.yml
-    - include_tasks: task_check_rly_db_grants_status.yml
-    - include_tasks: task_check_reportstore_status.yml
-    - include_tasks: task_check_coral_services_status.yml
-    - include_tasks: task_check_searchhead_vip_status.yml
-    - include_tasks: task_check_de_config_status.yml
-    - include_tasks: task_check_relayweb_port_status.yml
-    - include_tasks: task_check_chrony_server_status.yml
-    - include_tasks: task_check_process_status.yml
-    - include_tasks: task_check_rly_splunk_status.yml
-    - include_tasks: task_check_relayweb_conf_file.yml
-    - include_tasks: task_check_hosts_file.yml
-    - include_tasks: task_check_chrony_file.yml
-    - include_tasks: task_check_splunk_cronjob_status.yml
-    - include_tasks: task_check_splunk_status.yml
-    - include_tasks: task_check_backup_dir_status.yml
-    - include_tasks: task_check_data01_dir_status.yml
-    - include_tasks: task_check_swap_status.yml
-    - include_tasks: task_check_application_properties_status.yml
-    - include_tasks: task_check_configfile_properties_status.yml
-    - include_tasks: task_check_backup_cronjob_status.yml
-    - include_tasks: task_check_user_expiry_status.yml
-    - include_tasks: task_check_ownership_status.yml
-    - include_tasks: task_check_sudoers_user_status.yml
-  when:
-    - inventory_hostname is search('rly')
-    - inventory_hostname is not search('atarly')
-  tags: sanity
+    - name: Check relay DBs
+      ansible.builtin.include_tasks: task_check_rly_dbs.yml
+    - name: Check relay DB cluster status
+      ansible.builtin.include_tasks: task_check_rly_db_cluster_status.yml
+    - name: Check relay DB grants status
+      ansible.builtin.include_tasks: task_check_rly_db_grants_status.yml
+    - name: Check reportstore status
+      ansible.builtin.include_tasks: task_check_reportstore_status.yml
+    - name: Check coral services status
+      ansible.builtin.include_tasks: task_check_coral_services_status.yml
+    - name: Check search head VIP status
+      ansible.builtin.include_tasks: task_check_searchhead_vip_status.yml
+    - name: Check DE config status
+      ansible.builtin.include_tasks: task_check_de_config_status.yml
+    - name: Check relayweb port status
+      ansible.builtin.include_tasks: task_check_relayweb_port_status.yml
+    - name: Check chrony server status
+      ansible.builtin.include_tasks: task_check_chrony_server_status.yml
+    - name: Check process status
+      ansible.builtin.include_tasks: task_check_process_status.yml
+    - name: Check relay splunk status
+      ansible.builtin.include_tasks: task_check_rly_splunk_status.yml
+    - name: Check relayweb confi file
+      ansible.builtin.include_tasks: task_check_relayweb_conf_file.yml
+    - name: Check hosts file
+      ansible.builtin.include_tasks: task_check_hosts_file.yml
+    - name: Check chrony file
+      ansible.builtin.include_tasks: task_check_chrony_file.yml
+    - name: Check Splunk cronjob status
+      ansible.builtin.include_tasks: task_check_splunk_cronjob_status.yml
+    - name: Check Splunk status
+      ansible.builtin.include_tasks: task_check_splunk_status.yml
+    - name: Check backup directory status
+      ansible.builtin.include_tasks: task_check_backup_dir_status.yml
+    - name: Check data01 directory status
+      ansible.builtin.include_tasks: task_check_data01_dir_status.yml
+    - name: Check SWAP status
+      ansible.builtin.include_tasks: task_check_swap_status.yml
+    - name: Check application properties status
+      ansible.builtin.include_tasks: task_check_application_properties_status.yml
+    - name: Check config file properties status
+      ansible.builtin.include_tasks: task_check_configfile_properties_status.yml
+    - name: Check backup cronjob status
+      ansible.builtin.include_tasks: task_check_backup_cronjob_status.yml
+    - name: Check user expiry status
+      ansible.builtin.include_tasks: task_check_user_expiry_status.yml
+    - name: Check ownership status
+      ansible.builtin.include_tasks: task_check_ownership_status.yml
+    - name: Check sudoers user status
+      ansible.builtin.include_tasks: task_check_sudoers_user_status.yml

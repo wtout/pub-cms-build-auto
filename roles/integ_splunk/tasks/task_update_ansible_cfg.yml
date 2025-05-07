@@ -1,26 +1,27 @@
 ---
 # Tasks to update ansible.cfg file
-- block:
-  - name: remove log file definition from {{ spl_ansible_path }}/ansible.cfg
-    ansible.builtin.lineinfile:
-      path: "{{ spl_ansible_path }}/ansible.cfg"
-      regex: '^log_path ='
-      state: absent
-  - name: disable allow_world_readable_tmpfiles parameter from {{ spl_ansible_path }}/ansible.cfg
-    ansible.builtin.replace:
-      path: "{{ spl_ansible_path }}/ansible.cfg"
-      regexp: '^(allow_world_readable_tmpfiles = .*)$'
-      replace: '#\g<1>'
-  - name: disable command_warnings parameter from {{ spl_ansible_path }}/ansible.cfg
-    ansible.builtin.replace:
-      path: "{{ spl_ansible_path }}/ansible.cfg"
-      regexp: '^(command_warnings = .*)$'
-      replace: '#\g<1>'
-  - name: replace callback_whitelist with callbacks_enabled
-    ansible.builtin.replace:
-      path: "{{ spl_ansible_path }}/ansible.cfg"
-      regexp: '^callback_whitelist'
-      replace: 'callbacks_enabled'
+- name: Update ansible.cfg
   delegate_to: localhost
-  become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+  become: "{{ true if host_os | lower is search('almalinux|ubuntu') else false }}"
   run_once: true
+  block:
+    - name: Remove log file definition from {{ spl_ansible_path + '/ansible.cfg' }}
+      ansible.builtin.lineinfile:
+        path: "{{ spl_ansible_path }}/ansible.cfg"
+        regex: '^log_path ='
+        state: absent
+    - name: Disable allow_world_readable_tmpfiles parameter from {{ spl_ansible_path + '/ansible.cfg' }}
+      ansible.builtin.replace:
+        path: "{{ spl_ansible_path }}/ansible.cfg"
+        regexp: '^(allow_world_readable_tmpfiles = .*)$'
+        replace: '#\g<1>'
+    - name: Disable command_warnings parameter from {{ spl_ansible_path + '/ansible.cfg' }}
+      ansible.builtin.replace:
+        path: "{{ spl_ansible_path }}/ansible.cfg"
+        regexp: '^(command_warnings = .*)$'
+        replace: '#\g<1>'
+    - name: Replace callback_whitelist with callbacks_enabled
+      ansible.builtin.replace:
+        path: "{{ spl_ansible_path }}/ansible.cfg"
+        regexp: '^callback_whitelist'
+        replace: 'callbacks_enabled'

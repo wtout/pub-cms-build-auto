@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test sanity
+  hosts: localhost
   remote_user: root
   roles:
-    - roles/sanity
+    - sanity

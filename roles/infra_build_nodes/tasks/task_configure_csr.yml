@@ -1,8 +1,10 @@
 ---
 # Task file to configure CSRs
-- ansible.builtin.include_tasks:
+- name: Configure hosted CSR
+  ansible.builtin.include_tasks:
     file: task_configure_hosted_csr.yml
   when: hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h')
-- ansible.builtin.include_tasks:
+- name: Configure on-premise CSR
+  ansible.builtin.include_tasks:
     file: task_configure_onprem_csr.yml
   when: hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is not search('h')

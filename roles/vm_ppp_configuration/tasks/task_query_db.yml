@@ -1,13 +1,17 @@
 ---
 # tasks to query db on relay
-- block:
-  - name: check cluster size on relay
-    ansible.builtin.shell: mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
-    register: query_db1
-    failed_when: query_db1.stdout|int < 3
+- name: Check cluster size on relay
+  ansible.builtin.shell:
+    cmd: set -o pipefail && mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
+    executable: /bin/bash
+  register: query_db1
+  changed_when: false
+  failed_when: query_db1.stdout|int < 3
 
-  - block:
-    - name: check if puppet agent test is already running
+- name: Tasks for query_db1 greater then 3
+  when: query_db1.stdout|int > 3
+  block:
+    - name: Check if puppet agent test is already running
       ansible.builtin.stat:
         path: '/opt/puppetlabs/puppet/cache/state/agent_catalog_run.lock'
       register: ppr3
@@ -17,7 +21,8 @@
         state: absent
         timeout: 1800
       when: ppr3.stat.exists
-    - include_tasks:
+    - name: Restart service
+      ansible.builtin.include_tasks:
         file:
           task_restart_service.yml
         apply:
@@ -27,8 +32,10 @@
         - mariadb
       loop_control:
         loop_var: svc_item
-    - name: recheck cluster size on relay
-      ansible.builtin.shell: mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
+    - name: Recheck cluster size on relay
+      ansible.builtin.shell:
+        cmd: set -o pipefail && mysql -uroot -p{{ relay_db_password }} -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';" | tail -1 | awk -F ' ' '{print $NF}'
+        executable: /bin/bash
       register: query_db2
+      changed_when: false
       failed_when: query_db2.stdout|int != 3
-    when: query_db1.stdout|int > 3

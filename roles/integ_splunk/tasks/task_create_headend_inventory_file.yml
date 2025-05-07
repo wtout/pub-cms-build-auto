@@ -1,47 +1,53 @@
 ---
 # Tasks to get the Headend hosts list
-- block:
-  - name: check if headend hosts inventory file exists
-    ansible.builtin.stat:
-      path: "{{ auto_dir }}/inventories/{{ customer.he_identifier }}/hosts.yml"
-    register: he_hosts_file
-  - name: check if the headend hosts file is found
-    ansible.builtin.assert:
-      that:
-        - he_hosts_file.stat.exists
-      fail_msg: "The Headend inventory is not found. Aborting!"
-  - name: read Headend hosts list
-    ansible.builtin.shell: ansible all -i inventories/{{ customer.he_identifier }} --list-hosts | grep -v 'hosts\|vcenter\|bastion' | sed -e 's/^\s*//g'
-    args:
-      chdir: "{{ auto_dir }}"
-    register: he_hosts_list
-    check_mode: no
-  - name: read Headend VMs list
-    ansible.builtin.shell: ansible {{ he_hosts_list.stdout_lines|join(',') }} -i inventories/{{ customer.he_identifier }} -m debug -a "var='vm.name'" | grep -v SUCCESS | awk '{print $2}' | cut -d '"' -f2 | sed -e '/^$/d'
-    args:
-      chdir: "{{ auto_dir }}"
-    register: he_vms_list
-    check_mode: no
-  - name: define list of headend host groups
-    ansible.builtin.set_fact:
-      he_group_list: "{{ he_group_list|default([]) | union([host_item[:-2]]) }}"
-    loop: "{{ he_hosts_list.stdout_lines }}"
-    loop_control:
-      loop_var: host_item
-  - name: define lists of headend VMs per group
-    ansible.builtin.set_fact:
-      "{{ list_item + '_list' }}" : "{{ he_vms_list.stdout_lines | select('search', list_item) | list }}"
-    loop: "{{ he_group_list }}"
-    loop_control:
-      loop_var: list_item
-  - name: define Headend facts
-    ansible.builtin.set_fact:
-      tmpl_name: 'headend_inventory.yml.tmpl'
-  - name: create Headend inventory file
-    ansible.builtin.template:
-      src: "{{ tmpl_item.name }}"
-      dest: "{{ tmpl_item.dest }}"
-    loop:
-      - { name: "templates/{{ tmpl_name }}", dest: "{{ tmpl_dest }}/{{ he_inv_file_name }}" }
-    loop_control:
-      loop_var: tmpl_item
+- name: Check if headend hosts inventory file exists
+  ansible.builtin.stat:
+    path: "{{ auto_dir }}/inventories/{{ customer.he_identifier }}/hosts.yml"
+  register: he_hosts_file
+- name: Check if the headend hosts file is found
+  ansible.builtin.assert:
+    that:
+      - he_hosts_file.stat.exists
+    fail_msg: "The Headend inventory is not found. Aborting!"
+- name: Read Headend hosts list
+  ansible.builtin.shell:
+    cmd: set -o pipefail && ansible all -i inventories/{{ customer.he_identifier }} --list-hosts | grep -v 'hosts\|vcenter\|bastion' | sed -e 's/^\s*//g'
+    executable: /bin/bash
+    chdir: "{{ auto_dir }}"
+  register: he_hosts_list
+  changed_when: false
+  check_mode: false
+- name: Read Headend VMs list
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail && ansible {{ he_hosts_list.stdout_lines | join(',') }} -i inventories/{{ customer.he_identifier }} -m debug -a "var='vm.name'" | \
+      grep -v SUCCESS | awk '{print $2}' | cut -d '"' -f2 | sed -e '/^$/d'
+    executable: /bin/bash
+    chdir: "{{ auto_dir }}"
+  register: he_vms_list
+  changed_when: false
+  check_mode: false
+- name: Define list of headend host groups
+  ansible.builtin.set_fact:
+    he_group_list: "{{ he_group_list | default([]) | union([host_item[:-2]]) }}"
+  loop: "{{ he_hosts_list.stdout_lines }}"
+  loop_control:
+    loop_var: host_item
+- name: Define lists of headend VMs per group
+  ansible.builtin.set_fact:
+    "{{ list_item + '_list' }}": "{{ he_vms_list.stdout_lines | select('search', list_item) | list }}" # noqa: var-naming[no-jinja]
+  loop: "{{ he_group_list }}"
+  loop_control:
+    loop_var: list_item
+- name: Define Headend facts
+  ansible.builtin.set_fact:
+    tmpl_name: 'headend_inventory.yml.tmpl'
+- name: Create Headend inventory file
+  ansible.builtin.template:
+    src: "{{ tmpl_item.name }}"
+    dest: "{{ tmpl_item.dest }}"
+    mode: '644'
+  loop:
+    - { name: "templates/{{ tmpl_name }}", dest: "{{ tmpl_dest }}/{{ he_inv_file_name }}" }
+  loop_control:
+    loop_var: tmpl_item

@@ -1,22 +1,23 @@
 ---
 # Tasks to copy the generate-ngx-cert.sh script to the EM7 VM
-- block:
-  - name: ensure the {{ fpath }} directory exists
-    ansible.builtin.file:
-      path: "{{ fpath }}"
-      state: directory
-      group: root
-      owner: root
-      mode: 0755
-  - name: copy {{ fname }} to em7 host
-    ansible.builtin.copy:
-      src: "{{ role_path }}/files/{{ fname }}"
-      dest: "{{ fpath }}"
-      group: root
-      owner: root
-      mode: 0755
+- name: Copy the generate-ngx-cert.sh script
   when: inventory_hostname is search('em7')
   become: "{{ true if ansible_user != 'root' else false }}"
   vars:
     fpath: '/opt/em7/share/ssl'
     fname: 'generate-ngx-cert.sh'
+  block:
+    - name: Ensure the {{ fpath + ' directory exists' }}
+      ansible.builtin.file:
+        path: "{{ fpath }}"
+        state: directory
+        group: root
+        owner: root
+        mode: '755'
+    - name: Copy {{ fname + ' to em7 host' }}
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/{{ fname }}"
+        dest: "{{ fpath }}"
+        group: root
+        owner: root
+        mode: '755'
