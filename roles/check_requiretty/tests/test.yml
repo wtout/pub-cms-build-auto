@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test check_requiretty
+  hosts: localhost
   remote_user: root
   roles:
-    - todo
+    - check_requiretty

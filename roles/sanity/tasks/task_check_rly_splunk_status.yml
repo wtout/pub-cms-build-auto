@@ -1,20 +1,23 @@
 ---
 # Tasks to check splunk service status on the relay
-- block:
-  - name: check splunk service status
-    ansible.builtin.shell: |
-      ps -aef | grep splunk | grep -v grep
-    check_mode: no
-    register: rly_spl_status
-    ignore_errors: true
-    no_log: yes
-  - ansible.builtin.debug:
-      msg: "{{ rly_spl_status }}"
-    when: rly_spl_status is failed
-  - name: define rly_splunk status
-    ansible.builtin.set_fact:
-      rly_splunk_status: 'splunk service is not running'
-    when:
-      - rly_spl_status.stdout_lines|length == 0
+- name: Check Splunk service status
   when: inventory_hostname is search('rly')
-  tags: sanity
+  block:
+    - name: Check splunk service status
+      ansible.builtin.shell:
+        cmd: set -o pipefail && ps -aef | grep splunk | grep -v grep
+        executable: /bin/bash
+      register: rly_spl_status
+      changed_when: false
+      check_mode: false
+      no_log: true
+  rescue:
+    - name: Debug message
+      ansible.builtin.debug:
+        msg: "{{ rly_spl_status }}"
+  always:
+    - name: Define rly_splunk status
+      ansible.builtin.set_fact:
+        rly_splunk_status: 'splunk service is not running'
+      when:
+        - rly_spl_status.stdout_lines | length == 0

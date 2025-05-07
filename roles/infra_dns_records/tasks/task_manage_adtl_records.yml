@@ -1,6 +1,6 @@
 ---
 # Tasks to add/delete the additional DNS records
-- name: "{{ 'Add' if dns_state == 'present' else 'Remove' }} additional {{ 'DR ' if 'dr' in group_names else '' }}DNS records"
+- name: "{{ ('Add' if dns_state == 'present' else 'Remove') + ' additional ' + ('DR ' if 'dr' in group_names else '') + 'DNS records' }}"
   community.general.nsupdate:
     server: "{{ dns_server }}"
     record: "{{ list_item.record }}"

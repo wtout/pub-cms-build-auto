@@ -1,58 +1,65 @@
 ---
 # Tasks to validate Splunk logrotate
-- block:
-  - name: check /etc/rsyslog.conf
-    ansible.builtin.shell: |
-      grep cmskern /etc/rsyslog.conf
-    register: reg_rsyslog1
-    check_mode: no
-    ignore_errors: yes
-  - name: check /etc/logrotate.d/syslog
-    ansible.builtin.shell: |
-      grep cmskern /etc/logrotate.d/syslog
-    register: reg_syslog1
-    check_mode: no
-    ignore_errors: yes
-  - block:
-    - ansible.builtin.debug:
+- name: Check /etc/rsyslog.conf
+  ansible.builtin.command: |
+    grep cmskern /etc/rsyslog.conf
+  register: reg_rsyslog1
+  changed_when: false
+  check_mode: false
+  ignore_errors: true
+- name: Check /etc/logrotate.d/syslog
+  ansible.builtin.command: |
+    grep cmskern /etc/logrotate.d/syslog
+  register: reg_syslog1
+  changed_when: false
+  check_mode: false
+  ignore_errors: true
+- name: Rechech after puppet push
+  when: reg_rsyslog1 is failed or reg_syslog1 is failed
+  block:
+    - name: Debug message
+      ansible.builtin.debug:
         msg:
           - 'Splunk logrotate validation failed'
           - "{{ reg_rsyslog1.stdout if reg_rsyslog1 is failed else '' }}"
           - "{{ reg_syslog1.stdout if reg_syslog1 is failed else '' }}"
-    - name: delete /opt/puppet/var/rsyslog_update.done file
+    - name: Delete /opt/puppet/var/rsyslog_update.done file
       ansible.builtin.file:
         path: '/opt/puppet/var/rsyslog_update.done'
         state: absent
-    - name: trigger a puppet push
-      ansible.builtin.shell:
+    - name: Trigger a puppet push
+      ansible.builtin.command:
         /usr/local/bin/puppet agent --server {{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }} --test
       register: reg_puppet_push
+      changed_when: reg_puppet_push.rc == 0
       no_log: true
       failed_when:
         - reg_puppet_push.stdout is not search('Run of Puppet configuration client already in progress')
         - reg_puppet_push.stdout is not search('Applied catalog in')
-    - debug:
+    - name: Debug message
+      ansible.builtin.debug:
         msg:
           - "{{ reg_puppet_push.stdout }}"
       when:
         - reg_puppet_push.stdout_lines is defined
-        - reg_puppet_push.stdout_lines == [] or reg_puppet_push.stdout_lines|last is not search('Applied catalog')
-    - debug:
+        - reg_puppet_push.stdout_lines == [] or reg_puppet_push.stdout_lines | last is not search('Applied catalog')
+    - name: Debug message
+      ansible.builtin.debug:
         msg:
-          - "{{ reg_puppet_push.stdout_lines|last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
+          - "{{ reg_puppet_push.stdout_lines | last | regex_replace('^.*(Notice.*seconds).*$', '\\1') }}"
       when:
         - reg_puppet_push.stdout_lines is defined
         - reg_puppet_push.stdout_lines != []
-        - reg_puppet_push.stdout_lines|last is search('Applied catalog')
-    - name: recheck /etc/rsyslog.conf
-      ansible.builtin.shell: |
+        - reg_puppet_push.stdout_lines | last is search('Applied catalog')
+    - name: Recheck /etc/rsyslog.conf
+      ansible.builtin.command: |
         grep cmskern /etc/rsyslog.conf
       register: reg_rsyslog2
-      check_mode: no
-    - name: recheck /etc/logrotate.d/syslog
-      ansible.builtin.shell: |
+      changed_when: false
+      check_mode: false
+    - name: Recheck /etc/logrotate.d/syslog
+      ansible.builtin.command: |
         grep cmskern /etc/logrotate.d/syslog
       register: reg_syslog2
-      check_mode: no
-    when:
-      - reg_rsyslog1 is failed or reg_syslog1 is failed
+      changed_when: false
+      check_mode: false

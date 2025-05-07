@@ -1,30 +1,29 @@
 ---
 # Tasks to check chrony server and state
-- block:
-  - name: Check chrony state
-    ansible.builtin.shell: |
-      chronyc tracking | grep 'Reference ID\|Leap status'
-    register: reg_chronyc
-    check_mode: no
-    ignore_errors: yes
-  - name: define rly_chrony_leap_status
-    ansible.builtin.set_fact:
-      rly_chrony_leap_status: "{{ reg_chronyc.msg }}"
-    when:
-      - reg_chronyc is failed
-      - reg_chronyc.msg is search('cannot create directory')
-  - name: define rly_chrony_leap_status
-    ansible.builtin.set_fact:
-      rly_chrony_leap_status: "{{ 'Chrony Leap status is' + reg_chronyc.stdout_lines[1].split(':')|last }}"
-    when: reg_chronyc.stdout_lines[1].split(':')|last != 'Normal'
-  - name: define rly_chrony_server_status
-    ansible.builtin.set_fact:
-      rly_chrony_server_status: 'NTP server address is not configured correctly'
-    when: reg_chronyc.stdout_lines[0].split(' ')|last | regex_replace('\\(|\\)', '') != server_address
-    vars:
-      server_address: "{% if 'dr' in group_names %} {%- if sysconfig.secondary.ntp_server|type_debug == 'list' %} {{- sysconfig.secondary.ntp_server|join(',')|split(', ')|first -}} {% else %} {{- sysconfig.secondary.ntp_server -}} {% endif -%} {% else %} {%- if sysconfig.primary.ntp_server|type_debug == 'list' %} {{- sysconfig.primary.ntp_server|join(',')|split(', ')|first -}} {% else %} {{- sysconfig.primary.ntp_server -}} {% endif -%} {% endif %}"
-  - name: define rly_chrony_leap_status
-    ansible.builtin.set_fact:
-      rly_chrony_leap_status: 'Chrony Leap status is not Normal'
-    when: reg_chronyc.stdout_lines[1].split(' ')|last != 'Normal'
-  tags: sanity
+- name: Check chrony state
+  ansible.builtin.shell: |
+    chronyc tracking | grep 'Reference ID\|Leap status'
+  register: reg_chronyc
+  changed_when: false
+  check_mode: false
+  ignore_errors: true
+- name: Define rly_chrony_leap_status
+  ansible.builtin.set_fact:
+    rly_chrony_leap_status: "{{ reg_chronyc.msg }}"
+  when:
+    - reg_chronyc is failed
+    - reg_chronyc.msg is search('cannot create directory')
+- name: Define rly_chrony_leap_status
+  ansible.builtin.set_fact:
+    rly_chrony_leap_status: "{{ 'Chrony Leap status is' + reg_chronyc.stdout_lines[1].split(':') | last }}"
+  when: reg_chronyc.stdout_lines[1].split(':') | last != 'Normal'
+- name: Define rly_chrony_server_status
+  ansible.builtin.set_fact:
+    rly_chrony_server_status: 'NTP server address is not configured correctly'
+  when: reg_chronyc.stdout_lines[0].split(' ') | last | regex_replace('\\(|\\)', '') != server_address
+  vars:
+    server_address: "{% if 'dr' in group_names %}{%- if sysconfig.secondary.ntp_server | type_debug == 'list' %}{{- sysconfig.secondary.ntp_server | join(',') | split(', ') | first -}} {% else %}{{- sysconfig.secondary.ntp_server -}} {% endif -%} {% else %}{%- if sysconfig.primary.ntp_server | type_debug == 'list' %}{{- sysconfig.primary.ntp_server | join(',') | split(', ') | first -}} {% else %}{{- sysconfig.primary.ntp_server -}} {% endif -%} {% endif %}" # noqa: yaml[line-length]
+- name: Define rly_chrony_leap_status
+  ansible.builtin.set_fact:
+    rly_chrony_leap_status: 'Chrony Leap status is not Normal'
+  when: reg_chronyc.stdout_lines[1].split(' ') | last != 'Normal'

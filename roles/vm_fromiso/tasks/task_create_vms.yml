@@ -1,76 +1,79 @@
 ---
 # tasks file to create vms
-- block:
-  - name: create Hosted VMs
-    block:
-    - name: "vm_creation: create folder"
-      include_role:
-        name: vm_creation
-        tasks_from: task_create_folder.yml
-      vars:
-        folder_name: "{{ fldr_name }}"
-      when:
-        - "'stack' in group_names"
-        - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
-    - name: "vm_creation: create folder"
-      include_role:
-        name: vm_creation
-        tasks_from: task_create_folder.yml
-      vars:
-        folder_name: "{{ fldr_name }}"
-      when:
-        - customer.disaster_recovery
-        - "'dr' in group_names"
-        - inventory_hostname == ansible_play_hosts | intersect(groups['dr']) | first
-    - block:
-      - name: get list of groups in play
-        ansible.builtin.set_fact:
-          play_group_list: "{{ play_group_list|default([]) | union([host_item[:-2]]) }}"
-        loop: "{{ ansible_play_hosts | reject('search', 'bastion|puppet|vcenter') | list }}"
-        loop_control:
-          loop_var: host_item
-          label: "{{ host_item }}"
-        when:
-          - inventory_hostname == ansible_play_hosts | intersect(groups['stack'] + groups['dr']) | first
-      - include_tasks:
-          file: task_create_vm_pair.yml
-          apply:
-            vars:
-              vm_group: "{{ group_item }}"
-        loop: "{{ play_group_list }}"
-        loop_control:
-          loop_var: group_item
-          label: "{{ group_item }}"
-        when: inventory_hostname in groups[group_item]
-      when:
-        - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == ''
-    - include_tasks: task_create_configure_vms.yml
-      when:
-        - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != ''
-    when:
-      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h'
-
-  - name: create On-prem VMs
-    block:
-    - name: "infra_configure: create primary cluster"
-      include_role:
-        name: infra_configure
-        tasks_from: task_create_cluster.yml
-      when:
-        - ansible_play_hosts | reject('search', 'dr') | length >= 1
-        - hostvars[groups['vcenter'][0]]['cluster_host'] == []
-        - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
-    - name: "infra_configure: create DR cluster"
-      include_role:
-        name: infra_configure
-        tasks_from: task_create_cluster.yml
-      when:
-        - customer.disaster_recovery
-        - ansible_play_hosts | select('search', 'dr') | length >= 1
-        - hostvars[groups['drvcenter'][0]]['cluster_host'] == []
-        - inventory_hostname == ansible_play_hosts | intersect(groups['dr']) | first
-    - include_tasks: task_create_configure_vms.yml
-    when:
-      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
-
+- name: Create VMs
   when: crecon | default(true) | bool
+  block:
+    - name: Create Hosted VMs
+      when:
+        - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h'
+      block:
+        - name: "Vm_creation: create folder"
+          ansible.builtin.include_role:
+            name: vm_creation
+            tasks_from: task_create_folder.yml
+          vars:
+            folder_name: "{{ fldr_name }}"
+          when:
+            - "'stack' in group_names"
+            - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
+        - name: "Vm_creation: create folder"
+          ansible.builtin.include_role:
+            name: vm_creation
+            tasks_from: task_create_folder.yml
+          vars:
+            folder_name: "{{ fldr_name }}"
+          when:
+            - customer.disaster_recovery
+            - "'dr' in group_names"
+            - inventory_hostname == ansible_play_hosts | intersect(groups['dr']) | first
+        - name: Create VM pair
+          when:
+            - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == ''
+          block:
+            - name: Get list of groups in play
+              ansible.builtin.set_fact:
+                play_group_list: "{{ play_group_list | default([]) | union([host_item[:-2]]) }}"
+              loop: "{{ ansible_play_hosts | reject('search', 'bastion|puppet|vcenter') | list }}"
+              loop_control:
+                loop_var: host_item
+                label: "{{ host_item }}"
+              when:
+                - inventory_hostname == ansible_play_hosts | intersect(groups['stack'] + groups['dr']) | first
+            - name: Create VM pair
+              ansible.builtin.include_tasks:
+                file: task_create_vm_pair.yml
+                apply:
+                  vars:
+                    vm_group: "{{ group_item }}"
+              loop: "{{ play_group_list }}"
+              loop_control:
+                loop_var: group_item
+                label: "{{ group_item }}"
+              when: inventory_hostname in groups[group_item]
+        - name: Create and configure VMs
+          ansible.builtin.include_tasks: task_create_configure_vms.yml
+          when:
+            - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] != ''
+
+    - name: Create On-prem VMs
+      when: hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
+      block:
+        - name: "Infra_configure: create primary cluster"
+          ansible.builtin.include_role:
+            name: infra_configure
+            tasks_from: task_create_cluster.yml
+          when:
+            - ansible_play_hosts | reject('search', 'dr') | length >= 1
+            - hostvars[groups['vcenter'][0]]['cluster_host'] == []
+            - inventory_hostname == ansible_play_hosts | intersect(groups['stack']) | first
+        - name: "Infra_configure: create DR cluster"
+          ansible.builtin.include_role:
+            name: infra_configure
+            tasks_from: task_create_cluster.yml
+          when:
+            - customer.disaster_recovery
+            - ansible_play_hosts | select('search', 'dr') | length >= 1
+            - hostvars[groups['drvcenter'][0]]['cluster_host'] == []
+            - inventory_hostname == ansible_play_hosts | intersect(groups['dr']) | first
+        - name: Create and configure VMs
+          ansible.builtin.include_tasks: task_create_configure_vms.yml

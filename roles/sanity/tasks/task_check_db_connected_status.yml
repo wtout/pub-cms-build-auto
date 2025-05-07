@@ -1,14 +1,17 @@
 ---
 # Tasks to check DB connected status
-- block:
-  - name: check DB connected status
-    ansible.builtin.shell: |
-      grep cs /proc/drbd | awk '{print $2}' | awk -F ':' '{print $2}'
-    check_mode: no
-    register: cs_check
-  - name: define connected_status
-    ansible.builtin.set_fact:
-      connected_status: "{{ cs_check.stdout }}"
-    when: (cs_check.stdout is not search('Connected') and 'em7db' in group_names) or (cs_check.stdout is not search('WFConnection') and 'drem7db' in group_names)
+- name: Check DB connected status
   when: groups['em7'] | length > 1
-  tags: sanity
+  block:
+    - name: Check DB connected status
+      ansible.builtin.shell:
+        cmd: set -o pipefail && grep cs /proc/drbd | awk '{print $2}' | awk -F ':' '{print $2}'
+        executable: /bin/bash
+      register: cs_check
+      changed_when: false
+      check_mode: false
+    - name: Define connected_status
+      ansible.builtin.set_fact:
+        connected_status: "{{ cs_check.stdout }}"
+      when: (cs_check.stdout is not search('Connected') and 'em7db' in group_names) or \
+        (cs_check.stdout is not search('WFConnection') and 'drem7db' in group_names)

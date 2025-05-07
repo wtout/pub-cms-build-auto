@@ -1,20 +1,22 @@
 ---
 # tasks to get datastore info
-- block:
-  - name: Get datastore info
-    community.vmware.vmware_datastore_info:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      datacenter: "{{ information.datacenter }}"
-      cluster: "{{ information.cluster }}"
-      validate_certs: no
-    register: datastore_info
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-  - block:
-    - name: define lists of datastores to host the VMs
-      include_tasks:
+- name: Get datastore info
+  community.vmware.vmware_datastore_info:
+    hostname: "{{ information.address }}"
+    username: "{{ credentials.username }}"
+    password: "{{ credentials.password }}"
+    datacenter: "{{ information.datacenter }}"
+    cluster: "{{ information.cluster }}"
+    validate_certs: false
+  register: datastore_info
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+- name: Get list of stack usable datastores
+  when:
+    - play_stack_group_list is defined
+    - "'vcenter' in group_names"
+  block:
+    - name: Define lists of datastores to host the VMs
+      ansible.builtin.include_tasks:
         file:
           task_define_datastores_list.yml
         apply:
@@ -24,27 +26,28 @@
       loop: "{{ play_stack_group_list }}"
       loop_control:
         loop_var: group_item
-    - name: define list of usable datastores
+    - name: Define list of usable datastores
       ansible.builtin.set_fact:
-        usable_ds_list: "{{ usable_ds_list|default([]) | union(vars[group_item + '_ds_names']) }}" 
-      loop: "{{ play_stack_group_list|default([]) }}"
+        usable_ds_list: "{{ usable_ds_list | default([]) | union(vars[group_item + '_ds_names']) }}"
+      loop: "{{ play_stack_group_list | default([]) }}"
       loop_control:
         loop_var: group_item
-    - name: define total free space on usable datastores
+    - name: Define total free space on usable datastores
       ansible.builtin.set_fact:
-        total_fs: "{{ total_fs|default(0)|int + myvar[0] }}"
+        total_fs: "{{ total_fs | default(0) | int + myvar[0] }}"
       vars:
-        myvar: "{{ datastore_info.datastores|selectattr('name', 'equalto', loop_item)|map(attribute='freeSpace')|list }}"
+        myvar: "{{ datastore_info.datastores | selectattr('name', 'equalto', loop_item) | map(attribute='freeSpace') | list }}"
       loop: "{{ usable_ds_list }}"
       loop_control:
         loop_var: loop_item
-    when:
-      - play_stack_group_list is defined
-      - "'vcenter' in group_names"
-
-  - block:
-    - name: define lists of datastores to host the DR VMs
-      include_tasks:
+- name: Get list of DR usable datastores
+  when:
+    - customer.disaster_recovery
+    - play_dr_group_list is defined
+    - "'drvcenter' in group_names"
+  block:
+    - name: Define lists of datastores to host the DR VMs
+      ansible.builtin.include_tasks:
         file:
           task_define_datastores_list.yml
         apply:
@@ -54,49 +57,45 @@
       loop: "{{ play_dr_group_list }}"
       loop_control:
         loop_var: group_item
-    - name: define list of usable datastores
+    - name: Define list of usable datastores
       ansible.builtin.set_fact:
-        usable_ds_list: "{{ usable_ds_list|default([]) | union(vars[group_item + '_ds_names']) }}" 
+        usable_ds_list: "{{ usable_ds_list | default([]) | union(vars[group_item + '_ds_names']) }}"
       loop: "{{ play_dr_group_list }}"
       loop_control:
         loop_var: group_item
-    - name: define total free space on usable datastores
+    - name: Define total free space on usable datastores
       ansible.builtin.set_fact:
-        total_fs: "{{ total_fs|default(0)|int + myvar[0] }}"
+        total_fs: "{{ total_fs | default(0) | int + myvar[0] }}"
       vars:
-        myvar: "{{ datastore_info.datastores|selectattr('name', 'equalto', loop_item)|map(attribute='freeSpace')|list }}"
+        myvar: "{{ datastore_info.datastores | selectattr('name', 'equalto', loop_item) | map(attribute='freeSpace') | list }}"
       loop: "{{ usable_ds_list }}"
       loop_control:
         loop_var: loop_item
-    when:
-      - customer.disaster_recovery
-      - play_dr_group_list is defined
-      - "'drvcenter' in group_names"
-
-  - ansible.builtin.debug:
-      msg:
-        - "{{ usable_ds_list }}"
-        - "Total {{ 'dr' if 'drvcenter' in group_names else 'stack' }} available storage space: {{ (total_fs|float / 1024|pow(4))|string + ' TiB' if (total_fs|int)|string|length > 12 else (total_fs|float / 1024|pow(3))|string + ' GiB' }}"
-    when:
-      - usable_ds_list is defined
-      - total_fs is defined
-
-  - name: verify that there is enough space to deploy the VMs
-    ansible.builtin.assert:
-      that:
-        - "(total_fs|float / 1024|pow(3)) >= vars[('dr' if 'drvcenter' in group_names else 'stack') + '_required_space']|float"
-      fail_msg: "Not enough storage space to deploy all the {{ 'dr' if 'drvcenter' in group_names else 'stack' }} VMs"
-    when:
-      - total_fs is defined
-
-  - name: verify thay there is enough space to deploy HA + DR VMs
-    ansible.builtin.assert:
-      that:
-        - "((hostvars['vcenter01']['total_fs']|float + hostvars['drvcenter01']['total_fs']|float) / 1024|pow(3)) >= (hostvars['vcenter01']['stack_required_space']|float + hostvars['drvcenter01']['dr_required_space']|float)"
-      fail_msg: "Not enough storage space to deploy all the HA + DR VMs"
-    when:
-      - customer.disaster_recovery
-      - datacenter.primary.name == datacenter.secondary.name
-      - hostvars['vcenter01']['total_fs'] is defined
-      - hostvars['drvcenter01']['total_fs'] is defined
-    run_once: true
+# yamllint disable rule:line-length
+- name: Information message
+  ansible.builtin.debug:
+    msg:
+      - "{{ usable_ds_list }}"
+      - "Total {{ 'dr' if 'drvcenter' in group_names else 'stack' }} available storage space: {{ (total_fs | float / 1024 | pow(4)) | string + ' TiB' if (total_fs | int) | string | length > 12 else (total_fs | float / 1024 | pow(3)) | string + ' GiB' }}"
+  when:
+    - usable_ds_list is defined
+    - total_fs is defined
+- name: Verify that there is enough space to deploy the VMs
+  ansible.builtin.assert:
+    that:
+      - "(total_fs | float / 1024 | pow(3)) >= vars[('dr' if 'drvcenter' in group_names else 'stack') + '_required_space'] | float"
+    fail_msg: "Not enough storage space to deploy all the {{ 'dr' if 'drvcenter' in group_names else 'stack' }} VMs"
+  when:
+    - total_fs is defined
+- name: Verify thay there is enough space to deploy HA + DR VMs
+  ansible.builtin.assert:
+    that:
+      - "((hostvars['vcenter01']['total_fs'] | float + hostvars['drvcenter01']['total_fs'] | float) / 1024 | pow(3)) >= (hostvars['vcenter01']['stack_required_space'] | float + hostvars['drvcenter01']['dr_required_space'] | float)"
+    fail_msg: "Not enough storage space to deploy all the HA + DR VMs"
+  when:
+    - customer.disaster_recovery
+    - datacenter.primary.name == datacenter.secondary.name
+    - hostvars['vcenter01']['total_fs'] is defined
+    - hostvars['drvcenter01']['total_fs'] is defined
+  run_once: true
+# yamllint enable rule:line-length

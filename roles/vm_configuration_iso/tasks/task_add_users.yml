@@ -1,51 +1,52 @@
 ---
-# Tasks to create the user on the VM
-- block:
-  - name: Add the user groups
-    ansible.builtin.group:
-      name: "{{ grp_item.name }}"
-      state: present
-      gid: "{{ grp_item.gid }}"
-    loop:
-      - { name: 'ciscosupporttier1', gid: 60001 }
-      - { name: 'ciscosupporttier2', gid: 60002 }
-      - { name: 'ciscosupporttier3', gid: 60003 }
-      - { name: 'ciscosupporttier4', gid: 60004 }
-      - { name: "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}", gid: "{{ '60006' if inventory_hostname is search('em7') else '' }}" }
-    loop_control:
-      loop_var: grp_item
-    when: grp_item.name != ''
-  - name: Add the users
-    ansible.builtin.user:
-      name: "{{ user_item.name }}"
-      group: "{{ user_item.name }}"
-      password: "{{ user_item.password | password_hash('sha512') }}"
-      state: present
-    loop:
-      - { name: 'ciscosupporttier1', password: 'cisco123' }
-      - { name: 'ciscosupporttier2', password: 'cisco123' }
-      - { name: 'ciscosupporttier3', password: 'cisco123' }
-      - { name: 'ciscosupporttier4', password: 'cisco123' }
-      - { name: "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}", password: 'cisco123' }
-    loop_control:
-      loop_var: user_item
-    when: user_item.name != ''
-  - name: copy user file to /etc/sudoers.d
-    ansible.builtin.copy:
-      src: "{{ role_path }}/files/{{ user_item }}"
-      dest: "/etc/sudoers.d/{{ user_item }}"
-      owner: root
-      group: root
-      mode: 0400
-    loop:
-      - ciscosupporttier1
-      - ciscosupporttier2
-      - ciscosupporttier3
-      - ciscosupporttier4
-      - "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}"
-    loop_control:
-      loop_var: user_item
-    when:
-      - customer.version.release[1:]|replace('.', '')|int > 9217
-      - user_item != ''
+# Tasks to create the users on the VM
+- name: Create the users
   become: "{{ true if ansible_user != 'root' else false }}"
+  block:
+    - name: Add the user groups
+      ansible.builtin.group:
+        name: "{{ grp_item.name }}"
+        state: present
+        gid: "{{ grp_item.gid }}"
+      loop:
+        - { name: 'ciscosupporttier1', gid: 60001 }
+        - { name: 'ciscosupporttier2', gid: 60002 }
+        - { name: 'ciscosupporttier3', gid: 60003 }
+        - { name: 'ciscosupporttier4', gid: 60004 }
+        - { name: "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}", gid: "{{ '60006' if inventory_hostname is search('em7') else '' }}" }
+      loop_control:
+        loop_var: grp_item
+      when: grp_item.name != ''
+    - name: Add the users
+      ansible.builtin.user:
+        name: "{{ user_item.name }}"
+        group: "{{ user_item.name }}"
+        password: "{{ user_item.password | password_hash('sha512') }}"
+        state: present
+      loop:
+        - { name: 'ciscosupporttier1', password: 'cisco123' }
+        - { name: 'ciscosupporttier2', password: 'cisco123' }
+        - { name: 'ciscosupporttier3', password: 'cisco123' }
+        - { name: 'ciscosupporttier4', password: 'cisco123' }
+        - { name: "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}", password: 'cisco123' }
+      loop_control:
+        loop_var: user_item
+      when: user_item.name != ''
+    - name: Copy user file to /etc/sudoers.d
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/{{ user_item }}"
+        dest: "/etc/sudoers.d/{{ user_item }}"
+        owner: root
+        group: root
+        mode: '400'
+      loop:
+        - ciscosupporttier1
+        - ciscosupporttier2
+        - ciscosupporttier3
+        - ciscosupporttier4
+        - "{{ 'silosupport' if inventory_hostname is search('em7') else '' }}"
+      loop_control:
+        loop_var: user_item
+      when:
+        - customer.version.release[1:] | replace('.', '') | int > 9217
+        - user_item != ''

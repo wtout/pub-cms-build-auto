@@ -1,10 +1,13 @@
 ---
 # tasks to set the folder name
-- block:
-  - name: Define folder name
-    ansible.builtin.set_fact:
-      fldr_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] + '/' + (customer.name if customer.name|lower is search('mdr|stdal') else customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}"
-  - ansible.builtin.assert:
-      that: fldr_name is defined
-      success_msg: "{{ 'fldr_name is ' + fldr_name }}"
-      fail_msg: 'fldr_name is not defined'
+- name: Define folder name
+  ansible.builtin.set_fact:
+    fldr_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] + '/' + \
+      (customer.name if customer.name | lower is search('mdr|stdal') else customer.secondary.name_prefix if 'dr' in group_names else \
+      customer.primary.name_prefix) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h' else \
+      hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['folder'] }}"
+- name: Assert fldr_name is defined
+  ansible.builtin.assert:
+    that: fldr_name is defined
+    success_msg: "{{ 'fldr_name is ' + fldr_name }}"
+    fail_msg: 'fldr_name is not defined'

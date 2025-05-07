@@ -1,50 +1,49 @@
 ---
 # tasks to delete cluster
-- block:
-  - name: Check if '{{ information.cluster }}' cluster exists
-    community.vmware.vmware_cluster_info:
-      hostname: "{{ information.address }}"
-      username: "{{ credentials.username }}"
-      password: "{{ credentials.password }}"
-      cluster_name: "{{ information.cluster }}"
-      validate_certs: no
-    register: cluster_status
-    delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-    run_once: true
-    ignore_errors: true
-    when:
-      - information.cluster != 'None'
-    check_mode: no
-
-  - block:
+- name: Check if '{{ information.cluster + "' cluster exists" }}
+  community.vmware.vmware_cluster_info:
+    hostname: "{{ information.address }}"
+    username: "{{ credentials.username }}"
+    password: "{{ credentials.password }}"
+    cluster_name: "{{ information.cluster }}"
+    validate_certs: false
+  register: cluster_status
+  delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  run_once: true
+  ignore_errors: true
+  when:
+    - information.cluster != 'None'
+  check_mode: false
+- name: Check and delete cluster
+  when:
+    - cluster_status.msg | default('') is not search('Failed to find cluster')
+  block:
     - name: Get VM info
       community.vmware.vmware_vm_info:
         hostname: "{{ host_item }}"
         username: "{{ information.hostuser }}"
         password: "{{ information.hostpass }}"
         vm_type: vm
-        validate_certs: no
+        validate_certs: false
       loop: "{{ information.resources }}"
       loop_control:
         loop_var: host_item
         label: "{{ host_item }}"
-      check_mode: no
+      check_mode: false
       register: vm_info
       delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-
-    - name: define vm names list
+    - name: Define vm names list
       ansible.builtin.set_fact:
-        vm_names: "{{ vm_names|default([]) + [host_item.virtual_machines|default({}) | map(attribute='guest_name') | list] | flatten }}"
+        vm_names: "{{ vm_names | default([]) + [host_item.virtual_machines | default({}) | map(attribute='guest_name') | list] | flatten }}"
       loop: "{{ vm_info.results }}"
       loop_control:
         loop_var: host_item
-        label: "{{ host_item.virtual_machines|default({}) | map(attribute='guest_name') | list }}"
-
-    - name: initialize cluster_empty
+        label: "{{ host_item.virtual_machines | default({}) | map(attribute='guest_name') | list }}"
+    - name: Initialize cluster_empty
       ansible.builtin.set_fact:
         cluster_empty: true
-
-    - include_tasks:
+    - name: Check cluster empty
+      ansible.builtin.include_tasks:
         file:
           task_check_cluster_empty.yml
         apply:
@@ -57,101 +56,94 @@
       when:
         - vm_names != []
         - vm_item is not search('vCLS-')
-
-    - name: define delete_cluster
+    - name: Define delete_cluster
       ansible.builtin.set_fact:
         delete_cluster: "{{ cluster_empty }}"
-
-    - block:
-      - name: Get cluster info
-        community.vmware.vmware_cluster_info:
-          hostname: "{{ information.address }}"
-          username: "{{ credentials.username }}"
-          password: "{{ credentials.password }}"
-          cluster_name: "{{ information.cluster }}"
-          validate_certs: no
-        register: reg_cluster_info1
-
-      - block:
-        - name: Put hosts in maintenance mode
-          community.vmware.vmware_maintenancemode:
-            hostname: "{{ information.address }}"
-            username: "{{ credentials.username }}"
-            password: "{{ credentials.password }}"
-            esxi_hostname: "{{ host_item }}"
-            timeout: 3600
-            state: present
-            validate_certs: no
-          loop: "{{ information.resources }}"
-          loop_control:
-            loop_var: host_item
-            label: "{{ host_item }}"
-          register: maint_mode
-
-        - name: Move hosts out of the '{{ information.cluster }}' cluster
-          community.vmware.vmware_host:
-            hostname: "{{ information.address }}"
-            username: "{{ credentials.username }}"
-            password: "{{ credentials.password }}"
-            datacenter: "{{ information.datacenter }}"
-            folder: "{{ information.datacenter }}/host"
-            esxi_hostname: "{{ host_item }}"
-            esxi_username: "{{ information.hostuser }}"
-            esxi_password: "{{ information.hostpass }}"
-            state: present
-            validate_certs: no
-          loop: "{{ information.resources }}"
-          loop_control:
-            loop_var: host_item
-            label: "{{ host_item }}"
-          register: move_hosts
-
-        - name: Put hosts in normal mode
-          community.vmware.vmware_maintenancemode:
-            hostname: "{{ information.address }}"
-            username: "{{ credentials.username }}"
-            password: "{{ credentials.password }}"
-            esxi_hostname: "{{ host_item }}"
-            timeout: 3600
-            state: absent
-            validate_certs: no
-          loop: "{{ information.resources }}"
-          loop_control:
-            loop_var: host_item
-            label: "{{ host_item }}"
-          register: normal_mode
-
+    - name: Deleting cluster
+      when:
+        - delete_cluster | bool
+        - information.cluster != ''
+        - information.cluster != 'None'
+      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+      run_once: true
+      block:
         - name: Get cluster info
           community.vmware.vmware_cluster_info:
             hostname: "{{ information.address }}"
             username: "{{ credentials.username }}"
             password: "{{ credentials.password }}"
             cluster_name: "{{ information.cluster }}"
-            validate_certs: no
-          register: reg_cluster_info2
-
-        - name: Delete the '{{ information.cluster }}' cluster
-          community.vmware.vmware_cluster:
-            hostname: "{{ information.address }}"
-            username: "{{ credentials.username }}"
-            password: "{{ credentials.password }}"
-            datacenter: "{{ information.datacenter }}"
-            cluster_name: "{{ information.cluster }}"
-            state: absent
-            validate_certs: no
-          register: cust_cluster
-          when: numberofhosts2|int == 0
+            validate_certs: false
+          register: reg_cluster_info1
+        - name: Move hosts and delete cluster
+          when: numberofhosts1 | int >= 1
           vars:
-            numberofhosts2: "{{ reg_cluster_info2.clusters|dict2items|selectattr('key', 'match', mycluster_name)|map(attribute='value')|list|first|dict2items|selectattr('key', 'match', 'hosts')|map(attribute='value')|list|first|length }}"
-        when: numberofhosts1|int >= 1
-        vars:
-          mycluster_name: "{{ information.cluster }}"
-          numberofhosts1: "{{ reg_cluster_info1.clusters|dict2items|selectattr('key', 'match', mycluster_name)|map(attribute='value')|list|first|dict2items|selectattr('key', 'match', 'hosts')|map(attribute='value')|list|first|length }}"
-      delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
-      run_once: true
-      when:
-        - delete_cluster|bool
-        - information.cluster != ''
-        - information.cluster != 'None'
-    when:
-      - cluster_status.msg|default('') is not search('Failed to find cluster')
+            mycluster_name: "{{ information.cluster }}"
+            numberofhosts1: "{{ reg_cluster_info1.clusters | dict2items | selectattr('key', 'match', mycluster_name) | map(attribute='value') | list | first | dict2items | selectattr('key', 'match', 'hosts') | map(attribute='value') | list | first | length }}" # noqa: yaml[line-length]
+          block:
+            - name: Put hosts in maintenance mode
+              community.vmware.vmware_maintenancemode:
+                hostname: "{{ information.address }}"
+                username: "{{ credentials.username }}"
+                password: "{{ credentials.password }}"
+                esxi_hostname: "{{ host_item }}"
+                timeout: 3600
+                state: present
+                validate_certs: false
+              loop: "{{ information.resources }}"
+              loop_control:
+                loop_var: host_item
+                label: "{{ host_item }}"
+              register: maint_mode
+            - name: Move hosts out of the '{{ information.cluster + "' cluster" }}
+              community.vmware.vmware_host:
+                hostname: "{{ information.address }}"
+                username: "{{ credentials.username }}"
+                password: "{{ credentials.password }}"
+                datacenter: "{{ information.datacenter }}"
+                folder: "{{ information.datacenter }}/host"
+                esxi_hostname: "{{ host_item }}"
+                esxi_username: "{{ information.hostuser }}"
+                esxi_password: "{{ information.hostpass }}"
+                state: present
+                validate_certs: false
+              loop: "{{ information.resources }}"
+              loop_control:
+                loop_var: host_item
+                label: "{{ host_item }}"
+              register: move_hosts
+            - name: Put hosts in normal mode
+              community.vmware.vmware_maintenancemode:
+                hostname: "{{ information.address }}"
+                username: "{{ credentials.username }}"
+                password: "{{ credentials.password }}"
+                esxi_hostname: "{{ host_item }}"
+                timeout: 3600
+                state: absent
+                validate_certs: false
+              loop: "{{ information.resources }}"
+              loop_control:
+                loop_var: host_item
+                label: "{{ host_item }}"
+              register: normal_mode
+            - name: Get cluster info
+              community.vmware.vmware_cluster_info:
+                hostname: "{{ information.address }}"
+                username: "{{ credentials.username }}"
+                password: "{{ credentials.password }}"
+                cluster_name: "{{ information.cluster }}"
+                validate_certs: false
+              register: reg_cluster_info2
+            - name: Delete the '{{ information.cluster + "' cluster" }}
+              community.vmware.vmware_cluster:
+                hostname: "{{ information.address }}"
+                username: "{{ credentials.username }}"
+                password: "{{ credentials.password }}"
+                datacenter: "{{ information.datacenter }}"
+                cluster_name: "{{ information.cluster }}"
+                state: absent
+                validate_certs: false
+              register: cust_cluster
+              when: numberofhosts2 | int == 0
+              vars:
+                numberofhosts2: "{{ reg_cluster_info2.clusters | dict2items | selectattr('key', 'match', mycluster_name) | map(attribute='value') | list | first | dict2items | selectattr('key', 'match', 'hosts') | map(attribute='value') | list | first | length }}" # noqa: yaml[line-length]

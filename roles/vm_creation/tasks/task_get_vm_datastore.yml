@@ -1,13 +1,14 @@
 ---
 # Tasks to assign a datastore to each VM in a pair
-- block:
-  - include_tasks:
-      file: task_get_hosted_datastore.yml
-    when:
-      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h'
-      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == '' or inventory_hostname is search('em7')
+- name: Get hosted datastore
+  ansible.builtin.include_tasks:
+    file: task_get_hosted_datastore.yml
+  when:
+    - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'h'
+    - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datastore_cluster'] == '' or inventory_hostname is search('em7')
 
-  - include_tasks:
-      file: task_get_onprem_datastore.yml
-    when:
-      - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'
+- name: Get on-prem datastore
+  ansible.builtin.include_tasks:
+    file: task_get_onprem_datastore.yml
+  when:
+    - hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] == 'a'

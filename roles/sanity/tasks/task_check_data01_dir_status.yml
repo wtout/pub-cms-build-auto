@@ -1,23 +1,20 @@
 ---
 # Tasks to check if Data Extractor and Report Store are installed on /data01
-- block:
-  - name: check if /data01/DataExtractor dir exists
-    ansible.builtin.stat:
-      path: '/data01/DataExtractor'
-    register: reg_de_dir
-  - name: check if /data01/ReportStore dir exists
-    ansible.builtin.stat:
-      path: '/data01/ReportStore'
-    register: reg_rs_dir
-  - name: define rly_data01_dir_status
-    ansible.builtin.set_fact:
-      rly_data01_dir_status: "{{ rly_data01_dir_status|default([]) + ['/data01/DataExtractor is not found'] }}"
-    when:
-      - not reg_de_dir.stat.exists
-  - name: define rly_data01_dir_status
-    ansible.builtin.set_fact:
-      rly_data01_dir_status: "{{ rly_data01_dir_status|default([]) + ['/data01/ReportStore is not found'] }}"
-    when:
-      - not reg_rs_dir.stat.exists
-  tags: sanity
-  
+- name: Check if /data01/DataExtractor dir exists
+  ansible.builtin.stat:
+    path: '/data01/DataExtractor'
+  register: reg_de_dir
+- name: Check if /data01/ReportStore dir exists
+  ansible.builtin.stat:
+    path: '/data01/ReportStore'
+  register: reg_rs_dir
+- name: Define rly_data01_dir_status
+  ansible.builtin.set_fact:
+    rly_data01_dir_status: "{{ rly_data01_dir_status | default([]) + ['/data01/DataExtractor is not found'] }}"
+  when:
+    - not reg_de_dir.stat.exists
+- name: Define rly_data01_dir_status
+  ansible.builtin.set_fact:
+    rly_data01_dir_status: "{{ rly_data01_dir_status | default([]) + ['/data01/ReportStore is not found'] }}"
+  when:
+    - not reg_rs_dir.stat.exists

@@ -1,60 +1,70 @@
 ---
 # tasks to define vm ips
-- block:
-  - name: define ansible_host for HA DBs
-    ansible.builtin.set_fact:
-      ansible_host: "{{ em7db_ip1_list[db_item[-2:]|int - 1] }}"
-    delegate_to: "{{ db_item }}"
-    delegate_facts: yes
-    loop: "{{ groups['em7db'] }}"
-    loop_control:
-      loop_var: db_item
-    when:
-      - ansible_run_tags is search('puppet|vm_ppp_configuration')
-      - groups['em7db'] is defined
-      - ansible_play_hosts | select('regex','em7db0[1-2]') | length < 2
-    run_once: true
-  - name: define ansible_host for DR DB
-    ansible.builtin.set_fact:
-      ansible_host: "{{ drem7db_ip1_list[db_item[-2:]|int - 1] }}"
-    delegate_to: "{{ db_item }}"
-    delegate_facts: yes
-    loop: "{{ groups['drem7db'] }}"
-    loop_control:
-      loop_var: db_item
-    when:
-      - customer.disaster_recovery
-      - ansible_run_tags is search('puppet|vm_ppp_configuration')
-      - groups['drem7db'] is defined
-      - ansible_play_hosts | select('regex','drem7db01') | length < 1
-    run_once: true
+- name: Define ansible_host for HA DBs
+  ansible.builtin.set_fact:
+    ansible_host: "{{ em7db_ip1_list[db_item[-2:] | int - 1] }}"
+  delegate_to: "{{ db_item }}"
+  delegate_facts: true
+  loop: "{{ groups['em7db'] }}"
+  loop_control:
+    loop_var: db_item
+  when:
+    - ansible_run_tags is search('puppet|vm_ppp_configuration')
+    - groups['em7db'] is defined
+    - ansible_play_hosts | select('regex', 'em7db0[1-2]') | length < 2
+  run_once: true
+- name: Define ansible_host for DR DB
+  ansible.builtin.set_fact:
+    ansible_host: "{{ drem7db_ip1_list[db_item[-2:] | int - 1] }}"
+  delegate_to: "{{ db_item }}"
+  delegate_facts: true
+  loop: "{{ groups['drem7db'] }}"
+  loop_control:
+    loop_var: db_item
+  when:
+    - customer.disaster_recovery
+    - ansible_run_tags is search('puppet|vm_ppp_configuration')
+    - groups['drem7db'] is defined
+    - ansible_play_hosts | select('regex', 'drem7db01') | length < 1
+  run_once: true
 
-  - name: define IP addresses
-    ansible.builtin.set_fact:
-      ipaddress1: "{{ netconfig.nic1.ippool[index|int - 1] if netconfig.nic1.ippool != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic1.octetpool[index|int - 1]|string if (netconfig.nic1.octetpool != [] and index|int <= netconfig.nic1.octetpool|length) else '' }}"
-      ipaddress2: "{{ netconfig.nic2.ippool[index|int - 1] if netconfig.nic2.ippool != [] else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic2.octetpool[index|int - 1]|string if (netconfig.nic2.octetpool != [] and index|int <= netconfig.nic2.octetpool|length) else '' }}"
-      ipaddress3: "{{ netconfig.nic3.ippool[index|int - 1] if (netconfig.nic3.ippool is defined and netconfig.nic3.ippool != []) else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic3.octetpool[index|int - 1]|string if ((netconfig.nic3.octetpool is defined and netconfig.nic3.octetpool != []) and index|int <= netconfig.nic3.octetpool|length) else '' }}"
-      ipaddress4: "{{ netconfig.nic4.ippool[index|int - 1] if (netconfig.nic4.ippool is defined and netconfig.nic4.ippool != []) else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic4.octetpool[index|int - 1]|string if ((netconfig.nic4.octetpool is defined and netconfig.nic4.octetpool != []) and index|int <= netconfig.nic4.octetpool|length) else '' }}"
-      ipaddress5: "{{ netconfig.nic5.ippool[index|int - 1] if (netconfig.nic5.ippool is defined and netconfig.nic5.ippool != []) else (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic5.octetpool[index|int - 1]|string if ((netconfig.nic5.octetpool is defined and netconfig.nic5.octetpool != []) and index|int <= netconfig.nic5.octetpool|length) else '' }}"
-    vars:
-      index: "{{ inventory_hostname[-2:] }}"
+- name: Define IP addresses
+  ansible.builtin.set_fact:
+    ipaddress1: "{{ netconfig.nic1.ippool[index | int - 1] if netconfig.nic1.ippool != [] else (customer.secondary.octets \
+      if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic1.octetpool[index | int - 1] | string \
+      if (netconfig.nic1.octetpool != [] and index | int <= netconfig.nic1.octetpool | length) else '' }}"
+    ipaddress2: "{{ netconfig.nic2.ippool[index | int - 1] if netconfig.nic2.ippool != [] else (customer.secondary.octets \
+      if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic2.octetpool[index | int - 1] | string \
+      if (netconfig.nic2.octetpool != [] and index | int <= netconfig.nic2.octetpool | length) else '' }}"
+    ipaddress3: "{{ netconfig.nic3.ippool[index | int - 1] if (netconfig.nic3.ippool is defined and netconfig.nic3.ippool != []) else \
+      (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic3.octetpool[index | int - 1] | \
+      string if ((netconfig.nic3.octetpool is defined and netconfig.nic3.octetpool != []) and index | int <= netconfig.nic3.octetpool | length) else '' }}"
+    ipaddress4: "{{ netconfig.nic4.ippool[index | int - 1] if (netconfig.nic4.ippool is defined and netconfig.nic4.ippool != []) else \
+      (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic4.octetpool[index | int - 1] | \
+      string if ((netconfig.nic4.octetpool is defined and netconfig.nic4.octetpool != []) and index | int <= netconfig.nic4.octetpool | length) else '' }}"
+    ipaddress5: "{{ netconfig.nic5.ippool[index | int - 1] if (netconfig.nic5.ippool is defined and netconfig.nic5.ippool != []) else \
+      (customer.secondary.octets if inventory_hostname is search('dr') else customer.primary.octets) + '.' + netconfig.nic5.octetpool[index | int - 1] | \
+      string if ((netconfig.nic5.octetpool is defined and netconfig.nic5.octetpool != []) and index | int <= netconfig.nic5.octetpool | length) else '' }}"
+  vars:
+    index: "{{ inventory_hostname[-2:] }}"
 
-  - name: define ansible_host
-    ansible.builtin.set_fact:
-      ansible_host: "{{ (ipaddress2 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') else ipaddress3) if inventory_hostname is search('csr') else ipaddress1 }}"
+- name: Define ansible_host
+  ansible.builtin.set_fact:
+    ansible_host: "{{ (ipaddress2 if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['deptype'] is search('h') \
+      else ipaddress3) if inventory_hostname is search('csr') else ipaddress1 }}"
 
-  - name: update netconfig with IP addresses
-    ansible.builtin.set_fact:
-      netconfig: "{{ netconfig|default({}) | combine(new_item, recursive=true) }}"
-    vars:
-      new_item: "{'{{ task_item.interface }}': {'{{ task_item.key }}': '{{ task_item.value }}'}}"
-    when: vars['netconfig'][task_item.interface] is defined
-    loop:
-      - { interface: 'nic1', key: 'ipaddress', value: '{{ ipaddress1 }}'}
-      - { interface: 'nic2', key: 'ipaddress', value: '{{ ipaddress2 }}'}
-      - { interface: 'nic3', key: 'ipaddress', value: '{{ ipaddress3 }}'}
-      - { interface: 'nic4', key: 'ipaddress', value: '{{ ipaddress4 }}'}
-      - { interface: 'nic5', key: 'ipaddress', value: '{{ ipaddress5 }}'}
-    loop_control:
-      loop_var: task_item
-    no_log: true
+- name: Update netconfig with IP addresses
+  ansible.builtin.set_fact:
+    netconfig: "{{ netconfig | default({}) | combine(new_item, recursive=true) }}"
+  vars:
+    new_item: "{'{{ task_item.interface }}': {'{{ task_item.key }}': '{{ task_item.value }}'}}"
+  when: vars['netconfig'][task_item.interface] is defined
+  loop:
+    - { interface: 'nic1', key: 'ipaddress', value: '{{ ipaddress1 }}'}
+    - { interface: 'nic2', key: 'ipaddress', value: '{{ ipaddress2 }}'}
+    - { interface: 'nic3', key: 'ipaddress', value: '{{ ipaddress3 }}'}
+    - { interface: 'nic4', key: 'ipaddress', value: '{{ ipaddress4 }}'}
+    - { interface: 'nic5', key: 'ipaddress', value: '{{ ipaddress5 }}'}
+  loop_control:
+    loop_var: task_item
+  no_log: true

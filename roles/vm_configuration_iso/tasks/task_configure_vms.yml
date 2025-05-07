@@ -1,56 +1,73 @@
 ---
 # tasks file to configure_vms
-- block:
-  - include_tasks: task_check_silo_patch.yml
-  - include_tasks: task_delete_docker0_self_healing.yml
-    when: groups['em7']|length == 1 and 'em7' in group_names
-  - include_tasks: task_add_users.yml
-  - include_tasks: task_add_qs_scripts.yml
-  - include_tasks: task_add_ngx_cert_script.yml
-  - include_tasks: task_update_rp_filter.yml
-  - include_tasks: task_configure_snmp.yml
-  - include_tasks: task_update_chrony.yml
-  - include_tasks: task_update_repo.yml
-  - include_tasks: task_update_puppet_data_file.yml
-    when: customer.version.em7_iso is not search('em7_x86_64_12.')
-  - include_tasks: task_update_hosts_file.yml
-  - include_tasks: task_coro_install.yml
-    when: ansible_ssh_pass != postppp
-  - block:
-    - name: time laps
+- name: Check silo patch
+  ansible.builtin.include_tasks: task_check_silo_patch.yml
+- name: Delete docker0 self healing
+  ansible.builtin.include_tasks: task_delete_docker0_self_healing.yml
+  when: groups['em7']|length == 1 and 'em7' in group_names
+- name: Add users
+  ansible.builtin.include_tasks: task_add_users.yml
+- name: Add qs scripts
+  ansible.builtin.include_tasks: task_add_qs_scripts.yml
+- name: Add nginx certificate script
+  ansible.builtin.include_tasks: task_add_ngx_cert_script.yml
+- name: Update rp_filter
+  ansible.builtin.include_tasks: task_update_rp_filter.yml
+- name: Configure SNMP
+  ansible.builtin.include_tasks: task_configure_snmp.yml
+- name: Update chrony
+  ansible.builtin.include_tasks: task_update_chrony.yml
+- name: Update repo
+  ansible.builtin.include_tasks: task_update_repo.yml
+- name: Update puppet data.conf file
+  ansible.builtin.include_tasks: task_update_puppet_data_file.yml
+  when: customer.version.em7_iso is not search('em7_x86_64_12.')
+- name: Update /etc/hosts file
+  ansible.builtin.include_tasks: task_update_hosts_file.yml
+- name: Coro install
+  ansible.builtin.include_tasks: task_coro_install.yml
+  when: ansible_ssh_pass != postppp
+- name: Increase sync rate
+  when:
+    - inventory_hostname is search('em7db')
+    - customer.version.em7_iso is not search('em7_x86_64_12.')
+  block:
+    - name: Time laps
       ansible.builtin.wait_for:
         timeout: 30
       async: 35
       poll: 0
       register: reg_time_laps
-    - include_tasks: task_increase_sync_rate.yml
-    when:
-      - inventory_hostname is search('em7db')
-      - customer.version.em7_iso is not search('em7_x86_64_12.')
-  - include_tasks: task_update_silo_file.yml
-  - include_tasks: task_install_packages.yml
-  - name: flush handlers
-    meta: flush_handlers
-  - name: check time laps
-    ansible.builtin.async_status:
-      jid: "{{ reg_time_laps.ansible_job_id }}"
-    register: reg_time_check
-    until: reg_time_check.finished
-    retries: 3
-    delay: 12
-    when:
-      - inventory_hostname is search('em7db')
-      - customer.version.em7_iso is not search('em7_x86_64_12.')
-  - include_tasks:
-      file: task_update_conf_file.yml
-      apply:
-        vars:
-          conf_file: "{{ file_item }}"
-    loop:
-      - /etc/siteconfig/mysql.siteconfig
-      - /etc/my.cnf.d/silo_mysql.cnf
-    loop_control:
-      loop_var: file_item
-    when:
-      - customer.version.em7_iso is not search('em7_x86_64_12.')
-  - include_tasks: task_update_exports_file.yml
+    - name: Increase sync rate
+      ansible.builtin.include_tasks: task_increase_sync_rate.yml
+- name: Update silo file
+  ansible.builtin.include_tasks: task_update_silo_file.yml
+- name: Install packages
+  ansible.builtin.include_tasks: task_install_packages.yml
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+- name: Check time laps
+  ansible.builtin.async_status:
+    jid: "{{ reg_time_laps.ansible_job_id }}"
+  register: reg_time_check
+  until: reg_time_check.finished
+  retries: 3
+  delay: 12
+  when:
+    - inventory_hostname is search('em7db')
+    - customer.version.em7_iso is not search('em7_x86_64_12.')
+- name: Update configuration file
+  ansible.builtin.include_tasks:
+    file: task_update_conf_file.yml
+    apply:
+      vars:
+        conf_file: "{{ file_item }}"
+  loop:
+    - /etc/siteconfig/mysql.siteconfig
+    - /etc/my.cnf.d/silo_mysql.cnf
+  loop_control:
+    loop_var: file_item
+  when:
+    - customer.version.em7_iso is not search('em7_x86_64_12.')
+- name: Update exports file
+  ansible.builtin.include_tasks: task_update_exports_file.yml

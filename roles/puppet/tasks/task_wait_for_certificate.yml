@@ -1,74 +1,87 @@
 ---
 # Tasks to wait for the certificate to be created
-- block:
-  - name: get list of created certificates
-    ansible.builtin.shell: >
-      puppet cert list --all | grep -E '{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}' || echo 'Found no certificate'
-    become: true
-    ignore_errors: true
-    register: certs_on_puppet1
-    delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
-    run_once: true
-  - ansible.builtin.debug:
-      msg:
-        - "{{ certs_on_puppet1.stdout_lines }}"
-    run_once: true
-  - name: check if certificate is created on {{ puppet.secondary.vmname if 'dr' in group_names else puppet.primary.vmname }}
-    ansible.builtin.set_fact:
-      cert_exists1: "{{ certs_on_puppet1.stdout_lines|default([]) | select('search', '\"' + host_cert_name) | list | length == 1 }}"
-  - name: initialize hosts count
-    set_fact:
-      hosts_count: 0
-    run_once: true
-  - name: define number of hosts to rebuild
-    ansible.builtin.set_fact:
-      hosts_count: "{{ hosts_count|int + 1 if not hostvars[host_item]['cert_exists1'] else hosts_count }}"
-    vars:
-      myhosts: "{{ groups['stack'] | union(groups['dr']) if customer.disaster_recovery else groups['stack'] }}"
-    loop: "{{ ansible_play_batch | intersect(myhosts) }}"
-    loop_control:
-      loop_var: host_item
-    when:
-      - hostvars[host_item]['cert_exists1'] is defined
-      - hostvars[host_item] is not search('em7db') or (groups['em7']|length == 1 and hostvars[host_item] is not search('em7'))
-    run_once: true
-  - block:
-    - include_tasks: task_rebuild_host.yml
-    - include_tasks: task_delete_certificates.yml
-    - include_tasks: task_add_vm_to_class.yml
-    - include_tasks: task_generate_cert.yml
-    - include_tasks: task_generate_cert_for_em7.yml
-    - name: get list of created certificates
+- name: Get list of created certificates
+  ansible.builtin.shell: >
+    puppet cert list --all | grep -E '{{ myprefix }}' || echo 'Found no certificate'
+  vars:
+    myprefix: "{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}"
+  register: certs_on_puppet1
+  changed_when: false
+  become: true
+  ignore_errors: true
+  delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet'] | first }}"
+  run_once: true
+- name: Information message
+  ansible.builtin.debug:
+    msg:
+      - "{{ certs_on_puppet1.stdout_lines }}"
+  run_once: true
+- name: Check if certificate is created on {{ puppet.secondary.vmname if 'dr' in group_names else puppet.primary.vmname }}
+  ansible.builtin.set_fact:
+    cert_exists1: "{{ certs_on_puppet1.stdout_lines | default([]) | select('search', '\"' + host_cert_name) | list | length == 1 }}"
+- name: Initialize hosts count
+  ansible.builtin.set_fact:
+    hosts_count: 0
+  run_once: true
+- name: Define number of hosts to rebuild
+  ansible.builtin.set_fact:
+    hosts_count: "{{ hosts_count | int + 1 if not hostvars[host_item]['cert_exists1'] else hosts_count }}"
+  vars:
+    myhosts: "{{ groups['stack'] | union(groups['dr']) if customer.disaster_recovery else groups['stack'] }}"
+  loop: "{{ ansible_play_batch | intersect(myhosts) }}"
+  loop_control:
+    loop_var: host_item
+  when:
+    - hostvars[host_item]['cert_exists1'] is defined
+    - hostvars[host_item] is not search('em7db') or (groups['em7'] | length == 1 and hostvars[host_item] is not search('em7'))
+  run_once: true
+- name: Rebuild the VM
+  when:
+    - inventory_hostname is not search('em7db') or (groups['em7'] | length == 1 and 'em7' not in group_names)
+    - not cert_exists1 | default(false)
+  block:
+    - name: Rebuild host
+      ansible.builtin.include_tasks: task_rebuild_host.yml
+    - name: Delete certificates
+      ansible.builtin.include_tasks: task_delete_certificates.yml
+    - name: Add VM to class
+      ansible.builtin.include_tasks: task_add_vm_to_class.yml
+    - name: Generate certificate
+      ansible.builtin.include_tasks: task_generate_cert.yml
+    - name: Generate certificate for EM7
+      ansible.builtin.include_tasks: task_generate_cert_for_em7.yml
+    - name: Get list of created certificates
       ansible.builtin.shell: >
-        puppet cert list --all | grep -E '{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}' || echo 'Found no certificate'
+        puppet cert list --all | grep -E '{{ myprefix }}' || echo 'Found no certificate'
+      vars:
+        myprefix: "{{ customer.secondary.name_prefix if 'dr' in group_names else customer.primary.name_prefix }}"
+      register: certs_on_puppet2
+      changed_when: false
       become: true
       ignore_errors: true
-      register: certs_on_puppet2
-      delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
-      run_once: "{{ true if hosts_count|int > 1 else false }}"
-    - name: look for certificate on server
+      delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet'] | first }}"
+      run_once: "{{ true if hosts_count | int > 1 else false }}"
+    - name: Look for certificate on server
       ansible.builtin.set_fact:
-        cert_exists2: "{{ certs_on_puppet2.stdout_lines|default([]) | select('search', '\"' + host_cert_name) | list | length == 1 }}"
-    - name: check if certificate is created on server
+        cert_exists2: "{{ certs_on_puppet2.stdout_lines | default([]) | select('search', '\"' + host_cert_name) | list | length == 1 }}"
+    - name: Check if certificate is created on server
       ansible.builtin.assert:
         that:
           - cert_exists2
         fail_msg: "Certificate could not be created for host. Aborting!"
-    when:
-      - inventory_hostname is not search('em7db') or (groups['em7']|length == 1 and 'em7' not in group_names)
-      - not cert_exists1|default(false)
-  - name: puppet sign certs
-    ansible.builtin.shell: >
-      /usr/local/bin/puppet cert sign {{ host_cert_name }}
-    register: psc
-    until: psc is succeeded
-    retries: 5
-    delay: 10
-    become: true
-    ignore_errors: true
-    delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet']|first }}"
-    when: cert_exists1|default(false) or cert_exists2|default(false)
-  - name: check cert signed successfully
-    ansible.builtin.assert:
-      that: "psc is not skipped"
-      fail_msg: "{{ 'No certificate for ' + inventory_hostname }}"
+- name: Puppet sign certs
+  ansible.builtin.shell: >
+    /usr/local/bin/puppet cert sign {{ host_cert_name }}
+  register: psc
+  changed_when: psc.rc == 0
+  until: psc is succeeded
+  retries: 5
+  delay: 10
+  become: true
+  ignore_errors: true
+  delegate_to: "{{ groups[('dr' if 'dr' in group_names else '') + 'puppet'] | first }}"
+  when: cert_exists1 | default(false) or cert_exists2 | default(false)
+- name: Check cert signed successfully
+  ansible.builtin.assert:
+    that: "psc is not skipped"
+    fail_msg: "{{ 'No certificate for ' + inventory_hostname }}"

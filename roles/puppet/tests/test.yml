@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test puppet
+  hosts: localhost
   remote_user: root
   roles:
     - puppet

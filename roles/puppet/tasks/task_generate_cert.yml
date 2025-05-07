@@ -1,32 +1,36 @@
 ---
 # Tasks to generate certificate for vm
-- block:
-  - name: check if puppet agent is installed
-    ansible.builtin.shell: $(which yum) list installed puppet-agent || echo "No puppet-agent installed"
-    check_mode: no
-    register: puppet_installed
-    until: puppet_installed is succeeded
-    ignore_errors: true
-  - block:
+- name: Check if puppet agent is installed
+  ansible.builtin.shell: $(which yum) list installed puppet-agent || echo "No puppet-agent installed"
+  register: puppet_installed
+  changed_when: false
+  check_mode: false
+  until: puppet_installed is succeeded
+  ignore_errors: true
+- name: Install puppet agent
+  when: "'No puppet-agent installed' in puppet_installed.stdout"
+  become: "{{ true if ansible_user != 'root' else false }}"
+  block:
     - name: Download Puppet to VM
       ansible.builtin.get_url:
         url: "https://{{ puppet.secondary.fqdn if 'dr' in group_names else puppet.primary.fqdn }}:8140/packages/current/install.bash"
         dest: /tmp
-        url_username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'puppet']|first]['ansible_user'] }}"
-        url_password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'puppet']|first]['ansible_ssh_pass'] }}"
-        validate_certs: no
+        url_username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'puppet'] | first]['ansible_user'] }}"
+        url_password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'puppet'] | first]['ansible_ssh_pass'] }}"
+        validate_certs: false
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
+        mode: '644'
       register: download_action
       until: download_action is succeeded
       retries: 7
     - name: Install Puppet on VM
       ansible.builtin.command: bash /tmp/install.bash
       register: puppet_install
+      changed_when: puppet_install.rc == 0
       until: puppet_install is succeeded
       retries: 5
       delay: 5
       when: download_action is succeeded
-    when: "'No puppet-agent installed' in puppet_installed.stdout"
-    become: "{{ true if ansible_user != 'root' else false }}"
-  - include_tasks: task_disable_puppet_sync.yml
+- name: Disable puppet sync
+  ansible.builtininclude_tasks: task_disable_puppet_sync.yml

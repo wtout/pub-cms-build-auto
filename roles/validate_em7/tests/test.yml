@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test validate_em7
+  hosts: localhost
   remote_user: root
   roles:
-    - roles/validate_em7
+    - validate_em7

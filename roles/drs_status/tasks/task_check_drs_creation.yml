@@ -1,29 +1,29 @@
 ---
 # Tasks to check if DRS rules have been created
-- block:
-  - name: Check DRS rule status
-    ansible.builtin.async_status:
-      jid: "{{ rule_item.ansible_job_id }}"
-    register: create_result
-    loop: "{{ create_drs.results }}"
-    loop_control:
-      loop_var: rule_item
-      label: "{{ rule_item.rule_item }}"
-    when:
-      - not ansible_check_mode
-      - create_drs is changed
-
-  - name: Check if DRS rule has been created
-    ansible.builtin.debug:
-      msg:
-        - "{{ (rule_idx + 1)|string + ': ' + rule_item.rule_item.rule_item + (' has been created' if rule_item.finished else ' HAS NOT BEEN CREATED') }}"
-    loop: "{{ create_result.results }}"
-    loop_control:
-      loop_var: rule_item
-      label: "{{ rule_item.rule_item.rule_item }}"
-      index_var: rule_idx
-    when:
-      - create_result is changed
-
+- name: Check DRS rules created
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Check DRS rule status
+      ansible.builtin.async_status:
+        jid: "{{ rule_item.ansible_job_id }}"
+      register: create_result
+      loop: "{{ create_drs.results }}"
+      loop_control:
+        loop_var: rule_item
+        label: "{{ rule_item.rule_item }}"
+      when:
+        - not ansible_check_mode
+        - create_drs is changed
+
+    - name: Check if DRS rule has been created
+      ansible.builtin.debug:
+        msg:
+          - "{{ (rule_idx + 1) | string + ': ' + rule_item.rule_item.rule_item + (' has been created' if rule_item.finished else ' HAS NOT BEEN CREATED') }}"
+      loop: "{{ create_result.results }}"
+      loop_control:
+        loop_var: rule_item
+        label: "{{ rule_item.rule_item.rule_item }}"
+        index_var: rule_idx
+      when:
+        - create_result is changed

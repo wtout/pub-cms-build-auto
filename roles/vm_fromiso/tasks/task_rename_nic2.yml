@@ -1,36 +1,41 @@
 ---
 # tasks to rename nic2 on the EM7 VMs
-- block:
-  - name: Renaming NIC2 block
-    block:
-      - name: check if ens224 exists {{ loop_counter }}
-        ansible.builtin.shell: |
-          ip a | grep ens224
-        check_mode: no
-        register: reg_nic2_name
-        failed_when: reg_nic2_name.stdout != ''
-      - name: disable NIC2 renaming {{ loop_counter }}
-        ansible.builtin.set_fact:
-          rename_nic2: false
-    rescue:
-      - name: Set ens224 down {{ loop_counter }}
-        ansible.builtin.command: |
-          ip link set ens224 down
-        register: int_down
-        failed_when: int_down.rc == 1 and int_down.stderr is not search('Cannot find device')
-      - name: rename nic2 on the VM {{ loop_counter }}
-        ansible.builtin.command: |
-          ip link set ens224 name ens192
-        register: int_rename
-        failed_when: int_rename.rc == 1 and int_rename.stderr is not search('Cannot find device')
-      - name: Set ens192 up {{ loop_counter }}
-        ansible.builtin.command: |
-          ip link set ens192 up
-      - name: restart network {{ loop_counter }}
-        ansible.builtin.systemd:
-          name: network
-          state: restarted
-          daemon_reload: yes
-        when: int_rename is succeeded
+- name: Renaming NIC2 block
   become: "{{ true if ansible_user != 'root' else false }}"
   when: rename_nic2
+  block:
+    - name: Check if ens224 exists {{ loop_counter }}
+      ansible.builtin.shell:
+        cmd: set -o pipefail && ip a | grep ens224
+        executable: /bin/bash
+      register: reg_nic2_name
+      changed_when: false
+      failed_when: reg_nic2_name.stdout != ''
+      check_mode: false
+    - name: Disable NIC2 renaming {{ loop_counter }}
+      ansible.builtin.set_fact:
+        rename_nic2: false
+  rescue:
+    - name: Set ens224 down {{ loop_counter }}
+      ansible.builtin.command: |
+        ip link set ens224 down
+      register: int_down
+      changed_when: int_down.rc == 0
+      failed_when: int_down.rc == 1 and int_down.stderr is not search('Cannot find device')
+    - name: Rename nic2 on the VM {{ loop_counter }}
+      ansible.builtin.command: |
+        ip link set ens224 name ens192
+      register: int_rename
+      changed_when: int_rename.rc == 0
+      failed_when: int_rename.rc == 1 and int_rename.stderr is not search('Cannot find device')
+    - name: Set ens192 up {{ loop_counter }}
+      ansible.builtin.command: |
+        ip link set ens192 up
+      register: new_link_up
+      changed_when: new_link_up.rc == 0
+    - name: Restart network {{ loop_counter }}
+      ansible.builtin.systemd:
+        name: network
+        state: restarted
+        daemon_reload: true
+      when: int_rename is succeeded

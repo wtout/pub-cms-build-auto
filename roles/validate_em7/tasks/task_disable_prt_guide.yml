@@ -1,12 +1,15 @@
 ---
 # Tasks to disable the Admin portal guide
-- block:
-  - name: Run the conf_edit.py script
-    ansible.builtin.shell: |
-      python /opt/sapphire/Build/AdminPortalScripts/conf_edit.py
-    register: reg_conf_edit
-    ignore_errors: yes
-    no_log: yes
-  - ansible.builtin.assert:
-      that: reg_conf_edit is succeeded
-      fail_msg: "{{ reg_conf_edit }}"
+- name: Disabling Admin portal guide
+  block:
+    - name: Run the conf_edit.py script
+      ansible.builtin.shell: |
+        python /opt/sapphire/Build/AdminPortalScripts/conf_edit.py
+      register: reg_conf_edit
+      changed_when: reg_conf_edit.rc == 0
+      no_log: true
+  rescue:
+    - name: Assert that running the conf_edit.py script was successful
+      ansible.builtin.assert:
+        that: reg_conf_edit is succeeded
+        fail_msg: "{{ reg_conf_edit }}"

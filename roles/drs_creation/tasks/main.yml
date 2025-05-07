@@ -1,11 +1,13 @@
 ---
 # tasks file for drs_creation
-- block:
-  - include_tasks: task_create_drs_rule.yml
-    when:
-      - deploy_drs | default(false) | bool
-
-  - include_tasks: task_delete_drs_rule.yml
-    when:
-      - rollback_drs | default(false) | bool
-  tags: [ 'drs_creation', 'vm_creation' ]
+- name: Main drs_creation block
+  tags: ['drs_creation', 'vm_creation']
+  block:
+    - name: Create DRS rule
+      ansible.builtin.include_tasks: task_create_drs_rule.yml
+      when:
+        - deploy_drs | default(false) | bool
+    - name: Delete DRS rule
+      ansible.builtin.include_tasks: task_delete_drs_rule.yml
+      when:
+        - rollback_drs | default(false) | bool

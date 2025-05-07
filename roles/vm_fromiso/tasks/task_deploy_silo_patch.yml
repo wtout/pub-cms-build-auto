@@ -1,31 +1,41 @@
 ---
 # tasks to deploy the silo 12.1.1 patch on EM7 DB01 VM
-- block:
-  - block:
-    - name: copy the patch file to VM
-      ansible.builtin.copy:
-        src: "{{ auto_dir }}/Packages/ISO/{{ silopatch_file }}"
-        dest: '/tmp'
-    - name: import the silo patch
-      ansible.builtin.command: |
-        siloupdate import-patch /tmp/{{ silopatch_file }}
-      async: 900
-      poll: 30
-    rescue:
-    - name: delete patch
-      ansible.builtin.file:
-        path: "/tmp/{{ silopatch_file }}"
-        state: absent
-    - name: copy the patch file to VM
-      ansible.builtin.copy:
-        src: "{{ auto_dir }}/Packages/ISO/{{ silopatch_file }}"
-        dest: '/tmp'
-    - name: import the silo patch
-      ansible.builtin.command: |
-        siloupdate import-patch /tmp/{{ silopatch_file }}
-      async: 900
-      poll: 30
-  - name: fix the license expiration issue
-    ansible.builtin.shell: |
-      sleep 300 && silo_mysql -e "UPDATE siloupdate.preupgrade_config SET enabled=0 WHERE type='lic_expiration'" &
+- name: Deploy the silo patch
   become: "{{ true if ansible_user != 'root' else false }}"
+  block:
+    - name: Copy the patch file to VM
+      block:
+        - name: Copy the patch file to VM
+          ansible.builtin.copy:
+            src: "{{ auto_dir }}/Packages/ISO/{{ silopatch_file }}"
+            dest: '/tmp'
+            mode: '644'
+        - name: Import the silo patch
+          ansible.builtin.command: |
+            siloupdate import-patch /tmp/{{ silopatch_file }}
+          register: import_patch1
+          changed_when: import_patch1.rc == 0
+          async: 900
+          poll: 30
+      rescue:
+        - name: Delete patch
+          ansible.builtin.file:
+            path: "/tmp/{{ silopatch_file }}"
+            state: absent
+        - name: Copy the patch file to VM
+          ansible.builtin.copy:
+            src: "{{ auto_dir }}/Packages/ISO/{{ silopatch_file }}"
+            dest: '/tmp'
+            mode: '644'
+        - name: Import the silo patch
+          ansible.builtin.command: |
+            siloupdate import-patch /tmp/{{ silopatch_file }}
+          register: import_patch2
+          changed_when: import_patch2.rc == 0
+          async: 900
+          poll: 30
+    - name: Fix the license expiration issue
+      ansible.builtin.shell: |
+        sleep 300 && silo_mysql -e "UPDATE siloupdate.preupgrade_config SET enabled=0 WHERE type='lic_expiration'" &
+      register: fix_license
+      changed_when: fix_license.rc == 0

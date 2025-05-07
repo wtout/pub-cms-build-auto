@@ -1,104 +1,135 @@
 ---
 # Tasks to update variables files
-- block:
-  - name: Update default.yml file
-    ansible.builtin.template:
-      src: "{{ tmpl_item.name }}"
-      dest: "{{ tmpl_item.dest }}"
-    loop:
-      - { name: 'templates/default.yml.tmpl', dest: "{{ tmpl_dest }}/default.yml" }
-    loop_control:
-      loop_var: tmpl_item
-  - name: Decrypt ssh_passwords vault
-    ansible.builtin.shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
-      export ANSIBLE_LOG_PATH
-      head -1 ssh_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt ssh_passwords.yml --vault-password-file ssh-vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
-    args:
-      chdir: "{{ spl_ansible_path }}"
-  - name: Update SSH passwords vault
-    ansible.builtin.template:
-      src: "{{ tmpl_item.name }}"
-      dest: "{{ tmpl_item.dest }}"
-    loop:
-      - { name: 'templates/ssh_passwords.yml.tmpl', dest: "{{ spl_ansible_path }}/ssh_passwords.yml" }
-    loop_control:
-      loop_var: tmpl_item
-  - name: Encrypt ssh_passwords vault
-    ansible.builtin.shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
-      export ANSIBLE_LOG_PATH
-      ansible-vault encrypt ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
-    args:
-      chdir: "{{ spl_ansible_path }}"
-  - name: Decrypt phantom config assets file
-    ansible.builtin.shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
-      export ANSIBLE_LOG_PATH
-      head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt phantom_config_assets.yml --vault-password-file vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
-    args:
-      chdir: "{{ spl_ansible_path }}"
-  - name: Update phantom config assets file
-    ansible.builtin.replace:
-      path: "{{ spl_ansible_path }}/phantom_config_assets.yml"
-      regexp: "^({{ line_item.param }}:).*$"
-      replace: '\g<1> {{ line_item.value }}'
-    loop:
-      - { param: 'my_phantom_email', value: '{{ SPLPHN_USER }}' }
-      - { param: 'my_phantom_password', value: '{{ SPLPHN_PASS }}' }
-    loop_control:
-      loop_var: line_item
-    no_log: true
-  - name: Encrypt phantom config assets file
-    ansible.builtin.shell: |
-      ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
-      export ANSIBLE_LOG_PATH
-      head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt phantom_config_assets.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
-    args:
-      chdir: "{{ spl_ansible_path }}"
-
-  - block:
-    - name: Decrypt default_core_passwords vault
-      ansible.builtin.shell: |
-        ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
-        export ANSIBLE_LOG_PATH
-        head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' && ansible-vault decrypt default_core_passwords.yml --vault-password-file vault-password-file --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
-      args:
-        chdir: "{{ spl_ansible_path }}"
-    - name: get threatq setings
-      include_vars:
-        file: "{{ role_path }}/templates/tq.yml.tmpl"
-        name: tq_def
-    - name: check if threatq is defined in default core passwords file
-      ansible.builtin.lineinfile:
-        path: "{{ spl_ansible_path }}/default_core_passwords.yml"
-        line: 'threatq:'
-      check_mode: yes
-      register: reg_tq_in_vault
-    - name: Update default core passwords file
-      ansible.builtin.lineinfile:
-        path: "{{ spl_ansible_path }}/default_core_passwords.yml"
-        line: "{{ tq_def | to_nice_yaml(indent=2) }}"
-      when: reg_tq_in_vault is changed
-    - name: Encrypt default core passwords file
-      ansible.builtin.shell: |
-        ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
-        export ANSIBLE_LOG_PATH
-        head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' || ansible-vault encrypt default_core_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
-      args:
-        chdir: "{{ spl_ansible_path }}"
-    when: (inventory_hostname is search('splfwd') and reg_cust_creds is failed) or (inventory_hostname is not search('splfwd') and reg_core_creds is failed)
-
-  - name: Implement changes to avoid ssh timeout
-    ansible.builtin.lineinfile:
-      path: "{{ spl_ansible_path }}/roles/phantom/tasks/yum_upgrade.yml"
-      insertafter: '    lock_timeout: 120'
-      line: "{{ line_item }}"
-    loop:
-      - '  poll: 25'
-      - '  async: 8200'
-    loop_control:
-      loop_var: line_item
+- name: Update variables files
   delegate_to: localhost
   run_once: true
-  
+  block:
+    - name: Update default.yml file
+      ansible.builtin.template:
+        src: "{{ tmpl_item.name }}"
+        dest: "{{ tmpl_item.dest }}"
+        mode: '644'
+      loop:
+        - { name: 'templates/default.yml.tmpl', dest: "{{ tmpl_dest }}/default.yml" }
+      loop_control:
+        loop_var: tmpl_item
+    - name: Decrypt ssh_passwords vault
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+          export ANSIBLE_LOG_PATH
+          head -1 ssh_passwords.yml | grep '$ANSIBLE_VAULT' && \
+          ansible-vault decrypt ssh_passwords.yml --vault-password-file ssh-vault-password-file \
+          --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
+        executable: /bin/bash
+        chdir: "{{ spl_ansible_path }}"
+      register: decrypt_vault
+      changed_when: decrypt_vault.rc == 0
+    - name: Update SSH passwords vault
+      ansible.builtin.template:
+        src: "{{ tmpl_item.name }}"
+        dest: "{{ tmpl_item.dest }}"
+        mode: '644'
+      loop:
+        - { name: 'templates/ssh_passwords.yml.tmpl', dest: "{{ spl_ansible_path }}/ssh_passwords.yml" }
+      loop_control:
+        loop_var: tmpl_item
+    - name: Encrypt ssh_passwords vault
+      ansible.builtin.shell:
+        cmd: |
+          ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+          export ANSIBLE_LOG_PATH
+          ansible-vault encrypt ssh_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
+        chdir: "{{ spl_ansible_path }}"
+      register: encrypt_vault
+      changed_when: encrypt_vault.rc == 0
+    - name: Decrypt phantom config assets file
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+          export ANSIBLE_LOG_PATH
+          head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' && \
+          ansible-vault decrypt phantom_config_assets.yml --vault-password-file vault-password-file \
+          --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
+        executable: /bin/bash
+        chdir: "{{ spl_ansible_path }}"
+      register: decrypt_assets
+      changed_when: decrypt_assets.rc == 0
+    - name: Update phantom config assets file
+      ansible.builtin.replace:
+        path: "{{ spl_ansible_path }}/phantom_config_assets.yml"
+        regexp: "^({{ line_item.param }}:).*$"
+        replace: '\g<1> {{ line_item.value }}'
+      loop:
+        - { param: 'my_phantom_email', value: '{{ SPLPHN_USER }}' }
+        - { param: 'my_phantom_password', value: '{{ SPLPHN_PASS }}' }
+      loop_control:
+        loop_var: line_item
+      no_log: true
+    - name: Encrypt phantom config assets file
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+          export ANSIBLE_LOG_PATH
+          head -1 phantom_config_assets.yml | grep '$ANSIBLE_VAULT' || \
+          ansible-vault encrypt phantom_config_assets.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
+        executable: /bin/bash
+        chdir: "{{ spl_ansible_path }}"
+      register: encrypt_assets
+      changed_when: encrypt_assets.rc == 0
+    - name: Update default core passwords vault
+      when: (inventory_hostname is search('splfwd') and reg_cust_creds is failed) or (inventory_hostname is not search('splfwd') and reg_core_creds is failed)
+      block:
+        - name: Decrypt default_core_passwords vault
+          ansible.builtin.shell:
+            cmd: |
+              set -o pipefail
+              ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+              export ANSIBLE_LOG_PATH
+              head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' && \
+              ansible-vault decrypt default_core_passwords.yml --vault-password-file vault-password-file \
+              --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh || echo 'Not encrypted'
+            executable: /bin/bash
+            chdir: "{{ spl_ansible_path }}"
+          register: decrypt_core
+          changed_when: decrypt_core.rc == 0
+        - name: Get threatq setings
+          ansible.builtin.include_vars:
+            file: "{{ role_path }}/templates/tq.yml.tmpl"
+            name: tq_def
+        - name: Check if threatq is defined in default core passwords file
+          ansible.builtin.lineinfile:
+            path: "{{ spl_ansible_path }}/default_core_passwords.yml"
+            line: 'threatq:'
+          check_mode: true
+          register: reg_tq_in_vault
+        - name: Update default core passwords file
+          ansible.builtin.lineinfile:
+            path: "{{ spl_ansible_path }}/default_core_passwords.yml"
+            line: "{{ tq_def | to_nice_yaml(indent=2) }}"
+          when: reg_tq_in_vault is changed
+        - name: Encrypt default core passwords file
+          ansible.builtin.shell:
+            cmd: |
+              set -o pipefail
+              ANSIBLE_LOG_PATH={{ lookup('env', 'HOME') }}/{{ automation_reponame }}/{{ lookup('env', 'ANSIBLE_LOG_PATH') }}
+              export ANSIBLE_LOG_PATH
+              head -1 default_core_passwords.yml | grep '$ANSIBLE_VAULT' || \
+              ansible-vault encrypt default_core_passwords.yml --vault-password-file {{ auto_dir }}/Bash/get_common_vault_pass.sh
+            executable: /bin/bash
+            chdir: "{{ spl_ansible_path }}"
+          register: encrypt_core
+          changed_when: encrypt_core.rc == 0
+    - name: Implement changes to avoid ssh timeout
+      ansible.builtin.lineinfile:
+        path: "{{ spl_ansible_path }}/roles/phantom/tasks/yum_upgrade.yml"
+        insertafter: '    lock_timeout: 120'
+        line: "{{ line_item }}"
+      loop:
+        - '  poll: 25'
+        - '  async: 8200'
+      loop_control:
+        loop_var: line_item

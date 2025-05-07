@@ -1,37 +1,40 @@
 ---
 # Tasks to configure snmpd on the VM
-- block:
-  - name: get nic ens160 MAC address 
-    ansible.builtin.shell: ip link show ens160 | grep ether | awk '{print $2}'
-    register: ens160_mac
-  - name: update snmpd.conf with ens160 MAC address
-    ansible.builtin.lineinfile:
-      path: '/etc/snmp/snmpd.conf'
-      line: "engineid {{ ens160_mac.stdout | replace(':', '') }}"
-    notify: restart snmpd service
-
-  - name: check if backup file exists
-    ansible.builtin.stat:
-      path: '/etc/snmp/snmpd.conf.d/snmpd_default.conf.orig'
-    register: bkp_file
-  - name: backup snmpd_default.conf file
-    ansible.builtin.copy:
-      src: '/etc/snmp/snmpd.conf.d/snmpd_default.conf'
-      dest: '/etc/snmp/snmpd.conf.d/snmpd_default.conf.orig'
-      remote_src: yes
-    when: not bkp_file.stat.exists
-
-  - name: update snmpd_default.conf
-    ansible.builtin.replace:
-      path: /etc/snmp/snmpd.conf.d/snmpd_default.conf
-      regexp: "{{ exp_item }}"
-      replace: '#\g<1>'
-    loop:
-      - '^(group.*Group\s+[v1|v2c].*)$'
-      - '^(r.*community.*em7default)$'
-    loop_control:
-      loop_var: exp_item
+- name: Configure SNMP
   when:
     - not ansible_check_mode
     - inventory_hostname is search('em7')
   become: "{{ true if ansible_user != 'root' else false }}"
+  block:
+    - name: Get nic ens160 MAC address
+      ansible.builtin.shell:
+        cmd: set -o pipefail && ip link show ens160 | grep ether | awk '{print $2}'
+        executable: /bin/bash
+      register: ens160_mac
+      changed_when: false
+    - name: Update snmpd.conf with ens160 MAC address
+      ansible.builtin.lineinfile:
+        path: '/etc/snmp/snmpd.conf'
+        line: "engineid {{ ens160_mac.stdout | replace(':', '') }}"
+      notify: Restart snmpd service
+    - name: Check if backup file exists
+      ansible.builtin.stat:
+        path: '/etc/snmp/snmpd.conf.d/snmpd_default.conf.orig'
+      register: bkp_file
+    - name: Backup snmpd_default.conf file
+      ansible.builtin.copy:
+        src: '/etc/snmp/snmpd.conf.d/snmpd_default.conf'
+        dest: '/etc/snmp/snmpd.conf.d/snmpd_default.conf.orig'
+        mode: '644'
+        remote_src: true
+      when: not bkp_file.stat.exists
+    - name: Update snmpd_default.conf
+      ansible.builtin.replace:
+        path: /etc/snmp/snmpd.conf.d/snmpd_default.conf
+        regexp: "{{ exp_item }}"
+        replace: '#\g<1>'
+      loop:
+        - '^(group.*Group\s+[v1|v2c].*)$'
+        - '^(r.*community.*em7default)$'
+      loop_control:
+        loop_var: exp_item

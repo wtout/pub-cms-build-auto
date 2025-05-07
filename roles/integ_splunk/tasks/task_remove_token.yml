@@ -1,6 +1,6 @@
 ---
 # Tasks to remove token from git config
-- name: remove repo token from git config
+- name: Remove repo token from git config
   ansible.builtin.replace:
     path: "{{ spl_wd }}/dev/{{ repo_item }}/.git/config"
     regexp: '//.*@'
@@ -11,5 +11,5 @@
   loop_control:
     loop_var: repo_item
   delegate_to: localhost
-  become: "{{ 'yes' if host_os|lower is search('almalinux|ubuntu') else 'no' }}"
+  become: "{{ true if host_os | lower is search('almalinux|ubuntu') else false }}"
   run_once: true

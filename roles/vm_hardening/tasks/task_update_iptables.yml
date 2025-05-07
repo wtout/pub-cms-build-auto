@@ -1,18 +1,17 @@
 ---
 # tasks to update iptables on VM
-- block:
-  - name: update iptables
-    ansible.builtin.iptables:
-      chain: INPUT
-      protocol: udp
-      destination_port: "{{ port_item }}"
-      jump: ACCEPT
-    loop:
-      - 161
-    loop_control:
-      loop_var: port_item
-    notify:
-      - save iptables
-      - restart iptables
+- name: Update iptables
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: udp
+    destination_port: "{{ port_item }}"
+    jump: ACCEPT
+  loop:
+    - 161
+  loop_control:
+    loop_var: port_item
+  notify:
+    - Save iptables
+    - Restart iptables
   become: "{{ true if ansible_user != 'root' else false }}"
   when: not ansible_check_mode

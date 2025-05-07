@@ -1,28 +1,32 @@
 ---
 # Task file to create forward DNS record
-- block:
-  - name: Add {{ mydesignation }} DNS record
-    ansible.builtin.shell: |
-      {% if myserver is search('172.(23|30)') %}
-      sshpass -p {{ svc_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T -l {{ svc_username }} {{ lookup('env','MYIP') }} <<EOF
-      {% endif %}
-      nsupdate {% if myserver is search('172.(23|30)') %}-g {% endif %}<<EOC
-      server {{ myserver }}
-      update add {{ myrecord }}.{{ mydomain }} 86400 A {{ myipaddress }}
-      send
-      EOC
-      {% if myserver is search('172.(23|30)') %}
-      EOF
-      {% endif %}
-    register: reg_fdr
-    failed_when: reg_fdr.rc != 0 and reg_fdr.stderr is not search('tsig verify failure')
-    until: reg_fdr is succeeded
-    delay: 10
-    no_log: yes
-  rescue:
-  - ansible.builtin.debug:
-      msg: "{{ reg_fdr|replace(svc_password,'obfuscated') if svc_password != '' else reg_fdr }}"
-  always:
-  - ansible.builtin.assert:
-      that: reg_fdr is succeeded
+- name: Create forward DNS record
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Add {{ mydesignation + ' DNS record' }}
+      ansible.builtin.shell: |
+        {% if myserver is search('172.(23|30)') %}
+        sshpass -p {{ svc_password }} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -T -l {{ svc_username }} {{ lookup('env', 'MYIP') }} <<EOF
+        {% endif %}
+        nsupdate {% if myserver is search('172.(23|30)') %}-g {% endif %}<<EOC
+        server {{ myserver }}
+        update add {{ myrecord }}.{{ mydomain }} 86400 A {{ myipaddress }}
+        send
+        EOC
+        {% if myserver is search('172.(23|30)') %}
+        EOF
+        {% endif %}
+      register: reg_fdr
+      changed_when: reg_fdr.rc == 0
+      failed_when: reg_fdr.rc != 0 and reg_fdr.stderr is not search('tsig verify failure')
+      until: reg_fdr is succeeded
+      delay: 10
+      no_log: true
+  rescue:
+    - name: Debug message
+      ansible.builtin.debug:
+        msg: "{{ reg_fdr | replace(svc_password, 'obfuscated') if svc_password != '' else reg_fdr }}"
+  always:
+    - name: Assert creating of the forward DNS record is successful
+      ansible.builtin.assert:
+        that: reg_fdr is succeeded

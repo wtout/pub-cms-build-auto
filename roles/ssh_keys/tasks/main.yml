@@ -1,9 +1,12 @@
 ---
 # Tasks for configure and rollback ssh keys
-- block:
-  - include_tasks: configure_ssh_keys.yml
-    when: configure_ssh_keys | default(false) | bool
-
-  - include_tasks: rollback_ssh_keys.yml
-    when: rollback_ssh_keys | default(false) | bool
+- name: Main ssh_keys block
   tags: ssh_keys
+  block:
+    - name: Configure SSH keys
+      ansible.builtin.include_tasks: configure_ssh_keys.yml
+      when: configure_ssh_keys | default(false) | bool
+
+    - name: Rollback SSH keys
+      ansible.builtin.include_tasks: rollback_ssh_keys.yml
+      when: rollback_ssh_keys | default(false) | bool

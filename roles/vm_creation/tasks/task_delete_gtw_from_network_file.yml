@@ -1,85 +1,92 @@
 ---
 # Tasks to configure the default route on the VM
-- block:
-  - block:
-    - name: Wait on VMware Tools to become available
-      community.vmware.vmware_guest_tools_wait:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        validate_certs: false
-        name: "{{ vm.name }}"
-    - name: "Pause for {{ 30 if deploy_ovf|default({'changed': false}) is changed else 60 }} seconds to ensure VM finished booting"
-      ansible.builtin.wait_for:
-        timeout: "{{ 30 if deploy_ovf|default({'changed': false}) is changed else 60 }}"
-    - name: delete gateway from network file on the EM7 VM
-      community.vmware.vmware_vm_shell:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        validate_certs: false
-        vm_id: "{{ vm.name }}"
-        vm_username: "{{ ansible_user }}"
-        vm_password: "{{ ansible_ssh_pass }}"
-        vm_shell: '/usr/bin/sudo'
-        vm_shell_args: '-S sh -c "/bin/sed -i \"/^GATEWAY.*$/,+d\" /etc/sysconfig/network" <<< {{ ansible_ssh_pass }}'
-        wait_for_process: true
-      register: delete_em7gtw
-      until: delete_em7gtw is succeeded
-      delay: 10
-    - name: restart the network on the EM7 VM
-      community.vmware.vmware_vm_shell:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        validate_certs: false
-        vm_id: "{{ vm.name }}"
-        vm_username: "{{ ansible_user }}"
-        vm_password: "{{ ansible_ssh_pass }}"
-        vm_shell: '/usr/bin/sudo'
-        vm_shell_args: '-S sh -c "/bin/systemctl restart network" <<< {{ ansible_ssh_pass }}'
-        wait_for_process: true
-      when: delete_em7gtw is succeeded
-    when: inventory_hostname is search('em7')
-  - block:
-    - name: delete gateway from network file on the non-EM7 VM
-      community.vmware.vmware_vm_shell:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        validate_certs: false
-        vm_id: "{{ vm.name }}"
-        vm_username: "{{ ansible_user }}"
-        vm_password: "{{ ansible_ssh_pass }}"
-        vm_shell: '/bin/sed'
-        vm_shell_args: '-i "/^GATEWAY.*$/,+d" /etc/sysconfig/network'
-        wait_for_process: true
-      register: delete_gtw
-      until: delete_gtw is succeeded
-      delay: 10
-    - name: restart the network on the non-EM7 VM
-      community.vmware.vmware_vm_shell:
-        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-        validate_certs: false
-        vm_id: "{{ vm.name }}"
-        vm_username: "{{ ansible_user }}"
-        vm_password: "{{ ansible_ssh_pass }}"
-        vm_shell: '/bin/systemctl'
-        vm_shell_args: 'restart network'
-        wait_for_process: true
-      when: delete_gtw is succeeded
-    when: inventory_hostname is not search('em7')
-  when:
-    - netconfig.nic2.ipaddress != ''
+- name: Delete gateway from network file
+  when: netconfig.nic2.ipaddress != ''
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Delete gateway on EM7 VM
+      when: inventory_hostname is search('em7')
+      block:
+        - name: Wait on VMware Tools to become available
+          community.vmware.vmware_guest_tools_wait:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+              ('/' + fldr_name if fldr_name != '' else '') }}"
+            validate_certs: false
+            name: "{{ vm.name }}"
+        - name: "Pause for {{ ('30' if deploy_ovf | default({'changed': false}) is changed else '60') + ' seconds to ensure VM finished booting' }}"
+          ansible.builtin.wait_for:
+            timeout: "{{ 30 if deploy_ovf | default({'changed': false}) is changed else 60 }}"
+        - name: Delete gateway from network file on the EM7 VM
+          community.vmware.vmware_vm_shell:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+              ('/' + fldr_name if fldr_name != '' else '') }}"
+            validate_certs: false
+            vm_id: "{{ vm.name }}"
+            vm_username: "{{ ansible_user }}"
+            vm_password: "{{ ansible_ssh_pass }}"
+            vm_shell: '/usr/bin/sudo'
+            vm_shell_args: '-S sh -c "/bin/sed -i \"/^GATEWAY.*$/,+d\" /etc/sysconfig/network" <<< {{ ansible_ssh_pass }}'
+            wait_for_process: true
+          register: delete_em7gtw
+          until: delete_em7gtw is succeeded
+          delay: 10
+        - name: Restart the network on the EM7 VM
+          community.vmware.vmware_vm_shell:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+              ('/' + fldr_name if fldr_name != '' else '') }}"
+            validate_certs: false
+            vm_id: "{{ vm.name }}"
+            vm_username: "{{ ansible_user }}"
+            vm_password: "{{ ansible_ssh_pass }}"
+            vm_shell: '/usr/bin/sudo'
+            vm_shell_args: '-S sh -c "/bin/systemctl restart network" <<< {{ ansible_ssh_pass }}'
+            wait_for_process: true
+          when: delete_em7gtw is succeeded
+    - name: Delete gateway on non-EM7 VM
+      when: inventory_hostname is not search('em7')
+      block:
+        - name: Delete gateway from network file on the non-EM7 VM
+          community.vmware.vmware_vm_shell:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+              ('/' + fldr_name if fldr_name != '' else '') }}"
+            validate_certs: false
+            vm_id: "{{ vm.name }}"
+            vm_username: "{{ ansible_user }}"
+            vm_password: "{{ ansible_ssh_pass }}"
+            vm_shell: '/bin/sed'
+            vm_shell_args: '-i "/^GATEWAY.*$/,+d" /etc/sysconfig/network'
+            wait_for_process: true
+          register: delete_gtw
+          until: delete_gtw is succeeded
+          delay: 10
+        - name: Restart the network on the non-EM7 VM
+          community.vmware.vmware_vm_shell:
+            hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+            username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+            password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+            datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+            folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+              ('/' + fldr_name if fldr_name != '' else '') }}"
+            validate_certs: false
+            vm_id: "{{ vm.name }}"
+            vm_username: "{{ ansible_user }}"
+            vm_password: "{{ ansible_ssh_pass }}"
+            vm_shell: '/bin/systemctl'
+            vm_shell_args: 'restart network'
+            wait_for_process: true
+          when: delete_gtw is succeeded

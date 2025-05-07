@@ -1,3 +1,4 @@
 ---
 # Tasks to rollback ssh keys
-- include_tasks: task_remove_ssh_keys.yml
+- name: Remove SSH keys
+  ansible.builtin.include_tasks: task_remove_ssh_keys.yml

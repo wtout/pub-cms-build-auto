@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test vm_ppp_configuration
+  hosts: localhost
   remote_user: root
   roles:
     - vm_ppp_configuration

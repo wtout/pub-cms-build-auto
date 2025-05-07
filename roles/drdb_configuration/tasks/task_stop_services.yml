@@ -1,15 +1,15 @@
 ---
 # Tasks file to stop services
-- block:
-  - include_tasks:
-      file: task_manage_service.yml
-      apply:
-        vars:
-          service: "{{ service_item }}"
-          action: 'stopped'
-    loop:
-      - pacemaker
-      - corosync
-      - drbdproxy
-    loop_control:
-      loop_var: service_item      
+- name: Manage service
+  ansible.builtin.include_tasks:
+    file: task_manage_service.yml
+    apply:
+      vars:
+        service: "{{ service_item }}"
+        action: 'stopped'
+  loop:
+    - pacemaker
+    - corosync
+    - drbdproxy
+  loop_control:
+    loop_var: service_item

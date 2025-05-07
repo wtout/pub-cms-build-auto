@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test infra_build_nodes
+  hosts: localhost
   remote_user: root
   roles:
     - infra_build_nodes

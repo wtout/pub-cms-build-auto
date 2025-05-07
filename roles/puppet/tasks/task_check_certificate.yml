@@ -1,12 +1,18 @@
 ---
 # Tasks to check the status of the certificate
-- block:
-  - include_tasks: task_wait_for_certificate.yml
-    when: "'No puppet-agent installed' in puppet_installed.stdout"
-  - block:
-    - include_tasks: task_delete_certificates.yml
-    - include_tasks: task_add_vm_to_class.yml
-    - include_tasks: task_generate_cert.yml
-    - include_tasks: task_generate_cert_for_em7.yml
-    - include_tasks: task_wait_for_certificate.yml
-    when: psc|default({}) is failed
+- name: Wait for certificate
+  ansible.builtin.include_tasks: task_wait_for_certificate.yml
+  when: "'No puppet-agent installed' in puppet_installed.stdout"
+- name: Regenerate certificate
+  when: psc|default({}) is failed
+  block:
+    - name: Delete certificate
+      ansible.builtin.include_tasks: task_delete_certificates.yml
+    - name: Add VM to class
+      ansible.builtin.include_tasks: task_add_vm_to_class.yml
+    - name: Generate certificate
+      ansible.builtin.include_tasks: task_generate_cert.yml
+    - name: Generate certificate for EM7
+      ansible.builtin.include_tasks: task_generate_cert_for_em7.yml
+    - name: Wait for certificate
+      ansible.builtin.include_tasks: task_wait_for_certificate.yml

@@ -1,5 +1,5 @@
 ---
 # vars file for ssh_keys
-LOCAL_SSH_DIR: "~/.ssh"
-REMOTE_SSH_DIR: "{{ ansible_env.HOME }}/.ssh"
-SSH_KEY_FILE: "id_rsa"
+local_ssh_dir: "~/.ssh"
+remote_ssh_dir: "{{ ansible_env.HOME }}/.ssh"
+ssh_key_file: "id_rsa"

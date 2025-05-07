@@ -1,34 +1,35 @@
 ---
 # Tasks to start a new /var/log/messages file on the VM
-- block:
-  - name: get list of old system messages files
-    ansible.builtin.find:
-      path: "{{ syslog_path }}"
-      patterns: "^messages-.*\\.gz$"
-      use_regex: yes
-    register: old_files
-
-  - name: delete old system messages files
-    ansible.builtin.file:
-      path: "{{ file_item.path }}"
-      state: absent
-    loop: "{{ old_files.files }}"
-    loop_control:
-      loop_var: file_item
-      label: "{{ file_item }}"
-    when: old_files.matched >= 1
-
-  - name: check if {{ sys_msgs }} file exists
-    ansible.builtin.stat:
-      path: "{{ sys_msgs }}"
-    register: msgs_log
-  - block:
-    - name: reset {{ sys_msgs }} file
-      ansible.builtin.lineinfile:
-        path: "{{ sys_msgs }}"
-        regexp: "^.*$"
-        state: absent
-    - include_tasks: task_bounce_syslogd.yml
-    when: msgs_log.stat.exists
+- name: Start a new messages file
   when: ansible_ssh_pass != postppp
   become: "{{ true if inventory_hostname is search('em7') else false }}"
+  block:
+    - name: Get list of old system messages files
+      ansible.builtin.find:
+        path: "{{ syslog_path }}"
+        patterns: "^messages-.*\\.gz$"
+        use_regex: true
+      register: old_files
+    - name: Delete old system messages files
+      ansible.builtin.file:
+        path: "{{ file_item.path }}"
+        state: absent
+      loop: "{{ old_files.files }}"
+      loop_control:
+        loop_var: file_item
+        label: "{{ file_item }}"
+      when: old_files.matched >= 1
+    - name: Check if {{ sys_msgs + ' file exists' }}
+      ansible.builtin.stat:
+        path: "{{ sys_msgs }}"
+      register: msgs_log
+    - name: Reset {{ sys_msgs + ' file' }}
+      when: msgs_log.stat.exists
+      block:
+        - name: Reset {{ sys_msgs + ' file' }}
+          ansible.builtin.lineinfile:
+            path: "{{ sys_msgs }}"
+            regexp: "^.*$"
+            state: absent
+        - name: Bounce syslogd
+          ansible.builtin.include_tasks: task_bounce_syslogd.yml

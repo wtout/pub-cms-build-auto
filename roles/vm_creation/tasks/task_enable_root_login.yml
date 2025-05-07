@@ -1,54 +1,58 @@
 ---
 # Tasks to enable root login on the non-EM7 VM
-- block:
-  - name: Wait on VMware Tools to become available
-    community.vmware.vmware_guest_tools_wait:
-      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-      validate_certs: false
-      name: "{{ vm.name }}"
-  - name: "Pause for {{ 30 if deploy_ovf|default({'changed': false}) is changed else 60 }} seconds to ensure VM finished booting"
-    ansible.builtin.wait_for:
-      timeout: "{{ 30 if deploy_ovf|default({'changed': false}) is changed else 60 }}"
-  - name: enable root login on the non-EM7 VM
-    community.vmware.vmware_vm_shell:
-      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-      validate_certs: false
-      vm_id: "{{ vm.name }}"
-      vm_username: 'root'
-      vm_password: "{{ ansible_ssh_pass }}"
-      vm_shell: '/bin/sed'
-      vm_shell_args: '-i "s/^\(PermitRootLogin.*\)$/#\1/" /etc/ssh/sshd_config'
-      wait_for_process: true
-    register: enable_root
-    until: enable_root is succeeded
-    retries: 5
-    delay: 10
-  - name: restart sshd on the non-EM7 VM
-    community.vmware.vmware_vm_shell:
-      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-      datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-      validate_certs: false
-      vm_id: "{{ vm.name }}"
-      vm_username: 'root'
-      vm_password: "{{ ansible_ssh_pass }}"
-      vm_shell: '/bin/systemctl'
-      vm_shell_args: 'restart sshd'
-      wait_for_process: true
-    register: sshd_restart
-    until: sshd_restart is succeeded
-    retries: 5
-    delay: 10
+- name: Enable root login
   when:
     - inventory_hostname is not search('em7')
     - customer.version.release is search('9.2')
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Wait on VMware Tools to become available
+      community.vmware.vmware_guest_tools_wait:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+          ('/' + fldr_name if fldr_name != '' else '') }}"
+        validate_certs: false
+        name: "{{ vm.name }}"
+    - name: "Pause for {{ ('30' if deploy_ovf | default({'changed': false}) is changed else '60') + ' seconds to ensure VM finished booting' }}"
+      ansible.builtin.wait_for:
+        timeout: "{{ 30 if deploy_ovf | default({'changed': false}) is changed else 60 }}"
+    - name: Enable root login on the non-EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+          ('/' + fldr_name if fldr_name != '' else '') }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: 'root'
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/bin/sed'
+        vm_shell_args: '-i "s/^\(PermitRootLogin.*\)$/#\1/" /etc/ssh/sshd_config'
+        wait_for_process: true
+      register: enable_root
+      until: enable_root is succeeded
+      retries: 5
+      delay: 10
+    - name: Restart sshd on the non-EM7 VM
+      community.vmware.vmware_vm_shell:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+          ('/' + fldr_name if fldr_name != '' else '') }}"
+        validate_certs: false
+        vm_id: "{{ vm.name }}"
+        vm_username: 'root'
+        vm_password: "{{ ansible_ssh_pass }}"
+        vm_shell: '/bin/systemctl'
+        vm_shell_args: 'restart sshd'
+        wait_for_process: true
+      register: sshd_restart
+      until: sshd_restart is succeeded
+      retries: 5
+      delay: 10

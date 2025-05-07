@@ -1,24 +1,23 @@
 ---
 # Tasks to check /proc/sys/net/ipv4/conf/default/rp_filter file content
-- block:
-  - name: Get value from /proc/sys/net/ipv4/conf/default/rp_filter
-    ansible.builtin.shell: $(which cat) /proc/sys/net/ipv4/conf/default/rp_filter
-    register: rpfilter_content
-    check_mode: no
-  - name: define rpfilter_status
-    ansible.builtin.set_fact:
-      rpfilter_status: 'The /proc/sys/net/ipv4/conf/default/rp_filter file is not found'
-    when:
-      - rpfilter_content.stderr is search('No such file or directory')
-  - name: define rpfilter_status
-    ansible.builtin.set_fact:
-      rpfilter_status: 'More than one value is configured in /proc/sys/net/ipv4/conf/default/rp_filter'
-    when:
-      - rpfilter_content.stdout_lines | length > 1
-  - name: define rpfilter_status
-    ansible.builtin.set_fact:
-      rpfilter_status: 'rp_filter value is not set to 2 in /proc/sys/net/ipv4/conf/default/rp_filter'
-    when:
-      - rpfilter_content.stdout_lines | length == 1
-      - rpfilter_content.stdout_lines[0]|int != 2
-  tags: sanity
+- name: Get value from /proc/sys/net/ipv4/conf/default/rp_filter
+  ansible.builtin.shell: $(which cat) /proc/sys/net/ipv4/conf/default/rp_filter
+  register: rpfilter_content
+  changed_when: false
+  check_mode: false
+- name: Define rpfilter_status
+  ansible.builtin.set_fact:
+    rpfilter_status: 'The /proc/sys/net/ipv4/conf/default/rp_filter file is not found'
+  when:
+    - rpfilter_content.stderr is search('No such file or directory')
+- name: Define rpfilter_status
+  ansible.builtin.set_fact:
+    rpfilter_status: 'More than one value is configured in /proc/sys/net/ipv4/conf/default/rp_filter'
+  when:
+    - rpfilter_content.stdout_lines | length > 1
+- name: Define rpfilter_status
+  ansible.builtin.set_fact:
+    rpfilter_status: 'rp_filter value is not set to 2 in /proc/sys/net/ipv4/conf/default/rp_filter'
+  when:
+    - rpfilter_content.stdout_lines | length == 1
+    - rpfilter_content.stdout_lines[0] | int != 2

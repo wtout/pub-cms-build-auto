@@ -1,5 +1,9 @@
 ---
 # tasks to bounce the syslogd process on the VM
-- name: bounce syslogd process
-  ansible.builtin.shell: kill -9 $(ps aux | grep syslogd | grep -v grep | awk '{print $2}')
+- name: Bounce syslogd process
+  ansible.builtin.shell:
+    cmd: set -o pipefail && kill -9 $(ps aux | grep syslogd | grep -v grep | awk '{print $2}')
+    executable: /bin/bash
+  register: bounce_syslogd
+  changed_when: bounce_syslogd.rc == 0
   become: "{{ true if inventory_hostname is search('em7') else false }}"

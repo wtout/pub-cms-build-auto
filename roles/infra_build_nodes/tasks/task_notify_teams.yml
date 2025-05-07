@@ -1,50 +1,56 @@
 ---
 # Task file for notifying teams with csr serial no. for license
-- block:
-  - name: Generate notification message
-    ansible.builtin.set_fact:
-      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line_item] | list }}"
-    loop:
-      - "{{ ( hostvars['csr01']['vm']['name'] + ': ' + hostvars['csr01']['ansible_net_serialnum'] ) if hostvars['csr01']['ansible_net_serialnum'] is defined else '' }}"
-      - "{{ ( hostvars['csr02']['vm']['name'] + ': ' + hostvars['csr02']['ansible_net_serialnum'] ) if hostvars['csr02']['ansible_net_serialnum'] is defined else '' }}"
-      - "{{ ( hostvars['nsvpx01']['vm']['name'] + ': ' + hostvars['nsvpx01']['serial_number'] ) if hostvars['nsvpx01']['serial_number'] is defined else '' }}"
-      - "{{ ( hostvars['nsvpx02']['vm']['name'] + ': ' + hostvars['nsvpx02']['serial_number'] ) if hostvars['nsvpx02']['serial_number'] is defined else '' }}"
-    loop_control:
-      loop_var: line_item
-    when: line_item != ''
-
-  - name: Append DR VMs to notification message
-    ansible.builtin.set_fact:
-      NOTIF_MSG: "{{ NOTIF_MSG | default ([]) + [line_item] | list }}"
-    loop:
-      - "{{ ( hostvars['drcsr01']['vm']['name'] + ': ' + hostvars['drcsr01']['ansible_net_serialnum'] ) if hostvars['drcsr01']['ansible_net_serialnum'] is defined else '' }}"
-      - "{{ ( hostvars['drnsvpx01']['vm']['name'] + ': ' + hostvars['drnsvpx01']['serial_number'] ) if hostvars['drnsvpx01']['serial_number'] is defined else '' }}"
-    loop_control:
-      loop_var: line_item
-    when:
-      - customer.disaster_recovery
-      - line_item != ''
-
-  - block:
-    - name: Send notification via Webex Teams with infra serial numbers
-      ansible.builtin.uri:
-        url: "https://webexapis.com/v1/messages"
-        method: POST
-        headers:
-          Authorization: "Bearer MWQ4MmQyOTYtMzQ2ZC00M2ViLTg3OGMtOThhMGFkOTI3NGQ5Mzk1YzI4NzYtMDFm_PF84_1eb65fdf-9643-417f-9974-ad72cae0e10f"
-        body_format: json
-        body:
-          roomId: Y2lzY29zcGFyazovL3VzL1JPT00vYjRiMWM0MzAtMTg2My0xMWViLWE4OWQtNTNkMDRiZjUxMjMy
-          markdown: "{{ '**Infra Serial Numbers**' + '\n' + NOTIF_MSG | join('  \n') }}"
-      register: reg_notify
-      ignore_errors: yes
-      environment:
-        http_proxy: "{{ proxy_address|default('') }}"
-        https_proxy: "{{ proxy_address|default('') }}"
-    - name: print notification message to screen/log
-      ansible.builtin.debug:
-        msg: "{{ ['Infra Serial Numbers'] + NOTIF_MSG }}"
-      when: reg_notify is failed
-    when: NOTIF_MSG is defined and NOTIF_MSG != []
+- name: Send notification
   run_once: true
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Generate notification message
+      ansible.builtin.set_fact:
+        notif_msg: "{{ notif_msg | default([]) + [line_item] | list }}"
+      loop:
+        - "{{ (hostvars['csr01']['vm']['name'] + ': ' + myans1) if myans1 is defined else '' }}"
+        - "{{ (hostvars['csr02']['vm']['name'] + ': ' + myans2) if myans2 is defined else '' }}"
+        - "{{ (hostvars['nsvpx01']['vm']['name'] + ': ' + hostvars['nsvpx01']['serial_number']) if hostvars['nsvpx01']['serial_number'] is defined else '' }}"
+        - "{{ (hostvars['nsvpx02']['vm']['name'] + ': ' + hostvars['nsvpx02']['serial_number']) if hostvars['nsvpx02']['serial_number'] is defined else '' }}"
+      loop_control:
+        loop_var: line_item
+      when: line_item != ''
+      vars:
+        myans1: "{{ hostvars['csr01']['ansible_net_serialnum'] }}"
+        myans2: "{{ hostvars['csr02']['ansible_net_serialnum'] }}"
+    - name: Append DR VMs to notification message
+      ansible.builtin.set_fact:
+        notif_msg: "{{ notif_msg | default([]) + [line_item] | list }}"
+      loop:
+        - "{{ (hostvars['drcsr01']['vm']['name'] + ': ' + myans) if myans is defined else '' }}"
+        - "{{ (hostvars['drnsvpx01']['vm']['name'] + ': ' + mysnsn) if mysn is defined else '' }}"
+      loop_control:
+        loop_var: line_item
+      when:
+        - customer.disaster_recovery
+        - line_item != ''
+      vars:
+        myans: "{{ hostvars['drcsr01']['ansible_net_serialnum'] }}"
+        mysn: "{{ hostvars['drnsvpx01']['serial_number'] }}"
+    - name: Send Webex notification
+      when: notif_msg is defined and notif_msg != []
+      block:
+        - name: Send notification via Webex Teams with infra serial numbers
+          ansible.builtin.uri:
+            url: "https://webexapis.com/v1/messages"
+            method: POST
+            headers:
+              Authorization: "{{ PWEBEX_BOT_TOKEN }}"
+            body_format: json
+            body:
+              roomId: "{{ PWEBEX_ROOM_ID_SERIAL }}"
+              markdown: "{{ '**Infra Serial Numbers**' + '\n' + notif_msg | join('  \n') }}"
+          register: reg_notify
+          ignore_errors: true
+          environment:
+            http_proxy: "{{ proxy_address | default('') }}"
+            https_proxy: "{{ proxy_address | default('') }}"
+        - name: Print notification message to screen/log
+          ansible.builtin.debug:
+            msg: "{{ ['Infra Serial Numbers'] + notif_msg }}"
+          when: reg_notify is failed

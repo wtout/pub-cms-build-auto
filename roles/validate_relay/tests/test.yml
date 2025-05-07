@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test validate relay
+  hosts: localhost
   remote_user: root
   roles:
-    - roles/validate_relay
+    - validate_relay

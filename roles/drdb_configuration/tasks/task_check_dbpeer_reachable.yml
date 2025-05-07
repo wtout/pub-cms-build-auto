@@ -1,19 +1,23 @@
 ---
 # tasks file to check DB peer is reachable
-- block:
-  - name: check DB peer reachable
-    ansible.builtin.shell: ping {{ drem7db_ip1_list|first if db_item is search('dr') else em7db_ip1_list|first if db_item[-2:] == '01' else em7db_ip1_list|last }} -c 1
-    register: reg_dbpeer_reachable
-    ignore_errors: true
-    check_mode: no
-    loop: "{{ groups['em7db'] | union(groups['drem7db']) | reject('equalto', inventory_hostname) }}"
-    loop_control:
-      loop_var: db_item
-  - name: Ensure peers are reachable
-    ansible.builtin.assert:
-      that: reg_dbpeer_reachable.results|selectattr('db_item','equalto',db_item)|map(attribute='failed')|list|join
-      fail_msg: "{{ db_item + ' is not reachable' }}"
-    loop: "{{ groups['em7db'] | union(groups['drem7db']) | reject('equalto', inventory_hostname) }}"
-    loop_control:
-      loop_var: db_item
+- name: Check DB peer is reachable
   when: inventory_hostname is search('em7db')
+  block:
+    - name: Check DB peer reachable
+      ansible.builtin.command: ping {{ mypeeraddr }} -c 1
+      register: reg_dbpeer_reachable
+      changed_when: false
+      ignore_errors: true
+      check_mode: false
+      loop: "{{ groups['em7db'] | union(groups['drem7db']) | reject('equalto', inventory_hostname) }}"
+      loop_control:
+        loop_var: db_item
+      vars:
+        mypeeraddr: "{{ drem7db_ip1_list | first if db_item is search('dr') else em7db_ip1_list | first if db_item[-2:] == '01' else em7db_ip1_list | last }}"
+    - name: Ensure peers are reachable
+      ansible.builtin.assert:
+        that: reg_dbpeer_reachable.results | selectattr('db_item', 'equalto', db_item) | map(attribute='failed') | list | join
+        fail_msg: "{{ db_item + ' is not reachable' }}"
+      loop: "{{ groups['em7db'] | union(groups['drem7db']) | reject('equalto', inventory_hostname) }}"
+      loop_control:
+        loop_var: db_item

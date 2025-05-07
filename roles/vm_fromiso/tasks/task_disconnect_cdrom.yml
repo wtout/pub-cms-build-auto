@@ -8,16 +8,23 @@
     name: "{{ vm.name }}"
     datacenter: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
     cluster: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['cluster'] }}"
-    folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + ('/' + fldr_name if fldr_name != '' else '') }}"
-    validate_certs: no
+    folder: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+      ('/' + fldr_name if fldr_name != '' else '') }}"
+    validate_certs: false
     cdrom:
       - type: iso
-        iso_path: "[{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}] {{ ('ISO/' + hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path']) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
+        iso_path: "[{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] \
+          if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}] {{ ('ISO/' + \
+          hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path']) if hostvars[groups[('dr' \
+          if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else 'ISO' }}/CentOS-7-x86_64-DVD-1908.iso"
         controller_number: 0
         unit_number: 0
         state: absent
       - type: iso
-        iso_path: "[{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}] {{ ('ISO/' + hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path']) if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
+        iso_path: "[{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] \
+          if hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_datastore'] != '' else vm_ds }}] {{ ('ISO/' + \
+          hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path']) if hostvars[groups[('dr' \
+          if 'dr' in group_names else '') + 'vcenter'][0]]['information']['storage_path'] != '' else 'ISO' }}/{{ vm.name }}-kickstart.iso"
         controller_number: 1
         unit_number: 0
         state: absent

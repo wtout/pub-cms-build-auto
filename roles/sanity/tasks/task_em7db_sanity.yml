@@ -1,15 +1,22 @@
 ---
 # Tasks to check DB sanity
-- block:
-  - include_tasks: task_check_puppet_push_status.yml
-    when: customer.version.release[1:]|replace('.', '')|int <= 9217
-  - block:
-    - include_tasks: task_check_service_status.yml
-    - include_tasks: task_check_chrony_file.yml
-    - include_tasks: task_check_db_connected_status.yml
-    - include_tasks: task_check_r0_res_file.yml
-    - include_tasks: task_check_cmsp_em7_file.yml
-    - include_tasks: task_check_licensed_state.yml
-    - include_tasks: task_check_sudoers_user_status.yml
+- name: Check DB sanity
   when: inventory_hostname is search('em7db')
-  tags: sanity
+  block:
+    - name: Check puppet push status
+      ansible.builtin.include_tasks: task_check_puppet_push_status.yml
+      when: customer.version.release[1:] | replace('.', '') | int <= 9217
+    - name: Check service status
+      ansible.builtin.include_tasks: task_check_service_status.yml
+    - name: Check chrony file
+      ansible.builtin.include_tasks: task_check_chrony_file.yml
+    - name: Check DB connected status
+      ansible.builtin.include_tasks: task_check_db_connected_status.yml
+    - name: Check r0_res file
+      ansible.builtin.include_tasks: task_check_r0_res_file.yml
+    - name: Check CMSP EM7 file
+      ansible.builtin.include_tasks: task_check_cmsp_em7_file.yml
+    - name: Check licensed_state
+      ansible.builtin.include_tasks: task_check_licensed_state.yml
+    - name: Check sudoers user status
+      ansible.builtin.include_tasks: task_check_sudoers_user_status.yml

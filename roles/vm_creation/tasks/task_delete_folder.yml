@@ -1,40 +1,47 @@
 ---
 # Tasks to delete the VM folder
-- block:
-  - name: Get list of folders
-    community.vmware.vmware_folder_info:
-      hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-      username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-      password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-      datacenter_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-      validate_certs: no
-    register: folder_info
-    no_log: yes
-  - block:
-    - include_tasks: task_check_folder_empty.yml
-    - ansible.builtin.debug:
-        msg: "The folder '{{ folder_name }}' cannot be deleted because it is not empty"
-      when: not folder_empty
-    - block:
-      - name: Delete the {{ folder_name }} folder
-        community.vmware.vcenter_folder:
-          hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
-          username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
-          password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
-          datacenter_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
-          folder_name: "{{ folder_name.split('/')[(2 if folder_name is regex('^/') else 1):]|join('/') }}"
-          folder_type: vm
-          parent_folder: "{{ folder_name.split('/')[1 if folder_name is regex('^/') else 0] }}"
-          state: absent
-          validate_certs: no
-        register: cust_folder
-      rescue:
-      - ansible.builtin.fail:
-          msg: "Failed to delete the folder '{{ folder_name }}'"
-        when:
-          - cust_folder is failed
-      when: folder_empty
-    when: folder_info.flat_folder_info|select('search', ffn)
-    vars:
-      ffn: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + (('' if folder_name is regex('^/') else '/') + folder_name if folder_name != '' else '') }}"
+- name: Deleting VM folder
   delegate_to: "{{ groups['bastion'][0] if (groups['bastion'] | length >= 1 and bastion.address != [] and bastion.address != ['']) else 'localhost' }}"
+  block:
+    - name: Get list of folders
+      community.vmware.vmware_folder_info:
+        hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+        username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+        password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+        datacenter_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+        validate_certs: false
+      register: folder_info
+      no_log: true
+    - name: Check folder and delete it
+      when: folder_info.flat_folder_info | select('search', ffn)
+      vars:
+        ffn: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] + '/vm' + \
+          (('' if folder_name is regex('^/') else '/') + folder_name if folder_name != '' else '') }}"
+      block:
+        - name: Check that the folder is empty
+          ansible.builtin.include_tasks: task_check_folder_empty.yml
+        - name: Display folder not empty message
+          ansible.builtin.debug:
+            msg: "The folder '{{ folder_name }}' cannot be deleted because it is not empty"
+          when: not folder_empty
+        - name: Delete folder
+          when: folder_empty
+          block:
+            - name: Delete the {{ folder_name + ' folder' }}
+              community.vmware.vcenter_folder:
+                hostname: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['address'] }}"
+                username: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['username'] }}"
+                password: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['credentials']['password'] }}"
+                datacenter_name: "{{ hostvars[groups[('dr' if 'dr' in group_names else '') + 'vcenter'][0]]['information']['datacenter'] }}"
+                folder_name: "{{ folder_name.split('/')[(2 if folder_name is regex('^/') else 1) :] | join('/') }}"
+                folder_type: vm
+                parent_folder: "{{ folder_name.split('/')[1 if folder_name is regex('^/') else 0] }}"
+                state: absent
+                validate_certs: false
+              register: cust_folder
+          rescue:
+            - name: Display failed message
+              ansible.builtin.fail:
+                msg: "Failed to delete the folder '{{ folder_name }}'"
+              when:
+                - cust_folder is failed

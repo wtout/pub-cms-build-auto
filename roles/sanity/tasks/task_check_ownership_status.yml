@@ -1,39 +1,6 @@
 ---
 # Tasks to check ownership status
-- block:
-  - name: define directory list
-    ansible.builtin.set_fact:
-      dir_list: "{{ rly_list if vm.name is search('rly') and vm.name is not search('ata') else splsrc_list if vm.name is search('splsrc') or (vm.name is search('spl') and vm.name is search('aio')) else spldpl_list if vm.name is search('spldpl') else splmas_list if vm.name is search('splmas') else splind_list if vm.name is search('splind') else [] }}"
-  - name: check ownership status
-    ansible.builtin.shell: |
-      {{ 'sudo -S' if ansible_user != 'root' else '' }} ls -l{{ 'd' if dir_item.name[-1] != '*' else '' }} {{ dir_item.name if dir_item.name[-1] != '*' else dir_item.name[:-1] }} {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}  | grep -v total | awk '{print $3" "$4" {{ dir_item.name[:-1] if dir_item.name[-1] == '*' else '' }}"$NF}'
-    loop: "{{ dir_list }}"
-    loop_control:
-      loop_var: dir_item
-    register: reg_dir_status
-    args:
-      warn: false
-    ignore_errors: true
-    check_mode: no
-    no_log: "{{ 'yes' if ansible_user != 'root' else 'no' }}"
-  - name: define ownership status
-    ansible.builtin.set_fact:
-      ownership_status: "{{ ownership_status|default([]) | union([(dir_item.name if dir_item.name[-1] != '*' else dir_item.name[:-1]) + ' is not found']) }}"
-    when:
-      - reg_dir_status.results|selectattr('dir_item','equalto',dir_item)|map(attribute='stderr')|list|join is search('No such file or directory')
-    loop: "{{ dir_list }}"
-    loop_control:
-      loop_var: dir_item
-  - name: define ownership status
-    ansible.builtin.set_fact:
-      ownership_status: "{{ ownership_status|default([]) + ['Wrong ownership: ' + dir_ownership|join(', ')] }}"
-    vars:
-      dir_ownership: "{{ reg_dir_status.results|selectattr('dir_item','equalto',dir_item)|map(attribute='stdout_lines')|first|reject('search',dir_item.user + ' ' + dir_item.group)|list }}"
-    loop: "{{ dir_list }}"
-    loop_control:
-      loop_var: dir_item
-    when:
-      - dir_ownership|length != 0
+- name: Check ownership
   vars:
     rly_list:
       - { name: '/opt/splunk/*', user: 'splunk', group: 'splunk' }
@@ -74,4 +41,40 @@
       - { name: '/opt/splunk/var/log/*', user: 'splunk', group: 'splunk' }
       - { name: '/opt/splunk/etc/', user: 'splunk', group: 'splunk' }
       - { name: '/opt/splunk/etc/*', user: 'splunk', group: 'splunk' }
-  tags: sanity
+  block:
+    - name: Define directory list
+      ansible.builtin.set_fact:
+        dir_list: "{{ rly_list if vm.name is search('rly') and vm.name is not search('ata') else splsrc_list if vm.name is search('splsrc') or (vm.name is search('spl') and vm.name is search('aio')) else spldpl_list if vm.name is search('spldpl') else splmas_list if vm.name is search('splmas') else splind_list if vm.name is search('splind') else [] }}" # noqa: yaml[line-length]
+     # yamllint disable rule:line-length
+    - name: Check ownership status
+      ansible.builtin.shell: |
+        {{ 'sudo -S' if ansible_user != 'root' else '' }} ls -l{{ 'd' if dir_item.name[-1] != '*' else '' }} {{ dir_item.name if dir_item.name[-1] != '*' else dir_item.name[:-1] }} {{ '<<< ' + ansible_ssh_pass if ansible_user != 'root' else '' }}  | grep -v total | awk '{print $3" "$4" {{ dir_item.name[:-1] if dir_item.name[-1] == '*' else '' }}"$NF}'
+      args:
+        warn: false
+      loop: "{{ dir_list }}"
+      loop_control:
+        loop_var: dir_item
+      register: reg_dir_status
+      changed_when: false
+      ignore_errors: true
+      check_mode: false
+      no_log: "{{ true if ansible_user != 'root' else false }}"
+      # yamllint enable rule:line-length
+    - name: Define ownership status
+      ansible.builtin.set_fact:
+        ownership_status: "{{ ownership_status | default([]) | union([(dir_item.name if dir_item.name[-1] != '*' else dir_item.name[:-1]) + ' is not found']) }}" # noqa: yaml[line-length]
+      when:
+        - reg_dir_status.results | selectattr('dir_item', 'equalto', dir_item) | map(attribute='stderr') | list | join is search('No such file or directory')
+      loop: "{{ dir_list }}"
+      loop_control:
+        loop_var: dir_item
+    - name: Define ownership status
+      ansible.builtin.set_fact:
+        ownership_status: "{{ ownership_status | default([]) + ['Wrong ownership: ' + dir_ownership | join(', ')] }}"
+      vars:
+        dir_ownership: "{{ reg_dir_status.results | selectattr('dir_item', 'equalto', dir_item) | map(attribute='stdout_lines') | first | reject('search', dir_item.user + ' ' + dir_item.group) | list }}" # noqa: yaml[line-length]
+      loop: "{{ dir_list }}"
+      loop_control:
+        loop_var: dir_item
+      when:
+        - dir_ownership | length != 0

@@ -1,7 +1,9 @@
 ---
 # vars file for infra_dns_records
-svc_username: "{{ vars[('S' if 'dr' in group_names else 'P') + 'AD_MGMT_USER'] if vars[('S' if 'dr' in group_names else 'P') + 'AD_MGMT_USER'] is defined else '' }}"
-svc_password: "{{ vars[('S' if 'dr' in group_names else 'P') + 'AD_MGMT_PASS'] if vars[('S' if 'dr' in group_names else 'P') + 'AD_MGMT_PASS'] is defined else '' }}"
+svc_username: "{{ vars[('S' if 'dr' in group_names else 'P') + 'AD_MGMT_USER'] if vars[('S' if 'dr' in group_names else 'P') + 'AD_MGMT_USER'] is defined \
+  else '' }}"
+svc_password: "{{ vars[('S' if 'dr' in group_names else 'P') + 'AD_MGMT_PASS'] if vars[('S' if 'dr' in group_names else 'P') + 'AD_MGMT_PASS'] is defined \
+  else '' }}"
 
 dns_records:
   - record: "{{ customer.primary.name_prefix }}splsrchv01"

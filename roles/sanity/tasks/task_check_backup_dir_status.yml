@@ -1,23 +1,20 @@
 ---
 # Tasks to check the backup directories status
-- block:
-  - name: check if backup config directory exists
-    ansible.builtin.stat:
-      path: '/backup/em7/config'
-    register: reg_config_dir
-  - name: check if backup full directory exists
-    ansible.builtin.stat:
-      path: '/backup/em7/full'
-    register: reg_full_dir
-  - name: define rly_backup_dir_status
-    ansible.builtin.set_fact:
-      rly_backup_dir_status: "{{ rly_backup_dir_status|default([]) + ['/backup/em7/config is not found'] }}"
-    when:
-      - not reg_config_dir.stat.exists
-  - name: define rly_backup_dir_status
-    ansible.builtin.set_fact:
-      rly_backup_dir_status: "{{ rly_backup_dir_status|default([]) + ['/backup/em7/full is not found'] }}"
-    when:
-      - not reg_full_dir.stat.exists
-  tags: sanity
-  
+- name: Check if backup config directory exists
+  ansible.builtin.stat:
+    path: '/backup/em7/config'
+  register: reg_config_dir
+- name: Check if backup full directory exists
+  ansible.builtin.stat:
+    path: '/backup/em7/full'
+  register: reg_full_dir
+- name: Define rly_backup_dir_status
+  ansible.builtin.set_fact:
+    rly_backup_dir_status: "{{ rly_backup_dir_status | default([]) + ['/backup/em7/config is not found'] }}"
+  when:
+    - not reg_config_dir.stat.exists
+- name: Define rly_backup_dir_status
+  ansible.builtin.set_fact:
+    rly_backup_dir_status: "{{ rly_backup_dir_status | default([]) + ['/backup/em7/full is not found'] }}"
+  when:
+    - not reg_full_dir.stat.exists

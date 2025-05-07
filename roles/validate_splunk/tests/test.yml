@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test validate_splunk
+  hosts: localhost
   remote_user: root
   roles:
-    - roles/validate_splunk
+    - validate_splunk

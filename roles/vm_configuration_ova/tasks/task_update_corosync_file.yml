@@ -1,22 +1,29 @@
 ---
 # tasks to update corosync config file on EM7 VM
-- block:
-  - name: find string to replace
-    ansible.builtin.shell: grep ring0_addr /etc/corosync/corosync.conf | head -1
-    check_mode: no
-    register: coro_string_to_replace
-  - name: Update /etc/corosync/corosync.conf file on VM
-    ansible.builtin.replace:
-      path: '/etc/corosync/corosync.conf'
-      regexp: '{{ task_item.regexp_string }}'
-      replace: '{{ task_item.replace_string }}'
-    loop:
-      - { regexp_string: '{{ coro_string_to_replace.stdout.split(": ")[1].split(".")[:-1] | join(".") }}', replace_string: '{{ customer.secondary.octets if "dr" in group_names else customer.primary.octets }}' }
-      - { regexp_string: '^(.* name: ).*(\d{2})$', replace_string: '\g<1>{{ vm.name[:-2] }}\g<2>' }
-    loop_control:
-      loop_var: task_item
-    notify:
-      - restart pacemaker
-      - restart corosync
+- name: Update corosync config file on EM7 VM
   when: inventory_hostname is search('em7db')
   become: "{{ true if inventory_hostname is search('em7') else false }}"
+  block:
+    - name: Find string to replace
+      ansible.builtin.shell:
+        cmd: set -o pipefail && grep ring0_addr /etc/corosync/corosync.conf | head -1
+        executable: /bin/bash
+      register: coro_string_to_replace
+      changed_when: false
+      check_mode: false
+    - name: Update /etc/corosync/corosync.conf file on VM
+      ansible.builtin.replace:
+        path: '/etc/corosync/corosync.conf'
+        regexp: '{{ task_item.regexp_string }}'
+        replace: '{{ task_item.replace_string }}'
+      loop:
+        - { regexp_string: "{{ regexps }}", replace_string: '{{ replaces }}' }
+        - { regexp_string: '^(.* name: ).*(\d{2})$', replace_string: '\g<1>{{ vm.name[:-2] }}\g<2>' }
+      loop_control:
+        loop_var: task_item
+      notify:
+        - Restart pacemaker
+        - Restart corosync
+      vars:
+        regexps: '{{ coro_string_to_replace.stdout.split(": ")[1].split(".")[:-1] | join(".") }}'
+        replaces: '{{ customer.secondary.octets if "dr" in group_names else customer.primary.octets }}'

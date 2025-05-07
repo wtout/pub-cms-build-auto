@@ -1,26 +1,32 @@
 ---
 # tasks to update em7vg files on EM7 VM
-- block:
-  - name: find default_host
-    ansible.builtin.shell: grep creation_host /etc/lvm/backup/em7vg | grep -v {{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}
-    check_mode: no
-    register: default_host
-  - name: define string to replace
-    set_fact:
-      string_to_replace: "{{ default_host.stdout.split(' ')[4][:-2] }}"
-  - name: find em7vg files
-    ansible.builtin.find:
-      path: '/etc/lvm'
-      patterns: 'em7vg*'
-      recurse: yes
-    register: em7vg
-  - name: Update em7vg files on VM
-    ansible.builtin.replace:
-      path: "{{ task_item.path }}"
-      regexp: '{{ string_to_replace }}'
-      replace: '{{ vm.name[:-2] }}'
-    loop: "{{ em7vg.files }}"
-    loop_control:
-      loop_var: task_item
+- name: Update em7vg files on EM7 VM
   when: inventory_hostname is search('em7')
   become: "{{ true if ansible_user != 'root' else false }}"
+  block:
+    - name: Find default_host
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail && \
+          grep creation_host /etc/lvm/backup/em7vg | grep -v {{ sysconfig.secondary.domain_name if 'dr' in group_names else sysconfig.primary.domain_name }}
+        executable: /bin/bash
+      register: default_host
+      changed_when: false
+      check_mode: false
+    - name: Define string to replace
+      ansible.builtin.set_fact:
+        string_to_replace: "{{ default_host.stdout.split(' ')[4][:-2] }}"
+    - name: Find em7vg files
+      ansible.builtin.find:
+        path: '/etc/lvm'
+        patterns: 'em7vg*'
+        recurse: true
+      register: em7vg
+    - name: Update em7vg files on VM
+      ansible.builtin.replace:
+        path: "{{ task_item.path }}"
+        regexp: '{{ string_to_replace }}'
+        replace: '{{ vm.name[:-2] }}'
+      loop: "{{ em7vg.files }}"
+      loop_control:
+        loop_var: task_item

@@ -1,40 +1,39 @@
 ---
 # tasks to restore /etc/silo.conf on EM7 VM
-- block:
-  - name: check primary DB credentials
-    ansible.builtin.wait_for_connection:
-      timeout: 15
-    delegate_to: "{{ groups['em7db']|first }}"
-    register: primarydb_connection_status1
-    check_mode: no
-    ignore_errors: true
-
-  - name: Update dbpasswd in silo.conf on DR VM
-    ansible.builtin.replace:
-      path: /etc/silo.conf
-      regexp: '^({{ task_item.param }}) (.*)$'
-      replace: '\g<1> {{ task_item.value }}'
-    loop:
-      - { param: 'dbpasswd =', value: "{{ 'SEM7DBPPP_PASS' }}" }
-    loop_control:
-      loop_var: task_item
-    no_log: true
-    when:
-      - primarydb_connection_status1 is failed or hostvars[groups['em7db']|first]['ansible_ssh_pass'] == postppp
-
-  - name: Restore dbpasswd in silo.conf on DR VM
-    ansible.builtin.replace:
-      path: /etc/silo.conf
-      regexp: '^({{ task_item.param }}) {{ task_item.regexp }}$'
-      replace: '\g<1> {{ task_item.value }}'
-    loop:
-      - { param: 'dbpasswd =', regexp: "{{ 'SEM7DBPPP_PASS' }}", value: 'em7admin' }
-    loop_control:
-      loop_var: task_item
-    no_log: true
-    when:
-      - primarydb_connection_status1 is succeeded and hostvars[groups['em7db']|first]['ansible_ssh_pass'] == preppp
-
+- name: Restore /etc/silo.conf
   when:
-    - (inventory_hostname is regex('drem7(prt|db)') and customer.version.release is search('9.2')) or (inventory_hostname is search('drem7prt') and customer.version.release is not search('9.2'))
+    - (inventory_hostname is regex('drem7(prt|db)') and customer.version.release is search('9.2')) or \
+      (inventory_hostname is search('drem7prt') and customer.version.release is not search('9.2'))
   become: "{{ true if inventory_hostname is search('em7') else false }}"
+  block:
+    - name: Check primary DB credentials
+      ansible.builtin.wait_for_connection:
+        timeout: 15
+      delegate_to: "{{ groups['em7db'] | first }}"
+      register: primarydb_connection_status1
+      check_mode: false
+      ignore_errors: true
+    - name: Update dbpasswd in silo.conf on DR VM
+      ansible.builtin.replace:
+        path: /etc/silo.conf
+        regexp: '^({{ task_item.param }}) (.*)$'
+        replace: '\g<1> {{ task_item.value }}'
+      loop:
+        - { param: 'dbpasswd =', value: "{{ 'SEM7DBPPP_PASS' }}" }
+      loop_control:
+        loop_var: task_item
+      no_log: true
+      when:
+        - primarydb_connection_status1 is failed or hostvars[groups['em7db'] | first]['ansible_ssh_pass'] == postppp
+    - name: Restore dbpasswd in silo.conf on DR VM
+      ansible.builtin.replace:
+        path: /etc/silo.conf
+        regexp: '^({{ task_item.param }}) {{ task_item.regexp }}$'
+        replace: '\g<1> {{ task_item.value }}'
+      loop:
+        - { param: 'dbpasswd =', regexp: "{{ 'SEM7DBPPP_PASS' }}", value: 'em7admin' }
+      loop_control:
+        loop_var: task_item
+      no_log: true
+      when:
+        - primarydb_connection_status1 is succeeded and hostvars[groups['em7db'] | first]['ansible_ssh_pass'] == preppp
